@@ -92,15 +92,22 @@ export async function chatWithAi(
   // Try to parse as JSON
   try {
     const parsed = JSON.parse(rawText.trim());
-    if (parsed.type === "reply" && typeof parsed.text === "string") {
-      return { type: "reply", text: parsed.text };
+    if (parsed.type === "reply") {
+      // Handle both string and nested object formats
+      const text = typeof parsed.text === "string"
+        ? parsed.text
+        : parsed.text?.text || JSON.stringify(parsed.text);
+      return { type: "reply", text };
     }
     if (parsed.type === "draft" && parsed.category && parsed.data) {
+      const text = typeof parsed.text === "string"
+        ? parsed.text
+        : parsed.text?.text || "";
       return {
         type: "draft",
         category: parsed.category,
         data: parsed.data,
-        text: parsed.text || "",
+        text,
       };
     }
   } catch {
