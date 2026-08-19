@@ -87,13 +87,23 @@ export async function chatWithAi(
     temperature: 0.3,
   });
 
-  const rawText = response?.response ?? "";
+  const rawResponse = response?.response ?? "";
 
-  // Try to parse as JSON
-  try {
-    const parsed = JSON.parse(rawText.trim());
+  // Workers AI may return an object or a JSON string — normalize to object
+  let parsed: Record<string, unknown> | null = null;
+  if (typeof rawResponse === "object" && rawResponse !== null) {
+    parsed = rawResponse as Record<string, unknown>;
+  } else if (typeof rawResponse === "string") {
+    try {
+      parsed = JSON.parse(rawResponse.trim());
+    } catch {
+      // Not JSON — treat as plain text
+      return { type: "reply", text: rawResponse || "ขออภัยค่ะ ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้ง" };
+    }
+  }
+
+  if (parsed) {
     if (parsed.type === "reply") {
-      // Handle both string and nested object formats
       const text = typeof parsed.text === "string"
         ? parsed.text
         : parsed.text?.text || JSON.stringify(parsed.text);
@@ -105,15 +115,13 @@ export async function chatWithAi(
         : parsed.text?.text || "";
       return {
         type: "draft",
-        category: parsed.category,
-        data: parsed.data,
+        category: parsed.category as "fertilizer" | "season_input",
+        data: parsed.data as Record<string, unknown>,
         text,
       };
     }
-  } catch {
-    // Not valid JSON — treat as plain text reply
   }
 
-  // Fallback: return as plain reply
-  return { type: "reply", text: rawText || "ขออภัยค่ะ ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้ง" };
+  // Fallback
+  return { type: "reply", text: "ขออภัยค่ะ ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้ง" };
 }
