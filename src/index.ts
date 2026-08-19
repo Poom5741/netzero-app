@@ -8,12 +8,12 @@ import { sponsorRoutes } from "./routes/sponsor";
 import { replyMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
-import { handleFaq } from "./chat/faq";
-import { parseDraft } from "./chat/parser";
+import { chatWithAi } from "./chat/ai";
 
 type Bindings = {
   DB: D1Database;
   R2: R2Bucket;
+  AI: Ai;
   ENVIRONMENT: string;
   SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
@@ -91,15 +91,12 @@ async function handleEvent(
   env: Bindings,
   event: WebhookEvent,
 ): Promise<void> {
-  const { LINE_CHANNEL_ACCESS_TOKEN: token, DB: db } = env;
+  const { LINE_CHANNEL_ACCESS_TOKEN: token, DB: db, AI: ai } = env;
 
   switch (event.type) {
     case "follow": {
-      // Send welcome Flex message
       const welcomeMsg = buildWelcomeFlex();
       await replyMessage(token, event.replyToken, [welcomeMsg]);
-
-      // Send consent card after a short delay
       const consentMsg = buildConsentCard();
       await replyMessage(token, event.replyToken, [consentMsg]);
       break;
@@ -119,14 +116,12 @@ async function handleEvent(
         // Not linked — check if they sent a phone number
         const phoneMatch = text.replace(/[-\s]/g, "");
         if (/^\d{10}$/.test(phoneMatch)) {
-          // Look up farmer by phone
           const farmer = await db
             .prepare("SELECT id, full_name FROM farmers WHERE phone = ?")
             .bind(phoneMatch)
             .first<{ id: string; full_name: string }>();
 
           if (farmer) {
-            // Create pending link
             const linkId = `link_${crypto.randomUUID()}`;
             await db
               .prepare(
@@ -152,58 +147,112 @@ async function handleEvent(
           break;
         }
 
-        // Not linked, not a phone number — prompt for phone
+        // Not linked — use AI to guide them
+        const aiResponse = await chatWithAi(ai, text, { linkedFarmer: false });
         await replyMessage(token, event.replyToken, [
-          {
-            type: "text",
-            text: "กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
-          },
+          { type: "text", text: aiResponse.type === "reply" ? aiResponse.text : aiResponse.text || "กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี" },
         ]);
         break;
       }
 
-      // Farmer is linked — process the message
-      // Try parsing as structured input (fertilizer, photo intent)
-      const draft = parseDraft(text);
+      // Farmer is linked — gather context for AI
+      const farmer = await db
+        .prepare("SELECT full_name FROM farmers WHERE id = ?")
+        .bind(link.farmer_id)
+        .first<{ full_name: string }>();
 
-      if (draft.type === "fertilizer" && draft.confidence >= 0.5) {
-        const { step, formula, rate_kg_per_rai, is_urea } = draft.data;
-        const stepLabel = step === "base" ? "หว่าน" : step === "tillering" ? "แตกกอ" : "ช่อ";
+      // Get current plot (most recent)
+      const plot = await db
+        .prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+        .bind(link.farmer_id)
+        .first<{ plot_code: string }>();
 
+      // Get current season
+      const seasonInput = await db
+        .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
+        .bind(link.farmer_id)
+        .first<{ season_id: string }>();
+
+      const aiResponse = await chatWithAi(ai, text, {
+        farmerName: farmer?.full_name,
+        plotCode: plot?.plot_code,
+        seasonId: seasonInput?.season_id,
+        linkedFarmer: true,
+      });
+
+      // Log to farmer_messages for audit trail
+      await db
+        .prepare(
+          `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed)
+           VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
+        )
+        .bind(
+          crypto.randomUUID(),
+          link.farmer_id,
+          null,
+          text,
+          JSON.stringify(aiResponse),
+        )
+        .run();
+
+      if (aiResponse.type === "reply") {
+        // Simple text reply from AI
         await replyMessage(token, event.replyToken, [
-          {
-            type: "text",
-            text: `📋 พบข้อมูลปุ๋ย:\n- ขั้นตอน: ${stepLabel}\n- สูตร: ${formula || "ไม่ระบุ"}\n- อัตรา: ${rate_kg_per_rai ? `${rate_kg_per_rai} กก./ไร่` : "ไม่ระบุ"}${is_urea ? "\n⚠️ เป็นปุ๋ยยูเรีย" : ""}\n\nพิมพ์ 'ยืนยัน' เพื่อบันทึก หรือ 'ยกเลิก' เพื่อลบ`,
-          },
+          { type: "text", text: aiResponse.text },
         ]);
-        break;
+      } else if (aiResponse.type === "draft") {
+        // AI extracted structured data — show confirmation
+        const { category, data, text: summary } = aiResponse;
+
+        if (category === "fertilizer") {
+          const d = data as { step?: string; formula?: string; rate_kg_per_rai?: number; is_urea?: boolean };
+          const stepLabel = d.step === "base" ? "หว่าน/เตรียมดิน" : d.step === "tillering" ? "แตกกอ" : "ช่อ/รวง";
+
+          await replyMessage(token, event.replyToken, [
+            {
+              type: "text",
+              text: `📋 ${summary || "พบข้อมูลปุ๋ย"}\n\n` +
+                `ขั้นตอน: ${stepLabel}\n` +
+                `สูตร: ${d.formula || "ไม่ระบุ"}\n` +
+                `อัตรา: ${d.rate_kg_per_rai ? `${d.rate_kg_per_rai} กก./ไร่` : "ไม่ระบุ"}\n` +
+                (d.is_urea ? `⚠️ เป็นปุ๋ยยูเรีย\n` : "") +
+                `\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`,
+            },
+          ]);
+        } else if (category === "season_input") {
+          const d = data as { field?: string; value?: unknown };
+          await replyMessage(token, event.replyToken, [
+            {
+              type: "text",
+              text: `📋 ${summary || "พบข้อมูลฤดู"}\n\n` +
+                `ฟิลด์: ${d.field || "ไม่ระบุ"}\n` +
+                `ค่า: ${d.value ?? "ไม่ระบุ"}\n` +
+                `\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`,
+            },
+          ]);
+        }
       }
 
-      if (draft.type === "photo") {
-        await replyMessage(token, event.replyToken, [
-          {
-            type: "text",
-            text: "📸 ถ่ายรูปหลักฐานได้เลยค่ะ เปิดกล้องถ่ายรูปที่ลิงก์นี้: [เปิดกล้อง](https://liff.line.me/)",
-          },
-        ]);
-        break;
-      }
+      // Log AI event for quota tracking
+      await db
+        .prepare(
+          `INSERT INTO ai_events (id, farmer_id, event_type, model_version, created_at)
+           VALUES (?, ?, 'chat', ?, datetime('now'))`,
+        )
+        .bind(crypto.randomUUID(), link.farmer_id, MODEL)
+        .run();
 
-      // Fall through to FAQ
-      const faqResult = await handleFaq(text);
-      await replyMessage(token, event.replyToken, [
-        { type: "text", text: faqResult.reply },
-      ]);
       break;
     }
 
     case "unfollow": {
-      // Mark link as inactive (optional cleanup)
       console.log(`User unfollowed: ${event.source.userId}`);
       break;
     }
   }
 }
+
+const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 // Sponsor dashboard + detail
 app.route("/sponsor", sponsorRoutes);

@@ -14,6 +14,10 @@ database_id = "a1bd56ed-7d7a-4b38-b5b2-9769a9715e59"
 binding = "R2"
 bucket_name = "netzero-photos"
 
+# Workers AI
+[ai]
+binding = "AI"
+
 # Environment variables
 [vars]
 ENVIRONMENT = "development"
