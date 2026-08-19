@@ -184,12 +184,15 @@ async function handleEvent(
           .bind(link.farmer_id)
           .first<{ season_id: string }>();
 
+        const aiStart = Date.now();
         const aiResponse = await chatWithAi(ai, text, {
           farmerName: farmer?.full_name,
           plotCode: plot?.plot_code,
           seasonId: seasonInput?.season_id,
           linkedFarmer: true,
         });
+        const aiDuration = Date.now() - aiStart;
+        console.log(`AI call: ${aiDuration}ms, type=${aiResponse.type}`);
 
         aiReplyText = aiResponse.type === "reply"
           ? aiResponse.text

@@ -5,7 +5,7 @@
  * Level A+B: Draft parser — extracts structured data from free text
  */
 
-const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const MODEL = "@cf/qwen/qwen3.8-27b";
 
 const SYSTEM_PROMPT = `คุณเป็นผู้ช่วยเกษตรกรในระบบ NetZeroCarbon สำหรับโครงการคาร์บอนเครดิตนาข้าว AWD (Alternate Wetting and Drying)
 
