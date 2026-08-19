@@ -97,10 +97,11 @@ async function handleEvent(
 
   switch (event.type) {
     case "follow": {
+      // Send welcome + consent in a single reply (replyToken can only be used once)
       const welcomeMsg = buildWelcomeFlex();
-      await replyMessage(token, event.replyToken, [welcomeMsg]);
       const consentMsg = buildConsentCard();
-      await replyMessage(token, event.replyToken, [consentMsg]);
+      const replyResult = await replyMessage(token, event.replyToken, [welcomeMsg, consentMsg]);
+      console.log(`Follow reply: ${replyResult.status} ${replyResult.statusText}`);
       break;
     }
 
@@ -199,9 +200,10 @@ async function handleEvent(
 
       if (aiResponse.type === "reply") {
         // Simple text reply from AI
-        await replyMessage(token, event.replyToken, [
+        const r = await replyMessage(token, event.replyToken, [
           { type: "text", text: aiResponse.text },
         ]);
+        console.log(`AI reply: ${r.status} ${r.statusText} body=${r.body}`);
       } else if (aiResponse.type === "draft") {
         // AI extracted structured data — show confirmation
         const { category, data, text: summary } = aiResponse;

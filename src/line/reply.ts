@@ -14,7 +14,7 @@ export async function replyMessage(
   accessToken: string,
   replyToken: string,
   messages: LineMessage[],
-): Promise<{ status: number; statusText: string }> {
+): Promise<{ status: number; statusText: string; body: string }> {
   const res = await fetch("https://api.line.me/v2/bot/message/reply", {
     method: "POST",
     headers: {
@@ -24,14 +24,15 @@ export async function replyMessage(
     body: JSON.stringify({ replyToken, messages }),
   });
 
-  return { status: res.status, statusText: res.statusText };
+  const body = await res.text();
+  return { status: res.status, statusText: res.statusText, body };
 }
 
 export async function pushMessage(
   accessToken: string,
   userId: string,
   messages: LineMessage[],
-): Promise<{ status: number; statusText: string }> {
+): Promise<{ status: number; statusText: string; body: string }> {
   const res = await fetch("https://api.line.me/v2/bot/message/push", {
     method: "POST",
     headers: {
@@ -41,5 +42,6 @@ export async function pushMessage(
     body: JSON.stringify({ to: userId, messages }),
   });
 
-  return { status: res.status, statusText: res.statusText };
+  const body = await res.text();
+  return { status: res.status, statusText: res.statusText, body };
 }
