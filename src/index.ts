@@ -20,7 +20,7 @@ app.route("/", healthRoutes);
 // Photo upload
 app.route("/", photoRoutes);
 
-// LINE webhook — direct handler to avoid routing conflicts
+// LINE webhook
 app.post("/webhook/line", async (c) => {
   try {
     const secret = c.env.LINE_CHANNEL_SECRET;
@@ -29,7 +29,7 @@ app.post("/webhook/line", async (c) => {
     const sig = c.req.header("X-Line-Signature");
     const rawBody = await c.req.text();
 
-    // Compute HMAC using Web Crypto API
+    // Verify HMAC signature using Web Crypto API
     const key = await crypto.subtle.importKey(
       "raw",
       new TextEncoder().encode(secret),
@@ -42,15 +42,9 @@ app.post("/webhook/line", async (c) => {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    console.log(JSON.stringify({
-      received: sig?.substring(0, 16) + "...",
-      expected: expected.substring(0, 16) + "...",
-      match: sig === expected,
-      bodyLen: rawBody.length,
-    }));
-
-    if (!sig) return c.json({ error: "Missing signature" }, 401);
-    if (sig !== expected) return c.json({ error: "Invalid signature" }, 401);
+    if (!sig || sig !== expected) {
+      return c.json({ error: "Invalid signature" }, 401);
+    }
 
     const data = JSON.parse(rawBody) as { events?: Array<{
       type: string;
@@ -59,7 +53,12 @@ app.post("/webhook/line", async (c) => {
       timestamp: number;
     }> };
 
-    return c.json({ processed: (data.events ?? []).length });
+    const events = data.events ?? [];
+    console.log(`LINE webhook: ${events.length} event(s)`);
+
+    // TODO: handle each event (message, follow, unfollow, etc.)
+
+    return c.json({ processed: events.length });
   } catch (err) {
     console.error("LINE webhook error:", err);
     return c.json({ error: "Internal server error" }, 500);
