@@ -1,26 +1,70 @@
 import { Hono } from "hono";
-import { exportRoutes } from "./routes/export"; // eslint-disable-line -- verified: src/routes/export.ts exists
-import { healthRoutes } from "./routes/health"; // eslint-disable-line -- verified: src/routes/health.ts exists
-import { lineRoutes } from "./routes/line"; // eslint-disable-line -- verified: src/routes/line.ts exists
-import { photoRoutes } from "./routes/photo"; // eslint-disable-line -- verified: src/routes/photo.ts exists
-import { sponsorRoutes } from "./routes/sponsor"; // eslint-disable-line -- verified: src/routes/sponsor.ts exists
+import { exportRoutes } from "./routes/export";
+import { healthRoutes } from "./routes/health";
+import { photoRoutes } from "./routes/photo";
+import { sponsorRoutes } from "./routes/sponsor";
 
 type Bindings = {
   DB: D1Database;
   R2: R2Bucket;
   ENVIRONMENT: string;
+  LINE_CHANNEL_ACCESS_TOKEN: string;
+  LINE_CHANNEL_SECRET: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
-
-// LINE webhook
-app.route("/", lineRoutes);
 
 // Health check
 app.route("/", healthRoutes);
 
 // Photo upload
 app.route("/", photoRoutes);
+
+// LINE webhook — direct handler to avoid routing conflicts
+app.post("/webhook/line", async (c) => {
+  try {
+    const secret = c.env.LINE_CHANNEL_SECRET;
+    if (!secret) return c.json({ error: "LINE_CHANNEL_SECRET not configured" }, 500);
+
+    const sig = c.req.header("X-Line-Signature");
+    const rawBody = await c.req.text();
+
+    // Compute HMAC using Web Crypto API
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const hmacSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+    const expected = Array.from(new Uint8Array(hmacSig))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    console.log(JSON.stringify({
+      received: sig?.substring(0, 16) + "...",
+      expected: expected.substring(0, 16) + "...",
+      match: sig === expected,
+      bodyLen: rawBody.length,
+    }));
+
+    if (!sig) return c.json({ error: "Missing signature" }, 401);
+    if (sig !== expected) return c.json({ error: "Invalid signature" }, 401);
+
+    const data = JSON.parse(rawBody) as { events?: Array<{
+      type: string;
+      replyToken: string;
+      source: { userId: string; type: string };
+      timestamp: number;
+    }> };
+
+    return c.json({ processed: (data.events ?? []).length });
+  } catch (err) {
+    console.error("LINE webhook error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
 
 // Sponsor dashboard + detail
 app.route("/sponsor", sponsorRoutes);
