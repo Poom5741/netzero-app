@@ -98,10 +98,13 @@ async function handleEvent(
   switch (event.type) {
     case "follow": {
       // Send welcome + consent in a single reply (replyToken can only be used once)
-      const welcomeMsg = buildWelcomeFlex();
-      const consentMsg = buildConsentCard();
-      const replyResult = await replyMessage(token, event.replyToken, [welcomeMsg, consentMsg]);
-      console.log(`Follow reply: ${replyResult.status} ${replyResult.statusText}`);
+      const r = await replyMessage(token, event.replyToken, [
+        {
+          type: "text",
+          text: "🌱 สวัสดีค่ะ! ยินดีต้อนรับสู่ NetZeroCarbon\n\nโครงการคาร์บอนเครดิตนาข้าว AWD\n\nพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
+        },
+      ]);
+      console.log(`Follow reply: ${r.status} ${r.statusText} body=${r.body}`);
       break;
     }
 
@@ -116,136 +119,105 @@ async function handleEvent(
         .first<{ farmer_id: string; status: string }>();
 
       if (!link) {
-        // Not linked — check if they sent a phone number
-        const phoneMatch = text.replace(/[-\s]/g, "");
-        if (/^\d{10}$/.test(phoneMatch)) {
-          const farmer = await db
-            .prepare("SELECT id, full_name FROM farmers WHERE phone = ?")
-            .bind(phoneMatch)
-            .first<{ id: string; full_name: string }>();
+      // Not linked — check if they sent a phone number
+      const phoneMatch = text.replace(/[-\s]/g, "");
+      if (/^\d{10}$/.test(phoneMatch)) {
+        const farmer = await db
+          .prepare("SELECT id, full_name FROM farmers WHERE phone = ?")
+          .bind(phoneMatch)
+          .first<{ id: string; full_name: string }>();
 
-          if (farmer) {
-            const linkId = `link_${crypto.randomUUID()}`;
-            await db
-              .prepare(
-                "INSERT INTO line_links (id, farmer_id, line_user_id, status) VALUES (?, ?, ?, 'pending')",
-              )
-              .bind(linkId, farmer.id, event.source.userId)
-              .run();
+        if (farmer) {
+          const linkId = `link_${crypto.randomUUID()}`;
+          await db
+            .prepare(
+              "INSERT INTO line_links (id, farmer_id, line_user_id, status) VALUES (?, ?, ?, 'pending')",
+            )
+            .bind(linkId, farmer.id, event.source.userId)
+            .run();
 
-            await replyMessage(token, event.replyToken, [
-              {
-                type: "text",
-                text: `พบข้อมูลของคุณ ${farmer.full_name} กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ`,
-              },
-            ]);
-          } else {
-            await replyMessage(token, event.replyToken, [
-              {
-                type: "text",
-                text: "ไม่พบข้อมูลเกษตรกรในระบบ กรุณาติดต่อเจ้าหน้าที่โครงการค่ะ",
-              },
-            ]);
-          }
-          break;
+          const r = await replyMessage(token, event.replyToken, [
+            {
+              type: "text",
+              text: `พบข้อมูลของคุณ ${farmer.full_name} กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ`,
+            },
+          ]);
+          console.log(`Phone link reply: ${r.status} body=${r.body}`);
+        } else {
+          const r = await replyMessage(token, event.replyToken, [
+            {
+              type: "text",
+              text: "ไม่พบข้อมูลเกษตรกรในระบบ กรุณาติดต่อเจ้าหน้าที่โครงการค่ะ",
+            },
+          ]);
+          console.log(`Phone not found reply: ${r.status} body=${r.body}`);
         }
-
-        // Not linked — use AI to guide them
-        const aiResponse = await chatWithAi(ai, text, { linkedFarmer: false });
-        await replyMessage(token, event.replyToken, [
-          { type: "text", text: aiResponse.type === "reply" ? aiResponse.text : aiResponse.text || "กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี" },
-        ]);
         break;
       }
 
-      // Farmer is linked — gather context for AI
-      const farmer = await db
-        .prepare("SELECT full_name FROM farmers WHERE id = ?")
-        .bind(link.farmer_id)
-        .first<{ full_name: string }>();
-
-      // Get current plot (most recent)
-      const plot = await db
-        .prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
-        .bind(link.farmer_id)
-        .first<{ plot_code: string }>();
-
-      // Get current season
-      const seasonInput = await db
-        .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
-        .bind(link.farmer_id)
-        .first<{ season_id: string }>();
-
-      const aiResponse = await chatWithAi(ai, text, {
-        farmerName: farmer?.full_name,
-        plotCode: plot?.plot_code,
-        seasonId: seasonInput?.season_id,
-        linkedFarmer: true,
-      });
-
-      // Log to farmer_messages for audit trail
-      await db
-        .prepare(
-          `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed)
-           VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
-        )
-        .bind(
-          crypto.randomUUID(),
-          link.farmer_id,
-          null,
-          text,
-          JSON.stringify(aiResponse),
-        )
-        .run();
-
-      if (aiResponse.type === "reply") {
-        // Simple text reply from AI
-        const r = await replyMessage(token, event.replyToken, [
-          { type: "text", text: aiResponse.text },
-        ]);
-        console.log(`AI reply: ${r.status} ${r.statusText} body=${r.body}`);
-      } else if (aiResponse.type === "draft") {
-        // AI extracted structured data — show confirmation
-        const { category, data, text: summary } = aiResponse;
-
-        if (category === "fertilizer") {
-          const d = data as { step?: string; formula?: string; rate_kg_per_rai?: number; is_urea?: boolean };
-          const stepLabel = d.step === "base" ? "หว่าน/เตรียมดิน" : d.step === "tillering" ? "แตกกอ" : "ช่อ/รวง";
-
-          await replyMessage(token, event.replyToken, [
-            {
-              type: "text",
-              text: `📋 ${summary || "พบข้อมูลปุ๋ย"}\n\n` +
-                `ขั้นตอน: ${stepLabel}\n` +
-                `สูตร: ${d.formula || "ไม่ระบุ"}\n` +
-                `อัตรา: ${d.rate_kg_per_rai ? `${d.rate_kg_per_rai} กก./ไร่` : "ไม่ระบุ"}\n` +
-                (d.is_urea ? `⚠️ เป็นปุ๋ยยูเรีย\n` : "") +
-                `\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`,
-            },
-          ]);
-        } else if (category === "season_input") {
-          const d = data as { field?: string; value?: unknown };
-          await replyMessage(token, event.replyToken, [
-            {
-              type: "text",
-              text: `📋 ${summary || "พบข้อมูลฤดู"}\n\n` +
-                `ฟิลด์: ${d.field || "ไม่ระบุ"}\n` +
-                `ค่า: ${d.value ?? "ไม่ระบุ"}\n` +
-                `\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`,
-            },
-          ]);
-        }
+      // Not linked — prompt for phone
+      const r = await replyMessage(token, event.replyToken, [
+        {
+          type: "text",
+          text: "กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
+        },
+      ]);
+      console.log(`Prompt phone reply: ${r.status} body=${r.body}`);
+      break;
       }
 
-      // Log AI event for quota tracking
-      await db
-        .prepare(
-          `INSERT INTO ai_events (id, farmer_id, event_type, model_version, created_at)
-           VALUES (?, ?, 'chat', ?, datetime('now'))`,
-        )
-        .bind(crypto.randomUUID(), link.farmer_id, MODEL)
-        .run();
+      // Farmer is linked — use AI for conversation
+      let aiReplyText = "ได้รับข้อความแล้วค่ะ";
+      try {
+        const farmer = await db
+          .prepare("SELECT full_name FROM farmers WHERE id = ?")
+          .bind(link.farmer_id)
+          .first<{ full_name: string }>();
 
+        const plot = await db
+          .prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+          .bind(link.farmer_id)
+          .first<{ plot_code: string }>();
+
+        const seasonInput = await db
+          .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
+          .bind(link.farmer_id)
+          .first<{ season_id: string }>();
+
+        const aiResponse = await chatWithAi(ai, text, {
+          farmerName: farmer?.full_name,
+          plotCode: plot?.plot_code,
+          seasonId: seasonInput?.season_id,
+          linkedFarmer: true,
+        });
+
+        aiReplyText = aiResponse.type === "reply"
+          ? aiResponse.text
+          : aiResponse.text || "ได้รับข้อความแล้วค่ะ";
+
+        // Log to farmer_messages for audit trail
+        await db
+          .prepare(
+            `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed)
+             VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
+          )
+          .bind(
+            crypto.randomUUID(),
+            link.farmer_id,
+            null,
+            text,
+            JSON.stringify(aiResponse),
+          )
+          .run();
+      } catch (aiErr) {
+        console.error("AI chat error:", aiErr);
+        aiReplyText = "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง";
+      }
+
+      const r = await replyMessage(token, event.replyToken, [
+        { type: "text", text: aiReplyText },
+      ]);
+      console.log(`AI reply: ${r.status} body=${r.body}`);
       break;
     }
 
