@@ -14,6 +14,7 @@ type Bindings = {
   DB: D1Database;
   R2: R2Bucket;
   AI: Ai;
+  OPENROUTER_API_KEY: string;
   ENVIRONMENT: string;
   SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
@@ -93,7 +94,7 @@ async function handleEvent(
   env: Bindings,
   event: WebhookEvent,
 ): Promise<void> {
-  const { LINE_CHANNEL_ACCESS_TOKEN: token, DB: db, AI: ai } = env;
+  const { LINE_CHANNEL_ACCESS_TOKEN: token, DB: db, OPENROUTER_API_KEY: apiKey } = env;
 
   switch (event.type) {
     case "follow": {
@@ -185,7 +186,7 @@ async function handleEvent(
           .first<{ season_id: string }>();
 
         const aiStart = Date.now();
-        const aiResponse = await chatWithAi(ai, text, {
+        const aiResponse = await chatWithAi(apiKey, text, {
           farmerName: farmer?.full_name,
           plotCode: plot?.plot_code,
           seasonId: seasonInput?.season_id,

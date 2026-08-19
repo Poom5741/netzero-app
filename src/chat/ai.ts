@@ -1,11 +1,11 @@
 /**
- * AI Chat module — calls Workers AI (LLM) for farmer conversations.
+ * AI Chat module — calls OpenRouter API for farmer conversations.
  *
  * Level C: FAQ/guidance — answers questions, doesn't write to DB
  * Level A+B: Draft parser — extracts structured data from free text
  */
 
-const MODEL = "@cf/qwen/qwen3.8-27b";
+const MODEL = "relace/relace-apply-3";
 
 const SYSTEM_PROMPT = `คุณเป็นผู้ช่วยเกษตรกรในระบบ NetZeroCarbon สำหรับโครงการคาร์บอนเครดิตนาข้าว AWD (Alternate Wetting and Drying)
 
@@ -56,10 +56,10 @@ type AiDraft = {
 export type AiResponse = AiReply | AiDraft;
 
 /**
- * Call Workers AI with the farmer's message and return a structured response.
+ * Call OpenRouter API with the farmer's message and return a structured response.
  */
 export async function chatWithAi(
-  ai: Ai,
+  apiKey: string,
   userMessage: string,
   context: {
     farmerName?: string;
@@ -78,27 +78,44 @@ export async function chatWithAi(
     ? `[ข้อมูลผู้ใช้]\n${contextParts.join("\n")}\n\n[ข้อความจากเกษตรกร]\n${userMessage}`
     : userMessage;
 
-  const response = await ai.run(MODEL, {
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ],
-    max_tokens: 512,
-    temperature: 0.3,
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 512,
+      temperature: 0.3,
+    }),
   });
 
-  const rawResponse = response?.response ?? "";
+  const json = await res.json() as {
+    choices?: Array<{ message?: { content?: string } }>;
+    error?: { message?: string };
+  };
 
-  // Workers AI may return an object or a JSON string — normalize to object
+  if (json.error) {
+    console.error("OpenRouter error:", json.error);
+    return { type: "reply", text: "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง" };
+  }
+
+  const rawText = json.choices?.[0]?.message?.content ?? "";
+
+  // Try to parse as JSON
   let parsed: Record<string, unknown> | null = null;
-  if (typeof rawResponse === "object" && rawResponse !== null) {
-    parsed = rawResponse as Record<string, unknown>;
-  } else if (typeof rawResponse === "string") {
+  if (typeof rawText === "object" && rawText !== null) {
+    parsed = rawText as unknown as Record<string, unknown>;
+  } else if (typeof rawText === "string") {
     try {
-      parsed = JSON.parse(rawResponse.trim());
+      parsed = JSON.parse(rawText.trim());
     } catch {
-      // Not JSON — treat as plain text
-      return { type: "reply", text: rawResponse || "ขออภัยค่ะ ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้ง" };
+      return { type: "reply", text: rawText || "ขออภัยค่ะ ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้ง" };
     }
   }
 
@@ -122,6 +139,5 @@ export async function chatWithAi(
     }
   }
 
-  // Fallback
-  return { type: "reply", text: "ขออภัยค่ะ ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้ง" };
+  return { type: "reply", text: rawText || "ขออภัยค่ะ ไม่สามารถประมวลผลได้ กรุณาลองใหม่อีกครั้ง" };
 }
