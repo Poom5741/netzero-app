@@ -1,0 +1,13 @@
+# Cloudflare Workers environment variables
+# Copy this to .dev.vars and fill in values
+
+# Environment
+ENVIRONMENT=development
+
+# LINE Messaging API (required for webhook)
+LINE_CHANNEL_ACCESS_TOKEN=
+LINE_CHANNEL_SECRET=
+
+# AI Gateway (optional — for vision screening)
+AI_GATEWAY_URL=
+AI_API_KEY=

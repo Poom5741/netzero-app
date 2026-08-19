@@ -1,0 +1,27 @@
+{
+  "name": "netzero-carbon-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:lint": "bunx biome check src/ tests/",
+    "check:type": "bunx tsc --noEmit",
+    "check:test": "bun test --bail tests/unit/ tests/integration/",
+    "check": "bun run check:lint && bun run check:type && bun run check:test",
+    "dev": "bunx wrangler dev",
+    "deploy": "bunx wrangler deploy",
+    "db:init": "bunx wrangler d1 execute netzero --local --file=src/db/migrate.sql",
+    "db:migrate": "bunx wrangler d1 execute netzero --remote --file=src/db/migrate.sql",
+    "seed": "bun run src/db/seed.ts"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^5.20260819.1",
+    "hono": "^4.13.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.9",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
+    "vitest": "^4.1.11"
+  }
+}

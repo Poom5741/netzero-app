@@ -1,0 +1,14 @@
+[tools]
+node = "22"
+bun = "latest"
+
+[tasks]
+check = "bun run check:lint && bun run check:type && bun run check:test"
+check-lint = "bunx biome check src/ tests/"
+check-type = "bunx tsc --noEmit"
+check-test = "bun test --bail tests/unit/ tests/integration/"
+dev = "bunx wrangler dev"
+deploy = "bunx wrangler deploy"
+db-init = "bunx wrangler d1 execute netzero --local --file=src/db/migrate.sql"
+db-migrate = "bunx wrangler d1 execute netzero --remote --file=src/db/migrate.sql"
+seed = "bun run src/db/seed.ts"

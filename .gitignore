@@ -25,6 +25,10 @@ wrangler.toml.bak
 .mt-cache/
 .turbo/
 
+# ---- Agent / automation loop state (not project code) ----
+.pi-glla/
+.until-done/
+
 # ---- OS ----
 .DS_Store
 Thumbs.db

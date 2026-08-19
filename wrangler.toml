@@ -1,0 +1,19 @@
+name = "netzero-carbon-poc"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "netzero"
+database_id = "placeholder-replace-with-real-id"
+
+# R2 Bucket for photo evidence
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "netzero-photos"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "development"
