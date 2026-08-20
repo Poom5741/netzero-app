@@ -248,70 +248,72 @@ async function handleEvent(
         const rejected = await rejectDraft(db, link.farmer_id);
         aiReplyText = rejected ? "🗑️ ยกเลิกเรียบร้อยแล้วค่ะ" : "ไม่มีข้อมูลที่ต้องยกเลิกค่ะ";
       } else {
-        // Normal AI conversation
-        try {
-          const farmer = await db
-            .prepare("SELECT full_name FROM farmers WHERE id = ?")
-            .bind(link.farmer_id)
-            .first<{ full_name: string }>();
+        // Check for quick-reply patterns (skip AI for instant response)
+        const quickReplies: Record<string, string> = {
+          "สวัสดี": "สวัสดีครับ! ยินดีช่วยเหลือคุณ 🌱\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลยครับ",
+          "ช่วย": "📋 วิธีใช้งาน:\n• พิมพ์ข้อมูลปุ๋ย (เช่น ใส่ปุ๋ย 46-0-0 12 กก./ไร่)\n• พิมพ์ 'ถ่ายรูป' เพื่อเปิดกล้อง\n• ถามคำถามได้เลยครับ",
+          "ถ่ายรูป": "📸 เปิดกล้องถ่ายรูปได้ที่ลิงก์นี้:\nhttps://liff.line.me/",
+          "ราคา": "💰 ตรวจสอบราคาข้าวได้ที่ https://www.thaismep.go.th",
+          "สภาพอากาศ": "🌤️ ตรวจสอบพยากรณ์อากาศได้ที่ https://weather.tmd.go.th",
+        };
+        const matchedQuick = Object.entries(quickReplies).find(([kw]) =>
+          lowerText.includes(kw),
+        );
+        if (matchedQuick) {
+          aiReplyText = matchedQuick[1];
+        } else {
+          // Full AI conversation — parallel DB queries
+          try {
+            const [farmer, plot, seasonInput] = await Promise.all([
+              db.prepare("SELECT full_name FROM farmers WHERE id = ?").bind(link.farmer_id).first<{ full_name: string }>(),
+              db.prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(link.farmer_id).first<{ plot_code: string }>(),
+              db.prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1").bind(link.farmer_id).first<{ season_id: string }>(),
+            ]);
 
-          const plot = await db
-            .prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
-            .bind(link.farmer_id)
-            .first<{ plot_code: string }>();
-
-          const seasonInput = await db
-            .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
-            .bind(link.farmer_id)
-            .first<{ season_id: string }>();
-
-          const aiStart = Date.now();
-          const aiResponse = await chatWithAi(apiKey, text, {
-            farmerName: farmer?.full_name,
-            plotCode: plot?.plot_code,
-            seasonId: seasonInput?.season_id,
-            linkedFarmer: true,
-          });
-          const aiDuration = Date.now() - aiStart;
-          console.log(`AI call: ${aiDuration}ms, type=${aiResponse.type}`);
-
-          if (aiResponse.type === "draft") {
-            // Save pending draft and ask for confirmation
-            await savePendingDraft(db, link.farmer_id, {
-              category: aiResponse.category,
-              data: aiResponse.data,
-              text: aiResponse.text,
+            const aiStart = Date.now();
+            const aiResponse = await chatWithAi(apiKey, text, {
+              farmerName: farmer?.full_name,
+              plotCode: plot?.plot_code,
+              seasonId: seasonInput?.season_id,
+              linkedFarmer: true,
             });
-            aiReplyText = `${aiResponse.text}\n\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`;
-          } else {
-            aiReplyText = aiResponse.text || "ได้รับข้อความแล้วค่ะ";
-          }
+            console.log(`AI call: ${Date.now() - aiStart}ms, type=${aiResponse.type}`);
 
-          // Log to farmer_messages for audit trail
-          await db
-            .prepare(
-              `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed)
-               VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
-            )
-            .bind(
-              crypto.randomUUID(),
-              link.farmer_id,
-              null,
-              text,
-              JSON.stringify(aiResponse),
-            )
-            .run();
-        } catch (aiErr) {
-          console.error("AI chat error:", aiErr);
-          aiReplyText = "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง";
+            if (aiResponse.type === "draft") {
+              await savePendingDraft(db, link.farmer_id, {
+                category: aiResponse.category,
+                data: aiResponse.data,
+                text: aiResponse.text,
+              });
+              aiReplyText = `${aiResponse.text}\n\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`;
+            } else {
+              aiReplyText = aiResponse.text || "ได้รับข้อความแล้วค่ะ";
+            }
+
+            // Log to farmer_messages
+            await db.prepare(
+              `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed) VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
+            ).bind(crypto.randomUUID(), link.farmer_id, null, text, JSON.stringify(aiResponse)).run();
+          } catch (aiErr) {
+            console.error("AI chat error:", aiErr);
+            aiReplyText = "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง";
+          }
         }
       }
 
       // Send reply via push API
-      const r = await pushMessage(token, event.source.userId, [
-        { type: "text", text: aiReplyText },
-      ]);
-      console.log(`AI push: ${r.status}`);
+      try {
+        const r = await pushMessage(token, event.source.userId, [
+          { type: "text", text: aiReplyText },
+        ]);
+        console.log(`AI push: ${r.status} body=${r.body.substring(0, 100)}`);
+      } catch (pushErr) {
+        console.error("Push error:", pushErr);
+        // Fallback to reply
+        await replyMessage(token, event.replyToken, [
+          { type: "text", text: aiReplyText },
+        ]).catch(() => {});
+      }
       break;
     }
 
