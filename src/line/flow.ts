@@ -37,6 +37,21 @@ type FlowResult = {
 };
 
 /**
+ * Safe push that catches errors and logs them.
+ */
+async function safePush(token: string, userId: string, messages: Array<{ type: string; text?: string; altText?: string; contents?: unknown }>): Promise<void> {
+  try {
+    const r = await pushMessage(token, userId, messages);
+    if (r.status !== 200) {
+      console.error(`Push failed: ${r.status} ${r.body.substring(0, 200)}`);
+    }
+  } catch (err) {
+    console.error("Push error:", err);
+    // Fallback: try reply if possible
+  }
+}
+
+/**
  * Handle a message based on the farmer's current conversation state.
  */
 export async function handleFlow(ctx: FlowContext): Promise<void> {
@@ -80,7 +95,7 @@ async function handleWelcome(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
   if (["ยอมรับ", "accept", "ตกลง", "同意", "ok"].includes(lower)) {
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)" },
     ]);
     return { newState: "phone" };
@@ -88,7 +103,7 @@ async function handleWelcome(ctx: FlowContext): Promise<FlowResult> {
 
   // Show consent card again
   const consentMsg = buildConsentCard();
-  await pushMessage(ctx.token, ctx.userId, [
+  await safePush(ctx.token, ctx.userId, [
     { type: "text", text: "กรุณายอมรับเงื่อนไขก่อนใช้งาน\nพิมพ์ 'ยอมรับ' เพื่อยอมรับเงื่อนไขทั้งหมด" },
     consentMsg,
   ]);
@@ -103,7 +118,7 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
   const phone = ctx.text.replace(/[-\s]/g, "");
 
   if (!/^\d{10}$/.test(phone)) {
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: "กรุณาพิมพ์เบอร์โทรศัพท์ 10 หลัก (เช่น 0812345678)" },
     ]);
     return { newState: "phone" };
@@ -116,7 +131,7 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .first<{ id: string; full_name: string }>();
 
   if (!farmer) {
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: "ไม่พบข้อมูลเกษตรกรในระบบ\nกรุณาติดต่อเจ้าหน้าที่โครงการค่ะ" },
     ]);
     return { newState: "phone" };
@@ -129,7 +144,7 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .first<{ id: string }>();
 
   if (existingLink) {
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: "เบอร์นี้ผูกกับบัญชี LINE อื่นอยู่แล้ว\nกรุณาติดต่อเจ้าหน้าที่ค่ะ" },
     ]);
     return { newState: "phone" };
@@ -141,7 +156,7 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .bind(farmer.id, ctx.linkId)
     .run();
 
-  await pushMessage(ctx.token, ctx.userId, [
+  await safePush(ctx.token, ctx.userId, [
     { type: "text", text: `พบข้อมูลของคุณ ${farmer.full_name}\n\n⏳ กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ\nเมื่อยืนยันแล้วจะสามารถใช้งานได้ทันที` },
   ]);
   return { newState: "pending" };
@@ -163,7 +178,7 @@ async function handlePending(ctx: FlowContext): Promise<FlowResult> {
     return handlePlotSelection(ctx);
   }
 
-  await pushMessage(ctx.token, ctx.userId, [
+  await safePush(ctx.token, ctx.userId, [
     { type: "text", text: "⏳ บัญชีของท่านอยู่ระหว่างรอการยืนยัน\nกรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ" },
   ]);
   return { newState: "pending" };
@@ -181,7 +196,7 @@ async function handleSelectPlot(ctx: FlowContext): Promise<FlowResult> {
     .all<{ id: string; plot_code: string; area_rai: number }>();
 
   if (!plots.results || plots.results.length === 0) {
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: "ไม่พบแปลงนาในระบบ\nกรุณาติดต่อเจ้าหน้าที่ค่ะ" },
     ]);
     return { newState: "select_plot" };
@@ -190,7 +205,7 @@ async function handleSelectPlot(ctx: FlowContext): Promise<FlowResult> {
   if (plots.results.length === 1) {
     // Only one plot — auto-select
     const plot = plots.results[0];
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: `✅ เลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลย` },
     ]);
     return { newState: "chat", selectedPlotId: plot.id };
@@ -206,14 +221,14 @@ async function handleSelectPlot(ctx: FlowContext): Promise<FlowResult> {
 
   if (num >= 1 && num <= plots.results.length) {
     const plot = plots.results[num - 1];
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: `✅ เลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลย` },
     ]);
     return { newState: "chat", selectedPlotId: plot.id };
   }
 
   // Show plot list
-  await pushMessage(ctx.token, ctx.userId, [
+  await safePush(ctx.token, ctx.userId, [
     { type: "text", text: `📋 แปลงนาของท่าน:\n\n${plotList}\n\nพิมพ์หมายเลขเพื่อเลือกแปลง` },
   ]);
   return { newState: "select_plot" };
@@ -261,21 +276,21 @@ async function handleConfirmDraft(ctx: FlowContext): Promise<FlowResult> {
             )
             .run();
 
-          await pushMessage(ctx.token, ctx.userId, [
+          await safePush(ctx.token, ctx.userId, [
             { type: "text", text: `✅ บันทึกข้อมูลปุ๋ยเรียบร้อยแล้วค่ะ\n\nสูตร: ${d.formula}\nอัตรา: ${d.rate_kg_per_rai} กก./ไร่\nไนโตรเจน: ${nitrogenKg.toFixed(2)} กก./ไร่` },
           ]);
         } else {
-          await pushMessage(ctx.token, ctx.userId, [
+          await safePush(ctx.token, ctx.userId, [
             { type: "text", text: "❌ ไม่สามารถบันทึกได้ กรุณาลองใหม่" },
           ]);
         }
       } else {
-        await pushMessage(ctx.token, ctx.userId, [
+        await safePush(ctx.token, ctx.userId, [
           { type: "text", text: "✅ บันทึกข้อมูลเรียบร้อยแล้วค่ะ" },
         ]);
       }
     } else {
-      await pushMessage(ctx.token, ctx.userId, [
+      await safePush(ctx.token, ctx.userId, [
         { type: "text", text: "ไม่มีข้อมูลที่ต้องยืนยันค่ะ" },
       ]);
     }
@@ -285,14 +300,14 @@ async function handleConfirmDraft(ctx: FlowContext): Promise<FlowResult> {
 
   if (["ยกเลิก", "cancel", "ไม่", "ลบ"].includes(lower)) {
     const rejected = await rejectDraft(ctx.db, ctx.farmerId);
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: rejected ? "🗑️ ยกเลิกเรียบร้อยแล้วค่ะ" : "ไม่มีข้อมูลที่ต้องยกเลิกค่ะ" },
     ]);
     return { newState: "chat" };
   }
 
   // Invalid input — prompt again
-  await pushMessage(ctx.token, ctx.userId, [
+  await safePush(ctx.token, ctx.userId, [
     { type: "text", text: "พิมพ์ 'ยืนยัน' เพื่อบันทึก หรือ 'ยกเลิก' เพื่อลบ" },
   ]);
   return { newState: "confirm_draft" };
@@ -323,7 +338,7 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
     kw !== "เลือกแปลง" && kw !== "เปลี่ยนแปลง" && lower.includes(kw),
   );
   if (matchedQuick) {
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: matchedQuick[1] },
     ]);
     return { newState: "chat" };
@@ -357,14 +372,14 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
         data: aiResponse.data,
         text: aiResponse.text,
       });
-      await pushMessage(ctx.token, ctx.userId, [
+      await safePush(ctx.token, ctx.userId, [
         { type: "text", text: `${aiResponse.text}\n\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ` },
       ]);
       return { newState: "confirm_draft" };
     }
 
     // Regular reply
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: aiResponse.text || "ได้รับข้อความแล้วค่ะ" },
     ]);
 
@@ -386,7 +401,7 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
     return { newState: "chat" };
   } catch (aiErr) {
     console.error("AI chat error:", aiErr);
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง" },
     ]);
     return { newState: "chat" };
@@ -403,7 +418,7 @@ async function handlePlotSelection(ctx: FlowContext): Promise<FlowResult> {
     .all<{ id: string; plot_code: string; area_rai: number }>();
 
   if (!plots.results || plots.results.length === 0) {
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: "✅ ยืนยันบัญชีเรียบร้อยแล้วค่ะ\n\nแต่ยังไม่มีแปลงนาในระบบ\nกรุณาติดต่อเจ้าหน้าที่ค่ะ" },
     ]);
     return { newState: "select_plot" };
@@ -411,7 +426,7 @@ async function handlePlotSelection(ctx: FlowContext): Promise<FlowResult> {
 
   if (plots.results.length === 1) {
     const plot = plots.results[0];
-    await pushMessage(ctx.token, ctx.userId, [
+    await safePush(ctx.token, ctx.userId, [
       { type: "text", text: `✅ ยืนยันบัญชีเรียบร้อยแล้วค่ะ\n\nเลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลย` },
     ]);
     return { newState: "chat", selectedPlotId: plot.id };
@@ -421,7 +436,7 @@ async function handlePlotSelection(ctx: FlowContext): Promise<FlowResult> {
     .map((p, i) => `${i + 1}. ${p.plot_code} (${p.area_rai} ไร่)`)
     .join("\n");
 
-  await pushMessage(ctx.token, ctx.userId, [
+  await safePush(ctx.token, ctx.userId, [
     { type: "text", text: `✅ ยืนยันบัญชีเรียบร้อยแล้วค่ะ\n\n📋 แปลงนาของท่าน:\n${plotList}\n\nพิมพ์หมายเลขเพื่อเลือกแปลง` },
   ]);
   return { newState: "select_plot" };
