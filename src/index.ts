@@ -5,7 +5,7 @@ import { exportRoutes } from "./routes/export";
 import { healthRoutes } from "./routes/health";
 import { photoRoutes } from "./routes/photo";
 import { sponsorRoutes } from "./routes/sponsor";
-import { replyMessage } from "./line/reply";
+import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
 import { chatWithAi } from "./chat/ai";
@@ -38,6 +38,16 @@ app.route("/", authRoutes);
 
 // Health check
 app.route("/", healthRoutes);
+
+// DEBUG: test push from Worker
+app.get("/test/push", async (c) => {
+  const { pushMessage } = await import("./line/reply");
+  const token = c.env.LINE_CHANNEL_ACCESS_TOKEN;
+  const r = await pushMessage(token, "Uaedb673bdf9bec9b48b3c2c181bb0e77", [
+    { type: "text", text: "Direct push test from Worker" },
+  ]);
+  return c.json(r);
+});
 
 // Photo upload
 app.route("/", photoRoutes);
@@ -97,6 +107,14 @@ async function handleEvent(
 ): Promise<void> {
   const { LINE_CHANNEL_ACCESS_TOKEN: token, DB: db, OPENROUTER_API_KEY: apiKey } = env;
 
+  // AUDIT: log every event received
+  try {
+    await db.prepare(
+      `INSERT INTO farmer_messages (id, farmer_id, raw_text, draft_json, message_type, confirmed)
+       VALUES (?, ?, ?, ?, 'chat', 1)`
+    ).bind(crypto.randomUUID(), "farmer-001", `[event] type=${event.type} userId=${event.source?.userId}`, null).run();
+  } catch (e) { console.error("audit error:", e); }
+
   switch (event.type) {
     case "follow": {
       // Send welcome + consent in a single reply (replyToken can only be used once)
@@ -113,6 +131,23 @@ async function handleEvent(
     case "message": {
       if (event.message?.type !== "text") break;
       const text = event.message.text.trim();
+
+      // IMMEDIATE PUSH TEST - bypass all logic
+      try {
+        const pushResult = await pushMessage(token, event.source.userId, [
+          { type: "text", text: `[debug] Received: ${text}` },
+        ]);
+        await db.prepare(
+          `INSERT INTO farmer_messages (id, farmer_id, raw_text, draft_json, message_type, confirmed)
+           VALUES (?, ?, ?, ?, 'chat', 1)`
+        ).bind(crypto.randomUUID(), "farmer-001", `PUSH_OK: ${pushResult.status} ${pushResult.body.substring(0,100)}`, null).run().catch(() => {});
+      } catch (pushErr) {
+        const errMsg = pushErr instanceof Error ? pushErr.message : String(pushErr);
+        await db.prepare(
+          `INSERT INTO farmer_messages (id, farmer_id, raw_text, draft_json, message_type, confirmed)
+           VALUES (?, ?, ?, ?, 'chat', 1)`
+        ).bind(crypto.randomUUID(), "farmer-001", `PUSH_ERR: ${errMsg}`, null).run().catch(() => {});
+      }
 
       // Check if farmer is linked
       const link = await db
@@ -199,6 +234,7 @@ async function handleEvent(
 
       // Farmer is linked — handle conversation flow
       const lowerText = text.toLowerCase().trim();
+      let aiReplyText = "ได้รับข้อความแล้วค่ะ";
 
       // Check for confirm/reject commands FIRST
       if (["ยืนยัน", "confirm", "ok", "ได้", "ครับ", "ค่ะ"].includes(lowerText)) {
@@ -248,7 +284,6 @@ async function handleEvent(
         aiReplyText = rejected ? "🗑️ ยกเลิกเรียบร้อยแล้วค่ะ" : "ไม่มีข้อมูลที่ต้องยกเลิกค่ะ";
       } else {
         // Normal AI conversation
-        let aiReplyText = "ได้รับข้อความแล้วค่ะ";
         try {
           const farmer = await db
             .prepare("SELECT full_name FROM farmers WHERE id = ?")
@@ -307,10 +342,20 @@ async function handleEvent(
         }
       }
 
-      // Always use push (more reliable than reply which needs valid replyToken)
+      // Always use push (more reliable than reply)
       const r = await pushMessage(token, event.source.userId, [
         { type: "text", text: aiReplyText },
       ]);
+      // Log push result (use farmer_messages since ai_events has CHECK constraint)
+      await db.prepare(
+        `INSERT INTO farmer_messages (id, farmer_id, raw_text, draft_json, message_type, confirmed)
+         VALUES (?, ?, ?, ?, 'system', 1)`,
+      ).bind(
+        crypto.randomUUID(),
+        link.farmer_id,
+        `[push] status=${r.status} body=${r.body.substring(0, 200)}`,
+        null,
+      ).run().catch(() => {});
       console.log(`AI push: ${r.status} body=${r.body}`);
       break;
     }
