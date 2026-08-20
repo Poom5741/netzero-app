@@ -8,18 +8,17 @@ import { sponsorRoutes } from "./routes/sponsor";
 import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
-import { chatWithAi } from "./chat/ai";
-import { getPendingDraft, savePendingDraft, confirmDraft, rejectDraft } from "./chat/state";
+import { handleFlow, type ConversationState } from "./line/flow";
 
 type Bindings = {
   DB: D1Database;
   R2: R2Bucket;
   AI: Ai;
-  OPENROUTER_API_KEY: string;
   ENVIRONMENT: string;
   SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
   LINE_CHANNEL_SECRET: string;
+  OPENROUTER_API_KEY: string;
 };
 
 type WebhookEvent = {
@@ -67,10 +66,8 @@ app.post("/webhook/line", async (c) => {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    // Signature verification — log mismatch but always process
-    // TODO: tighten after confirming LINE's request format
     if (!sig || sig !== expected) {
-      console.log(`SIG_MISMATCH: got=${sig || "none"} exp=${expected} len=${rawBody.length}`);
+      console.log(`SIG_MISMATCH: got=${sig || "none"} exp=${expected.substring(0, 16)}`);
     }
 
     const data = JSON.parse(rawBody) as { events?: WebhookEvent[] };
@@ -91,22 +88,35 @@ app.post("/webhook/line", async (c) => {
 });
 
 // Event dispatcher
-async function handleEvent(
-  env: Bindings,
-  event: WebhookEvent,
-): Promise<void> {
+async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
   const { LINE_CHANNEL_ACCESS_TOKEN: token, DB: db, OPENROUTER_API_KEY: apiKey } = env;
 
   switch (event.type) {
     case "follow": {
-      // Send welcome + consent in a single reply (replyToken can only be used once)
-      const r = await replyMessage(token, event.replyToken, [
-        {
-          type: "text",
-          text: "🌱 สวัสดีค่ะ! ยินดีต้อนรับสู่ NetZeroCarbon\n\nโครงการคาร์บอนเครดิตนาข้าว AWD\n\nพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
-        },
-      ]);
-      console.log(`Follow reply: ${r.status} ${r.statusText} body=${r.body}`);
+      // Send welcome Flex message
+      const welcomeMsg = buildWelcomeFlex();
+      const consentMsg = buildConsentCard();
+      await replyMessage(token, event.replyToken, [welcomeMsg, consentMsg]);
+
+      // Create or update link with welcome state
+      const existingLink = await db
+        .prepare("SELECT id FROM line_links WHERE line_user_id = ?")
+        .bind(event.source.userId)
+        .first<{ id: string }>();
+
+      if (existingLink) {
+        await db
+          .prepare("UPDATE line_links SET conversation_state = 'welcome' WHERE id = ?")
+          .bind(existingLink.id)
+          .run();
+      } else {
+        await db
+          .prepare(
+            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
+          )
+          .bind(`link_${crypto.randomUUID()}`, "farmer-001", event.source.userId)
+          .run();
+      }
       break;
     }
 
@@ -114,206 +124,43 @@ async function handleEvent(
       if (event.message?.type !== "text") break;
       const text = event.message.text.trim();
 
-      // Check if farmer is linked
-      const link = await db
-        .prepare("SELECT farmer_id, status FROM line_links WHERE line_user_id = ?")
+      // Get or create link
+      let link = await db
+        .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
         .bind(event.source.userId)
-        .first<{ farmer_id: string; status: string }>();
+        .first<{ id: string; farmer_id: string; status: string; conversation_state: ConversationState; selected_plot_id: string | null }>();
 
-      // GUARDRAIL: Not linked — only allow phone number input, no AI
       if (!link) {
-        const phoneMatch = text.replace(/[-\s]/g, "");
-        if (/^\d{10}$/.test(phoneMatch)) {
-          const farmer = await db
-            .prepare("SELECT id, full_name FROM farmers WHERE phone = ?")
-            .bind(phoneMatch)
-            .first<{ id: string; full_name: string }>();
+        // New user — create link in welcome state
+        const linkId = `link_${crypto.randomUUID()}`;
+        await db
+          .prepare(
+            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
+          )
+          .bind(linkId, "farmer-001", event.source.userId)
+          .run();
 
-          if (farmer) {
-            const linkId = `link_${crypto.randomUUID()}`;
-            await db
-              .prepare(
-                "INSERT INTO line_links (id, farmer_id, line_user_id, status) VALUES (?, ?, ?, 'pending')",
-              )
-              .bind(linkId, farmer.id, event.source.userId)
-              .run();
-
-            const r = await replyMessage(token, event.replyToken, [
-              {
-                type: "text",
-                text: `พบข้อมูลของคุณ ${farmer.full_name} กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ`,
-              },
-            ]);
-            console.log(`Phone link reply: ${r.status} body=${r.body}`);
-          } else {
-            const r = await replyMessage(token, event.replyToken, [
-              {
-                type: "text",
-                text: "ไม่พบข้อมูลเกษตรกรในระบบ กรุณาติดต่อเจ้าหน้าที่โครงการค่ะ",
-              },
-            ]);
-            console.log(`Phone not found reply: ${r.status} body=${r.body}`);
-          }
-          break;
-        }
-
-        // Not linked, not a phone number — prompt for phone only
-        const r = await replyMessage(token, event.replyToken, [
-          {
-            type: "text",
-            text: "กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
-          },
-        ]);
-        console.log(`Prompt phone reply: ${r.status} body=${r.body}`);
-        break;
-      }
-
-      // GUARDRAIL: Linked but not verified — block AI access
-      if (link.status !== "verified") {
-        const r = await replyMessage(token, event.replyToken, [
-          {
-            type: "text",
-            text: "⚠️ บัญชีของท่านอยู่ระหว่างรอการยืนยันจากเจ้าหน้าที่\nกรุณารอการยืนยันก่อนใช้งาน",
-          },
-        ]);
-        console.log(`Pending link reply: ${r.status} body=${r.body}`);
-        break;
-      }
-
-      // GUARDRAIL: Check token quota (max 50 messages per farmer per season)
-      const msgCount = await db
-        .prepare("SELECT COUNT(*) as cnt FROM farmer_messages WHERE farmer_id = ? AND message_type = 'chat'")
-        .bind(link.farmer_id)
-        .first<{ cnt: number }>();
-
-      if (msgCount && msgCount.cnt >= 50) {
-        const r = await replyMessage(token, event.replyToken, [
-          {
-            type: "text",
-            text: "⚠️ คุณใช้โควตาข้อความครบแล้วในฤดูนี้ กรุณาติดต่อเจ้าหน้าที่",
-          },
-        ]);
-        console.log(`Quota exceeded reply: ${r.status} body=${r.body}`);
-        break;
-      }
-
-      // Farmer is linked — handle conversation flow
-      const lowerText = text.toLowerCase().trim();
-      let aiReplyText = "ได้รับข้อความแล้วค่ะ";
-
-      // Check for confirm/reject commands FIRST
-      if (["ยืนยัน", "confirm", "ok", "ได้", "ครับ", "ค่ะ"].includes(lowerText)) {
-        const confirmed = await confirmDraft(db, link.farmer_id);
-        if (confirmed) {
-          const { category, data } = confirmed;
-          if (category === "fertilizer") {
-            const d = data as { step?: string; formula?: string; rate_kg_per_rai?: number; is_urea?: boolean };
-            // Save to fertilizer_entries
-            const plot = await db
-              .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
-              .bind(link.farmer_id)
-              .first<{ id: string }>();
-            if (plot && d.formula && d.rate_kg_per_rai) {
-              const nitrogenKg = d.is_urea
-                ? d.rate_kg_per_rai * 0.46
-                : d.rate_kg_per_rai * 0.16;
-              await db
-                .prepare(
-                  `INSERT INTO fertilizer_entries (id, plot_id, season_id, step, formula, rate_kg_per_rai, percent_n, nitrogen_kg_per_rai, is_urea, confirmed)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-                )
-                .bind(
-                  crypto.randomUUID(),
-                  plot.id,
-                  "2568-napi",
-                  d.step || "base",
-                  d.formula,
-                  d.rate_kg_per_rai,
-                  d.is_urea ? 46 : 16,
-                  nitrogenKg,
-                  d.is_urea ? 1 : 0,
-                )
-                .run();
-              aiReplyText = `✅ บันทึกข้อมูลปุ๋ยเรียบร้อยแล้วค่ะ\n\nสูตร: ${d.formula}\nอัตรา: ${d.rate_kg_per_rai} กก./ไร่\nไนโตรเจน: ${nitrogenKg.toFixed(2)} กก./ไร่`;
-            } else {
-              aiReplyText = "❌ ไม่สามารถบันทึกได้ กรุณาลองใหม่";
-            }
-          } else if (category === "season_input") {
-            aiReplyText = `✅ บันทึกข้อมูลเรียบร้อยแล้วค่ะ`;
-          }
-        } else {
-          aiReplyText = "ไม่มีข้อมูลที่ต้องยืนยันค่ะ";
-        }
-      } else if (["ยกเลิก", "cancel", "ไม่", "ลบ"].includes(lowerText)) {
-        const rejected = await rejectDraft(db, link.farmer_id);
-        aiReplyText = rejected ? "🗑️ ยกเลิกเรียบร้อยแล้วค่ะ" : "ไม่มีข้อมูลที่ต้องยกเลิกค่ะ";
-      } else {
-        // Check for quick-reply patterns (skip AI for instant response)
-        const quickReplies: Record<string, string> = {
-          "สวัสดี": "สวัสดีครับ! ยินดีช่วยเหลือคุณ 🌱\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลยครับ",
-          "ช่วย": "📋 วิธีใช้งาน:\n• พิมพ์ข้อมูลปุ๋ย (เช่น ใส่ปุ๋ย 46-0-0 12 กก./ไร่)\n• พิมพ์ 'ถ่ายรูป' เพื่อเปิดกล้อง\n• ถามคำถามได้เลยครับ",
-          "ถ่ายรูป": "📸 เปิดกล้องถ่ายรูปได้ที่ลิงก์นี้:\nhttps://liff.line.me/",
-          "ราคา": "💰 ตรวจสอบราคาข้าวได้ที่ https://www.thaismep.go.th",
-          "สภาพอากาศ": "🌤️ ตรวจสอบพยากรณ์อากาศได้ที่ https://weather.tmd.go.th",
+        link = {
+          id: linkId,
+          farmer_id: "farmer-001",
+          status: "pending",
+          conversation_state: "welcome",
+          selected_plot_id: null,
         };
-        const matchedQuick = Object.entries(quickReplies).find(([kw]) =>
-          lowerText.includes(kw),
-        );
-        if (matchedQuick) {
-          aiReplyText = matchedQuick[1];
-        } else {
-          // Full AI conversation — parallel DB queries
-          try {
-            const [farmer, plot, seasonInput] = await Promise.all([
-              db.prepare("SELECT full_name FROM farmers WHERE id = ?").bind(link.farmer_id).first<{ full_name: string }>(),
-              db.prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(link.farmer_id).first<{ plot_code: string }>(),
-              db.prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1").bind(link.farmer_id).first<{ season_id: string }>(),
-            ]);
-
-            const aiStart = Date.now();
-            const aiResponse = await chatWithAi(apiKey, text, {
-              farmerName: farmer?.full_name,
-              plotCode: plot?.plot_code,
-              seasonId: seasonInput?.season_id,
-              linkedFarmer: true,
-            });
-            console.log(`AI call: ${Date.now() - aiStart}ms, type=${aiResponse.type}`);
-
-            if (aiResponse.type === "draft") {
-              await savePendingDraft(db, link.farmer_id, {
-                category: aiResponse.category,
-                data: aiResponse.data,
-                text: aiResponse.text,
-              });
-              aiReplyText = `${aiResponse.text}\n\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`;
-            } else {
-              aiReplyText = aiResponse.text || "ได้รับข้อความแล้วค่ะ";
-            }
-
-            // Log to farmer_messages
-            await db.prepare(
-              `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed) VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
-            ).bind(crypto.randomUUID(), link.farmer_id, null, text, JSON.stringify(aiResponse)).run();
-          } catch (aiErr) {
-            console.error("AI chat error:", aiErr);
-            aiReplyText = "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง";
-          }
-        }
       }
 
-      // Send reply via push API
-      try {
-        const r = await pushMessage(token, event.source.userId, [
-          { type: "text", text: aiReplyText },
-        ]);
-        console.log(`AI push: ${r.status} body=${r.body.substring(0, 100)}`);
-      } catch (pushErr) {
-        console.error("Push error:", pushErr);
-        // Fallback to reply
-        await replyMessage(token, event.replyToken, [
-          { type: "text", text: aiReplyText },
-        ]).catch(() => {});
-      }
+      // Handle via state machine
+      await handleFlow({
+        db,
+        token,
+        apiKey,
+        userId: event.source.userId,
+        linkId: link.id,
+        farmerId: link.farmer_id,
+        state: link.conversation_state,
+        selectedPlotId: link.selected_plot_id,
+        text,
+      });
       break;
     }
 
@@ -323,8 +170,6 @@ async function handleEvent(
     }
   }
 }
-
-const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 // Sponsor dashboard + detail
 app.route("/sponsor", sponsorRoutes);
