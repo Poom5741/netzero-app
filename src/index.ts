@@ -20,6 +20,7 @@ type Bindings = {
   LINE_CHANNEL_ACCESS_TOKEN: string;
   LINE_CHANNEL_SECRET: string;
   OPENROUTER_API_KEY: string;
+  LIFF_ID: string;
 };
 
 type WebhookEvent = {
@@ -100,10 +101,37 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
 
   switch (event.type) {
     case "follow": {
-      // Send welcome Flex message
-      const welcomeMsg = buildWelcomeFlex();
-      const consentMsg = buildConsentCard();
-      await replyMessage(token, event.replyToken, [welcomeMsg, consentMsg]);
+      const liffUrl = `https://liff.line.me/${env.LIFF_ID || ""}`;
+
+      // Send welcome with LIFF button
+      const welcomeFlex = {
+        type: "flex" as const,
+        altText: "ยินดีต้อนรับสู่ NetZeroCarbon",
+        contents: {
+          type: "bubble",
+          contents: [
+            { type: "text", text: "🌱 NetZeroCarbon", weight: "bold", size: "xl" },
+            { type: "text", text: "ผู้ช่วยเกษตรกรโครงการคาร์บอนเครดิต AWD", size: "sm", wrap: true, margin: "md" },
+            { type: "text", text: "─", separator: true, margin: "md" },
+            {
+              type: "text",
+              text: "เปิดแอปเพื่อกรอกข้อมูลการทำนา ถ่ายรูปหลักฐาน และดูคาร์บอนเครดิตของท่าน",
+              size: "md", wrap: true, margin: "md",
+            },
+            {
+              type: "button",
+              action: { type: "uri", label: "เปิดแอป NetZeroCarbon", uri: liffUrl },
+              style: "primary",
+              color: "#06c755",
+              margin: "lg",
+            },
+            { type: "text", text: "─", separator: true, margin: "md" },
+            { type: "text", text: "หรือพิมพ์เบอร์โทรศัพท์เพื่อผูกบัญชีในแชทนี้", size: "xs", wrap: true, margin: "sm" },
+          ],
+        },
+      };
+
+      await replyMessage(token, event.replyToken, [welcomeFlex]);
 
       // Create or update link with welcome state
       const existingLink = await db
