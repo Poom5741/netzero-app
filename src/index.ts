@@ -133,13 +133,19 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
 
       await replyMessage(token, event.replyToken, [welcomeFlex]);
 
-      // Create or update link with welcome state
+      // Check if already verified — keep their state
       const existingLink = await db
-        .prepare("SELECT id FROM line_links WHERE line_user_id = ?")
+        .prepare("SELECT id, status, conversation_state FROM line_links WHERE line_user_id = ?")
         .bind(event.source.userId)
-        .first<{ id: string }>();
+        .first<{ id: string; status: string; conversation_state: string }>();
 
       if (existingLink) {
+        if (existingLink.status === "verified") {
+          // Already verified — just send LIFF button, keep state
+          await replyMessage(token, event.replyToken, [welcomeFlex]);
+          return;
+        }
+        // Not yet verified — reset to welcome
         await db
           .prepare("UPDATE line_links SET conversation_state = 'welcome' WHERE id = ?")
           .bind(existingLink.id)
