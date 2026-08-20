@@ -5,6 +5,7 @@ import { exportRoutes } from "./routes/export";
 import { healthRoutes } from "./routes/health";
 import { photoRoutes } from "./routes/photo";
 import { sponsorRoutes } from "./routes/sponsor";
+import { liffRoutes } from "./routes/liff";
 import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
@@ -32,31 +33,17 @@ type WebhookEvent = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+// LIFF chat app
+app.route("/", liffRoutes);
+
 // Auth (login/logout)
 app.route("/", authRoutes);
 
 // Health check
 app.route("/", healthRoutes);
 
-// Debug: test handleFlow directly
-app.get("/debug/flow-test", async (c) => {
-  const db = c.env.DB;
-  const token = c.env.LINE_CHANNEL_ACCESS_TOKEN;
-  const apiKey = c.env.OPENROUTER_API_KEY;
-  const { handleFlow } = await import("./line/flow");
-  await handleFlow({
-    db,
-    token,
-    apiKey,
-    userId: "Uaedb673bdf9bec9b48b3c2c181bb0e77",
-    linkId: "test",
-    farmerId: "farmer-004",
-    state: "chat",
-    selectedPlotId: "plot-004",
-    text: "flow test",
-  });
-  return c.json({ ok: true });
-});
+// LIFF chat app
+app.route("/", liffRoutes);
 
 // Photo upload
 app.route("/", photoRoutes);

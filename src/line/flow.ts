@@ -442,3 +442,168 @@ async function handlePlotSelection(ctx: FlowContext): Promise<FlowResult> {
   ], ctx.db, ctx.farmerId);
   return { newState: "select_plot" };
 }
+
+// ===== API Mode (for LIFF) — returns reply text instead of pushing =====
+
+export type FlowApiResult = {
+  reply: string;
+  newState: ConversationState;
+  selectedPlotId?: string | null;
+};
+
+/**
+ * Handle flow for API mode — returns reply text instead of pushing.
+ * Used by LIFF chat app.
+ */
+export async function handleFlowApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const { state } = ctx;
+
+  switch (state) {
+    case "welcome": return handleWelcomeApi(ctx);
+    case "phone": return handlePhoneApi(ctx);
+    case "pending": return handlePendingApi(ctx);
+    case "select_plot": return handleSelectPlotApi(ctx);
+    case "confirm_draft": return handleConfirmDraftApi(ctx);
+    case "chat":
+    default: return handleChatApi(ctx);
+  }
+}
+
+async function handleWelcomeApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const lower = ctx.text.toLowerCase().trim();
+  if (["ยอมรับ", "accept", "ตกลง", "同意", "ok"].includes(lower)) {
+    await ctx.db.prepare("UPDATE line_links SET conversation_state = 'phone' WHERE id = ?").bind(ctx.linkId).run();
+    return { reply: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)", newState: "phone" };
+  }
+  return { reply: "กรุณายอมรับเงื่อนไขก่อนใช้งาน\nพิมพ์ 'ยอมรับ' เพื่อยอมรับเงื่อนไขทั้งหมด", newState: "welcome" };
+}
+
+async function handlePhoneApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const phone = ctx.text.replace(/[-\s]/g, "");
+  if (!/^\d{10}$/.test(phone)) {
+    return { reply: "กรุณาพิมพ์เบอร์โทรศัพท์ 10 หลัก (เช่น 0812345678)", newState: "phone" };
+  }
+
+  const farmer = await ctx.db.prepare("SELECT id, full_name FROM farmers WHERE phone = ?").bind(phone).first<{ id: string; full_name: string }>();
+  if (!farmer) {
+    return { reply: "ไม่พบข้อมูลเกษตรกรในระบบ\nกรุณาติดต่อเจ้าหน้าที่โครงการค่ะ", newState: "phone" };
+  }
+
+  await ctx.db.prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'pending' WHERE id = ?").bind(farmer.id, ctx.linkId).run();
+  return { reply: `พบข้อมูลของคุณ ${farmer.full_name}\n\n⏳ กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ`, newState: "pending" };
+}
+
+async function handlePendingApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const link = await ctx.db.prepare("SELECT status FROM line_links WHERE id = ?").bind(ctx.linkId).first<{ status: string }>();
+  if (link?.status === "verified") {
+    return handlePlotSelectionApi(ctx);
+  }
+  return { reply: "⏳ บัญชีของท่านอยู่ระหว่างรอการยืนยัน\nกรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ", newState: "pending" };
+}
+
+async function handleSelectPlotApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const plots = await ctx.db.prepare("SELECT id, plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY plot_code").bind(ctx.farmerId).all<{ id: string; plot_code: string; area_rai: number }>();
+
+  if (!plots.results || plots.results.length === 0) {
+    return { reply: "ไม่พบแปลงนาในระบบ\nกรุณาติดต่อเจ้าหน้าที่ค่ะ", newState: "select_plot" };
+  }
+
+  if (plots.results.length === 1) {
+    const plot = plots.results[0];
+    await ctx.db.prepare("UPDATE line_links SET selected_plot_id = ?, conversation_state = 'chat' WHERE id = ?").bind(plot.id, ctx.linkId).run();
+    return { reply: `✅ เลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ`, newState: "chat", selectedPlotId: plot.id };
+  }
+
+  const num = parseInt(ctx.text.trim(), 10);
+  if (num >= 1 && num <= plots.results.length) {
+    const plot = plots.results[num - 1];
+    await ctx.db.prepare("UPDATE line_links SET selected_plot_id = ?, conversation_state = 'chat' WHERE id = ?").bind(plot.id, ctx.linkId).run();
+    return { reply: `✅ เลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ`, newState: "chat", selectedPlotId: plot.id };
+  }
+
+  const plotList = plots.results.map((p, i) => `${i + 1}. ${p.plot_code} (${p.area_rai} ไร่)`).join("\n");
+  return { reply: `📋 แปลงนาของท่าน:\n\n${plotList}\n\nพิมพ์หมายเลขเพื่อเลือกแปลง`, newState: "select_plot" };
+}
+
+async function handleConfirmDraftApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const lower = ctx.text.toLowerCase().trim();
+
+  if (["ยืนยัน", "confirm", "ok", "ได้", "ครับ", "ค่ะ"].includes(lower)) {
+    const confirmed = await confirmDraft(ctx.db, ctx.farmerId);
+    if (confirmed) {
+      const { category, data } = confirmed;
+      if (category === "fertilizer") {
+        const d = data as { step?: string; formula?: string; rate_kg_per_rai?: number; is_urea?: boolean };
+        const plot = await ctx.db.prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first<{ id: string }>();
+        if (plot && d.formula && d.rate_kg_per_rai) {
+          const nitrogenKg = d.is_urea ? d.rate_kg_per_rai * 0.46 : d.rate_kg_per_rai * 0.16;
+          await ctx.db.prepare(`INSERT INTO fertilizer_entries (id, plot_id, season_id, step, formula, rate_kg_per_rai, percent_n, nitrogen_kg_per_rai, is_urea, confirmed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`).bind(crypto.randomUUID(), ctx.selectedPlotId || plot.id, "2568-napi", d.step || "base", d.formula, d.rate_kg_per_rai, d.is_urea ? 46 : 16, nitrogenKg, d.is_urea ? 1 : 0).run();
+          return { reply: `✅ บันทึกข้อมูลปุ๋ยเรียบร้อยแล้วค่ะ\n\nสูตร: ${d.formula}\nอัตรา: ${d.rate_kg_per_rai} กก./ไร่\nไนโตรเจน: ${nitrogenKg.toFixed(2)} กก./ไร่`, newState: "chat" };
+        }
+        return { reply: "❌ ไม่สามารถบันทึกได้ กรุณาลองใหม่", newState: "chat" };
+      }
+      return { reply: "✅ บันทึกข้อมูลเรียบร้อยแล้วค่ะ", newState: "chat" };
+    }
+    return { reply: "ไม่มีข้อมูลที่ต้องยืนยันค่ะ", newState: "chat" };
+  }
+
+  if (["ยกเลิก", "cancel", "ไม่", "ลบ"].includes(lower)) {
+    const rejected = await rejectDraft(ctx.db, ctx.farmerId);
+    return { reply: rejected ? "🗑️ ยกเลิกเรียบร้อยแล้วค่ะ" : "ไม่มีข้อมูลที่ต้องยกเลิกค่ะ", newState: "chat" };
+  }
+
+  return { reply: "พิมพ์ 'ยืนยัน' เพื่อบันทึก หรือ 'ยกเลิก' เพื่อลบ", newState: "confirm_draft" };
+}
+
+async function handleChatApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const lower = ctx.text.toLowerCase().trim();
+
+  // Quick replies
+  if (lower.includes("เลือกแปลง") || lower.includes("เปลี่ยนแปลง")) {
+    return handleSelectPlotApi(ctx);
+  }
+
+  const quickReplies: Record<string, string> = {
+    "สวัสดี": "สวัสดีครับ! ยินดีช่วยเหลือคุณ 🌱\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลยครับ",
+    "ช่วย": "📋 วิธีใช้งาน:\n• พิมพ์ข้อมูลปุ๋ย (เช่น ใส่ปุ๋ย 46-0-0 12 กก./ไร่)\n• พิมพ์ 'ถ่ายรูป' เพื่อเปิดกล้อง\n• ถามคำถามได้เลยครับ",
+    "ถ่ายรูป": "📸 ถ่ายรูปหลักฐานได้เลยค่ะ\nเปิดกล้องจากเมนูด้านล่าง",
+  };
+
+  const matched = Object.entries(quickReplies).find(([kw]) => lower.includes(kw));
+  if (matched) return { reply: matched[1], newState: "chat" };
+
+  // AI conversation
+  try {
+    const [farmer, plot, seasonInput] = await Promise.all([
+      ctx.db.prepare("SELECT full_name FROM farmers WHERE id = ?").bind(ctx.farmerId).first<{ full_name: string }>(),
+      ctx.selectedPlotId
+        ? ctx.db.prepare("SELECT plot_code FROM plots WHERE id = ?").bind(ctx.selectedPlotId).first<{ plot_code: string }>()
+        : ctx.db.prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first<{ plot_code: string }>(),
+      ctx.db.prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first<{ season_id: string }>(),
+    ]);
+
+    const aiResponse = await chatWithAi(ctx.apiKey, ctx.text, {
+      farmerName: farmer?.full_name,
+      plotCode: plot?.plot_code,
+      seasonId: seasonInput?.season_id,
+      linkedFarmer: true,
+    });
+
+    if (aiResponse.type === "draft") {
+      const { savePendingDraft } = await import("../chat/state");
+      await savePendingDraft(ctx.db, ctx.farmerId, {
+        category: aiResponse.category,
+        data: aiResponse.data,
+        text: aiResponse.text,
+      });
+      await ctx.db.prepare(`INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed) VALUES (?, ?, ?, ?, ?, 'chat', 0)`).bind(crypto.randomUUID(), ctx.farmerId, ctx.selectedPlotId, ctx.text, JSON.stringify(aiResponse)).run();
+      return { reply: `${aiResponse.text}\n\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`, newState: "confirm_draft" };
+    }
+
+    await ctx.db.prepare(`INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed) VALUES (?, ?, ?, ?, ?, 'chat', 0)`).bind(crypto.randomUUID(), ctx.farmerId, ctx.selectedPlotId, ctx.text, JSON.stringify(aiResponse)).run();
+    return { reply: aiResponse.text || "ได้รับข้อความแล้วค่ะ", newState: "chat" };
+  } catch (err) {
+    console.error("AI error:", err);
+    return { reply: "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง", newState: "chat" };
+  }
+}

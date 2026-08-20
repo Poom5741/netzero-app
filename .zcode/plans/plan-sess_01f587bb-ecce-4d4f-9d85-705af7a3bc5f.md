@@ -1,49 +1,61 @@
-## LINE Bot Flow Redesign — Implementation Plan
+## LIFF Chat POC — Plan
 
-### 1. Database Schema Change
-Add to `line_links` table:
-- `conversation_state TEXT DEFAULT 'welcome'` — tracks farmer's current step
-- `selected_plot_id TEXT` — which plot the farmer is working on
+### What We're Building
+A LIFF web app that runs inside LINE, with a chat interface. Farmer types messages → direct API call to our Worker → instant AI response. No webhook delays, no push API.
 
-### 2. New File: `src/line/flow.ts` — State Machine
-State handler that dispatches based on `conversation_state`:
-
-| State | Input | Action | Next State |
-|-------|-------|--------|------------|
-| `welcome` | "ยอมรับ" / consent keywords | Save consent, prompt phone | `phone` |
-| `phone` | 10-digit phone | Match farmer, create link | `pending` |
-| `pending` | Any | "รอการยืนยัน" | (stays) |
-| `select_plot` | Plot number | Set selected_plot_id | `chat` |
-| `chat` | Any text | AI or quick reply | `chat` or `confirm_draft` |
-| `confirm_draft` | "ยืนยัน"/"ยกเลิก" | Save/discard draft | `chat` |
-
-### 3. Rewrite `src/index.ts` Message Handler
-Replace monolithic handler with state machine dispatch:
+### Architecture
 ```
-getLink → get state → handleState(state, text, event)
+Farmer opens LIFF in LINE
+    ↓
+LIFF app (HTML/JS served by Worker)
+    ↓ POST /api/chat
+Worker (Hono) → OpenRouter AI → JSON response
+    ↓
+LIFF renders response in chat UI
 ```
 
-### 4. Wire Existing Modules
-- `line/welcome.ts` → Welcome Flex on follow
-- `line/consent.ts` → Consent card
-- `line/phone-match.ts` → Phone matching
-- `line/reply.ts` → Reply/Push API
-- `chat/ai.ts` → AI conversation
-- `chat/state.ts` → Draft management
+### Components
 
-### 5. Plot Selection (Chat-based)
-When farmer reaches `select_plot`:
-1. Query farmer's plots from DB
-2. Send numbered list: "1. 99999-1 (10 ไร่)\n2. 88888-1 (15 ไร่)"
-3. Farmer types "1" or "2"
-4. Save selected_plot_id, move to `chat`
+#### 1. LIFF App (HTML/JS served from Worker)
+- Single HTML page with chat interface
+- LIFF SDK for LINE user identification
+- Sends messages via `fetch("/api/chat", { body: { text, userId } })`
+- Displays responses in chat bubbles
+- Thai UI, mobile-first
 
-### 6. Cleanup
-Remove unused files: webhook.ts, crypto.ts, faq.ts, parser.ts, quota.ts, audit.ts
+#### 2. Chat API Endpoint (`POST /api/chat`)
+- Receives `{ text, userId }` from LIFF
+- Looks up farmer by LINE userId
+- Routes through state machine (same flow.ts logic)
+- Returns `{ reply: string }` — no push needed
+
+#### 3. Existing Backend (reuse)
+- `src/line/flow.ts` — state machine (adapt to return reply instead of push)
+- `src/chat/ai.ts` — OpenRouter AI
+- `src/chat/state.ts` — draft management
+- D1 database — farmer data
+
+### Files to Create
+1. `public/index.html` — LIFF chat app (HTML/CSS/JS)
+2. `src/routes/liff.ts` — serves the LIFF app + chat API
+
+### Files to Modify
+1. `wrangler.toml` — add static asset serving
+2. `src/line/flow.ts` — add `handleFlowApi()` that returns reply text instead of pushing
+
+### LIFF App ID
+Need to create a LIFF app in LINE Developers Console and set the LIFF_ID as an env var.
+
+### Flow
+1. Farmer opens LIFF app in LINE
+2. LIFF SDK gets LINE userId
+3. App shows chat interface
+4. Farmer types message → POST /api/chat
+5. Worker processes via state machine → returns reply
+6. App displays reply in chat
 
 ### Expected Result
-- Clear, maintainable state machine
-- Follow → Consent → Phone → Verify → Select Plot → Chat → Confirm flow
-- Each state has explicit allowed inputs and transitions
-- Plot selection via chat (text list + number)
-- No LIFF required for core flow
+- Instant responses (no webhook delay)
+- Rich chat UI (bubbles, timestamps, typing indicator)
+- Same state machine logic (welcome → phone → verify → select_plot → chat)
+- Easy to extend with photo/forms later
