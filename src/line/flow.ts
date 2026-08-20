@@ -37,17 +37,18 @@ type FlowResult = {
 };
 
 /**
- * Safe push that catches errors and logs them.
+ * Safe push that catches errors and logs to D1.
  */
-async function safePush(token: string, userId: string, messages: Array<{ type: string; text?: string; altText?: string; contents?: unknown }>): Promise<void> {
+async function safePush(
+  ctx: FlowContext,
+  messages: Array<{ type: string; text?: string; altText?: string; contents?: unknown }>,
+): Promise<void> {
   try {
-    const r = await pushMessage(token, userId, messages);
-    if (r.status !== 200) {
-      console.error(`Push failed: ${r.status} ${r.body.substring(0, 200)}`);
-    }
+    const r = await pushMessage(ctx.token, ctx.userId, messages);
+    console.log(`[PUSH] status=${r.status} body=${r.body.substring(0, 100)}`);
   } catch (err) {
-    console.error("Push error:", err);
-    // Fallback: try reply if possible
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[PUSH_ERR] ${errMsg}`);
   }
 }
 
@@ -95,18 +96,18 @@ async function handleWelcome(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
   if (["ยอมรับ", "accept", "ตกลง", "同意", "ok"].includes(lower)) {
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "phone" };
   }
 
   // Show consent card again
   const consentMsg = buildConsentCard();
-  await safePush(ctx.token, ctx.userId, [
+  await safePush(ctx, [
     { type: "text", text: "กรุณายอมรับเงื่อนไขก่อนใช้งาน\nพิมพ์ 'ยอมรับ' เพื่อยอมรับเงื่อนไขทั้งหมด" },
     consentMsg,
-  ]);
+  ], ctx.db, ctx.farmerId);
   return { newState: "welcome" };
 }
 
@@ -118,9 +119,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
   const phone = ctx.text.replace(/[-\s]/g, "");
 
   if (!/^\d{10}$/.test(phone)) {
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: "กรุณาพิมพ์เบอร์โทรศัพท์ 10 หลัก (เช่น 0812345678)" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "phone" };
   }
 
@@ -131,9 +132,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .first<{ id: string; full_name: string }>();
 
   if (!farmer) {
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: "ไม่พบข้อมูลเกษตรกรในระบบ\nกรุณาติดต่อเจ้าหน้าที่โครงการค่ะ" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "phone" };
   }
 
@@ -144,9 +145,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .first<{ id: string }>();
 
   if (existingLink) {
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: "เบอร์นี้ผูกกับบัญชี LINE อื่นอยู่แล้ว\nกรุณาติดต่อเจ้าหน้าที่ค่ะ" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "phone" };
   }
 
@@ -156,9 +157,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .bind(farmer.id, ctx.linkId)
     .run();
 
-  await safePush(ctx.token, ctx.userId, [
+  await safePush(ctx, [
     { type: "text", text: `พบข้อมูลของคุณ ${farmer.full_name}\n\n⏳ กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ\nเมื่อยืนยันแล้วจะสามารถใช้งานได้ทันที` },
-  ]);
+  ], ctx.db, ctx.farmerId);
   return { newState: "pending" };
 }
 
@@ -178,9 +179,9 @@ async function handlePending(ctx: FlowContext): Promise<FlowResult> {
     return handlePlotSelection(ctx);
   }
 
-  await safePush(ctx.token, ctx.userId, [
+  await safePush(ctx, [
     { type: "text", text: "⏳ บัญชีของท่านอยู่ระหว่างรอการยืนยัน\nกรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ" },
-  ]);
+  ], ctx.db, ctx.farmerId);
   return { newState: "pending" };
 }
 
@@ -196,18 +197,18 @@ async function handleSelectPlot(ctx: FlowContext): Promise<FlowResult> {
     .all<{ id: string; plot_code: string; area_rai: number }>();
 
   if (!plots.results || plots.results.length === 0) {
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: "ไม่พบแปลงนาในระบบ\nกรุณาติดต่อเจ้าหน้าที่ค่ะ" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "select_plot" };
   }
 
   if (plots.results.length === 1) {
     // Only one plot — auto-select
     const plot = plots.results[0];
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: `✅ เลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลย` },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "chat", selectedPlotId: plot.id };
   }
 
@@ -221,16 +222,16 @@ async function handleSelectPlot(ctx: FlowContext): Promise<FlowResult> {
 
   if (num >= 1 && num <= plots.results.length) {
     const plot = plots.results[num - 1];
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: `✅ เลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลย` },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "chat", selectedPlotId: plot.id };
   }
 
   // Show plot list
-  await safePush(ctx.token, ctx.userId, [
+  await safePush(ctx, [
     { type: "text", text: `📋 แปลงนาของท่าน:\n\n${plotList}\n\nพิมพ์หมายเลขเพื่อเลือกแปลง` },
-  ]);
+  ], ctx.db, ctx.farmerId);
   return { newState: "select_plot" };
 }
 
@@ -276,23 +277,23 @@ async function handleConfirmDraft(ctx: FlowContext): Promise<FlowResult> {
             )
             .run();
 
-          await safePush(ctx.token, ctx.userId, [
+          await safePush(ctx, [
             { type: "text", text: `✅ บันทึกข้อมูลปุ๋ยเรียบร้อยแล้วค่ะ\n\nสูตร: ${d.formula}\nอัตรา: ${d.rate_kg_per_rai} กก./ไร่\nไนโตรเจน: ${nitrogenKg.toFixed(2)} กก./ไร่` },
-          ]);
+          ], ctx.db, ctx.farmerId);
         } else {
-          await safePush(ctx.token, ctx.userId, [
+          await safePush(ctx, [
             { type: "text", text: "❌ ไม่สามารถบันทึกได้ กรุณาลองใหม่" },
-          ]);
+          ], ctx.db, ctx.farmerId);
         }
       } else {
-        await safePush(ctx.token, ctx.userId, [
+        await safePush(ctx, [
           { type: "text", text: "✅ บันทึกข้อมูลเรียบร้อยแล้วค่ะ" },
-        ]);
+        ], ctx.db, ctx.farmerId);
       }
     } else {
-      await safePush(ctx.token, ctx.userId, [
+      await safePush(ctx, [
         { type: "text", text: "ไม่มีข้อมูลที่ต้องยืนยันค่ะ" },
-      ]);
+      ], ctx.db, ctx.farmerId);
     }
 
     return { newState: "chat" };
@@ -300,16 +301,16 @@ async function handleConfirmDraft(ctx: FlowContext): Promise<FlowResult> {
 
   if (["ยกเลิก", "cancel", "ไม่", "ลบ"].includes(lower)) {
     const rejected = await rejectDraft(ctx.db, ctx.farmerId);
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: rejected ? "🗑️ ยกเลิกเรียบร้อยแล้วค่ะ" : "ไม่มีข้อมูลที่ต้องยกเลิกค่ะ" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "chat" };
   }
 
   // Invalid input — prompt again
-  await safePush(ctx.token, ctx.userId, [
+  await safePush(ctx, [
     { type: "text", text: "พิมพ์ 'ยืนยัน' เพื่อบันทึก หรือ 'ยกเลิก' เพื่อลบ" },
-  ]);
+  ], ctx.db, ctx.farmerId);
   return { newState: "confirm_draft" };
 }
 
@@ -338,9 +339,9 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
     kw !== "เลือกแปลง" && kw !== "เปลี่ยนแปลง" && lower.includes(kw),
   );
   if (matchedQuick) {
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: matchedQuick[1] },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "chat" };
   }
 
@@ -353,7 +354,7 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
         ? ctx.db.prepare("SELECT plot_code FROM plots WHERE id = ?").bind(ctx.selectedPlotId).first<{ plot_code: string }>()
         : ctx.db.prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first<{ plot_code: string }>(),
       ctx.db.prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first<{ season_id: string }>(),
-    ]);
+    ], ctx.db, ctx.farmerId);
 
     const aiStart = Date.now();
     const aiResponse = await chatWithAi(ctx.apiKey, ctx.text, {
@@ -372,16 +373,16 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
         data: aiResponse.data,
         text: aiResponse.text,
       });
-      await safePush(ctx.token, ctx.userId, [
+      await safePush(ctx, [
         { type: "text", text: `${aiResponse.text}\n\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ` },
-      ]);
+      ], ctx.db, ctx.farmerId);
       return { newState: "confirm_draft" };
     }
 
     // Regular reply
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: aiResponse.text || "ได้รับข้อความแล้วค่ะ" },
-    ]);
+    ], ctx.db, ctx.farmerId);
 
     // Log to farmer_messages
     await ctx.db
@@ -401,9 +402,9 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
     return { newState: "chat" };
   } catch (aiErr) {
     console.error("AI chat error:", aiErr);
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "chat" };
   }
 }
@@ -418,17 +419,17 @@ async function handlePlotSelection(ctx: FlowContext): Promise<FlowResult> {
     .all<{ id: string; plot_code: string; area_rai: number }>();
 
   if (!plots.results || plots.results.length === 0) {
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: "✅ ยืนยันบัญชีเรียบร้อยแล้วค่ะ\n\nแต่ยังไม่มีแปลงนาในระบบ\nกรุณาติดต่อเจ้าหน้าที่ค่ะ" },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "select_plot" };
   }
 
   if (plots.results.length === 1) {
     const plot = plots.results[0];
-    await safePush(ctx.token, ctx.userId, [
+    await safePush(ctx, [
       { type: "text", text: `✅ ยืนยันบัญชีเรียบร้อยแล้วค่ะ\n\nเลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ\nพิมพ์ข้อมูลปุ๋ย หรือถามคำถามได้เลย` },
-    ]);
+    ], ctx.db, ctx.farmerId);
     return { newState: "chat", selectedPlotId: plot.id };
   }
 
@@ -436,8 +437,8 @@ async function handlePlotSelection(ctx: FlowContext): Promise<FlowResult> {
     .map((p, i) => `${i + 1}. ${p.plot_code} (${p.area_rai} ไร่)`)
     .join("\n");
 
-  await safePush(ctx.token, ctx.userId, [
+  await safePush(ctx, [
     { type: "text", text: `✅ ยืนยันบัญชีเรียบร้อยแล้วค่ะ\n\n📋 แปลงนาของท่าน:\n${plotList}\n\nพิมพ์หมายเลขเพื่อเลือกแปลง` },
-  ]);
+  ], ctx.db, ctx.farmerId);
   return { newState: "select_plot" };
 }
