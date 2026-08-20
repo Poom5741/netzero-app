@@ -25,6 +25,7 @@ export async function replyMessage(
   });
 
   const body = await res.text();
+  console.log(`LINE reply: status=${res.status} body=${body.substring(0, 200)}`);
   return { status: res.status, statusText: res.statusText, body };
 }
 
@@ -43,5 +44,6 @@ export async function pushMessage(
   });
 
   const body = await res.text();
+  console.log(`LINE push: status=${res.status} body=${body.substring(0, 200)}`);
   return { status: res.status, statusText: res.statusText, body };
 }
