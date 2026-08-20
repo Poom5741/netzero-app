@@ -55,7 +55,7 @@ export async function savePendingDraft(
   await db
     .prepare(
       `INSERT INTO farmer_messages (id, farmer_id, raw_text, draft_json, message_type, confirmed)
-       VALUES (?, ?, ?, ?, 'draft', 0)`,
+       VALUES (?, ?, ?, ?, 'confirmation', 0)`,
     )
     .bind(
       crypto.randomUUID(),
@@ -76,7 +76,7 @@ export async function confirmDraft(
   const row = await db
     .prepare(
       `SELECT id, draft_json FROM farmer_messages
-       WHERE farmer_id = ? AND message_type = 'draft' AND confirmed = 0
+       WHERE farmer_id = ? AND message_type = 'confirmation' AND confirmed = 0
        ORDER BY created_at DESC LIMIT 1`,
     )
     .bind(farmerId)
@@ -103,7 +103,7 @@ export async function rejectDraft(
   const row = await db
     .prepare(
       `SELECT id FROM farmer_messages
-       WHERE farmer_id = ? AND message_type = 'draft' AND confirmed = 0
+       WHERE farmer_id = ? AND message_type = 'confirmation' AND confirmed = 0
        ORDER BY created_at DESC LIMIT 1`,
     )
     .bind(farmerId)
