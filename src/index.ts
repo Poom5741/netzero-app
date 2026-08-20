@@ -9,6 +9,7 @@ import { replyMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
 import { chatWithAi } from "./chat/ai";
+import { getPendingDraft, savePendingDraft, confirmDraft, rejectDraft } from "./chat/state";
 
 type Bindings = {
   DB: D1Database;
@@ -167,55 +168,114 @@ async function handleEvent(
       break;
       }
 
-      // Farmer is linked — use AI for conversation
-      let aiReplyText = "ได้รับข้อความแล้วค่ะ";
-      try {
-        const farmer = await db
-          .prepare("SELECT full_name FROM farmers WHERE id = ?")
-          .bind(link.farmer_id)
-          .first<{ full_name: string }>();
+      // Farmer is linked — handle conversation flow
+      const lowerText = text.toLowerCase().trim();
 
-        const plot = await db
-          .prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
-          .bind(link.farmer_id)
-          .first<{ plot_code: string }>();
+      // Check for confirm/reject commands FIRST
+      if (["ยืนยัน", "confirm", "ok", "ได้", "ครับ", "ค่ะ"].includes(lowerText)) {
+        const confirmed = await confirmDraft(db, link.farmer_id);
+        if (confirmed) {
+          const { category, data } = confirmed;
+          if (category === "fertilizer") {
+            const d = data as { step?: string; formula?: string; rate_kg_per_rai?: number; is_urea?: boolean };
+            // Save to fertilizer_entries
+            const plot = await db
+              .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+              .bind(link.farmer_id)
+              .first<{ id: string }>();
+            if (plot && d.formula && d.rate_kg_per_rai) {
+              const nitrogenKg = d.is_urea
+                ? d.rate_kg_per_rai * 0.46
+                : d.rate_kg_per_rai * 0.16;
+              await db
+                .prepare(
+                  `INSERT INTO fertilizer_entries (id, plot_id, season_id, step, formula, rate_kg_per_rai, percent_n, nitrogen_kg_per_rai, is_urea, confirmed)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+                )
+                .bind(
+                  crypto.randomUUID(),
+                  plot.id,
+                  "2568-napi",
+                  d.step || "base",
+                  d.formula,
+                  d.rate_kg_per_rai,
+                  d.is_urea ? 46 : 16,
+                  nitrogenKg,
+                  d.is_urea ? 1 : 0,
+                )
+                .run();
+              aiReplyText = `✅ บันทึกข้อมูลปุ๋ยเรียบร้อยแล้วค่ะ\n\nสูตร: ${d.formula}\nอัตรา: ${d.rate_kg_per_rai} กก./ไร่\nไนโตรเจน: ${nitrogenKg.toFixed(2)} กก./ไร่`;
+            } else {
+              aiReplyText = "❌ ไม่สามารถบันทึกได้ กรุณาลองใหม่";
+            }
+          } else if (category === "season_input") {
+            aiReplyText = `✅ บันทึกข้อมูลเรียบร้อยแล้วค่ะ`;
+          }
+        } else {
+          aiReplyText = "ไม่มีข้อมูลที่ต้องยืนยันค่ะ";
+        }
+      } else if (["ยกเลิก", "cancel", "ไม่", "ลบ"].includes(lowerText)) {
+        const rejected = await rejectDraft(db, link.farmer_id);
+        aiReplyText = rejected ? "🗑️ ยกเลิกเรียบร้อยแล้วค่ะ" : "ไม่มีข้อมูลที่ต้องยกเลิกค่ะ";
+      } else {
+        // Normal AI conversation
+        let aiReplyText = "ได้รับข้อความแล้วค่ะ";
+        try {
+          const farmer = await db
+            .prepare("SELECT full_name FROM farmers WHERE id = ?")
+            .bind(link.farmer_id)
+            .first<{ full_name: string }>();
 
-        const seasonInput = await db
-          .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
-          .bind(link.farmer_id)
-          .first<{ season_id: string }>();
+          const plot = await db
+            .prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+            .bind(link.farmer_id)
+            .first<{ plot_code: string }>();
 
-        const aiStart = Date.now();
-        const aiResponse = await chatWithAi(apiKey, text, {
-          farmerName: farmer?.full_name,
-          plotCode: plot?.plot_code,
-          seasonId: seasonInput?.season_id,
-          linkedFarmer: true,
-        });
-        const aiDuration = Date.now() - aiStart;
-        console.log(`AI call: ${aiDuration}ms, type=${aiResponse.type}`);
+          const seasonInput = await db
+            .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
+            .bind(link.farmer_id)
+            .first<{ season_id: string }>();
 
-        aiReplyText = aiResponse.type === "reply"
-          ? aiResponse.text
-          : aiResponse.text || "ได้รับข้อความแล้วค่ะ";
+          const aiStart = Date.now();
+          const aiResponse = await chatWithAi(apiKey, text, {
+            farmerName: farmer?.full_name,
+            plotCode: plot?.plot_code,
+            seasonId: seasonInput?.season_id,
+            linkedFarmer: true,
+          });
+          const aiDuration = Date.now() - aiStart;
+          console.log(`AI call: ${aiDuration}ms, type=${aiResponse.type}`);
 
-        // Log to farmer_messages for audit trail
-        await db
-          .prepare(
-            `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed)
-             VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
-          )
-          .bind(
-            crypto.randomUUID(),
-            link.farmer_id,
-            null,
-            text,
-            JSON.stringify(aiResponse),
-          )
-          .run();
-      } catch (aiErr) {
-        console.error("AI chat error:", aiErr);
-        aiReplyText = "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง";
+          if (aiResponse.type === "draft") {
+            // Save pending draft and ask for confirmation
+            await savePendingDraft(db, link.farmer_id, {
+              category: aiResponse.category,
+              data: aiResponse.data,
+              text: aiResponse.text,
+            });
+            aiReplyText = `${aiResponse.text}\n\nพิมพ์ "ยืนยัน" เพื่อบันทึก หรือ "ยกเลิก" เพื่อลบ`;
+          } else {
+            aiReplyText = aiResponse.text || "ได้รับข้อความแล้วค่ะ";
+          }
+
+          // Log to farmer_messages for audit trail
+          await db
+            .prepare(
+              `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed)
+               VALUES (?, ?, ?, ?, ?, 'chat', 0)`,
+            )
+            .bind(
+              crypto.randomUUID(),
+              link.farmer_id,
+              null,
+              text,
+              JSON.stringify(aiResponse),
+            )
+            .run();
+        } catch (aiErr) {
+          console.error("AI chat error:", aiErr);
+          aiReplyText = "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง";
+        }
       }
 
       const r = await replyMessage(token, event.replyToken, [
