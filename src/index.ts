@@ -307,17 +307,11 @@ async function handleEvent(
         }
       }
 
-      let r = await replyMessage(token, event.replyToken, [
+      // Always use push (more reliable than reply which needs valid replyToken)
+      const r = await pushMessage(token, event.source.userId, [
         { type: "text", text: aiReplyText },
       ]);
-      // Fallback to push if reply fails (e.g., expired replyToken)
-      if (r.status !== 200) {
-        console.log(`Reply failed (${r.status}), trying push`);
-        r = await pushMessage(token, event.source.userId, [
-          { type: "text", text: aiReplyText },
-        ]);
-      }
-      console.log(`AI reply: ${r.status} body=${r.body}`);
+      console.log(`AI push: ${r.status} body=${r.body}`);
       break;
     }
 
