@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260821T200848874Z-43123-f8d5ae926d02",
+  "runId": "20260821T200848874Z-43123-f8d5ae926d02",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "3413180ef766ec3316b3d89995e301726df1600a",
+  "diffHash": "a723f6bfa2b6627d13a2634df351322e5d3351605a3afb23a4914920cee1e270",
+  "rulesVersion": "unavailable",
+  "sessionHash": "c3fe05457e2adc69b016cf9166c590eb8e89bcbbcd0eadd6419fff3827b3756d",
+  "reportRef": ".mimosa/reports/task-review-sess_2a1809c7-edc7-4d45-8226-4e9ea676b4f8-20260821T200848874Z-43123-f8d5ae926d02.json",
+  "events": [],
+  "observedFindingIds": [
+    "mimosa-6743d715c5a6fe8560df0197"
+  ],
+  "verifiedFiles": [
+    {
+      "file": "src/components/admin-review/__tests__/filter-tabs.test.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/components/admin-review/review-card.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/admin/page.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/lib/sponsor.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/sponsor/page.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/components/sponsor/kpi-card.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-08-21T20:08:49.262Z"
+}
