@@ -12,15 +12,47 @@ export const dashboardRoutes = new Hono<{ Bindings: Bindings }>();
 
 function renderAdminDashboard(): string {
   return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Dashboard</title></head>
+<html lang="th">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Dashboard - NetZeroCarbon</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { font-size: 18px; }
+  .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+  .cards { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { background: white; border-radius: 12px; padding: 20px; text-decoration: none; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .card h3 { font-size: 24px; margin-bottom: 4px; }
+  .card p { font-size: 13px; color: #666; }
+</style>
+</head>
 <body>
-<h1>Admin Dashboard</h1>
-<p>Welcome, admin.</p>
-<nav>
-  <a href="/admin/farmers">Farmers</a>
-  <a href="/admin/review">Photo Review</a>
-</nav>
+  <div class="header">
+    <h1>🌱 Admin Dashboard</h1>
+    <a href="/logout">ออกจากระบบ</a>
+  </div>
+  <div class="cards">
+    <a href="/admin/review" class="card">
+      <h3>📋</h3>
+      <h3>คิวตรวจภาพ</h3>
+      <p>ตรวจสอบและอนุมัติภาพหลักฐาน</p>
+    </a>
+    <a href="/admin/season" class="card">
+      <h3>🌾</h3>
+      <h3>อนุมัติฤดู</h3>
+      <p>อนุมัติข้อมูลฤดูและคำนวณคาร์บอน</p>
+    </a>
+    <a href="/sponsor" class="card">
+      <h3>📊</h3>
+      <h3>Sponsor Dashboard</h3>
+      <p>ดูข้อมูลเครดิตคาร์บอน</p>
+    </a>
+    <a href="/export/estimates" class="card">
+      <h3>📥</h3>
+      <h3>Export</h3>
+      <p>ดาวน์โหลดข้อมูล CSV/JSON</p>
+    </a>
+  </div>
 </body>
 </html>`;
 }

@@ -5,6 +5,7 @@ import { exportRoutes } from "./routes/export";
 import { healthRoutes } from "./routes/health";
 import { photoRoutes } from "./routes/photo";
 import { sponsorRoutes } from "./routes/sponsor";
+import { adminRoutes } from "./routes/admin";
 import { liffRoutes } from "./routes/liff";
 import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
@@ -211,6 +212,9 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
     }
   }
 }
+
+// Admin review dashboard
+app.route("/", adminRoutes);
 
 // Sponsor dashboard + detail
 app.route("/sponsor", sponsorRoutes);
