@@ -72,6 +72,7 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
           liff.login();
         }
       } catch (err) {
+        setError(err instanceof Error ? err : new Error("LIFF initialization failed"));
         // Fallback to demo mode
         setUserId("demo-user");
         setProfile({ displayName: "Demo User", userId: "demo-user" });

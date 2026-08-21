@@ -159,6 +159,7 @@ function ChatContent() {
         <Button
           onClick={() => handleSend()}
           disabled={!input.trim()}
+          aria-label="ส่งข้อความ"
           className="w-10 h-10 rounded-full p-0 claymorphic"
         >
           ➤
@@ -166,7 +167,7 @@ function ChatContent() {
       </div>
 
       {/* Bottom Nav */}
-      <nav className="glass border-t border-surface-container-high px-6 py-2 flex justify-around sticky bottom-0">
+      <nav className="glass border-t border-surface-container-high px-6 py-2 flex justify-around sticky bottom-0" aria-label="นำทางหลัก">
         <a href="/chat" className="flex flex-col items-center gap-1 text-primary">
           <span className="text-xl">💬</span>
           <span className="text-xs font-medium">แชท</span>

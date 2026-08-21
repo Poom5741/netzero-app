@@ -40,6 +40,7 @@ export async function getReviewQueue(status?: string): Promise<PhotoReview[]> {
     ? `${API_BASE}/api/admin/review?status=${status}`
     : `${API_BASE}/api/admin/review`;
   const res = await fetch(url);
+  if (!res.ok) throw new Error(`Review queue error: ${res.status}`);
   return res.json();
 }
 
@@ -53,5 +54,6 @@ export async function reviewPhoto(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status, reason }),
   });
+  if (!res.ok) throw new Error(`Review error: ${res.status}`);
   return res.json();
 }
