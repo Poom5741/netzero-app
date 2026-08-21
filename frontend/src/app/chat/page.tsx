@@ -4,12 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import { LiffProvider, useLiff } from "@/lib/liff-context";
 import { sendChatMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { ChatBubble } from "@/components/ui/chat-bubble";
+import { QuickActions } from "@/components/ui/quick-actions";
+import { BottomNav } from "@/components/ui/bottom-nav";
+import { TypingIndicator } from "@/components/ui/typing-indicator";
 
 interface Message {
   id: string;
-  type: "user" | "bot" | "system";
+  type: "user" | "bot";
   text: string;
-  timestamp: Date;
+  timestamp: string;
+}
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 }
 
 function ChatContent() {
@@ -18,8 +26,8 @@ function ChatContent() {
     {
       id: "welcome",
       type: "bot",
-      text: "🌱 สวัสดีค่ะ! ยินดีต้อนรับสู่ NetZeroCarbon\n\nพิมพ์ข้อความหรือกดปุ่มด้านล่างเพื่อเริ่มต้นค่ะ",
-      timestamp: new Date(),
+      text: "สวัสดีครับ! 🌿 ยินดีต้อนรับสู่ NetZeroCarbon\nวันนี้คุณต้องการให้ผมช่วยบันทึกข้อมูลแปลงนา หรือตรวจสอบยอดคาร์บอนเครดิตครับ?",
+      timestamp: formatTime(new Date()),
     },
   ]);
   const [input, setInput] = useState("");
@@ -31,10 +39,15 @@ function ChatContent() {
   }, [messages, isTyping]);
 
   const quickActions = [
-    { label: "👋 สวัสดี", text: "สวัสดี" },
-    { label: "❓ ช่วย", text: "ช่วย" },
-    { label: "📸 ถ่ายรูป", text: "ถ่ายรูป" },
-    { label: "🌾 เลือกแปลง", text: "เลือกแปลง" },
+    { icon: "add_a_photo", label: "ส่งรูปถ่าย", onClick: () => handleSend("ถ่ายรูป") },
+    { icon: "summarize", label: "สรุปฤดูกาล", onClick: () => handleSend("สรุปฤดู") },
+    { icon: "help", label: "สอบถาม", onClick: () => handleSend("ช่วย") },
+  ];
+
+  const navItems = [
+    { icon: "chat", label: "แชท", href: "/chat", active: true },
+    { icon: "photo_camera", label: "อัปโหลด", href: "/upload" },
+    { icon: "bar_chart", label: "สรุป", href: "/summary" },
   ];
 
   async function handleSend(text?: string) {
@@ -46,7 +59,7 @@ function ChatContent() {
       id: Date.now().toString(),
       type: "user",
       text: messageText,
-      timestamp: new Date(),
+      timestamp: formatTime(new Date()),
     };
     setMessages((prev) => [...prev, userMsg]);
 
@@ -57,15 +70,15 @@ function ChatContent() {
         id: (Date.now() + 1).toString(),
         type: "bot",
         text: response.reply || response.error || "ไม่สามารถประมวลผลได้",
-        timestamp: new Date(),
+        timestamp: formatTime(new Date()),
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch {
       const errMsg: Message = {
         id: (Date.now() + 1).toString(),
-        type: "system",
+        type: "bot",
         text: "เกิดข้อผิดพลาด กรุณาลองใหม่",
-        timestamp: new Date(),
+        timestamp: formatTime(new Date()),
       };
       setMessages((prev) => [...prev, errMsg]);
     } finally {
@@ -75,9 +88,9 @@ function ChatContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-surface-container-low">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-3 border-surface-container-high border-t-primary-container rounded-full animate-spin" />
+          <div className="w-10 h-10 border-3 border-surface-container-highest border-t-primary-container rounded-full animate-spin" />
           <span className="text-on-surface-variant">กำลังเชื่อมต่อ...</span>
         </div>
       </div>
@@ -85,102 +98,88 @@ function ChatContent() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <header className="glass px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
-        <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold">
-          🌱
+    <div className="flex flex-col h-screen bg-surface-container-low">
+      {/* Glassmorphic Header */}
+      <header className="fixed top-0 w-full z-50 glass pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="h-16 px-5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-sm">eco</span>
+            </div>
+            <span className="font-semibold text-lg text-on-surface">Chat Hub</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="w-10 h-10 flex items-center justify-center" aria-label="การแจ้งเตือน">
+              <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
+            </button>
+            {profile?.pictureUrl ? (
+              <img alt="Profile" className="w-8 h-8 rounded-full object-cover border border-white" src={profile.pictureUrl} />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
+                <span className="text-xs text-on-secondary-container font-medium">
+                  {profile?.displayName?.charAt(0) || "U"}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex-1">
-          <h1 className="font-semibold text-on-surface">NetZeroCarbon</h1>
-          <p className="text-xs text-on-surface-variant">ผู้ช่วยเกษตรกรโครงการ AWD</p>
-        </div>
-        {profile?.pictureUrl && (
-          <img src={profile.pictureUrl} alt="" className="w-8 h-8 rounded-full" />
-        )}
       </header>
 
       {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`
-                max-w-[80%] px-4 py-3 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap
-                ${msg.type === "user"
-                  ? "claymorphic text-white rounded-br-md"
-                  : msg.type === "bot"
-                    ? "neumorphic text-on-surface rounded-bl-md"
-                    : "bg-surface-container text-on-surface-variant text-xs px-3 py-2 rounded-full"
-                }
-              `}
+      <main className="flex-1 pt-16 pb-24 px-5 bg-surface-container-low">
+        <div className="flex flex-col w-full min-h-[calc(100vh-140px)] overflow-y-auto px-4 py-4 space-y-6">
+          {messages.map((msg) => (
+            <ChatBubble
+              key={msg.id}
+              type={msg.type}
+              timestamp={msg.timestamp}
+              avatar={
+                msg.type === "user" && profile?.pictureUrl ? (
+                  <img alt="Profile" className="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm" src={profile.pictureUrl} />
+                ) : undefined
+              }
             >
-              {msg.text}
-            </div>
-          </div>
-        ))}
+              <p className="text-[16px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+            </ChatBubble>
+          ))}
 
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="neumorphic px-4 py-3 rounded-2xl rounded-bl-md flex gap-1">
-              <span className="w-2 h-2 bg-outline rounded-full typing-dot" />
-              <span className="w-2 h-2 bg-outline rounded-full typing-dot" />
-              <span className="w-2 h-2 bg-outline rounded-full typing-dot" />
-            </div>
-          </div>
-        )}
+          {isTyping && <TypingIndicator />}
 
-        <div ref={chatEndRef} />
-      </div>
+          <div ref={chatEndRef} />
+        </div>
+      </main>
 
       {/* Quick Actions */}
-      <div className="px-4 py-2 flex gap-2 overflow-x-auto flex-shrink-0">
-        {quickActions.map((action) => (
-          <button
-            key={action.text}
-            onClick={() => handleSend(action.text)}
-            className="neumorphic px-4 py-2 rounded-full text-sm text-primary whitespace-nowrap hover:shadow-lg transition-shadow touch-target"
-          >
-            {action.label}
-          </button>
-        ))}
+      <div className="px-5 pb-2 flex-shrink-0">
+        <QuickActions actions={quickActions} />
       </div>
 
       {/* Input Bar */}
-      <div className="glass px-4 py-3 flex gap-2 items-center sticky bottom-0">
+      <div className="glass px-5 py-3 flex gap-2 items-center sticky bottom-14 z-40 border-t border-white/20">
+        <button className="w-10 h-10 rounded-full neumorphic flex items-center justify-center flex-shrink-0" aria-label="เพิ่มไฟล์">
+          <span className="material-symbols-outlined text-on-surface-variant">add</span>
+        </button>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="พิมพ์ข้อความ..."
-          className="flex-1 neumorphic-inset px-4 py-3 rounded-full text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary-container"
+          aria-label="พิมพ์ข้อความ"
+          className="flex-1 neumorphic-inset px-4 py-3 rounded-full text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary-container text-[16px]"
         />
         <Button
           onClick={() => handleSend()}
           disabled={!input.trim()}
           aria-label="ส่งข้อความ"
-          className="w-10 h-10 rounded-full p-0 claymorphic"
+          className="w-10 h-10 rounded-full p-0 claymorphic flex-shrink-0"
         >
-          ➤
+          <span className="material-symbols-outlined text-white">send</span>
         </Button>
       </div>
 
       {/* Bottom Nav */}
-      <nav className="glass border-t border-surface-container-high px-6 py-2 flex justify-around sticky bottom-0" aria-label="นำทางหลัก">
-        <a href="/chat" className="flex flex-col items-center gap-1 text-primary">
-          <span className="text-xl">💬</span>
-          <span className="text-xs font-medium">แชท</span>
-        </a>
-        <a href="/upload" className="flex flex-col items-center gap-1 text-on-surface-variant">
-          <span className="text-xl">📷</span>
-          <span className="text-xs">อัปโหลด</span>
-        </a>
-        <a href="/summary" className="flex flex-col items-center gap-1 text-on-surface-variant">
-          <span className="text-xl">📊</span>
-          <span className="text-xs">สรุป</span>
-        </a>
-      </nav>
+      <BottomNav items={navItems} />
     </div>
   );
 }
