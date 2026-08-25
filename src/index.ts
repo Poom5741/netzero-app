@@ -7,6 +7,7 @@ import { photoRoutes } from "./routes/photo";
 import { sponsorRoutes } from "./routes/sponsor";
 import { adminRoutes } from "./routes/admin";
 import { liffRoutes } from "./routes/liff";
+import { seasonRoutes } from "./routes/season";
 import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
@@ -49,6 +50,9 @@ app.route("/", liffRoutes);
 
 // Photo upload
 app.route("/", photoRoutes);
+
+// Season inputs
+app.route("/", seasonRoutes);
 
 // LINE webhook
 app.post("/webhook/line", async (c) => {

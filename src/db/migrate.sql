@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS line_links (
   farmer_id TEXT NOT NULL REFERENCES farmers(id),
   line_user_id TEXT UNIQUE NOT NULL,
   status TEXT CHECK(status IN ('pending', 'verified', 'rejected')),
+  conversation_state TEXT DEFAULT 'welcome',
+  selected_plot_id TEXT,
   verified_by TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))

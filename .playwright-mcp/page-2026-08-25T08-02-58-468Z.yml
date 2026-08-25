@@ -1,0 +1,51 @@
+- generic [active] [ref=f17e1]:
+  - generic [ref=f17e2]:
+    - banner [ref=f17e3]:
+      - generic [ref=f17e4]:
+        - generic [ref=f17e5]:
+          - generic [ref=f17e6]: eco
+          - generic [ref=f17e8]: สรุปฤดูกาล
+        - generic [ref=f17e9]: 25%
+    - main [ref=f17e12]:
+      - generic [ref=f17e13]:
+        - generic [ref=f17e14]:
+          - generic [ref=f17e15]: 💧 ระดับน้ำ (ซม.)
+          - slider [ref=f17e16]: "5"
+          - generic [ref=f17e17]:
+            - generic [ref=f17e18]: 0 ซม.
+            - generic [ref=f17e19]: 5 ซม.
+            - generic [ref=f17e20]: 10 ซม.
+        - generic [ref=f17e21]:
+          - generic [ref=f17e22]: 🌾 การจัดการฟางข้าว
+          - combobox [ref=f17e23]:
+            - option "เลือก..." [selected]
+            - option "ไถกลบ"
+            - option "เผา"
+            - option "มัดขาย"
+            - option "เอาออก"
+        - generic [ref=f17e24]:
+          - generic [ref=f17e25]: ⚡ พลังงานที่ใช้
+          - generic [ref=f17e26]:
+            - generic [ref=f17e27]: น้ำมัน (ลิตร)
+            - spinbutton "น้ำมัน (ลิตร)" [ref=f17e28]
+          - generic [ref=f17e29]:
+            - generic [ref=f17e30]: ไฟฟ้า (kWh)
+            - spinbutton "ไฟฟ้า (kWh)" [ref=f17e31]
+        - button "save บันทึกข้อมูล" [ref=f17e32]:
+          - generic [ref=f17e33]: save
+          - generic [ref=f17e34]: บันทึกข้อมูล
+    - navigation "นำทางหลัก" [ref=f17e35]:
+      - link "chat แชท" [ref=f17e36] [cursor=pointer]:
+        - /url: /chat
+        - generic [ref=f17e37]: chat
+        - generic [ref=f17e38]: แชท
+      - link "photo_camera อัปโหลด" [ref=f17e39] [cursor=pointer]:
+        - /url: /upload
+        - generic [ref=f17e40]: photo_camera
+        - generic [ref=f17e41]: อัปโหลด
+      - link "bar_chart สรุป" [ref=f17e42] [cursor=pointer]:
+        - /url: /summary
+        - generic [ref=f17e43]: bar_chart
+        - generic [ref=f17e44]: สรุป
+  - button "Open Next.js Dev Tools" [ref=f17e50] [cursor=pointer]
+  - alert [ref=f17e54]

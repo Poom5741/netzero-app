@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { FilterTabs, type FilterTab } from "@/components/admin-review/filter-tabs";
@@ -10,8 +10,6 @@ import { getReviewQueue, reviewPhoto, type PhotoReview } from "@/lib/api";
 
 const sidebarEntries = [
   { key: "review", label: "ตรวจสอบภาพ", href: "/admin", icon: "rate_review", active: true },
-  { key: "users", label: "จัดการผู้ใช้", href: "/admin/users", icon: "group" },
-  { key: "reports", label: "รายงาน", href: "/admin/reports", icon: "summarize" },
 ];
 
 const filterTabs: FilterTab[] = [
@@ -36,8 +34,15 @@ export default function AdminReviewPage() {
   const [queue, setQueue] = useState<PhotoReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchedRef = useRef<Set<string>>(new Set());
 
   const fetchQueue = useCallback(async (filter: string) => {
+    // Prevent duplicate calls for same filter
+    if (fetchedRef.current.has(filter)) {
+      return;
+    }
+    fetchedRef.current.add(filter);
+
     setLoading(true);
     setError(null);
     try {
@@ -121,7 +126,18 @@ export default function AdminReviewPage() {
             {error && (
               <div className="neumorphic p-6 text-center">
                 <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
-                <p className="text-body-md text-on-surface">{error}</p>
+                <p className="text-body-md text-on-surface mb-2">{error}</p>
+                {error.includes("401") && (
+                  <p className="text-sm text-on-surface-variant mb-4">
+                    กรุณาเข้าสู่ระบบเพื่อดูข้อมูล
+                  </p>
+                )}
+                <button
+                  onClick={() => fetchQueue(activeFilter)}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  ลองใหม่
+                </button>
               </div>
             )}
 

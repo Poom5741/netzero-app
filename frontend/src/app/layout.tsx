@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sarabun } from "next/font/google";
+import { Inter, Sarabun, Material_Symbols_Outlined } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,6 +12,12 @@ const sarabun = Sarabun({
   variable: "--font-sarabun",
   subsets: ["thai", "latin"],
   weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const materialSymbols = Material_Symbols_Outlined({
+  variable: "--font-material-symbols",
+  subsets: ["latin"],
   display: "swap",
 });
 
@@ -28,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="th" className={`${inter.variable} ${sarabun.variable} h-full antialiased`}>
+    <html lang="th" className={`${inter.variable} ${sarabun.variable} ${materialSymbols.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

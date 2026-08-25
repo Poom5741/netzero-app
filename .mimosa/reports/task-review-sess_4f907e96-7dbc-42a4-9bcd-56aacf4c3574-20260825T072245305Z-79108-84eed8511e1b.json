@@ -1,0 +1,486 @@
+{
+  "schema_version": "mimosa-task-review/v2",
+  "run_id": "20260825T072245305Z-79108-84eed8511e1b",
+  "run_status": "inconclusive",
+  "errors": [
+    {
+      "stage": "baseline-read",
+      "target": "package-lock.json",
+      "reason": "baseline_snapshot_unreadable: file is missing from task baseline"
+    },
+    {
+      "stage": "baseline-read",
+      "target": ".wrangler/tmp/dev-kHgi68/index.js",
+      "reason": "baseline_snapshot_unreadable: file is missing from task baseline"
+    },
+    {
+      "stage": "baseline-read",
+      "target": ".wrangler/tmp/bundle-Oovorz/checked-fetch.js",
+      "reason": "baseline_snapshot_unreadable: file is missing from task baseline"
+    },
+    {
+      "stage": "baseline-read",
+      "target": ".wrangler/tmp/bundle-Oovorz/middleware-insertion-facade.js",
+      "reason": "baseline_snapshot_unreadable: file is missing from task baseline"
+    },
+    {
+      "stage": "baseline-read",
+      "target": ".wrangler/tmp/bundle-Oovorz/middleware-loader.entry.ts",
+      "reason": "baseline_snapshot_unreadable: file is missing from task baseline"
+    }
+  ],
+  "coverage": {
+    "schema_version": "mimosa-hook-coverage/v1",
+    "status": "partial",
+    "scope": "hook_observed_diff",
+    "baseline": {
+      "complete": true,
+      "captured_files": 163,
+      "candidate_limit": 5000,
+      "truncated": false,
+      "enumeration_error_count": 0,
+      "snapshot_error_count": 0,
+      "compensated_target_count": 3
+    },
+    "change_tracking": {
+      "touched_observed": 3,
+      "touched_retained": 3,
+      "truncated": false,
+      "bash_mutation": true,
+      "bash_discovered": 8,
+      "bash_discovery_limit": 80,
+      "bash_discovery_truncated": false
+    },
+    "candidates": {
+      "eligible_files": 8,
+      "selected_files": 8,
+      "limit": 20,
+      "truncated": false
+    },
+    "scanning": {
+      "required_files": 6,
+      "scanned_files": 6,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "project_checks_required": 1,
+      "project_checks_completed": 1
+    },
+    "notification": {
+      "eligible_findings": 4,
+      "detailed_findings": 3,
+      "detail_limit": 3,
+      "truncated": true
+    },
+    "reason_counts": {
+      "baseline_snapshot_unreadable": 5,
+      "project_check_failed": 5
+    },
+    "reasons": [
+      {
+        "code": "baseline_snapshot_unreadable",
+        "stage": "baseline-read",
+        "target": "package-lock.json",
+        "detail": "file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "baseline_snapshot_unreadable",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/dev-kHgi68/index.js",
+        "detail": "file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "baseline_snapshot_unreadable",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/bundle-Oovorz/checked-fetch.js",
+        "detail": "file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "baseline_snapshot_unreadable",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/bundle-Oovorz/middleware-insertion-facade.js",
+        "detail": "file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "baseline_snapshot_unreadable",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/bundle-Oovorz/middleware-loader.entry.ts",
+        "detail": "file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "baseline-read",
+        "target": "package-lock.json",
+        "detail": "baseline_snapshot_unreadable: file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/dev-kHgi68/index.js",
+        "detail": "baseline_snapshot_unreadable: file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/bundle-Oovorz/checked-fetch.js",
+        "detail": "baseline_snapshot_unreadable: file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/bundle-Oovorz/middleware-insertion-facade.js",
+        "detail": "baseline_snapshot_unreadable: file is missing from task baseline",
+        "affects_completion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "baseline-read",
+        "target": ".wrangler/tmp/bundle-Oovorz/middleware-loader.entry.ts",
+        "detail": "baseline_snapshot_unreadable: file is missing from task baseline",
+        "affects_completion": true
+      }
+    ],
+    "reasons_truncated": false
+  },
+  "generated_at": "2026-08-25T07:22:45.305Z",
+  "session_id": "sess_4f907e96-7dbc-42a4-9bcd-56aacf4c3574",
+  "target": ".",
+  "revision": "34184a900696a45cc3c1b41a3cdd30577904c87c",
+  "rules_version": "unavailable",
+  "diff_hash": "615fa72a89369e4f61873e8ccf19f6c43942ca47ca9d016c7839e19ab9c0707a",
+  "diff": {
+    "algorithm": "sha256",
+    "changed_file_count": 8,
+    "changed_files": [
+      {
+        "file": ".wrangler/tmp/bundle-Oovorz/checked-fetch.js",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 28
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "903607e07decdc5226344846be2599813ff9fb135d295d1416053210536653b6"
+      },
+      {
+        "file": ".wrangler/tmp/bundle-Oovorz/middleware-insertion-facade.js",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 11
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "1cab7c4b01953115184286d26a063b53cd4a8bb54fa79ed93e97e7968554b0b8"
+      },
+      {
+        "file": ".wrangler/tmp/bundle-Oovorz/middleware-loader.entry.ts",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 134
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "4a838f42db90ca0dcafed9f1d0451156e12950142cef15e71b50e696b960e2e6"
+      },
+      {
+        "file": ".wrangler/tmp/dev-kHgi68/index.js",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 4145
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "045a4e0bafe7f91ed6420fd151cbd69e7af239260f4c31271b365d9de3a4b19a"
+      },
+      {
+        "file": "frontend/next.config.ts",
+        "ranges": [
+          {
+            "start": 4,
+            "end": 11
+          }
+        ],
+        "before_hash": "614bce25b089c3f19b1e17a6346c74b858034040154c6621e7d35303004767cc",
+        "after_hash": "a238c8cedfe4dd20fffe4a615f8e8f8bd4e38c26c783b796c224f8900308a7a0"
+      },
+      {
+        "file": "package-lock.json",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 1038
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "26d8eb2ad78f08cf492a26bb3e7d57b607b8ea8191da5dbe2e46659fb88745cb"
+      },
+      {
+        "file": "package.json",
+        "ranges": [
+          {
+            "start": 11,
+            "end": 16
+          },
+          {
+            "start": 27,
+            "end": 27
+          }
+        ],
+        "before_hash": "46fc41d1e688f40016ce3471e12698eba99672ea4150f168f585853d15dcfdee",
+        "after_hash": "e210e9fc7bcae57f0223aaa068d76bca8c0dfec1ddfc65d04e01ca1c9ae410a5"
+      },
+      {
+        "file": "src/routes/admin.ts",
+        "ranges": [
+          {
+            "start": 119,
+            "end": 130
+          }
+        ],
+        "before_hash": "160102fe5ab82a438f7f733b981edddd66fc59278d5bf5d4e1bc72614c1a5fef",
+        "after_hash": "00898e9526f1afb3745cf259209ceb994d11b98e90ae2eec4ed0abb49fd5dc39"
+      }
+    ]
+  },
+  "timing": {
+    "started_at": "2026-08-25T07:22:44.461Z",
+    "completed_at": "2026-08-25T07:22:45.305Z",
+    "duration_ms": 844,
+    "measurement": "hook_wall_clock"
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "model_calls": 0,
+    "measurement": "known-zero"
+  },
+  "telemetry": {
+    "schemaVersion": "mimosa-gate-telemetry/v1",
+    "profile": "gate",
+    "operation": "Stop",
+    "outcome": "partial/INCONCLUSIVE",
+    "latencyMs": 844,
+    "peakMemoryBytes": 222527488,
+    "memoryMeasurement": "max-observed-process-rss",
+    "scannedFiles": 6,
+    "cache": {
+      "hits": 0,
+      "misses": 0,
+      "measurement": "not-applicable"
+    },
+    "denyCount": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "total": 0,
+      "modelCalls": 0,
+      "measurement": "known-zero"
+    }
+  },
+  "finding_count": 4,
+  "rewake_finding_count": 3,
+  "evidence_boundary": {
+    "scan": "candidate",
+    "static_fix_verification": "observed_static_only",
+    "runtime_verification": "not_performed"
+  },
+  "finding_events": [
+    {
+      "finding_id": "mimosa-55317a3a6f66feeb56b45452",
+      "file": ".wrangler/tmp/dev-kHgi68/index.js",
+      "line": 973,
+      "severity": "high",
+      "category": "SQL 注入",
+      "status": "blocked",
+      "decision": "stop_rewake",
+      "at": "2026-08-25T07:22:45.305Z",
+      "evidence": {
+        "kind": "static_scan",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "source": "semgrep",
+        "evidence_hash": "0556818ab78c49047ddd9f926b2fce9211ca9ac9e99b839454d1802f0fbb55de",
+        "runtime_oracle": false
+      }
+    },
+    {
+      "finding_id": "mimosa-9e93482d4f319e9db4e8e39c",
+      "file": ".wrangler/tmp/dev-kHgi68/index.js",
+      "line": 2370,
+      "severity": "high",
+      "category": "命令注入",
+      "status": "blocked",
+      "decision": "stop_rewake",
+      "at": "2026-08-25T07:22:45.305Z",
+      "evidence": {
+        "kind": "static_scan",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "source": "semgrep",
+        "evidence_hash": "a4905b06f628abb21db96f2c3031cb3a619e4fdcab787b9e4f958464d7d7ab56",
+        "runtime_oracle": false
+      }
+    },
+    {
+      "finding_id": "mimosa-958dc7bdcf94c70a9c7008f6",
+      "file": ".wrangler/tmp/dev-kHgi68/index.js",
+      "line": 3760,
+      "severity": "high",
+      "category": "SSRF 服务端请求伪造",
+      "status": "blocked",
+      "decision": "stop_rewake",
+      "at": "2026-08-25T07:22:45.305Z",
+      "evidence": {
+        "kind": "static_scan",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "source": "semgrep",
+        "evidence_hash": "f7c665858c3bb029215d6eb2570411db0301a9f33f9390d3dce91e50e952a006",
+        "runtime_oracle": false
+      }
+    },
+    {
+      "finding_id": "mimosa-be72836ecb353a43c45ee6ed",
+      "file": "package.json",
+      "line": 27,
+      "rule_id": "mimosa.supply.version-range",
+      "severity": "low",
+      "category": "manifest",
+      "status": "candidate",
+      "decision": "observe",
+      "at": "2026-08-25T07:22:45.305Z",
+      "evidence": {
+        "kind": "static_scan",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "source": "semgrep",
+        "evidence_hash": "587507f2695ebb538cd629dcc7acde3186e1c73258f71719a3288e4d6573ba19",
+        "runtime_oracle": false
+      }
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "mimosa-55317a3a6f66feeb56b45452",
+      "file": ".wrangler/tmp/dev-kHgi68/index.js",
+      "line": 973,
+      "end_line": 973,
+      "severity": "high",
+      "category": "SQL 注入",
+      "kind": "semgrep",
+      "advisory": false,
+      "status": "blocked",
+      "evidence_boundary": "candidate",
+      "evidence": [
+        {
+          "kind": "static_scan",
+          "boundary": "candidate",
+          "producer": "deterministic",
+          "source": "semgrep",
+          "file": ".wrangler/tmp/dev-kHgi68/index.js",
+          "line": 973,
+          "evidence_hash": "0556818ab78c49047ddd9f926b2fce9211ca9ac9e99b839454d1802f0fbb55de",
+          "runtime_oracle": false
+        }
+      ],
+      "already_reported_to_agent": false,
+      "selected_for_rewake": true
+    },
+    {
+      "finding_id": "mimosa-9e93482d4f319e9db4e8e39c",
+      "file": ".wrangler/tmp/dev-kHgi68/index.js",
+      "line": 2370,
+      "end_line": 2370,
+      "severity": "high",
+      "category": "命令注入",
+      "kind": "semgrep",
+      "advisory": false,
+      "status": "blocked",
+      "evidence_boundary": "candidate",
+      "evidence": [
+        {
+          "kind": "static_scan",
+          "boundary": "candidate",
+          "producer": "deterministic",
+          "source": "semgrep",
+          "file": ".wrangler/tmp/dev-kHgi68/index.js",
+          "line": 2370,
+          "evidence_hash": "a4905b06f628abb21db96f2c3031cb3a619e4fdcab787b9e4f958464d7d7ab56",
+          "runtime_oracle": false
+        }
+      ],
+      "already_reported_to_agent": false,
+      "selected_for_rewake": true
+    },
+    {
+      "finding_id": "mimosa-958dc7bdcf94c70a9c7008f6",
+      "file": ".wrangler/tmp/dev-kHgi68/index.js",
+      "line": 3760,
+      "end_line": 3760,
+      "severity": "high",
+      "category": "SSRF 服务端请求伪造",
+      "kind": "semgrep",
+      "advisory": false,
+      "status": "blocked",
+      "evidence_boundary": "candidate",
+      "evidence": [
+        {
+          "kind": "static_scan",
+          "boundary": "candidate",
+          "producer": "deterministic",
+          "source": "semgrep",
+          "file": ".wrangler/tmp/dev-kHgi68/index.js",
+          "line": 3760,
+          "evidence_hash": "f7c665858c3bb029215d6eb2570411db0301a9f33f9390d3dce91e50e952a006",
+          "runtime_oracle": false
+        }
+      ],
+      "already_reported_to_agent": false,
+      "selected_for_rewake": true
+    },
+    {
+      "finding_id": "mimosa-be72836ecb353a43c45ee6ed",
+      "file": "package.json",
+      "line": 27,
+      "end_line": 27,
+      "rule_id": "mimosa.supply.version-range",
+      "severity": "low",
+      "category": "manifest",
+      "kind": "semgrep",
+      "advisory": false,
+      "status": "candidate",
+      "evidence_boundary": "candidate",
+      "evidence": [
+        {
+          "kind": "static_scan",
+          "boundary": "candidate",
+          "producer": "deterministic",
+          "source": "semgrep",
+          "file": "package.json",
+          "line": 27,
+          "evidence_hash": "587507f2695ebb538cd629dcc7acde3186e1c73258f71719a3288e4d6573ba19",
+          "runtime_oracle": false
+        }
+      ],
+      "already_reported_to_agent": false,
+      "selected_for_rewake": false
+    }
+  ],
+  "artifacts": {
+    "immutable_report": ".mimosa/reports/task-review-sess_4f907e96-7dbc-42a4-9bcd-56aacf4c3574-20260825T072245305Z-79108-84eed8511e1b.json",
+    "latest_report": ".mimosa/reports/task-review-sess_4f907e96-7dbc-42a4-9bcd-56aacf4c3574.json",
+    "history_summary": ".mimosa/history/run-20260825T072245305Z-79108-84eed8511e1b.json"
+  }
+}

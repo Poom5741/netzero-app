@@ -1,0 +1,4145 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// .wrangler/tmp/bundle-Oovorz/checked-fetch.js
+function checkURL(request, init) {
+  const url = request instanceof URL ? request : new URL(
+    (typeof request === "string" ? new Request(request, init) : request).url
+  );
+  if (url.port && url.port !== "443" && url.protocol === "https:") {
+    if (!urls.has(url.toString())) {
+      urls.add(url.toString());
+      console.warn(
+        `WARNING: known issue with \`fetch()\` requests to custom HTTPS ports in published Workers:
+ - ${url.toString()} - the custom port will be ignored when the Worker is published using the \`wrangler deploy\` command.
+`
+      );
+    }
+  }
+}
+var urls;
+var init_checked_fetch = __esm({
+  ".wrangler/tmp/bundle-Oovorz/checked-fetch.js"() {
+    "use strict";
+    urls = /* @__PURE__ */ new Set();
+    __name(checkURL, "checkURL");
+    globalThis.fetch = new Proxy(globalThis.fetch, {
+      apply(target, thisArg, argArray) {
+        const [request, init] = argArray;
+        checkURL(request, init);
+        return Reflect.apply(target, thisArg, argArray);
+      }
+    });
+  }
+});
+
+// wrangler-modules-watch:wrangler:modules-watch
+var init_wrangler_modules_watch = __esm({
+  "wrangler-modules-watch:wrangler:modules-watch"() {
+    init_checked_fetch();
+    init_modules_watch_stub();
+  }
+});
+
+// ../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/modules-watch-stub.js
+var init_modules_watch_stub = __esm({
+  "../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/modules-watch-stub.js"() {
+    init_wrangler_modules_watch();
+  }
+});
+
+// src/auth/session.ts
+var session_exports = {};
+__export(session_exports, {
+  createSessionCookie: () => createSessionCookie,
+  parseSessionCookie: () => parseSessionCookie
+});
+import { createHmac } from "node:crypto";
+function sign(data, secret) {
+  return createHmac("sha256", secret).update(data).digest("hex");
+}
+function createSessionCookie(data, secret, secure = false) {
+  const payload = btoa(JSON.stringify(data));
+  const sig = sign(payload, secret);
+  const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax`;
+  return secure ? `${cookie}; Secure` : cookie;
+}
+function parseSessionCookie(raw2, secret) {
+  if (!raw2) return null;
+  const dotIdx = raw2.lastIndexOf(".");
+  if (dotIdx === -1) return null;
+  const payload = raw2.slice(0, dotIdx);
+  const sig = raw2.slice(dotIdx + 1);
+  if (!payload || !sig) return null;
+  const expected = sign(payload, secret);
+  if (sig !== expected) return null;
+  try {
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+}
+var COOKIE_NAME;
+var init_session = __esm({
+  "src/auth/session.ts"() {
+    "use strict";
+    init_checked_fetch();
+    init_modules_watch_stub();
+    COOKIE_NAME = "nzc_session";
+    __name(sign, "sign");
+    __name(createSessionCookie, "createSessionCookie");
+    __name(parseSessionCookie, "parseSessionCookie");
+  }
+});
+
+// src/auth/password.ts
+var password_exports = {};
+__export(password_exports, {
+  hashPassword: () => hashPassword,
+  verifyPassword: () => verifyPassword
+});
+function toHex(buf) {
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function fromHex(hex) {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = Number.parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+}
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const derived = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
+    keyMaterial,
+    HASH_LEN * 8
+  );
+  return `${toHex(salt.buffer)}:${toHex(derived)}`;
+}
+async function verifyPassword(password, stored) {
+  const parts = stored.split(":");
+  if (parts.length !== 2) return false;
+  const salt = parts[0];
+  const hash = parts[1];
+  if (!salt || !hash) return false;
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const derived = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: fromHex(salt), iterations: ITERATIONS, hash: "SHA-256" },
+    keyMaterial,
+    hash.length * 4
+  );
+  return toHex(derived) === hash;
+}
+var SALT_LEN, HASH_LEN, ITERATIONS;
+var init_password = __esm({
+  "src/auth/password.ts"() {
+    "use strict";
+    init_checked_fetch();
+    init_modules_watch_stub();
+    SALT_LEN = 16;
+    HASH_LEN = 32;
+    ITERATIONS = 1e5;
+    __name(toHex, "toHex");
+    __name(fromHex, "fromHex");
+    __name(hashPassword, "hashPassword");
+    __name(verifyPassword, "verifyPassword");
+  }
+});
+
+// src/chat/state.ts
+var state_exports = {};
+__export(state_exports, {
+  confirmDraft: () => confirmDraft,
+  getPendingDraft: () => getPendingDraft,
+  rejectDraft: () => rejectDraft,
+  savePendingDraft: () => savePendingDraft
+});
+async function getPendingDraft(db, farmerId) {
+  const row = await db.prepare(
+    `SELECT draft_json FROM farmer_messages
+       WHERE farmer_id = ? AND message_type = 'chat' AND confirmed = 0 AND draft_json IS NOT NULL
+       ORDER BY created_at DESC LIMIT 1`
+  ).bind(farmerId).first();
+  if (!row) return null;
+  try {
+    const draft = JSON.parse(row.draft_json);
+    if (draft.type !== "draft") return null;
+    if (Date.now() - (draft.createdAt || 0) > STATE_TTL_MS) return null;
+    return draft;
+  } catch {
+    return null;
+  }
+}
+async function savePendingDraft(db, farmerId, draft) {
+  await db.prepare(
+    `INSERT INTO farmer_messages (id, farmer_id, raw_text, draft_json, message_type, confirmed)
+       VALUES (?, ?, ?, ?, 'confirmation', 0)`
+  ).bind(
+    crypto.randomUUID(),
+    farmerId,
+    `[pending] ${draft.text}`,
+    JSON.stringify({ ...draft, type: "draft", createdAt: Date.now() })
+  ).run();
+}
+async function confirmDraft(db, farmerId) {
+  const row = await db.prepare(
+    `SELECT id, draft_json FROM farmer_messages
+       WHERE farmer_id = ? AND message_type = 'confirmation' AND confirmed = 0
+       ORDER BY created_at DESC LIMIT 1`
+  ).bind(farmerId).first();
+  if (!row) return null;
+  const draft = JSON.parse(row.draft_json);
+  await db.prepare(`UPDATE farmer_messages SET confirmed = 1 WHERE id = ?`).bind(row.id).run();
+  return { category: draft.category, data: draft.data };
+}
+async function rejectDraft(db, farmerId) {
+  const row = await db.prepare(
+    `SELECT id FROM farmer_messages
+       WHERE farmer_id = ? AND message_type = 'confirmation' AND confirmed = 0
+       ORDER BY created_at DESC LIMIT 1`
+  ).bind(farmerId).first();
+  if (!row) return false;
+  await db.prepare(`DELETE FROM farmer_messages WHERE id = ?`).bind(row.id).run();
+  return true;
+}
+var STATE_TTL_MS;
+var init_state = __esm({
+  "src/chat/state.ts"() {
+    "use strict";
+    init_checked_fetch();
+    init_modules_watch_stub();
+    STATE_TTL_MS = 5 * 60 * 1e3;
+    __name(getPendingDraft, "getPendingDraft");
+    __name(savePendingDraft, "savePendingDraft");
+    __name(confirmDraft, "confirmDraft");
+    __name(rejectDraft, "rejectDraft");
+  }
+});
+
+// .wrangler/tmp/bundle-Oovorz/middleware-loader.entry.ts
+init_checked_fetch();
+init_modules_watch_stub();
+
+// .wrangler/tmp/bundle-Oovorz/middleware-insertion-facade.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// src/index.ts
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/index.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/hono.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/hono-base.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/compose.js
+init_checked_fetch();
+init_modules_watch_stub();
+var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
+  return (context, next) => {
+    let index = -1;
+    return dispatch(0);
+    async function dispatch(i) {
+      if (i <= index) {
+        throw new Error("next() called multiple times");
+      }
+      index = i;
+      let res;
+      let isError = false;
+      let handler;
+      if (middleware[i]) {
+        handler = middleware[i][0][0];
+        context.req.routeIndex = i;
+      } else {
+        handler = i === middleware.length && next || void 0;
+      }
+      if (handler) {
+        try {
+          res = await handler(context, () => dispatch(i + 1));
+        } catch (err) {
+          if (err instanceof Error && onError) {
+            context.error = err;
+            res = await onError(err, context);
+            isError = true;
+          } else {
+            throw err;
+          }
+        }
+      } else {
+        if (context.finalized === false && onNotFound) {
+          res = await onNotFound(context);
+        }
+      }
+      if (res && (context.finalized === false || isError)) {
+        context.res = res;
+      }
+      return context;
+    }
+    __name(dispatch, "dispatch");
+  };
+}, "compose");
+
+// node_modules/hono/dist/context.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/request.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/http-exception.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/request/constants.js
+init_checked_fetch();
+init_modules_watch_stub();
+var GET_MATCH_RESULT = /* @__PURE__ */ Symbol();
+
+// node_modules/hono/dist/utils/body.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/utils/buffer.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/utils/crypto.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/utils/buffer.js
+var bufferToFormData = /* @__PURE__ */ __name((arrayBuffer, contentType) => {
+  const response = new Response(arrayBuffer, {
+    headers: {
+      // Normalize the media type (case-insensitive) while keeping parameters like the boundary
+      "Content-Type": contentType.replace(/^[^;]+/, (mediaType) => mediaType.toLowerCase())
+    }
+  });
+  return response.formData();
+}, "bufferToFormData");
+
+// node_modules/hono/dist/utils/body.js
+var isRawRequest = /* @__PURE__ */ __name((request) => "headers" in request, "isRawRequest");
+var parseBody = /* @__PURE__ */ __name(async (request, options = /* @__PURE__ */ Object.create(null)) => {
+  const { all = false, dot = false } = options;
+  const headers = isRawRequest(request) ? request.headers : request.raw.headers;
+  const contentType = headers.get("Content-Type");
+  const mediaType = contentType?.split(";")[0].trim().toLowerCase();
+  if (mediaType === "multipart/form-data" || mediaType === "application/x-www-form-urlencoded") {
+    return parseFormData(request, { all, dot });
+  }
+  return {};
+}, "parseBody");
+async function parseFormData(request, options) {
+  if (!isRawRequest(request) && request.bodyCache.formData) {
+    return convertFormDataToBodyData(
+      await request.bodyCache.formData,
+      options
+    );
+  }
+  const headers = isRawRequest(request) ? request.headers : request.raw.headers;
+  const arrayBuffer = await request.arrayBuffer();
+  const formDataPromise = bufferToFormData(arrayBuffer, headers.get("Content-Type") || "");
+  if (!isRawRequest(request)) {
+    request.bodyCache.formData = formDataPromise;
+  }
+  const formData = await formDataPromise;
+  if (formData) {
+    return convertFormDataToBodyData(formData, options);
+  }
+  return {};
+}
+__name(parseFormData, "parseFormData");
+function convertFormDataToBodyData(formData, options) {
+  const form = /* @__PURE__ */ Object.create(null);
+  formData.forEach((value, key) => {
+    const shouldParseAllValues = options.all || key.endsWith("[]");
+    if (!shouldParseAllValues) {
+      form[key] = value;
+    } else {
+      handleParsingAllValues(form, key, value);
+    }
+  });
+  if (options.dot) {
+    Object.entries(form).forEach(([key, value]) => {
+      const shouldParseDotValues = key.includes(".");
+      if (shouldParseDotValues) {
+        handleParsingNestedValues(form, key, value);
+        delete form[key];
+      }
+    });
+  }
+  return form;
+}
+__name(convertFormDataToBodyData, "convertFormDataToBodyData");
+var handleParsingAllValues = /* @__PURE__ */ __name((form, key, value) => {
+  if (form[key] !== void 0) {
+    if (Array.isArray(form[key])) {
+      ;
+      form[key].push(value);
+    } else {
+      form[key] = [form[key], value];
+    }
+  } else {
+    if (!key.endsWith("[]")) {
+      form[key] = value;
+    } else {
+      form[key] = [value];
+    }
+  }
+}, "handleParsingAllValues");
+var handleParsingNestedValues = /* @__PURE__ */ __name((form, key, value) => {
+  if (/(?:^|\.)__proto__\./.test(key)) {
+    return;
+  }
+  let nestedForm = form;
+  const keys = key.split(".");
+  keys.forEach((key2, index) => {
+    if (index === keys.length - 1) {
+      nestedForm[key2] = value;
+    } else {
+      if (!nestedForm[key2] || typeof nestedForm[key2] !== "object" || Array.isArray(nestedForm[key2]) || nestedForm[key2] instanceof File) {
+        nestedForm[key2] = /* @__PURE__ */ Object.create(null);
+      }
+      nestedForm = nestedForm[key2];
+    }
+  });
+}, "handleParsingNestedValues");
+
+// node_modules/hono/dist/utils/url.js
+init_checked_fetch();
+init_modules_watch_stub();
+var splitPath = /* @__PURE__ */ __name((path) => {
+  const paths = path.split("/");
+  if (paths[0] === "") {
+    paths.shift();
+  }
+  return paths;
+}, "splitPath");
+var splitRoutingPath = /* @__PURE__ */ __name((routePath) => {
+  const { groups, path } = extractGroupsFromPath(routePath);
+  const paths = splitPath(path);
+  return replaceGroupMarks(paths, groups);
+}, "splitRoutingPath");
+var extractGroupsFromPath = /* @__PURE__ */ __name((path) => {
+  const groups = [];
+  path = path.replace(/\{[^}]+\}/g, (match2, index) => {
+    const mark = `@${index}`;
+    groups.push([mark, match2]);
+    return mark;
+  });
+  return { groups, path };
+}, "extractGroupsFromPath");
+var replaceGroupMarks = /* @__PURE__ */ __name((paths, groups) => {
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const [mark] = groups[i];
+    for (let j = paths.length - 1; j >= 0; j--) {
+      if (paths[j].includes(mark)) {
+        paths[j] = paths[j].replace(mark, groups[i][1]);
+        break;
+      }
+    }
+  }
+  return paths;
+}, "replaceGroupMarks");
+var patternCache = {};
+var getPattern = /* @__PURE__ */ __name((label, next) => {
+  if (label === "*") {
+    return "*";
+  }
+  const match2 = label.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
+  if (match2) {
+    const cacheKey = `${label}#${next}`;
+    if (!patternCache[cacheKey]) {
+      if (match2[2]) {
+        patternCache[cacheKey] = next && next[0] !== ":" && next[0] !== "*" ? [cacheKey, match2[1], new RegExp(`^${match2[2]}(?=/${next})`)] : [label, match2[1], new RegExp(`^${match2[2]}$`)];
+      } else {
+        patternCache[cacheKey] = [label, match2[1], true];
+      }
+    }
+    return patternCache[cacheKey];
+  }
+  return null;
+}, "getPattern");
+var tryDecode = /* @__PURE__ */ __name((str, decoder) => {
+  try {
+    return decoder(str);
+  } catch {
+    return str.replace(/(?:%[0-9A-Fa-f]{2})+/g, (match2) => {
+      try {
+        return decoder(match2);
+      } catch {
+        return match2;
+      }
+    });
+  }
+}, "tryDecode");
+var tryDecodeURI = /* @__PURE__ */ __name((str) => tryDecode(str, decodeURI), "tryDecodeURI");
+var getPath = /* @__PURE__ */ __name((request) => {
+  const url = request.url;
+  const start = url.indexOf("/", url.indexOf(":") + 4);
+  let i = start;
+  for (; i < url.length; i++) {
+    const charCode = url.charCodeAt(i);
+    if (charCode === 37) {
+      const queryIndex = url.indexOf("?", i);
+      const hashIndex = url.indexOf("#", i);
+      const end = queryIndex === -1 ? hashIndex === -1 ? void 0 : hashIndex : hashIndex === -1 ? queryIndex : Math.min(queryIndex, hashIndex);
+      const path = url.slice(start, end);
+      return tryDecodeURI(path.includes("%25") ? path.replace(/%25/g, "%2525") : path);
+    } else if (charCode === 63 || charCode === 35) {
+      break;
+    }
+  }
+  return url.slice(start, i);
+}, "getPath");
+var getPathNoStrict = /* @__PURE__ */ __name((request) => {
+  const result = getPath(request);
+  return result.length > 1 && result.at(-1) === "/" ? result.slice(0, -1) : result;
+}, "getPathNoStrict");
+var mergePath = /* @__PURE__ */ __name((base, sub, ...rest) => {
+  if (rest.length) {
+    sub = mergePath(sub, ...rest);
+  }
+  return `${base?.[0] === "/" ? "" : "/"}${base}${sub === "/" ? "" : `${base?.at(-1) === "/" ? "" : "/"}${sub?.[0] === "/" ? sub.slice(1) : sub}`}`;
+}, "mergePath");
+var checkOptionalParameter = /* @__PURE__ */ __name((path) => {
+  if (path.charCodeAt(path.length - 1) !== 63 || !path.includes(":")) {
+    return null;
+  }
+  const segments = path.split("/");
+  const results = [];
+  let basePath = "";
+  segments.forEach((segment) => {
+    if (segment !== "" && !/\:/.test(segment)) {
+      basePath += "/" + segment;
+    } else if (/\:/.test(segment)) {
+      if (segment.charCodeAt(segment.length - 1) === 63) {
+        if (results.length === 0 && basePath === "") {
+          results.push("/");
+        } else {
+          results.push(basePath);
+        }
+        const optionalSegment = segment.slice(0, -1);
+        basePath += "/" + optionalSegment;
+        results.push(basePath);
+      } else {
+        basePath += "/" + segment;
+      }
+    }
+  });
+  return results.filter((v, i, a) => a.indexOf(v) === i);
+}, "checkOptionalParameter");
+var tryDecodeURIComponent = /* @__PURE__ */ __name((str) => str.indexOf("%") !== -1 ? tryDecode(str, decodeURIComponent_) : str, "tryDecodeURIComponent");
+var _decodeURI = /* @__PURE__ */ __name((value) => {
+  if (value.indexOf("+") !== -1) {
+    value = value.replace(/\+/g, " ");
+  }
+  return tryDecodeURIComponent(value);
+}, "_decodeURI");
+var _getQueryParam = /* @__PURE__ */ __name((url, key, multiple) => {
+  let encoded;
+  if (!multiple && key && key.indexOf("%") === -1 && key.indexOf("+") === -1) {
+    let keyIndex2 = url.indexOf("?", 8);
+    if (keyIndex2 === -1) {
+      return void 0;
+    }
+    if (!url.startsWith(key, keyIndex2 + 1)) {
+      keyIndex2 = url.indexOf(`&${key}`, keyIndex2 + 1);
+    }
+    while (keyIndex2 !== -1) {
+      const trailingKeyCode = url.charCodeAt(keyIndex2 + key.length + 1);
+      if (trailingKeyCode === 61) {
+        const valueIndex = keyIndex2 + key.length + 2;
+        const endIndex = url.indexOf("&", valueIndex);
+        return _decodeURI(url.slice(valueIndex, endIndex === -1 ? void 0 : endIndex));
+      } else if (trailingKeyCode == 38 || isNaN(trailingKeyCode)) {
+        return "";
+      }
+      keyIndex2 = url.indexOf(`&${key}`, keyIndex2 + 1);
+    }
+    encoded = /[%+]/.test(url);
+    if (!encoded) {
+      return void 0;
+    }
+  }
+  const results = /* @__PURE__ */ Object.create(null);
+  encoded ??= /[%+]/.test(url);
+  let keyIndex = url.indexOf("?", 8);
+  while (keyIndex !== -1) {
+    const nextKeyIndex = url.indexOf("&", keyIndex + 1);
+    let valueIndex = url.indexOf("=", keyIndex);
+    if (valueIndex > nextKeyIndex && nextKeyIndex !== -1) {
+      valueIndex = -1;
+    }
+    let name = url.slice(
+      keyIndex + 1,
+      valueIndex === -1 ? nextKeyIndex === -1 ? void 0 : nextKeyIndex : valueIndex
+    );
+    if (encoded) {
+      name = _decodeURI(name);
+    }
+    keyIndex = nextKeyIndex;
+    if (name === "") {
+      continue;
+    }
+    let value;
+    if (valueIndex === -1) {
+      value = "";
+    } else {
+      value = url.slice(valueIndex + 1, nextKeyIndex === -1 ? void 0 : nextKeyIndex);
+      if (encoded) {
+        value = _decodeURI(value);
+      }
+    }
+    if (multiple) {
+      if (!(results[name] && Array.isArray(results[name]))) {
+        results[name] = [];
+      }
+      ;
+      results[name].push(value);
+    } else {
+      results[name] ??= value;
+    }
+  }
+  return key ? results[key] : results;
+}, "_getQueryParam");
+var getQueryParam = _getQueryParam;
+var getQueryParams = /* @__PURE__ */ __name((url, key) => {
+  return _getQueryParam(url, key, true);
+}, "getQueryParams");
+var decodeURIComponent_ = decodeURIComponent;
+
+// node_modules/hono/dist/request.js
+var HonoRequest = class {
+  static {
+    __name(this, "HonoRequest");
+  }
+  /**
+   * `.raw` can get the raw Request object.
+   *
+   * @see {@link https://hono.dev/docs/api/request#raw}
+   *
+   * @example
+   * ```ts
+   * // For Cloudflare Workers
+   * app.post('/', async (c) => {
+   *   const metadata = c.req.raw.cf?.hostMetadata?
+   *   ...
+   * })
+   * ```
+   */
+  raw;
+  #validatedData;
+  // Short name of validatedData
+  #matchResult;
+  routeIndex = 0;
+  /**
+   * `.path` can get the pathname of the request.
+   *
+   * @see {@link https://hono.dev/docs/api/request#path}
+   *
+   * @example
+   * ```ts
+   * app.get('/about/me', (c) => {
+   *   const pathname = c.req.path // `/about/me`
+   * })
+   * ```
+   */
+  path;
+  bodyCache = {};
+  constructor(request, path = "/", matchResult = [[]]) {
+    this.raw = request;
+    this.path = path;
+    this.#matchResult = matchResult;
+  }
+  param(key) {
+    return key ? this.#getDecodedParam(key) : this.#getAllDecodedParams();
+  }
+  #getDecodedParam(key) {
+    const paramKey = this.#matchResult[0][this.routeIndex][1][key];
+    const param = this.#getParamValue(paramKey);
+    return param && tryDecodeURIComponent(param);
+  }
+  #getAllDecodedParams() {
+    const decoded = {};
+    const keys = Object.keys(this.#matchResult[0][this.routeIndex][1]);
+    for (const key of keys) {
+      const value = this.#getParamValue(this.#matchResult[0][this.routeIndex][1][key]);
+      if (value !== void 0) {
+        decoded[key] = tryDecodeURIComponent(value);
+      }
+    }
+    return decoded;
+  }
+  #getParamValue(paramKey) {
+    return this.#matchResult[1] ? this.#matchResult[1][paramKey] : paramKey;
+  }
+  query(key) {
+    return getQueryParam(this.url, key);
+  }
+  queries(key) {
+    return getQueryParams(this.url, key);
+  }
+  header(name) {
+    if (name) {
+      return this.raw.headers.get(name) ?? void 0;
+    }
+    const headerData = /* @__PURE__ */ Object.create(null);
+    this.raw.headers.forEach((value, key) => {
+      headerData[key] = value;
+    });
+    return headerData;
+  }
+  async parseBody(options) {
+    return parseBody(this, options);
+  }
+  #cachedBody = /* @__PURE__ */ __name((key) => {
+    const { bodyCache, raw: raw2 } = this;
+    const cachedBody = bodyCache[key];
+    if (cachedBody) {
+      return cachedBody;
+    }
+    for (const anyCachedKey in bodyCache) {
+      return bodyCache[anyCachedKey].then((body) => {
+        if (anyCachedKey === "json") {
+          body = JSON.stringify(body);
+        }
+        return new Response(body)[key]();
+      });
+    }
+    return bodyCache[key] = raw2[key]();
+  }, "#cachedBody");
+  /**
+   * `.json()` can parse Request body of type `application/json`
+   *
+   * @see {@link https://hono.dev/docs/api/request#json}
+   *
+   * @example
+   * ```ts
+   * app.post('/entry', async (c) => {
+   *   const body = await c.req.json()
+   * })
+   * ```
+   */
+  json() {
+    return this.#cachedBody("text").then((text) => JSON.parse(text));
+  }
+  /**
+   * `.text()` can parse Request body of type `text/plain`
+   *
+   * @see {@link https://hono.dev/docs/api/request#text}
+   *
+   * @example
+   * ```ts
+   * app.post('/entry', async (c) => {
+   *   const body = await c.req.text()
+   * })
+   * ```
+   */
+  text() {
+    return this.#cachedBody("text");
+  }
+  /**
+   * `.arrayBuffer()` parse Request body as an `ArrayBuffer`
+   *
+   * @see {@link https://hono.dev/docs/api/request#arraybuffer}
+   *
+   * @example
+   * ```ts
+   * app.post('/entry', async (c) => {
+   *   const body = await c.req.arrayBuffer()
+   * })
+   * ```
+   */
+  arrayBuffer() {
+    return this.#cachedBody("arrayBuffer");
+  }
+  /**
+   * `.bytes()` parses the request body as a `Uint8Array`.
+   *
+   * @see {@link https://hono.dev/docs/api/request#bytes}
+   *
+   * @example
+   * ```ts
+   * app.post('/entry', async (c) => {
+   *   const body = await c.req.bytes()
+   * })
+   * ```
+   */
+  bytes() {
+    return this.#cachedBody("arrayBuffer").then((buffer) => new Uint8Array(buffer));
+  }
+  /**
+   * Parses the request body as a `Blob`.
+   * @example
+   * ```ts
+   * app.post('/entry', async (c) => {
+   *   const body = await c.req.blob();
+   * });
+   * ```
+   * @see https://hono.dev/docs/api/request#blob
+   */
+  blob() {
+    return this.#cachedBody("blob");
+  }
+  /**
+   * Parses the request body as `FormData`.
+   * @example
+   * ```ts
+   * app.post('/entry', async (c) => {
+   *   const body = await c.req.formData();
+   * });
+   * ```
+   * @see https://hono.dev/docs/api/request#formdata
+   */
+  formData() {
+    return this.#cachedBody("formData");
+  }
+  /**
+   * Adds validated data to the request.
+   *
+   * @param target - The target of the validation.
+   * @param data - The validated data to add.
+   */
+  addValidatedData(target, data) {
+    ;
+    (this.#validatedData ??= {})[target] = data;
+  }
+  valid(target) {
+    return this.#validatedData?.[target];
+  }
+  /**
+   * `.url()` can get the request url strings.
+   *
+   * @see {@link https://hono.dev/docs/api/request#url}
+   *
+   * @example
+   * ```ts
+   * app.get('/about/me', (c) => {
+   *   const url = c.req.url // `http://localhost:8787/about/me`
+   *   ...
+   * })
+   * ```
+   */
+  get url() {
+    return this.raw.url;
+  }
+  /**
+   * `.method()` can get the method name of the request.
+   *
+   * @see {@link https://hono.dev/docs/api/request#method}
+   *
+   * @example
+   * ```ts
+   * app.get('/about/me', (c) => {
+   *   const method = c.req.method // `GET`
+   * })
+   * ```
+   */
+  get method() {
+    return this.raw.method;
+  }
+  get [GET_MATCH_RESULT]() {
+    return this.#matchResult;
+  }
+  /**
+   * `.matchedRoutes()` can return a matched route in the handler
+   *
+   * @deprecated
+   *
+   * Use matchedRoutes helper defined in "hono/route" instead.
+   *
+   * @see {@link https://hono.dev/docs/api/request#matchedroutes}
+   *
+   * @example
+   * ```ts
+   * app.use('*', async function logger(c, next) {
+   *   await next()
+   *   c.req.matchedRoutes.forEach(({ handler, method, path }, i) => {
+   *     const name = handler.name || (handler.length < 2 ? '[handler]' : '[middleware]')
+   *     console.log(
+   *       method,
+   *       ' ',
+   *       path,
+   *       ' '.repeat(Math.max(10 - path.length, 0)),
+   *       name,
+   *       i === c.req.routeIndex ? '<- respond from here' : ''
+   *     )
+   *   })
+   * })
+   * ```
+   */
+  get matchedRoutes() {
+    return this.#matchResult[0].map(([[, route]]) => route);
+  }
+  /**
+   * `routePath()` can retrieve the path registered within the handler
+   *
+   * @deprecated
+   *
+   * Use routePath helper defined in "hono/route" instead.
+   *
+   * @see {@link https://hono.dev/docs/api/request#routepath}
+   *
+   * @example
+   * ```ts
+   * app.get('/posts/:id', (c) => {
+   *   return c.json({ path: c.req.routePath })
+   * })
+   * ```
+   */
+  get routePath() {
+    return this.#matchResult[0].map(([[, route]]) => route)[this.routeIndex].path;
+  }
+};
+
+// node_modules/hono/dist/utils/html.js
+init_checked_fetch();
+init_modules_watch_stub();
+var HtmlEscapedCallbackPhase = {
+  Stringify: 1,
+  BeforeStream: 2,
+  Stream: 3
+};
+var raw = /* @__PURE__ */ __name((value, callbacks) => {
+  const escapedString = new String(value);
+  escapedString.isEscaped = true;
+  escapedString.callbacks = callbacks;
+  return escapedString;
+}, "raw");
+var resolveCallback = /* @__PURE__ */ __name(async (str, phase, preserveCallbacks, context, buffer) => {
+  if (typeof str === "object" && !(str instanceof String)) {
+    if (!(str instanceof Promise)) {
+      str = str.toString();
+    }
+    if (str instanceof Promise) {
+      str = await str;
+    }
+  }
+  const callbacks = str.callbacks;
+  if (!callbacks?.length) {
+    return Promise.resolve(str);
+  }
+  if (buffer) {
+    buffer[0] += str;
+  } else {
+    buffer = [str];
+  }
+  const resStr = Promise.all(callbacks.map((c) => c({ phase, buffer, context }))).then(
+    (res) => Promise.all(
+      res.filter(Boolean).map((str2) => resolveCallback(str2, phase, false, context, buffer))
+    ).then(() => buffer[0])
+  );
+  if (preserveCallbacks) {
+    return raw(await resStr, callbacks);
+  } else {
+    return resStr;
+  }
+}, "resolveCallback");
+
+// node_modules/hono/dist/context.js
+var TEXT_PLAIN = "text/plain; charset=UTF-8";
+var setDefaultContentType = /* @__PURE__ */ __name((contentType, headers) => {
+  return {
+    "Content-Type": contentType,
+    ...headers
+  };
+}, "setDefaultContentType");
+var createResponseInstance = /* @__PURE__ */ __name((body, init) => new Response(body, init), "createResponseInstance");
+var Context = class {
+  static {
+    __name(this, "Context");
+  }
+  #rawRequest;
+  #req;
+  /**
+   * `.env` can get bindings (environment variables, secrets, KV namespaces, D1 database, R2 bucket etc.) in Cloudflare Workers.
+   *
+   * @see {@link https://hono.dev/docs/api/context#env}
+   *
+   * @example
+   * ```ts
+   * // Environment object for Cloudflare Workers
+   * app.get('*', async c => {
+   *   const counter = c.env.COUNTER
+   * })
+   * ```
+   */
+  env = {};
+  #var;
+  finalized = false;
+  /**
+   * `.error` can get the error object from the middleware if the Handler throws an error.
+   *
+   * @see {@link https://hono.dev/docs/api/context#error}
+   *
+   * @example
+   * ```ts
+   * app.use('*', async (c, next) => {
+   *   await next()
+   *   if (c.error) {
+   *     // do something...
+   *   }
+   * })
+   * ```
+   */
+  error;
+  #status;
+  #executionCtx;
+  #res;
+  #layout;
+  #renderer;
+  #notFoundHandler;
+  #preparedHeaders;
+  #matchResult;
+  #path;
+  /**
+   * Creates an instance of the Context class.
+   *
+   * @param req - The Request object.
+   * @param options - Optional configuration options for the context.
+   */
+  constructor(req, options) {
+    this.#rawRequest = req;
+    if (options) {
+      this.#executionCtx = options.executionCtx;
+      this.env = options.env;
+      this.#notFoundHandler = options.notFoundHandler;
+      this.#path = options.path;
+      this.#matchResult = options.matchResult;
+    }
+  }
+  /**
+   * `.req` is the instance of {@link HonoRequest}.
+   */
+  get req() {
+    this.#req ??= new HonoRequest(this.#rawRequest, this.#path, this.#matchResult);
+    return this.#req;
+  }
+  /**
+   * @see {@link https://hono.dev/docs/api/context#event}
+   * The FetchEvent associated with the current request.
+   *
+   * @throws Will throw an error if the context does not have a FetchEvent.
+   */
+  get event() {
+    if (this.#executionCtx && "respondWith" in this.#executionCtx) {
+      return this.#executionCtx;
+    } else {
+      throw Error("This context has no FetchEvent");
+    }
+  }
+  /**
+   * @see {@link https://hono.dev/docs/api/context#executionctx}
+   * The ExecutionContext associated with the current request.
+   *
+   * @throws Will throw an error if the context does not have an ExecutionContext.
+   */
+  get executionCtx() {
+    if (this.#executionCtx) {
+      return this.#executionCtx;
+    } else {
+      throw Error("This context has no ExecutionContext");
+    }
+  }
+  /**
+   * @see {@link https://hono.dev/docs/api/context#res}
+   * The Response object for the current request.
+   */
+  get res() {
+    return this.#res ||= createResponseInstance(null, {
+      headers: this.#preparedHeaders ??= new Headers()
+    });
+  }
+  /**
+   * Sets the Response object for the current request.
+   *
+   * @param _res - The Response object to set.
+   */
+  set res(_res) {
+    if (this.#res && _res) {
+      _res = createResponseInstance(_res.body, _res);
+      for (const [k, v] of this.#res.headers.entries()) {
+        if (k === "content-type") {
+          continue;
+        }
+        if (k === "set-cookie") {
+          const cookies = this.#res.headers.getSetCookie();
+          _res.headers.delete("set-cookie");
+          for (const cookie of cookies) {
+            _res.headers.append("set-cookie", cookie);
+          }
+        } else {
+          _res.headers.set(k, v);
+        }
+      }
+    }
+    this.#res = _res;
+    this.finalized = true;
+  }
+  /**
+   * `.render()` can create a response within a layout.
+   *
+   * @see {@link https://hono.dev/docs/api/context#render-setrenderer}
+   *
+   * @example
+   * ```ts
+   * app.get('/', (c) => {
+   *   return c.render('Hello!')
+   * })
+   * ```
+   */
+  render = /* @__PURE__ */ __name((...args) => {
+    this.#renderer ??= (content) => this.html(content);
+    return this.#renderer(...args);
+  }, "render");
+  /**
+   * Sets the layout for the response.
+   *
+   * @param layout - The layout to set.
+   * @returns The layout function.
+   */
+  setLayout = /* @__PURE__ */ __name((layout) => this.#layout = layout, "setLayout");
+  /**
+   * Gets the current layout for the response.
+   *
+   * @returns The current layout function.
+   */
+  getLayout = /* @__PURE__ */ __name(() => this.#layout, "getLayout");
+  /**
+   * `.setRenderer()` can set the layout in the custom middleware.
+   *
+   * @see {@link https://hono.dev/docs/api/context#render-setrenderer}
+   *
+   * @example
+   * ```tsx
+   * app.use('*', async (c, next) => {
+   *   c.setRenderer((content) => {
+   *     return c.html(
+   *       <html>
+   *         <body>
+   *           <p>{content}</p>
+   *         </body>
+   *       </html>
+   *     )
+   *   })
+   *   await next()
+   * })
+   * ```
+   */
+  setRenderer = /* @__PURE__ */ __name((renderer) => {
+    this.#renderer = renderer;
+  }, "setRenderer");
+  /**
+   * `.header()` can set headers.
+   *
+   * @see {@link https://hono.dev/docs/api/context#header}
+   *
+   * @example
+   * ```ts
+   * app.get('/welcome', (c) => {
+   *   // Set headers
+   *   c.header('X-Message', 'Hello!')
+   *   c.header('Content-Type', 'text/plain')
+   *
+   *   // Append multiple headers using the append option (e.g. Vary)
+   *   c.header('Vary', 'Accept-Encoding', { append: true })
+   *   c.header('Vary', 'User-Agent', { append: true })
+   *
+   *   return c.body('Thank you for coming')
+   * })
+   * ```
+   */
+  header = /* @__PURE__ */ __name((name, value, options) => {
+    if (this.finalized) {
+      this.#res = createResponseInstance(this.#res.body, this.#res);
+    }
+    const headers = this.#res ? this.#res.headers : this.#preparedHeaders ??= new Headers();
+    if (value === void 0) {
+      headers.delete(name);
+    } else if (options?.append) {
+      headers.append(name, value);
+    } else {
+      headers.set(name, value);
+    }
+  }, "header");
+  status = /* @__PURE__ */ __name((status) => {
+    this.#status = status;
+  }, "status");
+  /**
+   * `.set()` can set the value specified by the key.
+   *
+   * @see {@link https://hono.dev/docs/api/context#set-get}
+   *
+   * @example
+   * ```ts
+   * app.use('*', async (c, next) => {
+   *   c.set('message', 'Hono is hot!!')
+   *   await next()
+   * })
+   * ```
+   */
+  set = /* @__PURE__ */ __name((key, value) => {
+    this.#var ??= /* @__PURE__ */ new Map();
+    this.#var.set(key, value);
+  }, "set");
+  /**
+   * `.get()` can use the value specified by the key.
+   *
+   * @see {@link https://hono.dev/docs/api/context#set-get}
+   *
+   * @example
+   * ```ts
+   * app.get('/', (c) => {
+   *   const message = c.get('message')
+   *   return c.text(`The message is "${message}"`)
+   * })
+   * ```
+   */
+  get = /* @__PURE__ */ __name((key) => {
+    return this.#var ? this.#var.get(key) : void 0;
+  }, "get");
+  /**
+   * `.var` can access the value of a variable.
+   *
+   * @see {@link https://hono.dev/docs/api/context#var}
+   *
+   * @example
+   * ```ts
+   * const result = c.var.client.oneMethod()
+   * ```
+   */
+  // c.var.propName is a read-only
+  get var() {
+    if (!this.#var) {
+      return {};
+    }
+    return Object.fromEntries(this.#var);
+  }
+  #newResponse(data, arg, headers) {
+    let responseHeaders = this.#res ? new Headers(this.#res.headers) : this.#preparedHeaders;
+    if (typeof arg === "object" && arg.headers) {
+      responseHeaders ??= new Headers();
+      for (const [key, value] of new Headers(arg.headers)) {
+        if (key === "set-cookie") {
+          responseHeaders.append(key, value);
+        } else {
+          responseHeaders.set(key, value);
+        }
+      }
+    }
+    if (headers) {
+      if (!responseHeaders) {
+        let count = 0;
+        for (const k in headers) {
+          if (++count > 1 || typeof headers[k] !== "string") {
+            responseHeaders = new Headers();
+            break;
+          }
+        }
+      }
+      if (responseHeaders) {
+        for (const k in headers) {
+          const v = headers[k];
+          if (typeof v === "string") {
+            responseHeaders.set(k, v);
+          } else {
+            responseHeaders.delete(k);
+            for (const v2 of v) {
+              responseHeaders.append(k, v2);
+            }
+          }
+        }
+      }
+    }
+    const status = typeof arg === "number" ? arg : arg?.status ?? this.#status;
+    return createResponseInstance(data, {
+      status,
+      headers: responseHeaders ?? headers
+    });
+  }
+  newResponse = /* @__PURE__ */ __name((...args) => this.#newResponse(...args), "newResponse");
+  /**
+   * `.body()` can return the HTTP response.
+   * You can set headers with `.header()` and set HTTP status code with `.status`.
+   * This can also be set in `.text()`, `.json()` and so on.
+   *
+   * @see {@link https://hono.dev/docs/api/context#body}
+   *
+   * @example
+   * ```ts
+   * app.get('/welcome', (c) => {
+   *   // Set headers
+   *   c.header('X-Message', 'Hello!')
+   *   c.header('Content-Type', 'text/plain')
+   *   // Set HTTP status code
+   *   c.status(201)
+   *
+   *   // Return the response body
+   *   return c.body('Thank you for coming')
+   * })
+   * ```
+   */
+  body = /* @__PURE__ */ __name((data, arg, headers) => this.#newResponse(data, arg, headers), "body");
+  /**
+   * `.text()` can render text as `Content-Type:text/plain`.
+   *
+   * @see {@link https://hono.dev/docs/api/context#text}
+   *
+   * @example
+   * ```ts
+   * app.get('/say', (c) => {
+   *   return c.text('Hello!')
+   * })
+   * ```
+   */
+  text = /* @__PURE__ */ __name((text, arg, headers) => {
+    return !this.#preparedHeaders && !this.#status && !arg && !headers && !this.finalized ? new Response(text) : this.#newResponse(
+      text,
+      arg,
+      setDefaultContentType(TEXT_PLAIN, headers)
+    );
+  }, "text");
+  /**
+   * `.json()` can render JSON as `Content-Type:application/json`.
+   *
+   * @see {@link https://hono.dev/docs/api/context#json}
+   *
+   * @example
+   * ```ts
+   * app.get('/api', (c) => {
+   *   return c.json({ message: 'Hello!' })
+   * })
+   * ```
+   */
+  json = /* @__PURE__ */ __name((object, arg, headers) => {
+    return this.#newResponse(
+      JSON.stringify(object),
+      arg,
+      setDefaultContentType("application/json", headers)
+    );
+  }, "json");
+  html = /* @__PURE__ */ __name((html, arg, headers) => {
+    const res = /* @__PURE__ */ __name((html2) => this.#newResponse(html2, arg, setDefaultContentType("text/html; charset=UTF-8", headers)), "res");
+    return typeof html === "object" ? resolveCallback(html, HtmlEscapedCallbackPhase.Stringify, false, {}).then(res) : res(html);
+  }, "html");
+  /**
+   * `.redirect()` can Redirect, default status code is 302.
+   *
+   * @see {@link https://hono.dev/docs/api/context#redirect}
+   *
+   * @example
+   * ```ts
+   * app.get('/redirect', (c) => {
+   *   return c.redirect('/')
+   * })
+   * app.get('/redirect-permanently', (c) => {
+   *   return c.redirect('/', 301)
+   * })
+   * ```
+   */
+  redirect = /* @__PURE__ */ __name((location, status) => {
+    const locationString = String(location);
+    this.header(
+      "Location",
+      // Multibyes should be encoded
+      // eslint-disable-next-line no-control-regex
+      !/[^\x00-\xFF]/.test(locationString) ? locationString : encodeURI(locationString)
+    );
+    return this.newResponse(null, status ?? 302);
+  }, "redirect");
+  /**
+   * `.notFound()` can return the Not Found Response.
+   *
+   * @see {@link https://hono.dev/docs/api/context#notfound}
+   *
+   * @example
+   * ```ts
+   * app.get('/notfound', (c) => {
+   *   return c.notFound()
+   * })
+   * ```
+   */
+  notFound = /* @__PURE__ */ __name(() => {
+    this.#notFoundHandler ??= () => createResponseInstance();
+    return this.#notFoundHandler(this);
+  }, "notFound");
+};
+
+// node_modules/hono/dist/router.js
+init_checked_fetch();
+init_modules_watch_stub();
+var METHOD_NAME_ALL = "ALL";
+var METHOD_NAME_ALL_LOWERCASE = "all";
+var METHODS = ["get", "post", "put", "delete", "options", "patch", "query"];
+var MESSAGE_MATCHER_IS_ALREADY_BUILT = "Can not add a route since the matcher is already built.";
+var UnsupportedPathError = class extends Error {
+  static {
+    __name(this, "UnsupportedPathError");
+  }
+};
+
+// node_modules/hono/dist/utils/constants.js
+init_checked_fetch();
+init_modules_watch_stub();
+var COMPOSED_HANDLER = "__COMPOSED_HANDLER";
+
+// node_modules/hono/dist/hono-base.js
+var notFoundHandler = /* @__PURE__ */ __name((c) => {
+  return c.text("404 Not Found", 404);
+}, "notFoundHandler");
+var errorHandler = /* @__PURE__ */ __name((err, c) => {
+  if ("getResponse" in err) {
+    const res = err.getResponse();
+    return c.newResponse(res.body, res);
+  }
+  console.error(err);
+  return c.text("Internal Server Error", 500);
+}, "errorHandler");
+var Hono = class _Hono {
+  static {
+    __name(this, "_Hono");
+  }
+  get;
+  post;
+  put;
+  delete;
+  options;
+  patch;
+  query;
+  all;
+  on;
+  use;
+  /*
+    This class is like an abstract class and does not have a router.
+    To use it, inherit the class and implement router in the constructor.
+  */
+  router;
+  getPath;
+  // Cannot use `#` because it requires visibility at JavaScript runtime.
+  _basePath = "/";
+  #path = "/";
+  routes = [];
+  constructor(options = {}) {
+    const allMethods = [...METHODS, METHOD_NAME_ALL_LOWERCASE];
+    allMethods.forEach((method) => {
+      this[method] = (args1, ...args) => {
+        if (typeof args1 === "string") {
+          this.#path = args1;
+        } else {
+          this.#addRoute(method, this.#path, args1);
+        }
+        args.forEach((handler) => {
+          this.#addRoute(method, this.#path, handler);
+        });
+        return this;
+      };
+    });
+    this.on = (method, path, ...handlers) => {
+      for (const p of [path].flat()) {
+        this.#path = p;
+        for (const m of [method].flat()) {
+          handlers.map((handler) => {
+            this.#addRoute(m.toUpperCase(), this.#path, handler);
+          });
+        }
+      }
+      return this;
+    };
+    this.use = (arg1, ...handlers) => {
+      if (typeof arg1 === "string") {
+        this.#path = arg1;
+      } else {
+        this.#path = "*";
+        handlers.unshift(arg1);
+      }
+      handlers.forEach((handler) => {
+        this.#addRoute(METHOD_NAME_ALL, this.#path, handler);
+      });
+      return this;
+    };
+    const { strict, ...optionsWithoutStrict } = options;
+    Object.assign(this, optionsWithoutStrict);
+    this.getPath = strict ?? true ? options.getPath ?? getPath : getPathNoStrict;
+  }
+  #clone() {
+    const clone = new _Hono({
+      router: this.router,
+      getPath: this.getPath
+    });
+    clone.errorHandler = this.errorHandler;
+    clone.#notFoundHandler = this.#notFoundHandler;
+    clone.routes = this.routes;
+    return clone;
+  }
+  #notFoundHandler = notFoundHandler;
+  // Cannot use `#` because it requires visibility at JavaScript runtime.
+  errorHandler = errorHandler;
+  /**
+   * `.route()` allows grouping other Hono instance in routes.
+   *
+   * @see {@link https://hono.dev/docs/api/routing#grouping}
+   *
+   * @param {string} path - base Path
+   * @param {Hono} app - other Hono instance
+   * @returns {Hono} routed Hono instance
+   *
+   * @example
+   * ```ts
+   * const app = new Hono()
+   * const app2 = new Hono()
+   *
+   * app2.get("/user", (c) => c.text("user"))
+   * app.route("/api", app2) // GET /api/user
+   * ```
+   */
+  route(path, app2) {
+    const subApp = this.basePath(path);
+    app2.routes.map((r) => {
+      let handler;
+      if (app2.errorHandler === errorHandler) {
+        handler = r.handler;
+      } else {
+        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app2.errorHandler)(c, () => r.handler(c, next))).res, "handler");
+        handler[COMPOSED_HANDLER] = r.handler;
+      }
+      subApp.#addRoute(r.method, r.path, handler, r.basePath);
+    });
+    return this;
+  }
+  /**
+   * `.basePath()` allows base paths to be specified.
+   *
+   * @see {@link https://hono.dev/docs/api/routing#base-path}
+   *
+   * @param {string} path - base Path
+   * @returns {Hono} changed Hono instance
+   *
+   * @example
+   * ```ts
+   * const api = new Hono().basePath('/api')
+   * ```
+   */
+  basePath(path) {
+    const subApp = this.#clone();
+    subApp._basePath = mergePath(this._basePath, path);
+    return subApp;
+  }
+  /**
+   * `.onError()` handles an error and returns a customized Response.
+   *
+   * @see {@link https://hono.dev/docs/api/hono#error-handling}
+   *
+   * @param {ErrorHandler} handler - request Handler for error
+   * @returns {Hono} changed Hono instance
+   *
+   * @example
+   * ```ts
+   * app.onError((err, c) => {
+   *   console.error(`${err}`)
+   *   return c.text('Custom Error Message', 500)
+   * })
+   * ```
+   */
+  onError = /* @__PURE__ */ __name((handler) => {
+    this.errorHandler = handler;
+    return this;
+  }, "onError");
+  /**
+   * `.notFound()` allows you to customize a Not Found Response.
+   *
+   * @see {@link https://hono.dev/docs/api/hono#not-found}
+   *
+   * @param {NotFoundHandler} handler - request handler for not-found
+   * @returns {Hono} changed Hono instance
+   *
+   * @example
+   * ```ts
+   * app.notFound((c) => {
+   *   return c.text('Custom 404 Message', 404)
+   * })
+   * ```
+   */
+  notFound = /* @__PURE__ */ __name((handler) => {
+    this.#notFoundHandler = handler;
+    return this;
+  }, "notFound");
+  /**
+   * `.mount()` allows you to mount applications built with other frameworks into your Hono application.
+   *
+   * @see {@link https://hono.dev/docs/api/hono#mount}
+   *
+   * @param {string} path - base Path
+   * @param {Function} applicationHandler - other Request Handler
+   * @param {MountOptions} [options] - options of `.mount()`
+   * @returns {Hono} mounted Hono instance
+   *
+   * @example
+   * ```ts
+   * import { Router as IttyRouter } from 'itty-router'
+   * import { Hono } from 'hono'
+   * // Create itty-router application
+   * const ittyRouter = IttyRouter()
+   * // GET /itty-router/hello
+   * ittyRouter.get('/hello', () => new Response('Hello from itty-router'))
+   *
+   * const app = new Hono()
+   * app.mount('/itty-router', ittyRouter.handle)
+   * ```
+   *
+   * @example
+   * ```ts
+   * const app = new Hono()
+   * // Send the request to another application without modification.
+   * app.mount('/app', anotherApp, {
+   *   replaceRequest: (req) => req,
+   * })
+   * ```
+   */
+  mount(path, applicationHandler, options) {
+    let replaceRequest;
+    let optionHandler;
+    if (options) {
+      if (typeof options === "function") {
+        optionHandler = options;
+      } else {
+        optionHandler = options.optionHandler;
+        if (options.replaceRequest === false) {
+          replaceRequest = /* @__PURE__ */ __name((request) => request, "replaceRequest");
+        } else {
+          replaceRequest = options.replaceRequest;
+        }
+      }
+    }
+    const getOptions = optionHandler ? (c) => {
+      const options2 = optionHandler(c);
+      return Array.isArray(options2) ? options2 : [options2];
+    } : (c) => {
+      let executionContext = void 0;
+      try {
+        executionContext = c.executionCtx;
+      } catch {
+      }
+      return [c.env, executionContext];
+    };
+    replaceRequest ||= (() => {
+      const mergedPath = mergePath(this._basePath, path);
+      const pathPrefixLength = mergedPath === "/" ? 0 : mergedPath.length;
+      return (request) => {
+        const url = new URL(request.url);
+        url.pathname = this.getPath(request).slice(pathPrefixLength) || "/";
+        return new Request(url, request);
+      };
+    })();
+    const handler = /* @__PURE__ */ __name(async (c, next) => {
+      const res = await applicationHandler(replaceRequest(c.req.raw), ...getOptions(c));
+      if (res) {
+        return res;
+      }
+      await next();
+    }, "handler");
+    this.#addRoute(METHOD_NAME_ALL, mergePath(path, "*"), handler);
+    return this;
+  }
+  #addRoute(method, path, handler, baseRoutePath) {
+    method = method.toUpperCase();
+    path = mergePath(this._basePath, path);
+    const r = {
+      basePath: baseRoutePath !== void 0 ? mergePath(this._basePath, baseRoutePath) : this._basePath,
+      path,
+      method,
+      handler
+    };
+    this.router.add(method, path, [handler, r]);
+    this.routes.push(r);
+  }
+  #handleError(err, c) {
+    if (err instanceof Error) {
+      return this.errorHandler(err, c);
+    }
+    throw err;
+  }
+  #dispatch(request, executionCtx, env, method) {
+    if (method === "HEAD") {
+      return (async () => new Response(null, await this.#dispatch(request, executionCtx, env, "GET")))();
+    }
+    const path = this.getPath(request, { env });
+    const matchResult = this.router.match(method, path);
+    const c = new Context(request, {
+      path,
+      matchResult,
+      env,
+      executionCtx,
+      notFoundHandler: this.#notFoundHandler
+    });
+    if (matchResult[0].length === 1) {
+      let res;
+      try {
+        res = matchResult[0][0][0][0](c, async () => {
+          c.res = await this.#notFoundHandler(c);
+        });
+      } catch (err) {
+        return this.#handleError(err, c);
+      }
+      return res instanceof Promise ? res.then(
+        (resolved) => resolved || (c.finalized ? c.res : this.#notFoundHandler(c))
+      ).catch((err) => this.#handleError(err, c)) : res ?? this.#notFoundHandler(c);
+    }
+    const composed = compose(matchResult[0], this.errorHandler, this.#notFoundHandler);
+    return (async () => {
+      try {
+        const context = await composed(c);
+        if (!context.finalized) {
+          throw new Error(
+            "Context is not finalized. Did you forget to return a Response object or `await next()`?"
+          );
+        }
+        return context.res;
+      } catch (err) {
+        return this.#handleError(err, c);
+      }
+    })();
+  }
+  /**
+   * `.fetch()` will be entry point of your app.
+   *
+   * @see {@link https://hono.dev/docs/api/hono#fetch}
+   *
+   * @param {Request} request - request Object of request
+   * @param {Env} env - env Object
+   * @param {ExecutionContext} executionCtx - context of execution
+   * @returns {Response | Promise<Response>} response of request
+   *
+   */
+  fetch = /* @__PURE__ */ __name((request, ...rest) => {
+    return this.#dispatch(request, rest[1], rest[0], request.method);
+  }, "fetch");
+  /**
+   * `.request()` is a useful method for testing.
+   * You can pass a URL or pathname to send a GET request.
+   * app will return a Response object.
+   * ```ts
+   * test('GET /hello is ok', async () => {
+   *   const res = await app.request('/hello')
+   *   expect(res.status).toBe(200)
+   * })
+   * ```
+   * @see https://hono.dev/docs/api/hono#request
+   */
+  request = /* @__PURE__ */ __name((input, requestInit, Env, executionCtx) => {
+    if (input instanceof Request) {
+      return this.fetch(requestInit ? new Request(input, requestInit) : input, Env, executionCtx);
+    }
+    input = input.toString();
+    return this.fetch(
+      new Request(
+        /^https?:\/\//.test(input) ? input : `http://localhost${mergePath("/", input)}`,
+        requestInit
+      ),
+      Env,
+      executionCtx
+    );
+  }, "request");
+  /**
+   * `.fire()` automatically adds a global fetch event listener.
+   * This can be useful for environments that adhere to the Service Worker API, such as non-ES module Cloudflare Workers.
+   * @deprecated
+   * Use `fire` from `hono/service-worker` instead.
+   * ```ts
+   * import { Hono } from 'hono'
+   * import { fire } from 'hono/service-worker'
+   *
+   * const app = new Hono()
+   * // ...
+   * fire(app)
+   * ```
+   * @see https://hono.dev/docs/api/hono#fire
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
+   * @see https://developers.cloudflare.com/workers/reference/migrate-to-module-workers/
+   */
+  fire = /* @__PURE__ */ __name(() => {
+    addEventListener("fetch", (event) => {
+      event.respondWith(this.#dispatch(event.request, event, void 0, event.request.method));
+    });
+  }, "fire");
+};
+
+// node_modules/hono/dist/router/reg-exp-router/index.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/router/reg-exp-router/router.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/router/reg-exp-router/matcher.js
+init_checked_fetch();
+init_modules_watch_stub();
+var emptyParam = [];
+function match(method, path) {
+  const matchers = this.buildAllMatchers();
+  const match2 = /* @__PURE__ */ __name(((method2, path2) => {
+    const matcher = matchers[method2] || matchers[METHOD_NAME_ALL];
+    const staticMatch = matcher[2][path2];
+    if (staticMatch) {
+      return staticMatch;
+    }
+    const match3 = path2.match(matcher[0]);
+    if (!match3) {
+      return [[], emptyParam];
+    }
+    const index = match3.indexOf("", 1);
+    return [matcher[1][index], match3];
+  }), "match2");
+  this.match = match2;
+  return match2(method, path);
+}
+__name(match, "match");
+
+// node_modules/hono/dist/router/reg-exp-router/node.js
+init_checked_fetch();
+init_modules_watch_stub();
+var LABEL_REG_EXP_STR = "[^/]+";
+var ONLY_WILDCARD_REG_EXP_STR = ".*";
+var TAIL_WILDCARD_REG_EXP_STR = "(?:|/.*)";
+var PATH_ERROR = /* @__PURE__ */ Symbol();
+var regExpMetaChars = new Set(".\\+*[^]$()");
+function compareKey(a, b) {
+  if (a.length === 1) {
+    return b.length === 1 ? a < b ? -1 : 1 : -1;
+  }
+  if (b.length === 1) {
+    return 1;
+  }
+  if (a === ONLY_WILDCARD_REG_EXP_STR || a === TAIL_WILDCARD_REG_EXP_STR) {
+    return b === TAIL_WILDCARD_REG_EXP_STR ? -1 : 1;
+  } else if (b === ONLY_WILDCARD_REG_EXP_STR || b === TAIL_WILDCARD_REG_EXP_STR) {
+    return -1;
+  }
+  if (a === LABEL_REG_EXP_STR) {
+    return 1;
+  } else if (b === LABEL_REG_EXP_STR) {
+    return -1;
+  }
+  return a.length === b.length ? a < b ? -1 : 1 : b.length - a.length;
+}
+__name(compareKey, "compareKey");
+var Node = class _Node {
+  static {
+    __name(this, "_Node");
+  }
+  // handler index of a dynamic path, or -1 for a static path terminal
+  #index;
+  #varIndex;
+  #children = /* @__PURE__ */ Object.create(null);
+  insert(tokens, index, paramMap, context, isStatic) {
+    let node = this;
+    for (let i = 0, len = tokens.length; i < len; i++) {
+      const token = tokens[i];
+      const pattern = token.length === 1 ? token === "*" ? i === len - 1 ? ["", "", ONLY_WILDCARD_REG_EXP_STR] : ["", "", LABEL_REG_EXP_STR] : null : token === "/*" ? ["", "", TAIL_WILDCARD_REG_EXP_STR] : token.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
+      let nextNode;
+      if (pattern) {
+        const name = pattern[1];
+        let regexpStr = pattern[2] || LABEL_REG_EXP_STR;
+        if (name && pattern[2]) {
+          if (regexpStr === ".*") {
+            throw PATH_ERROR;
+          }
+          regexpStr = regexpStr.replace(/^\((?!\?:)(?=[^)]+\)$)/, "(?:");
+          if (/\((?!\?:)/.test(regexpStr)) {
+            throw PATH_ERROR;
+          }
+          if (regexpStr.length === 1 && regExpMetaChars.has(regexpStr)) {
+            throw PATH_ERROR;
+          }
+        }
+        nextNode = node.#children[regexpStr];
+        if (!nextNode) {
+          if (regexpStr !== ONLY_WILDCARD_REG_EXP_STR && regexpStr !== TAIL_WILDCARD_REG_EXP_STR) {
+            for (const k in node.#children) {
+              if (
+                // a single-char pattern coexists with single-char literals as a literal does
+                (regexpStr.length > 1 || k.length > 1) && k !== ONLY_WILDCARD_REG_EXP_STR && k !== TAIL_WILDCARD_REG_EXP_STR
+              ) {
+                throw PATH_ERROR;
+              }
+            }
+          }
+          nextNode = node.#children[regexpStr] = new _Node();
+        }
+        if (name !== "") {
+          nextNode.#varIndex ??= context.varIndex++;
+          paramMap.push([name, nextNode.#varIndex]);
+        }
+      } else {
+        nextNode = node.#children[token];
+        if (!nextNode) {
+          for (const k in node.#children) {
+            if (k.length > 1 && k !== ONLY_WILDCARD_REG_EXP_STR && k !== TAIL_WILDCARD_REG_EXP_STR) {
+              throw PATH_ERROR;
+            }
+          }
+          nextNode = node.#children[token] = new _Node();
+        }
+      }
+      node = nextNode;
+    }
+    if (node.#index !== void 0) {
+      throw PATH_ERROR;
+    }
+    node.#index = isStatic ? -1 : index;
+  }
+  buildRegExpStr() {
+    const childKeys = Object.keys(this.#children).sort(compareKey);
+    const strList = childKeys.map((k) => {
+      const c = this.#children[k];
+      const childStr = c.buildRegExpStr();
+      return childStr === "" ? "" : (typeof c.#varIndex === "number" ? `(${k})@${c.#varIndex}` : regExpMetaChars.has(k) ? `\\${k}` : k) + childStr;
+    }).filter(Boolean);
+    if (typeof this.#index === "number" && this.#index !== -1) {
+      strList.unshift(`#${this.#index}`);
+    }
+    if (strList.length === 0) {
+      return "";
+    }
+    if (strList.length === 1) {
+      return strList[0];
+    }
+    return "(?:" + strList.join("|") + ")";
+  }
+};
+
+// node_modules/hono/dist/router/reg-exp-router/trie.js
+init_checked_fetch();
+init_modules_watch_stub();
+var Trie = class {
+  static {
+    __name(this, "Trie");
+  }
+  #context = { varIndex: 0 };
+  #root = new Node();
+  #index = 0;
+  // dynamic path -> [handler index, param assoc]; static paths are not registered
+  paths = /* @__PURE__ */ Object.create(null);
+  insert(path, isStatic) {
+    if (isStatic) {
+      this.#root.insert(path.split(""), 0, [], this.#context, true);
+      return;
+    }
+    const paramAssoc = [];
+    const groups = [];
+    let markedPath = path;
+    for (let i = 0; ; ) {
+      let replaced = false;
+      markedPath = markedPath.replace(/\{[^}]+\}/g, (m) => {
+        const mark = `@\\${i}`;
+        groups[i] = [mark, m];
+        i++;
+        replaced = true;
+        return mark;
+      });
+      if (!replaced) {
+        break;
+      }
+    }
+    const tokens = markedPath.match(/(?::[^\/]+)|(?:\/\*$)|./g) || [];
+    for (let i = groups.length - 1; i >= 0; i--) {
+      const [mark] = groups[i];
+      for (let j = tokens.length - 1; j >= 0; j--) {
+        if (tokens[j].indexOf(mark) !== -1) {
+          tokens[j] = tokens[j].replace(mark, groups[i][1]);
+          break;
+        }
+      }
+    }
+    this.#root.insert(tokens, this.#index, paramAssoc, this.#context, false);
+    this.paths[path] = [this.#index++, paramAssoc];
+  }
+  buildRegExp() {
+    let regexp = this.#root.buildRegExpStr();
+    if (regexp === "") {
+      return [/^$/, [], []];
+    }
+    let captureIndex = 0;
+    const indexReplacementMap = [];
+    const paramReplacementMap = [];
+    regexp = regexp.replace(/#(\d+)|@(\d+)|\.\*\$/g, (_, handlerIndex, paramIndex) => {
+      if (handlerIndex !== void 0) {
+        indexReplacementMap[++captureIndex] = Number(handlerIndex);
+        return "$()";
+      }
+      if (paramIndex !== void 0) {
+        paramReplacementMap[Number(paramIndex)] = ++captureIndex;
+        return "";
+      }
+      return "";
+    });
+    return [new RegExp(`^${regexp}`), indexReplacementMap, paramReplacementMap];
+  }
+};
+
+// node_modules/hono/dist/router/reg-exp-router/router.js
+var wildcardRegExpCache = /* @__PURE__ */ Object.create(null);
+function buildWildcardRegExp(path) {
+  return wildcardRegExpCache[path] ??= new RegExp(
+    path === "*" ? "" : `^${path.replace(
+      /\/\*$|([.\\+*[^\]$()])/g,
+      (_, metaChar) => metaChar ? `\\${metaChar}` : "(?:|/.*)"
+    )}$`
+  );
+}
+__name(buildWildcardRegExp, "buildWildcardRegExp");
+function clearWildcardRegExpCache() {
+  wildcardRegExpCache = /* @__PURE__ */ Object.create(null);
+}
+__name(clearWildcardRegExpCache, "clearWildcardRegExpCache");
+function findMiddleware(middleware, path) {
+  if (!middleware) {
+    return void 0;
+  }
+  for (const k of Object.keys(middleware).sort((a, b) => b.length - a.length)) {
+    if (buildWildcardRegExp(k).test(path)) {
+      return [...middleware[k]];
+    }
+  }
+  return void 0;
+}
+__name(findMiddleware, "findMiddleware");
+var RegExpRouter = class {
+  static {
+    __name(this, "RegExpRouter");
+  }
+  name = "RegExpRouter";
+  #middleware;
+  #routes;
+  #tries;
+  constructor() {
+    this.#middleware = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
+    this.#routes = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
+    this.#tries = { [METHOD_NAME_ALL]: new Trie() };
+  }
+  #insertPath(method, path) {
+    try {
+      this.#tries[method].insert(path, !/\*|\/:/.test(path));
+    } catch (e) {
+      throw e === PATH_ERROR ? new UnsupportedPathError(path) : e;
+    }
+  }
+  add(method, path, handler) {
+    const middleware = this.#middleware;
+    const routes = this.#routes;
+    if (!middleware || !routes) {
+      throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
+    }
+    if (!middleware[method]) {
+      this.#tries[method] = new Trie();
+      [middleware, routes].forEach((handlerMap) => {
+        handlerMap[method] = /* @__PURE__ */ Object.create(null);
+        Object.keys(handlerMap[METHOD_NAME_ALL]).forEach((p) => {
+          handlerMap[method][p] = [...handlerMap[METHOD_NAME_ALL][p]];
+          this.#insertPath(method, p);
+        });
+      });
+    }
+    if (path === "/*") {
+      path = "*";
+    }
+    const paramCount = (path.match(/\/:/g) || []).length;
+    if (/\*$/.test(path)) {
+      const re = buildWildcardRegExp(path);
+      Object.keys(middleware).forEach((m) => {
+        if ((method === METHOD_NAME_ALL || method === m) && !middleware[m][path]) {
+          this.#insertPath(m, path);
+          middleware[m][path] = findMiddleware(middleware[m], path) || findMiddleware(middleware[METHOD_NAME_ALL], path) || [];
+        }
+      });
+      Object.keys(middleware).forEach((m) => {
+        if (method === METHOD_NAME_ALL || method === m) {
+          Object.keys(middleware[m]).forEach((p) => {
+            re.test(p) && middleware[m][p].push([handler, paramCount]);
+          });
+        }
+      });
+      Object.keys(routes).forEach((m) => {
+        if (method === METHOD_NAME_ALL || method === m) {
+          Object.keys(routes[m]).forEach(
+            (p) => re.test(p) && routes[m][p].push([handler, paramCount])
+          );
+        }
+      });
+      return;
+    }
+    const paths = checkOptionalParameter(path) || [path];
+    for (let i = 0, len = paths.length; i < len; i++) {
+      const path2 = paths[i];
+      Object.keys(routes).forEach((m) => {
+        if (method === METHOD_NAME_ALL || method === m) {
+          if (!routes[m][path2]) {
+            this.#insertPath(m, path2);
+            routes[m][path2] = [
+              ...findMiddleware(middleware[m], path2) || findMiddleware(middleware[METHOD_NAME_ALL], path2) || []
+            ];
+          }
+          routes[m][path2].push([handler, paramCount - len + i + 1]);
+        }
+      });
+    }
+  }
+  match = match;
+  buildAllMatchers() {
+    const matchers = /* @__PURE__ */ Object.create(null);
+    Object.keys(this.#routes).concat(Object.keys(this.#middleware)).forEach((method) => {
+      matchers[method] ||= this.#buildMatcher(method);
+    });
+    this.#middleware = this.#routes = this.#tries = void 0;
+    clearWildcardRegExpCache();
+    return matchers;
+  }
+  #buildMatcher(method) {
+    const middleware = this.#middleware[method];
+    const routes = this.#routes[method];
+    const trie = this.#tries[method];
+    const staticMap = /* @__PURE__ */ Object.create(null);
+    const handlerData = [];
+    [middleware, routes].forEach((r) => {
+      for (const path in r) {
+        const handlers = r[path];
+        const pathData = trie.paths[path];
+        if (!pathData) {
+          staticMap[path] = [handlers.map(([h]) => [h, /* @__PURE__ */ Object.create(null)]), emptyParam];
+          continue;
+        }
+        const paramAssoc = pathData[1];
+        handlerData[pathData[0]] = handlers.map(([h, paramCount]) => {
+          const paramIndexMap = /* @__PURE__ */ Object.create(null);
+          paramCount -= 1;
+          for (; paramCount >= 0; paramCount--) {
+            const [key, value] = paramAssoc[paramCount];
+            paramIndexMap[key] = value;
+          }
+          return [h, paramIndexMap];
+        });
+      }
+    });
+    const [regexp, indexReplacementMap, paramReplacementMap] = trie.buildRegExp();
+    for (let i = 0, len = handlerData.length; i < len; i++) {
+      for (let j = 0, len2 = handlerData[i].length; j < len2; j++) {
+        const map = handlerData[i][j]?.[1];
+        if (!map) {
+          continue;
+        }
+        const keys = Object.keys(map);
+        for (let k = 0, len3 = keys.length; k < len3; k++) {
+          map[keys[k]] = paramReplacementMap[map[keys[k]]];
+        }
+      }
+    }
+    const handlerMap = [];
+    for (const i in indexReplacementMap) {
+      handlerMap[i] = handlerData[indexReplacementMap[i]];
+    }
+    return [regexp, handlerMap, staticMap];
+  }
+};
+
+// node_modules/hono/dist/router/reg-exp-router/prepared-router.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/router/smart-router/index.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/router/smart-router/router.js
+init_checked_fetch();
+init_modules_watch_stub();
+var SmartRouter = class {
+  static {
+    __name(this, "SmartRouter");
+  }
+  name = "SmartRouter";
+  #routers = [];
+  #routes = [];
+  constructor(init) {
+    this.#routers = init.routers;
+  }
+  add(method, path, handler) {
+    if (!this.#routes) {
+      throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
+    }
+    this.#routes.push([method, path, handler]);
+  }
+  match(method, path) {
+    if (!this.#routes) {
+      throw new Error("Fatal error");
+    }
+    const routers = this.#routers;
+    const routes = this.#routes;
+    const len = routers.length;
+    let i = 0;
+    let res;
+    for (; i < len; i++) {
+      const router = routers[i];
+      try {
+        for (let i2 = 0, len2 = routes.length; i2 < len2; i2++) {
+          router.add(...routes[i2]);
+        }
+        res = router.match(method, path);
+      } catch (e) {
+        if (e instanceof UnsupportedPathError) {
+          continue;
+        }
+        throw e;
+      }
+      this.match = router.match.bind(router);
+      this.#routers = [router];
+      this.#routes = void 0;
+      break;
+    }
+    if (i === len) {
+      throw new Error("Fatal error");
+    }
+    this.name = `SmartRouter + ${this.activeRouter.name}`;
+    return res;
+  }
+  get activeRouter() {
+    if (this.#routes || this.#routers.length !== 1) {
+      throw new Error("No active router has been determined yet.");
+    }
+    return this.#routers[0];
+  }
+};
+
+// node_modules/hono/dist/router/trie-router/index.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/router/trie-router/router.js
+init_checked_fetch();
+init_modules_watch_stub();
+
+// node_modules/hono/dist/router/trie-router/node.js
+init_checked_fetch();
+init_modules_watch_stub();
+var emptyParams = /* @__PURE__ */ Object.create(null);
+var order = 0;
+var Node2 = class _Node2 {
+  static {
+    __name(this, "_Node");
+  }
+  #methods = [];
+  #children = /* @__PURE__ */ Object.create(null);
+  #patterns = [];
+  #pattern;
+  #params = emptyParams;
+  insert(method, path, handler) {
+    let curNode = this;
+    const parts = splitRoutingPath(path);
+    const possibleKeys = /* @__PURE__ */ new Set();
+    let i = 0;
+    for (const p of parts) {
+      const nextP = parts[++i];
+      const pattern = getPattern(p, nextP) || (nextP === void 0 && p && p.indexOf("*") === p.length - 1 ? p : null);
+      const isParam = Array.isArray(pattern);
+      const key = isParam ? pattern[0] : pattern || p;
+      const child = curNode.#children[key] ||= new _Node2();
+      if (pattern && !child.#pattern) {
+        child.#pattern = pattern;
+        curNode.#patterns.push(child);
+      }
+      curNode = child;
+      if (isParam) {
+        possibleKeys.add(pattern[1]);
+      }
+    }
+    curNode.#methods.push({
+      [method]: {
+        handler,
+        possibleKeys: [...possibleKeys],
+        score: ++order
+      }
+    });
+  }
+  #pushHandlerSets(handlerSets, node, method, nodeParams, params) {
+    for (let i = 0, len = node.#methods.length; i < len; i++) {
+      const m = node.#methods[i];
+      const handlerSet = m[method] || m[METHOD_NAME_ALL];
+      if (handlerSet) {
+        handlerSet.params = /* @__PURE__ */ Object.create(null);
+        handlerSets.push(handlerSet);
+        for (let i2 = 0, len2 = handlerSet.possibleKeys.length; i2 < len2; i2++) {
+          const key = handlerSet.possibleKeys[i2];
+          handlerSet.params[key] = params?.[key] && !i2 ? params[key] : nodeParams[key] ?? params?.[key];
+        }
+      }
+    }
+  }
+  search(method, path) {
+    const handlerSets = [];
+    this.#params = emptyParams;
+    const curNode = this;
+    let curNodes = [curNode];
+    const parts = splitPath(path);
+    const curNodesQueue = [];
+    const len = parts.length;
+    let partOffsets = null;
+    for (let i = 0; i < len; i++) {
+      const part = parts[i];
+      const isLast = i === len - 1;
+      const tempNodes = [];
+      for (let j = 0, len2 = curNodes.length; j < len2; j++) {
+        const node = curNodes[j];
+        const nextNode = node.#children[part];
+        if (nextNode) {
+          nextNode.#params = node.#params;
+          if (isLast) {
+            if (nextNode.#children["*"]) {
+              this.#pushHandlerSets(handlerSets, nextNode.#children["*"], method, node.#params);
+            }
+            this.#pushHandlerSets(handlerSets, nextNode, method, node.#params);
+          } else {
+            tempNodes.push(nextNode);
+          }
+        }
+        for (const child of node.#patterns) {
+          const pattern = child.#pattern;
+          const params = node.#params === emptyParams ? {} : { ...node.#params };
+          if (typeof pattern === "string") {
+            if (pattern === "*" || part.startsWith(pattern.slice(0, -1))) {
+              this.#pushHandlerSets(handlerSets, child, method, node.#params);
+              if (pattern === "*") {
+                child.#params = params;
+                tempNodes.push(child);
+              }
+            }
+            continue;
+          }
+          const [, name, matcher] = pattern;
+          if (!part && matcher === true) {
+            continue;
+          }
+          if (matcher !== true) {
+            if (!partOffsets) {
+              partOffsets = [];
+              let offset = path[0] === "/" ? 1 : 0;
+              for (let p = 0; p < len; p++) {
+                partOffsets[p] = offset;
+                offset += parts[p].length + 1;
+              }
+            }
+            const restPathString = path.slice(partOffsets[i]);
+            const m = matcher.exec(restPathString);
+            if (m) {
+              params[name] = m[0];
+              this.#pushHandlerSets(handlerSets, child, method, node.#params, params);
+              if (m[0].length === restPathString.length && child.#children["*"]) {
+                this.#pushHandlerSets(
+                  handlerSets,
+                  child.#children["*"],
+                  method,
+                  node.#params,
+                  params
+                );
+              }
+              for (const _ in child.#children) {
+                child.#params = params;
+                const componentCount = m[0].match(/\//g)?.length ?? 0;
+                const targetCurNodes = curNodesQueue[componentCount] ||= [];
+                targetCurNodes.push(child);
+                break;
+              }
+              continue;
+            }
+          }
+          if (matcher === true || matcher.test(part)) {
+            params[name] = part;
+            if (isLast) {
+              this.#pushHandlerSets(handlerSets, child, method, params, node.#params);
+              if (child.#children["*"]) {
+                this.#pushHandlerSets(
+                  handlerSets,
+                  child.#children["*"],
+                  method,
+                  params,
+                  node.#params
+                );
+              }
+            } else {
+              child.#params = params;
+              tempNodes.push(child);
+            }
+          }
+        }
+      }
+      const shifted = curNodesQueue.shift();
+      curNodes = shifted ? tempNodes.concat(shifted) : tempNodes;
+    }
+    if (handlerSets[1]) {
+      handlerSets.sort((a, b) => {
+        return a.score - b.score;
+      });
+    }
+    return [handlerSets.map(({ handler, params }) => [handler, params])];
+  }
+};
+
+// node_modules/hono/dist/router/trie-router/router.js
+var TrieRouter = class {
+  static {
+    __name(this, "TrieRouter");
+  }
+  name = "TrieRouter";
+  #node = new Node2();
+  add(method, path, handler) {
+    for (const result of checkOptionalParameter(path) || [path]) {
+      this.#node.insert(method, result, handler);
+    }
+  }
+  match(method, path) {
+    return this.#node.search(method, path);
+  }
+};
+
+// node_modules/hono/dist/hono.js
+var Hono2 = class extends Hono {
+  static {
+    __name(this, "Hono");
+  }
+  /**
+   * Creates an instance of the Hono class.
+   *
+   * @param options - Optional configuration options for the Hono instance.
+   */
+  constructor(options = {}) {
+    super(options);
+    this.router = options.router ?? new SmartRouter({
+      routers: [new RegExpRouter(), new TrieRouter()]
+    });
+  }
+};
+
+// src/routes/auth.ts
+init_checked_fetch();
+init_modules_watch_stub();
+init_session();
+var authRoutes = new Hono2();
+function renderLoginPage(error) {
+  const errorHtml = error ? `<p style="color:red">${error}</p>` : "";
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NetZeroCarbon Login</title></head>
+<body>
+<h1>NetZeroCarbon</h1>
+${errorHtml}
+<form method="POST" action="/login">
+  <label>Email <input name="email" type="email" required></label>
+  <label>Password <input name="password" type="password" required></label>
+  <button type="submit">Log in</button>
+</form>
+</body>
+</html>`;
+}
+__name(renderLoginPage, "renderLoginPage");
+authRoutes.get("/login", (c) => {
+  return c.html(renderLoginPage());
+});
+authRoutes.post("/login", async (c) => {
+  const form = await c.req.formData();
+  const email = form.get("email");
+  const password = form.get("password");
+  if (!email || !password) {
+    return c.html(renderLoginPage("Email and password are required"), 400);
+  }
+  const user = await c.env.DB.prepare(
+    "SELECT id, email, password_hash, role FROM users WHERE email = ?"
+  ).bind(email).first();
+  if (!user) {
+    return c.html(renderLoginPage("Invalid credentials"), 401);
+  }
+  const { verifyPassword: verifyPassword2 } = await Promise.resolve().then(() => (init_password(), password_exports));
+  const valid = await verifyPassword2(password, user.password_hash);
+  if (!valid) {
+    return c.html(renderLoginPage("Invalid credentials"), 401);
+  }
+  const { createSessionCookie: createSessionCookie2 } = await Promise.resolve().then(() => (init_session(), session_exports));
+  const cookie = createSessionCookie2(
+    { userId: user.id, role: user.role, email: user.email },
+    c.env.SECRET
+  );
+  const redirectPath = user.role === "admin" ? "/admin" : "/sponsor";
+  return new Response(null, {
+    status: 302,
+    headers: { Location: redirectPath, "Set-Cookie": cookie }
+  });
+});
+authRoutes.post("/logout", (c) => {
+  return c.json({ ok: true }, 200, {
+    "Set-Cookie": "nzc_session=; Max-Age=0; Path=/; HttpOnly"
+  });
+});
+authRoutes.get("/redirect", (c) => {
+  const cookieHeader = c.req.header("Cookie") ?? "";
+  const match2 = cookieHeader.match(/nzc_session=([^;]+)/);
+  if (!match2?.[1]) {
+    return new Response(null, { status: 302, headers: { Location: "/login" } });
+  }
+  const session = parseSessionCookie(match2[1], c.env.SECRET);
+  if (!session) {
+    return new Response(null, { status: 302, headers: { Location: "/login" } });
+  }
+  const path = session.role === "admin" ? "/admin" : "/sponsor";
+  return new Response(null, { status: 302, headers: { Location: path } });
+});
+
+// src/routes/dashboard.ts
+init_checked_fetch();
+init_modules_watch_stub();
+init_session();
+var dashboardRoutes = new Hono2();
+function renderAdminDashboard() {
+  return `<!DOCTYPE html>
+<html lang="th">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Dashboard - NetZeroCarbon</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
+  .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { font-size: 18px; }
+  .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+  .cards { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { background: white; border-radius: 12px; padding: 20px; text-decoration: none; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .card h3 { font-size: 24px; margin-bottom: 4px; }
+  .card p { font-size: 13px; color: #666; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>\u{1F331} Admin Dashboard</h1>
+    <a href="/logout">\u0E2D\u0E2D\u0E01\u0E08\u0E32\u0E01\u0E23\u0E30\u0E1A\u0E1A</a>
+  </div>
+  <div class="cards">
+    <a href="/admin/review" class="card">
+      <h3>\u{1F4CB}</h3>
+      <h3>\u0E04\u0E34\u0E27\u0E15\u0E23\u0E27\u0E08\u0E20\u0E32\u0E1E</h3>
+      <p>\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A\u0E41\u0E25\u0E30\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E20\u0E32\u0E1E\u0E2B\u0E25\u0E31\u0E01\u0E10\u0E32\u0E19</p>
+    </a>
+    <a href="/admin/season" class="card">
+      <h3>\u{1F33E}</h3>
+      <h3>\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E24\u0E14\u0E39</h3>
+      <p>\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E24\u0E14\u0E39\u0E41\u0E25\u0E30\u0E04\u0E33\u0E19\u0E27\u0E13\u0E04\u0E32\u0E23\u0E4C\u0E1A\u0E2D\u0E19</p>
+    </a>
+    <a href="/sponsor" class="card">
+      <h3>\u{1F4CA}</h3>
+      <h3>Sponsor Dashboard</h3>
+      <p>\u0E14\u0E39\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E40\u0E04\u0E23\u0E14\u0E34\u0E15\u0E04\u0E32\u0E23\u0E4C\u0E1A\u0E2D\u0E19</p>
+    </a>
+    <a href="/export/estimates" class="card">
+      <h3>\u{1F4E5}</h3>
+      <h3>Export</h3>
+      <p>\u0E14\u0E32\u0E27\u0E19\u0E4C\u0E42\u0E2B\u0E25\u0E14\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25 CSV/JSON</p>
+    </a>
+  </div>
+</body>
+</html>`;
+}
+__name(renderAdminDashboard, "renderAdminDashboard");
+function renderSponsorDashboard() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sponsor Dashboard</title></head>
+<body>
+<h1>Sponsor Dashboard</h1>
+<p>Welcome, sponsor.</p>
+<nav>
+  <a href="/sponsor/plots">My Plots</a>
+  <a href="/sponsor/estimates">Carbon Estimates</a>
+</nav>
+</body>
+</html>`;
+}
+__name(renderSponsorDashboard, "renderSponsorDashboard");
+function extractSession(c, secret) {
+  const cookieHeader = c.req.header("Cookie") ?? "";
+  const match2 = cookieHeader.match(/nzc_session=([^;]+)/);
+  if (!match2?.[1]) return null;
+  return parseSessionCookie(match2[1], secret);
+}
+__name(extractSession, "extractSession");
+dashboardRoutes.get("/admin", async (c) => {
+  const secret = c.env.SECRET;
+  const session = extractSession(c, secret);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+  if (session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+  return c.html(renderAdminDashboard());
+});
+dashboardRoutes.get("/sponsor", async (c) => {
+  const secret = c.env.SECRET;
+  const session = extractSession(c, secret);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+  if (session.role !== "sponsor") return c.json({ error: "Forbidden" }, 403);
+  return c.html(renderSponsorDashboard());
+});
+
+// src/routes/export.ts
+init_checked_fetch();
+init_modules_watch_stub();
+
+// src/export/estimates.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var NOT_VERIFIED = "estimate \u2014 not yet verified";
+async function getAllEstimates(db) {
+  const { results } = await db.prepare(
+    `SELECT
+        ce.plot_id,
+        p.plot_code,
+        p.area_rai,
+        f.full_name AS farmer_name,
+        f.addr_province AS province,
+        ce.season_id,
+        ce.version,
+        ce.status,
+        ce.total_offset_tco2e,
+        ce.sf_w,
+        ce.sf_p,
+        ce.sf_o,
+        ce.nitrogen_total_kg_per_rai,
+        ce.baseline_ch4,
+        ce.project_ch4,
+        ce.baseline_n2o,
+        ce.project_n2o,
+        ce.baseline_co2,
+        ce.project_co2,
+        ce.burning_emissions
+      FROM carbon_estimates ce
+      JOIN plots p ON p.id = ce.plot_id
+      JOIN farmers f ON f.id = p.farmer_id
+      ORDER BY f.addr_province, p.plot_code, ce.season_id, ce.version`
+  ).bind().all();
+  const rows = results ?? [];
+  return rows.map((row) => ({ ...row, verification_label: NOT_VERIFIED }));
+}
+__name(getAllEstimates, "getAllEstimates");
+var CSV_HEADERS = [
+  "plot_id",
+  "plot_code",
+  "area_rai",
+  "farmer_name",
+  "province",
+  "season_id",
+  "version",
+  "status",
+  "total_offset_tco2e",
+  "sf_w",
+  "sf_p",
+  "sf_o",
+  "nitrogen_total_kg_per_rai",
+  "baseline_ch4",
+  "project_ch4",
+  "baseline_n2o",
+  "project_n2o",
+  "baseline_co2",
+  "project_co2",
+  "burning_emissions",
+  "verification_label"
+];
+function estimatesToCSV(rows) {
+  const header = CSV_HEADERS.join(",");
+  const lines = rows.map((row) => CSV_HEADERS.map((h) => String(row[h] ?? "")).join(","));
+  return [header, ...lines].join("\n");
+}
+__name(estimatesToCSV, "estimatesToCSV");
+
+// src/routes/export.ts
+var exportRoutes = new Hono2();
+exportRoutes.get("/estimates", async (c) => {
+  const db = c.env.DB;
+  const format = c.req.query("format") ?? "json";
+  const estimates = await getAllEstimates(db);
+  if (format === "csv") {
+    const csv = estimatesToCSV(estimates);
+    return new Response(csv, {
+      headers: { "content-type": "text/csv; charset=utf-8" }
+    });
+  }
+  return c.json({ estimates });
+});
+
+// src/routes/health.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var healthRoutes = new Hono2();
+healthRoutes.get("/health", (c) => {
+  return c.json({
+    status: "ok",
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    environment: c.env.ENVIRONMENT
+  });
+});
+
+// src/routes/photo.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var photoRoutes = new Hono2();
+photoRoutes.post("/photo/upload", async (c) => {
+  const formData = await c.req.formData();
+  const file = formData.get("photo");
+  const plotId = formData.get("plot_id");
+  const seasonId = formData.get("season_id");
+  const gpsLat = Number(formData.get("gps_lat"));
+  const gpsLng = Number(formData.get("gps_lng"));
+  const gpsAccuracy = formData.get("gps_accuracy");
+  const takenAt = formData.get("taken_at");
+  if (!(file instanceof File) || !plotId || !seasonId) {
+    return c.json({ error: "Missing required fields" }, 400);
+  }
+  const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const key = `evidence/${photoId}.jpg`;
+  await c.env.R2.put(key, file);
+  const photoUrl = key;
+  await c.env.DB.prepare(
+    `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`
+  ).bind(photoId, plotId, seasonId, photoUrl, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt).run();
+  return c.json({ id: photoId, photo_url: photoUrl }, 201);
+});
+
+// src/routes/sponsor.ts
+init_checked_fetch();
+init_modules_watch_stub();
+
+// src/sponsor/dashboard.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var NOT_VERIFIED2 = "estimate \u2014 not yet verified";
+async function getPlotsByProvince(db) {
+  const { results } = await db.prepare(
+    `SELECT
+        p.id AS plot_id,
+        p.plot_code,
+        p.area_rai,
+        f.full_name AS farmer_name,
+        f.addr_province AS province,
+        f.addr_district AS district,
+        ce.total_offset_tco2e,
+        ce.season_id AS latest_season_id,
+        ce.status AS estimate_status
+      FROM plots p
+      JOIN farmers f ON f.id = p.farmer_id
+      LEFT JOIN carbon_estimates ce
+        ON ce.plot_id = p.id
+        AND ce.version = (
+          SELECT MAX(c2.version)
+          FROM carbon_estimates c2
+          WHERE c2.plot_id = p.id
+        )
+      ORDER BY f.addr_province, p.plot_code`
+  ).bind().all();
+  const rows = results ?? [];
+  return groupByProvince(rows);
+}
+__name(getPlotsByProvince, "getPlotsByProvince");
+function groupByProvince(rows) {
+  const map = /* @__PURE__ */ new Map();
+  for (const row of rows) {
+    const province = row.province ?? "Unknown";
+    const existing = map.get(province) ?? [];
+    existing.push(row);
+    map.set(province, existing);
+  }
+  return Array.from(map.entries()).map(([province, plots]) => ({
+    province,
+    plots
+  }));
+}
+__name(groupByProvince, "groupByProvince");
+async function getPlotDetail(db, plotId) {
+  const { results } = await db.prepare(
+    `SELECT
+        p.id AS plot_id,
+        p.plot_code,
+        p.area_rai,
+        f.full_name AS farmer_name,
+        f.addr_province AS province,
+        f.addr_district AS district,
+        ce.season_id,
+        si.water_management,
+        ce.status AS estimate_status,
+        ce.total_offset_tco2e,
+        ce.sf_w,
+        ce.sf_p,
+        ce.sf_o,
+        ce.nitrogen_total_kg_per_rai
+      FROM plots p
+      JOIN farmers f ON f.id = p.farmer_id
+      LEFT JOIN carbon_estimates ce
+        ON ce.plot_id = p.id
+        AND ce.version = (
+          SELECT MAX(c2.version)
+          FROM carbon_estimates c2
+          WHERE c2.plot_id = p.id
+        )
+      LEFT JOIN season_inputs si
+        ON si.plot_id = p.id AND si.season_id = ce.season_id
+      WHERE p.id = ?`
+  ).bind(plotId).all();
+  const row = (results ?? [])[0];
+  if (!row) return null;
+  return { ...row, verification_label: NOT_VERIFIED2 };
+}
+__name(getPlotDetail, "getPlotDetail");
+
+// src/routes/sponsor.ts
+var sponsorRoutes = new Hono2();
+sponsorRoutes.get("/", async (c) => {
+  const db = c.env.DB;
+  const provinces = await getPlotsByProvince(db);
+  return c.json({ provinces });
+});
+sponsorRoutes.get("/:plotId", async (c) => {
+  const db = c.env.DB;
+  const plotId = c.req.param("plotId");
+  const detail = await getPlotDetail(db, plotId);
+  if (!detail) {
+    return c.json({ error: "Plot not found" }, 404);
+  }
+  return c.json(detail);
+});
+
+// src/routes/admin.ts
+init_checked_fetch();
+init_modules_watch_stub();
+
+// src/admin/queue.ts
+init_checked_fetch();
+init_modules_watch_stub();
+async function getReviewQueue(db, filters = {}) {
+  let query = "SELECT * FROM photo_evidence";
+  const conditions = [];
+  if (filters.ai_status) {
+    conditions.push("ai_status = ?");
+  }
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(" AND ")}`;
+  }
+  query += " ORDER BY CASE WHEN ai_status = 'flag' THEN 0 WHEN ai_status = 'reject' THEN 1 ELSE 2 END";
+  const bindValues = filters.ai_status ? [filters.ai_status] : [];
+  const { results } = await db.prepare(query).bind(...bindValues).all();
+  const rows = results ?? [];
+  const sortOrder = { flag: 0, reject: 1 };
+  return rows.sort((a, b) => {
+    const aO = sortOrder[a.ai_status] ?? 2;
+    const bO = sortOrder[b.ai_status] ?? 2;
+    return aO - bO;
+  });
+}
+__name(getReviewQueue, "getReviewQueue");
+
+// src/admin/review.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var VALID_STATUSES = ["verified", "rejected"];
+function isValidStatus(status) {
+  return VALID_STATUSES.includes(status);
+}
+__name(isValidStatus, "isValidStatus");
+async function reviewPhoto(db, photoId, adminStatus, reason) {
+  if (!isValidStatus(adminStatus)) {
+    return { success: false, error: `Invalid admin_status: ${adminStatus}` };
+  }
+  const photo = await db.prepare("SELECT id FROM photo_evidence WHERE id = ?").bind(photoId).first();
+  if (!photo) {
+    return { success: false, error: "Photo not found" };
+  }
+  await db.prepare(
+    `UPDATE photo_evidence
+       SET admin_status = ?, admin_reason = ?
+       WHERE id = ?`
+  ).bind(adminStatus, reason, photoId).run();
+  return { success: true };
+}
+__name(reviewPhoto, "reviewPhoto");
+
+// src/routes/admin.ts
+init_session();
+var adminRoutes = new Hono2();
+function requireAdmin(c, secret) {
+  const cookieHeader = c.req.header("Cookie") ?? "";
+  const match2 = cookieHeader.match(/nzc_session=([^;]+)/);
+  if (!match2?.[1]) return null;
+  const session = parseSessionCookie(match2[1], secret);
+  if (!session || session.role !== "admin") return null;
+  return session;
+}
+__name(requireAdmin, "requireAdmin");
+adminRoutes.get("/admin/review", async (c) => {
+  const session = requireAdmin(c, c.env.SECRET);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+  const db = c.env.DB;
+  const filter = c.req.query("status") || void 0;
+  const queue = await getReviewQueue(db, filter);
+  const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Review - NetZeroCarbon</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
+    .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 18px; }
+    .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+    .filters { padding: 12px 20px; background: white; display: flex; gap: 8px; border-bottom: 1px solid #eee; }
+    .filters a { padding: 6px 14px; border-radius: 16px; text-decoration: none; font-size: 13px; background: #f0f0f0; color: #333; }
+    .filters a.active { background: #06c755; color: white; }
+    .queue { padding: 12px 20px; }
+    .item { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .item img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; background: #eee; }
+    .item-info { flex: 1; }
+    .item-info h3 { font-size: 14px; margin-bottom: 4px; }
+    .item-info p { font-size: 12px; color: #666; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge.flag { background: #fff3cd; color: #856404; }
+    .badge.reject { background: #f8d7da; color: #721c24; }
+    .badge.pass { background: #d4edda; color: #155724; }
+    .badge.pending { background: #e2e3e5; color: #383d41; }
+    .badge.verified { background: #d4edda; color: #155724; }
+    .actions { display: flex; gap: 6px; }
+    .btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .btn-verify { background: #06c755; color: white; }
+    .btn-reject { background: #dc3545; color: white; }
+    .btn-detail { background: #6c757d; color: white; }
+    .empty { text-align: center; padding: 40px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>\u{1F4CB} \u0E04\u0E34\u0E27\u0E15\u0E23\u0E27\u0E08\u0E20\u0E32\u0E1E</h1>
+    <a href="/admin">\u2190 \u0E01\u0E25\u0E31\u0E1A</a>
+  </div>
+  <div class="filters">
+    <a href="/admin/review" class="${!filter ? "active" : ""}">\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14</a>
+    <a href="/admin/review?status=flag" class="${filter === "flag" ? "active" : ""}">\u{1F6A9} Flag</a>
+    <a href="/admin/review?status=pending" class="${filter === "pending" ? "active" : ""}">\u23F3 Pending</a>
+    <a href="/admin/review?status=pass" class="${filter === "pass" ? "active" : ""}">\u2705 Pass</a>
+    <a href="/admin/review?status=reject" class="${filter === "reject" ? "active" : ""}">\u274C Reject</a>
+  </div>
+  <div class="queue">
+    ${queue.length === 0 ? '<div class="empty">\u0E44\u0E21\u0E48\u0E21\u0E35\u0E20\u0E32\u0E1E\u0E43\u0E19\u0E04\u0E34\u0E27</div>' : queue.map((item) => `
+      <div class="item">
+        <img src="/api/photo/${item.id}" alt="photo">
+        <div class="item-info">
+          <h3>${item.plot_id} <span class="badge ${item.ai_status}">${item.ai_status}</span> <span class="badge ${item.admin_status}">${item.admin_status}</span></h3>
+          <p>${item.ai_label || "-"} | ${(item.ai_confidence * 100).toFixed(0)}% confidence</p>
+          <p>${item.ai_reason || ""}</p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-verify" onclick="review('${item.id}','verified')">\u2713 \u0E1C\u0E48\u0E32\u0E19</button>
+          <button class="btn btn-reject" onclick="review('${item.id}','rejected')">\u2717 \u0E15\u0E35\u0E01\u0E25\u0E31\u0E1A</button>
+        </div>
+      </div>
+    `).join("")}
+  </div>
+  <script>
+    async function review(photoId, status) {
+      const reason = status === 'rejected' ? prompt('\u0E40\u0E2B\u0E15\u0E38\u0E1C\u0E25\u0E17\u0E35\u0E48\u0E15\u0E35\u0E01\u0E25\u0E31\u0E1A:') : '';
+      if (status === 'rejected' && !reason) return;
+      const res = await fetch('/api/admin/review/' + photoId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, reason }),
+      });
+      if (res.ok) location.reload();
+      else alert('Error: ' + await res.text());
+    }
+  <\/script>
+</body>
+</html>`;
+  return c.html(html);
+});
+adminRoutes.get("/api/admin/review", async (c) => {
+  const session = requireAdmin(c, c.env.SECRET);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+  const db = c.env.DB;
+  const filter = c.req.query("status") || void 0;
+  const queue = await getReviewQueue(db, filter);
+  return c.json(queue);
+});
+adminRoutes.post("/api/admin/review/:photoId", async (c) => {
+  const session = requireAdmin(c, c.env.SECRET);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+  const db = c.env.DB;
+  const photoId = c.req.param("photoId");
+  const body = await c.req.json();
+  const result = await reviewPhoto(db, photoId, body.status, body.reason || "");
+  if (result.success) {
+    return c.json({ ok: true });
+  }
+  return c.json({ error: result.error }, 400);
+});
+adminRoutes.get("/api/photo/:photoId", async (c) => {
+  const photoId = c.req.param("photoId");
+  const r2 = c.env.R2;
+  const obj = await r2.get(`evidence/${photoId}.jpg`);
+  if (!obj) {
+    return new Response(
+      `<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" fill="#eee"/><text x="40" y="45" text-anchor="middle" fill="#999" font-size="12">No Image</text></svg>`,
+      { headers: { "Content-Type": "image/svg+xml" } }
+    );
+  }
+  return new Response(obj.body, {
+    headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" }
+  });
+});
+
+// src/routes/liff.ts
+init_checked_fetch();
+init_modules_watch_stub();
+
+// src/line/flow.ts
+init_checked_fetch();
+init_modules_watch_stub();
+
+// src/line/reply.ts
+init_checked_fetch();
+init_modules_watch_stub();
+async function replyMessage(accessToken, replyToken, messages) {
+  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({ replyToken, messages })
+  });
+  const body = await res.text();
+  console.log(`LINE reply: status=${res.status} body=${body.substring(0, 200)}`);
+  return { status: res.status, statusText: res.statusText, body };
+}
+__name(replyMessage, "replyMessage");
+async function pushMessage(accessToken, userId, messages) {
+  const res = await fetch("https://api.line.me/v2/bot/message/push", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({ to: userId, messages })
+  });
+  const body = await res.text();
+  console.log(`LINE push: status=${res.status} body=${body.substring(0, 200)}`);
+  return { status: res.status, statusText: res.statusText, body };
+}
+__name(pushMessage, "pushMessage");
+
+// src/line/consent.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var CONSENT_LABELS = {
+  pdpa: "\u540C\u610F PDPA \u0E04\u0E38\u0E49\u0E21\u0E04\u0E23\u0E2D\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2A\u0E48\u0E27\u0E19\u0E1A\u0E38\u0E04\u0E04\u0E25",
+  data_collection: "\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E40\u0E01\u0E47\u0E1A\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E01\u0E32\u0E23\u0E40\u0E01\u0E29\u0E15\u0E23",
+  photo_sharing: "\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E41\u0E0A\u0E23\u0E4C\u0E23\u0E39\u0E1B\u0E16\u0E48\u0E32\u0E22\u0E2B\u0E25\u0E31\u0E01\u0E10\u0E32\u0E19",
+  carbon_project: "\u0E40\u0E02\u0E49\u0E32\u0E23\u0E48\u0E27\u0E21\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E04\u0E32\u0E23\u0E4C\u0E1A\u0E2D\u0E19\u0E40\u0E04\u0E23\u0E14\u0E34\u0E15"
+};
+function buildConsentCard() {
+  const checkboxes = Object.entries(CONSENT_LABELS).map(
+    ([key, label]) => ({
+      type: "box",
+      layout: "horizontal",
+      contents: [{ type: "text", text: `[ ] ${label}`, size: "sm", wrap: true }],
+      // Store the consent key for programmatic identification
+      consentKey: key
+    })
+  );
+  return {
+    type: "flex",
+    altText: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E2D\u0E1A\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02 4 \u0E02\u0E49\u0E2D",
+    contents: {
+      type: "bubble",
+      contents: [
+        {
+          type: "text",
+          text: "\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19",
+          weight: "bold",
+          size: "lg"
+        },
+        { type: "text", text: "\u2500", separator: true, margin: "sm" },
+        ...checkboxes,
+        { type: "text", text: "\u2500", separator: true, margin: "md" },
+        {
+          type: "text",
+          text: "\u0E1E\u0E34\u0E21\u0E1E\u0E4C '\u540C\u610F' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14",
+          size: "xs",
+          wrap: true,
+          margin: "md"
+        }
+      ]
+    }
+  };
+}
+__name(buildConsentCard, "buildConsentCard");
+
+// src/chat/ai.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var MODEL = "qwen/qwen3.6-flash";
+var SYSTEM_PROMPT = `\u0E04\u0E38\u0E13\u0E40\u0E1B\u0E47\u0E19\u0E1C\u0E39\u0E49\u0E0A\u0E48\u0E27\u0E22\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A NetZeroCarbon \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E04\u0E32\u0E23\u0E4C\u0E1A\u0E2D\u0E19\u0E40\u0E04\u0E23\u0E14\u0E34\u0E15\u0E19\u0E32\u0E02\u0E49\u0E32\u0E27 AWD (Alternate Wetting and Drying)
+
+\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13:
+1. \u0E0A\u0E48\u0E27\u0E22\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E01\u0E32\u0E23\u0E17\u0E33\u0E19\u0E32 (\u0E1B\u0E38\u0E4B\u0E22, \u0E19\u0E49\u0E33, \u0E1F\u0E32\u0E07, \u0E19\u0E49\u0E33\u0E21\u0E31\u0E19, \u0E44\u0E1F\u0E1F\u0E49\u0E32, \u0E1C\u0E25\u0E1C\u0E25\u0E34\u0E15)
+2. \u0E15\u0E2D\u0E1A\u0E04\u0E33\u0E16\u0E32\u0E21\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23
+3. \u0E41\u0E19\u0E30\u0E19\u0E33\u0E02\u0E31\u0E49\u0E19\u0E15\u0E2D\u0E19\u0E01\u0E32\u0E23\u0E17\u0E33\u0E07\u0E32\u0E19
+
+\u0E01\u0E0E:
+- \u0E15\u0E2D\u0E1A\u0E40\u0E1B\u0E47\u0E19\u0E20\u0E32\u0E29\u0E32\u0E44\u0E17\u0E22\u0E40\u0E17\u0E48\u0E32\u0E19\u0E31\u0E49\u0E19 \u0E2A\u0E31\u0E49\u0E19 \u0E01\u0E23\u0E30\u0E0A\u0E31\u0E1A \u0E40\u0E02\u0E49\u0E32\u0E43\u0E08\u0E07\u0E48\u0E32\u0E22
+- \u0E43\u0E0A\u0E49\u0E20\u0E32\u0E29\u0E32\u0E17\u0E35\u0E48\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E40\u0E02\u0E49\u0E32\u0E43\u0E08 (\u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E40\u0E17\u0E04\u0E19\u0E34\u0E04)
+- \u0E44\u0E21\u0E48\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E40\u0E17\u0E47\u0E08 \u0E16\u0E49\u0E32\u0E44\u0E21\u0E48\u0E41\u0E19\u0E48\u0E43\u0E08\u0E43\u0E2B\u0E49\u0E1A\u0E2D\u0E01
+
+\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E2A\u0E48\u0E07\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21 \u0E43\u0E2B\u0E49\u0E27\u0E34\u0E40\u0E04\u0E23\u0E32\u0E30\u0E2B\u0E4C\u0E41\u0E25\u0E30\u0E15\u0E2D\u0E1A\u0E43\u0E19\u0E23\u0E39\u0E1B\u0E41\u0E1A\u0E1A JSON \u0E40\u0E17\u0E48\u0E32\u0E19\u0E31\u0E49\u0E19:
+
+\u0E16\u0E49\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E04\u0E33\u0E16\u0E32\u0E21/\u0E17\u0E31\u0E01\u0E17\u0E32\u0E22/\u0E02\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E0A\u0E48\u0E27\u0E22\u0E40\u0E2B\u0E25\u0E37\u0E2D:
+{"type":"reply","text":"\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E15\u0E2D\u0E1A"}
+
+\u0E16\u0E49\u0E32\u0E1E\u0E1A\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 (\u0E2A\u0E39\u0E15\u0E23, \u0E2D\u0E31\u0E15\u0E23\u0E32, \u0E02\u0E31\u0E49\u0E19\u0E15\u0E2D\u0E19):
+{"type":"draft","category":"fertilizer","data":{"step":"base|tillering|panicle","formula":"\u0E40\u0E0A\u0E48\u0E19 46-0-0","rate_kg_per_rai":\u0E15\u0E31\u0E27\u0E40\u0E25\u0E02,"is_urea":true/false},"text":"\u0E2A\u0E23\u0E38\u0E1B\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E17\u0E35\u0E48\u0E1E\u0E1A"}
+
+\u0E16\u0E49\u0E32\u0E1E\u0E1A\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E19\u0E49\u0E33/\u0E1F\u0E32\u0E07/\u0E1E\u0E25\u0E31\u0E07\u0E07\u0E32\u0E19/\u0E1C\u0E25\u0E1C\u0E25\u0E34\u0E15:
+{"type":"draft","category":"season_input","data":{"field":"water_level_cm|straw_mgmt|fuel_liters|electricity_kwh|yield_kg_rai","value":\u0E04\u0E48\u0E32\u0E17\u0E35\u0E48\u0E1E\u0E1A},"text":"\u0E2A\u0E23\u0E38\u0E1B\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E17\u0E35\u0E48\u0E1E\u0E1A"}
+
+\u0E16\u0E49\u0E32\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E43\u0E2B\u0E49\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E16\u0E48\u0E32\u0E22\u0E20\u0E32\u0E1E:
+{"type":"reply","text":"\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E16\u0E48\u0E32\u0E22\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E2B\u0E15\u0E38\u0E1C\u0E25"}
+
+\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E23\u0E30\u0E1A\u0E1A:
+- \u0E02\u0E31\u0E49\u0E19\u0E15\u0E2D\u0E19\u0E1B\u0E38\u0E4B\u0E22: "base" = \u0E2B\u0E27\u0E48\u0E32\u0E19/\u0E40\u0E15\u0E23\u0E35\u0E22\u0E21\u0E14\u0E34\u0E19, "tillering" = \u0E41\u0E15\u0E01\u0E01\u0E2D, "panicle" = \u0E0A\u0E48\u0E2D/\u0E23\u0E27\u0E07
+- \u0E2A\u0E39\u0E15\u0E23\u0E1B\u0E38\u0E4B\u0E22\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22: 46-0-0 (\u0E22\u0E39\u0E40\u0E23\u0E35\u0E22), 16-16-8, 15-15-15, 27-14-0
+- is_urea = true \u0E40\u0E21\u0E37\u0E48\u0E2D\u0E2A\u0E39\u0E15\u0E23\u0E04\u0E37\u0E2D 46-0-0
+- \u0E2B\u0E19\u0E48\u0E27\u0E22\u0E2D\u0E31\u0E15\u0E23\u0E32\u0E1B\u0E38\u0E4B\u0E22: \u0E01\u0E01./\u0E44\u0E23\u0E48
+- \u0E2B\u0E19\u0E48\u0E27\u0E22\u0E19\u0E49\u0E33: \u0E0B\u0E21. (\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E19\u0E49\u0E33\u0E43\u0E19\u0E17\u0E48\u0E2D)
+- \u0E2B\u0E19\u0E48\u0E27\u0E22\u0E1C\u0E25\u0E1C\u0E25\u0E34\u0E15: \u0E01\u0E01./\u0E44\u0E23\u0E48`;
+async function chatWithAi(apiKey, userMessage, context) {
+  const contextParts = [];
+  if (context.farmerName) contextParts.push(`\u0E0A\u0E37\u0E48\u0E2D\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23: ${context.farmerName}`);
+  if (context.plotCode) contextParts.push(`\u0E41\u0E1B\u0E25\u0E07\u0E1B\u0E31\u0E08\u0E08\u0E38\u0E1A\u0E31\u0E19: ${context.plotCode}`);
+  if (context.seasonId) contextParts.push(`\u0E24\u0E14\u0E39: ${context.seasonId}`);
+  if (context.linkedFarmer === false) contextParts.push(`\u0E2A\u0E16\u0E32\u0E19\u0E30: \u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E1C\u0E39\u0E01\u0E1A\u0E31\u0E0D\u0E0A\u0E35`);
+  const userPrompt = contextParts.length > 0 ? `[\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49]
+${contextParts.join("\n")}
+
+[\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E08\u0E32\u0E01\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23]
+${userMessage}` : userMessage;
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt }
+      ],
+      max_tokens: 512,
+      temperature: 0.3
+    })
+  });
+  const json = await res.json();
+  if (json.error) {
+    console.error("OpenRouter error:", json.error);
+    return { type: "reply", text: "\u0E02\u0E2D\u0E2D\u0E20\u0E31\u0E22\u0E04\u0E48\u0E30 \u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E23\u0E30\u0E21\u0E27\u0E25\u0E1C\u0E25\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07" };
+  }
+  const rawText = json.choices?.[0]?.message?.content ?? "";
+  let parsed = null;
+  if (typeof rawText === "object" && rawText !== null) {
+    parsed = rawText;
+  } else if (typeof rawText === "string") {
+    try {
+      parsed = JSON.parse(rawText.trim());
+    } catch {
+      return { type: "reply", text: rawText || "\u0E02\u0E2D\u0E2D\u0E20\u0E31\u0E22\u0E04\u0E48\u0E30 \u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E1B\u0E23\u0E30\u0E21\u0E27\u0E25\u0E1C\u0E25\u0E44\u0E14\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07" };
+    }
+  }
+  if (parsed) {
+    if (parsed.type === "reply") {
+      const text = typeof parsed.text === "string" ? parsed.text : parsed.text?.text || JSON.stringify(parsed.text);
+      return { type: "reply", text };
+    }
+    if (parsed.type === "draft" && parsed.category && parsed.data) {
+      const text = typeof parsed.text === "string" ? parsed.text : parsed.text?.text || "";
+      return {
+        type: "draft",
+        category: parsed.category,
+        data: parsed.data,
+        text
+      };
+    }
+  }
+  return { type: "reply", text: rawText || "\u0E02\u0E2D\u0E2D\u0E20\u0E31\u0E22\u0E04\u0E48\u0E30 \u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E1B\u0E23\u0E30\u0E21\u0E27\u0E25\u0E1C\u0E25\u0E44\u0E14\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07" };
+}
+__name(chatWithAi, "chatWithAi");
+
+// src/line/flow.ts
+init_state();
+async function safePush(ctx, messages) {
+  try {
+    const r = await pushMessage(ctx.token, ctx.userId, messages);
+    console.log(`[PUSH] status=${r.status} body=${r.body.substring(0, 100)}`);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[PUSH_ERR] ${errMsg}`);
+  }
+}
+__name(safePush, "safePush");
+async function handleFlow(ctx) {
+  const { state } = ctx;
+  let result;
+  switch (state) {
+    case "welcome":
+      result = await handleWelcome(ctx);
+      break;
+    case "phone":
+      result = await handlePhone(ctx);
+      break;
+    case "pending":
+      result = await handlePending(ctx);
+      break;
+    case "select_plot":
+      result = await handleSelectPlot(ctx);
+      break;
+    case "confirm_draft":
+      result = await handleConfirmDraft(ctx);
+      break;
+    case "chat":
+    default:
+      result = await handleChat(ctx);
+      break;
+  }
+  await ctx.db.prepare("UPDATE line_links SET conversation_state = ?, selected_plot_id = COALESCE(?, selected_plot_id) WHERE id = ?").bind(result.newState, result.selectedPlotId ?? null, ctx.linkId).run();
+}
+__name(handleFlow, "handleFlow");
+async function handleWelcome(ctx) {
+  const lower = ctx.text.toLowerCase().trim();
+  if (["\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A", "accept", "\u0E15\u0E01\u0E25\u0E07", "\u540C\u610F", "ok"].includes(lower)) {
+    await safePush(ctx, [
+      { type: "text", text: "\u2705 \u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30\n\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E01\u0E1A\u0E31\u0E0D\u0E0A\u0E35 (\u0E40\u0E0A\u0E48\u0E19 0812345678)" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "phone" };
+  }
+  const consentMsg = buildConsentCard();
+  await safePush(ctx, [
+    { type: "text", text: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E01\u0E48\u0E2D\u0E19\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\n\u0E1E\u0E34\u0E21\u0E1E\u0E4C '\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14" },
+    consentMsg
+  ], ctx.db, ctx.farmerId);
+  return { newState: "welcome" };
+}
+__name(handleWelcome, "handleWelcome");
+async function handlePhone(ctx) {
+  const phone = ctx.text.replace(/[-\s]/g, "");
+  if (!/^\d{10}$/.test(phone)) {
+    await safePush(ctx, [
+      { type: "text", text: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C 10 \u0E2B\u0E25\u0E31\u0E01 (\u0E40\u0E0A\u0E48\u0E19 0812345678)" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "phone" };
+  }
+  const farmer = await ctx.db.prepare("SELECT id, full_name FROM farmers WHERE phone = ?").bind(phone).first();
+  if (!farmer) {
+    await safePush(ctx, [
+      { type: "text", text: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E04\u0E48\u0E30" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "phone" };
+  }
+  const existingLink = await ctx.db.prepare("SELECT id FROM line_links WHERE farmer_id = ? AND line_user_id != ?").bind(farmer.id, ctx.userId).first();
+  if (existingLink) {
+    await safePush(ctx, [
+      { type: "text", text: "\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E19\u0E35\u0E49\u0E1C\u0E39\u0E01\u0E01\u0E31\u0E1A\u0E1A\u0E31\u0E0D\u0E0A\u0E35 LINE \u0E2D\u0E37\u0E48\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "phone" };
+  }
+  await ctx.db.prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'pending' WHERE id = ?").bind(farmer.id, ctx.linkId).run();
+  await safePush(ctx, [
+    { type: "text", text: `\u0E1E\u0E1A\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 ${farmer.full_name}
+
+\u23F3 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E08\u0E32\u0E01\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30
+\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E41\u0E25\u0E49\u0E27\u0E08\u0E30\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E44\u0E14\u0E49\u0E17\u0E31\u0E19\u0E17\u0E35` }
+  ], ctx.db, ctx.farmerId);
+  return { newState: "pending" };
+}
+__name(handlePhone, "handlePhone");
+async function handlePending(ctx) {
+  const link = await ctx.db.prepare("SELECT status FROM line_links WHERE id = ?").bind(ctx.linkId).first();
+  if (link?.status === "verified") {
+    return handlePlotSelection(ctx);
+  }
+  await safePush(ctx, [
+    { type: "text", text: "\u23F3 \u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E08\u0E32\u0E01\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30" }
+  ], ctx.db, ctx.farmerId);
+  return { newState: "pending" };
+}
+__name(handlePending, "handlePending");
+async function handleSelectPlot(ctx) {
+  const plots = await ctx.db.prepare("SELECT id, plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY plot_code").bind(ctx.farmerId).all();
+  if (!plots.results || plots.results.length === 0) {
+    await safePush(ctx, [
+      { type: "text", text: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E41\u0E1B\u0E25\u0E07\u0E19\u0E32\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "select_plot" };
+  }
+  if (plots.results.length === 1) {
+    const plot = plots.results[0];
+    await safePush(ctx, [
+      { type: "text", text: `\u2705 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07 ${plot.plot_code} (${plot.area_rai} \u0E44\u0E23\u0E48)
+
+\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E23\u0E34\u0E48\u0E21\u0E17\u0E33\u0E07\u0E32\u0E19\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E48\u0E30
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E32\u0E21\u0E04\u0E33\u0E16\u0E32\u0E21\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22` }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "chat", selectedPlotId: plot.id };
+  }
+  const plotList = plots.results.map((p, i) => `${i + 1}. ${p.plot_code} (${p.area_rai} \u0E44\u0E23\u0E48)`).join("\n");
+  const input = ctx.text.trim();
+  const num = parseInt(input, 10);
+  if (num >= 1 && num <= plots.results.length) {
+    const plot = plots.results[num - 1];
+    await safePush(ctx, [
+      { type: "text", text: `\u2705 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07 ${plot.plot_code} (${plot.area_rai} \u0E44\u0E23\u0E48)
+
+\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E23\u0E34\u0E48\u0E21\u0E17\u0E33\u0E07\u0E32\u0E19\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E48\u0E30
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E32\u0E21\u0E04\u0E33\u0E16\u0E32\u0E21\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22` }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "chat", selectedPlotId: plot.id };
+  }
+  await safePush(ctx, [
+    { type: "text", text: `\u{1F4CB} \u0E41\u0E1B\u0E25\u0E07\u0E19\u0E32\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19:
+
+${plotList}
+
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07` }
+  ], ctx.db, ctx.farmerId);
+  return { newState: "select_plot" };
+}
+__name(handleSelectPlot, "handleSelectPlot");
+async function handleConfirmDraft(ctx) {
+  const lower = ctx.text.toLowerCase().trim();
+  if (["\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19", "confirm", "ok", "\u0E44\u0E14\u0E49", "\u0E04\u0E23\u0E31\u0E1A", "\u0E04\u0E48\u0E30"].includes(lower)) {
+    const confirmed = await confirmDraft(ctx.db, ctx.farmerId);
+    if (confirmed) {
+      const { category, data } = confirmed;
+      if (category === "fertilizer") {
+        const d = data;
+        const plot = await ctx.db.prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first();
+        if (plot && d.formula && d.rate_kg_per_rai) {
+          const nitrogenKg = d.is_urea ? d.rate_kg_per_rai * 0.46 : d.rate_kg_per_rai * 0.16;
+          await ctx.db.prepare(
+            `INSERT INTO fertilizer_entries (id, plot_id, season_id, step, formula, rate_kg_per_rai, percent_n, nitrogen_kg_per_rai, is_urea, confirmed)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`
+          ).bind(
+            crypto.randomUUID(),
+            ctx.selectedPlotId || plot.id,
+            "2568-napi",
+            d.step || "base",
+            d.formula,
+            d.rate_kg_per_rai,
+            d.is_urea ? 46 : 16,
+            nitrogenKg,
+            d.is_urea ? 1 : 0
+          ).run();
+          await safePush(ctx, [
+            { type: "text", text: `\u2705 \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30
+
+\u0E2A\u0E39\u0E15\u0E23: ${d.formula}
+\u0E2D\u0E31\u0E15\u0E23\u0E32: ${d.rate_kg_per_rai} \u0E01\u0E01./\u0E44\u0E23\u0E48
+\u0E44\u0E19\u0E42\u0E15\u0E23\u0E40\u0E08\u0E19: ${nitrogenKg.toFixed(2)} \u0E01\u0E01./\u0E44\u0E23\u0E48` }
+          ], ctx.db, ctx.farmerId);
+        } else {
+          await safePush(ctx, [
+            { type: "text", text: "\u274C \u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E44\u0E14\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48" }
+          ], ctx.db, ctx.farmerId);
+        }
+      } else {
+        await safePush(ctx, [
+          { type: "text", text: "\u2705 \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30" }
+        ], ctx.db, ctx.farmerId);
+      }
+    } else {
+      await safePush(ctx, [
+        { type: "text", text: "\u0E44\u0E21\u0E48\u0E21\u0E35\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E04\u0E48\u0E30" }
+      ], ctx.db, ctx.farmerId);
+    }
+    return { newState: "chat" };
+  }
+  if (["\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01", "cancel", "\u0E44\u0E21\u0E48", "\u0E25\u0E1A"].includes(lower)) {
+    const rejected = await rejectDraft(ctx.db, ctx.farmerId);
+    await safePush(ctx, [
+      { type: "text", text: rejected ? "\u{1F5D1}\uFE0F \u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30" : "\u0E44\u0E21\u0E48\u0E21\u0E35\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E04\u0E48\u0E30" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "chat" };
+  }
+  await safePush(ctx, [
+    { type: "text", text: "\u0E1E\u0E34\u0E21\u0E1E\u0E4C '\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 \u0E2B\u0E23\u0E37\u0E2D '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E25\u0E1A" }
+  ], ctx.db, ctx.farmerId);
+  return { newState: "confirm_draft" };
+}
+__name(handleConfirmDraft, "handleConfirmDraft");
+async function handleChat(ctx) {
+  const lower = ctx.text.toLowerCase().trim();
+  const quickReplies = {
+    "\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35": "\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35\u0E04\u0E23\u0E31\u0E1A! \u0E22\u0E34\u0E19\u0E14\u0E35\u0E0A\u0E48\u0E27\u0E22\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E04\u0E38\u0E13 \u{1F331}\n\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E32\u0E21\u0E04\u0E33\u0E16\u0E32\u0E21\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E23\u0E31\u0E1A",
+    "\u0E0A\u0E48\u0E27\u0E22": "\u{1F4CB} \u0E27\u0E34\u0E18\u0E35\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19:\n\u2022 \u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 (\u0E40\u0E0A\u0E48\u0E19 \u0E43\u0E2A\u0E48\u0E1B\u0E38\u0E4B\u0E22 46-0-0 12 \u0E01\u0E01./\u0E44\u0E23\u0E48)\n\u2022 \u0E1E\u0E34\u0E21\u0E1E\u0E4C '\u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E1B\u0E34\u0E14\u0E01\u0E25\u0E49\u0E2D\u0E07\n\u2022 \u0E16\u0E32\u0E21\u0E04\u0E33\u0E16\u0E32\u0E21\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E23\u0E31\u0E1A",
+    "\u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B": "\u{1F4F8} \u0E40\u0E1B\u0E34\u0E14\u0E01\u0E25\u0E49\u0E2D\u0E07\u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B\u0E44\u0E14\u0E49\u0E17\u0E35\u0E48\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E19\u0E35\u0E49:\nhttps://liff.line.me/",
+    "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07": "",
+    // Will be handled below
+    "\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E41\u0E1B\u0E25\u0E07": ""
+    // Will be handled below
+  };
+  if (lower.includes("\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07") || lower.includes("\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E41\u0E1B\u0E25\u0E07")) {
+    return handleSelectPlot(ctx);
+  }
+  const matchedQuick = Object.entries(quickReplies).find(
+    ([kw]) => kw !== "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07" && kw !== "\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E41\u0E1B\u0E25\u0E07" && lower.includes(kw)
+  );
+  if (matchedQuick) {
+    await safePush(ctx, [
+      { type: "text", text: matchedQuick[1] }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "chat" };
+  }
+  try {
+    const [farmer, plot, seasonInput] = await Promise.all([
+      ctx.db.prepare("SELECT full_name FROM farmers WHERE id = ?").bind(ctx.farmerId).first(),
+      ctx.selectedPlotId ? ctx.db.prepare("SELECT plot_code FROM plots WHERE id = ?").bind(ctx.selectedPlotId).first() : ctx.db.prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first(),
+      ctx.db.prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first()
+    ], ctx.db, ctx.farmerId);
+    const aiStart = Date.now();
+    const aiResponse = await chatWithAi(ctx.apiKey, ctx.text, {
+      farmerName: farmer?.full_name,
+      plotCode: plot?.plot_code,
+      seasonId: seasonInput?.season_id,
+      linkedFarmer: true
+    });
+    console.log(`AI call: ${Date.now() - aiStart}ms, type=${aiResponse.type}`);
+    if (aiResponse.type === "draft") {
+      const { savePendingDraft: savePendingDraft2 } = await Promise.resolve().then(() => (init_state(), state_exports));
+      await savePendingDraft2(ctx.db, ctx.farmerId, {
+        category: aiResponse.category,
+        data: aiResponse.data,
+        text: aiResponse.text
+      });
+      await safePush(ctx, [
+        { type: "text", text: `${aiResponse.text}
+
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C "\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19" \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 \u0E2B\u0E23\u0E37\u0E2D "\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01" \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E25\u0E1A` }
+      ], ctx.db, ctx.farmerId);
+      return { newState: "confirm_draft" };
+    }
+    await safePush(ctx, [
+      { type: "text", text: aiResponse.text || "\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30" }
+    ], ctx.db, ctx.farmerId);
+    await ctx.db.prepare(
+      `INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed)
+         VALUES (?, ?, ?, ?, ?, 'chat', 0)`
+    ).bind(
+      crypto.randomUUID(),
+      ctx.farmerId,
+      ctx.selectedPlotId,
+      ctx.text,
+      JSON.stringify(aiResponse)
+    ).run();
+    return { newState: "chat" };
+  } catch (aiErr) {
+    console.error("AI chat error:", aiErr);
+    await safePush(ctx, [
+      { type: "text", text: "\u0E02\u0E2D\u0E2D\u0E20\u0E31\u0E22\u0E04\u0E48\u0E30 \u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E23\u0E30\u0E21\u0E27\u0E25\u0E1C\u0E25\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "chat" };
+  }
+}
+__name(handleChat, "handleChat");
+async function handlePlotSelection(ctx) {
+  const plots = await ctx.db.prepare("SELECT id, plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY plot_code").bind(ctx.farmerId).all();
+  if (!plots.results || plots.results.length === 0) {
+    await safePush(ctx, [
+      { type: "text", text: "\u2705 \u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30\n\n\u0E41\u0E15\u0E48\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E41\u0E1B\u0E25\u0E07\u0E19\u0E32\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30" }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "select_plot" };
+  }
+  if (plots.results.length === 1) {
+    const plot = plots.results[0];
+    await safePush(ctx, [
+      { type: "text", text: `\u2705 \u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30
+
+\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07 ${plot.plot_code} (${plot.area_rai} \u0E44\u0E23\u0E48)
+
+\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E23\u0E34\u0E48\u0E21\u0E17\u0E33\u0E07\u0E32\u0E19\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E48\u0E30
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E32\u0E21\u0E04\u0E33\u0E16\u0E32\u0E21\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22` }
+    ], ctx.db, ctx.farmerId);
+    return { newState: "chat", selectedPlotId: plot.id };
+  }
+  const plotList = plots.results.map((p, i) => `${i + 1}. ${p.plot_code} (${p.area_rai} \u0E44\u0E23\u0E48)`).join("\n");
+  await safePush(ctx, [
+    { type: "text", text: `\u2705 \u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30
+
+\u{1F4CB} \u0E41\u0E1B\u0E25\u0E07\u0E19\u0E32\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19:
+${plotList}
+
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07` }
+  ], ctx.db, ctx.farmerId);
+  return { newState: "select_plot" };
+}
+__name(handlePlotSelection, "handlePlotSelection");
+async function handleFlowApi(ctx) {
+  const { state } = ctx;
+  switch (state) {
+    case "welcome":
+      return handleWelcomeApi(ctx);
+    case "phone":
+      return handlePhoneApi(ctx);
+    case "pending":
+      return handlePendingApi(ctx);
+    case "select_plot":
+      return handleSelectPlotApi(ctx);
+    case "confirm_draft":
+      return handleConfirmDraftApi(ctx);
+    case "chat":
+    default:
+      return handleChatApi(ctx);
+  }
+}
+__name(handleFlowApi, "handleFlowApi");
+async function handleWelcomeApi(ctx) {
+  const lower = ctx.text.toLowerCase().trim();
+  if (["\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A", "accept", "\u0E15\u0E01\u0E25\u0E07", "\u540C\u610F", "ok"].includes(lower)) {
+    await ctx.db.prepare("UPDATE line_links SET conversation_state = 'phone' WHERE id = ?").bind(ctx.linkId).run();
+    return { reply: "\u2705 \u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30\n\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E01\u0E1A\u0E31\u0E0D\u0E0A\u0E35 (\u0E40\u0E0A\u0E48\u0E19 0812345678)", newState: "phone" };
+  }
+  return { reply: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E01\u0E48\u0E2D\u0E19\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\n\u0E1E\u0E34\u0E21\u0E1E\u0E4C '\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E22\u0E2D\u0E21\u0E23\u0E31\u0E1A\u0E40\u0E07\u0E37\u0E48\u0E2D\u0E19\u0E44\u0E02\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14", newState: "welcome" };
+}
+__name(handleWelcomeApi, "handleWelcomeApi");
+async function handlePhoneApi(ctx) {
+  const phone = ctx.text.replace(/[-\s]/g, "");
+  if (!/^\d{10}$/.test(phone)) {
+    return { reply: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C 10 \u0E2B\u0E25\u0E31\u0E01 (\u0E40\u0E0A\u0E48\u0E19 0812345678)", newState: "phone" };
+  }
+  const farmer = await ctx.db.prepare("SELECT id, full_name FROM farmers WHERE phone = ?").bind(phone).first();
+  if (!farmer) {
+    return { reply: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E04\u0E48\u0E30", newState: "phone" };
+  }
+  await ctx.db.prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'pending' WHERE id = ?").bind(farmer.id, ctx.linkId).run();
+  return { reply: `\u0E1E\u0E1A\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 ${farmer.full_name}
+
+\u23F3 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E08\u0E32\u0E01\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30`, newState: "pending" };
+}
+__name(handlePhoneApi, "handlePhoneApi");
+async function handlePendingApi(ctx) {
+  const link = await ctx.db.prepare("SELECT status FROM line_links WHERE id = ?").bind(ctx.linkId).first();
+  if (link?.status === "verified") {
+    return handlePlotSelectionApi(ctx);
+  }
+  return { reply: "\u23F3 \u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E23\u0E30\u0E2B\u0E27\u0E48\u0E32\u0E07\u0E23\u0E2D\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E01\u0E32\u0E23\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E08\u0E32\u0E01\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30", newState: "pending" };
+}
+__name(handlePendingApi, "handlePendingApi");
+async function handleSelectPlotApi(ctx) {
+  const plots = await ctx.db.prepare("SELECT id, plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY plot_code").bind(ctx.farmerId).all();
+  if (!plots.results || plots.results.length === 0) {
+    return { reply: "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E41\u0E1B\u0E25\u0E07\u0E19\u0E32\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A\n\u0E01\u0E23\u0E38\u0E13\u0E32\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E08\u0E49\u0E32\u0E2B\u0E19\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E48\u0E30", newState: "select_plot" };
+  }
+  if (plots.results.length === 1) {
+    const plot = plots.results[0];
+    await ctx.db.prepare("UPDATE line_links SET selected_plot_id = ?, conversation_state = 'chat' WHERE id = ?").bind(plot.id, ctx.linkId).run();
+    return { reply: `\u2705 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07 ${plot.plot_code} (${plot.area_rai} \u0E44\u0E23\u0E48)
+
+\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E23\u0E34\u0E48\u0E21\u0E17\u0E33\u0E07\u0E32\u0E19\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E48\u0E30`, newState: "chat", selectedPlotId: plot.id };
+  }
+  const num = parseInt(ctx.text.trim(), 10);
+  if (num >= 1 && num <= plots.results.length) {
+    const plot = plots.results[num - 1];
+    await ctx.db.prepare("UPDATE line_links SET selected_plot_id = ?, conversation_state = 'chat' WHERE id = ?").bind(plot.id, ctx.linkId).run();
+    return { reply: `\u2705 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07 ${plot.plot_code} (${plot.area_rai} \u0E44\u0E23\u0E48)
+
+\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E40\u0E23\u0E34\u0E48\u0E21\u0E17\u0E33\u0E07\u0E32\u0E19\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E48\u0E30`, newState: "chat", selectedPlotId: plot.id };
+  }
+  const plotList = plots.results.map((p, i) => `${i + 1}. ${p.plot_code} (${p.area_rai} \u0E44\u0E23\u0E48)`).join("\n");
+  return { reply: `\u{1F4CB} \u0E41\u0E1B\u0E25\u0E07\u0E19\u0E32\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19:
+
+${plotList}
+
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07`, newState: "select_plot" };
+}
+__name(handleSelectPlotApi, "handleSelectPlotApi");
+async function handleConfirmDraftApi(ctx) {
+  const lower = ctx.text.toLowerCase().trim();
+  if (["\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19", "confirm", "ok", "\u0E44\u0E14\u0E49", "\u0E04\u0E23\u0E31\u0E1A", "\u0E04\u0E48\u0E30"].includes(lower)) {
+    const confirmed = await confirmDraft(ctx.db, ctx.farmerId);
+    if (confirmed) {
+      const { category, data } = confirmed;
+      if (category === "fertilizer") {
+        const d = data;
+        const plot = await ctx.db.prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first();
+        if (plot && d.formula && d.rate_kg_per_rai) {
+          const nitrogenKg = d.is_urea ? d.rate_kg_per_rai * 0.46 : d.rate_kg_per_rai * 0.16;
+          await ctx.db.prepare(`INSERT INTO fertilizer_entries (id, plot_id, season_id, step, formula, rate_kg_per_rai, percent_n, nitrogen_kg_per_rai, is_urea, confirmed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`).bind(crypto.randomUUID(), ctx.selectedPlotId || plot.id, "2568-napi", d.step || "base", d.formula, d.rate_kg_per_rai, d.is_urea ? 46 : 16, nitrogenKg, d.is_urea ? 1 : 0).run();
+          return { reply: `\u2705 \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30
+
+\u0E2A\u0E39\u0E15\u0E23: ${d.formula}
+\u0E2D\u0E31\u0E15\u0E23\u0E32: ${d.rate_kg_per_rai} \u0E01\u0E01./\u0E44\u0E23\u0E48
+\u0E44\u0E19\u0E42\u0E15\u0E23\u0E40\u0E08\u0E19: ${nitrogenKg.toFixed(2)} \u0E01\u0E01./\u0E44\u0E23\u0E48`, newState: "chat" };
+        }
+        return { reply: "\u274C \u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E44\u0E14\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48", newState: "chat" };
+      }
+      return { reply: "\u2705 \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30", newState: "chat" };
+    }
+    return { reply: "\u0E44\u0E21\u0E48\u0E21\u0E35\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E04\u0E48\u0E30", newState: "chat" };
+  }
+  if (["\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01", "cancel", "\u0E44\u0E21\u0E48", "\u0E25\u0E1A"].includes(lower)) {
+    const rejected = await rejectDraft(ctx.db, ctx.farmerId);
+    return { reply: rejected ? "\u{1F5D1}\uFE0F \u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30" : "\u0E44\u0E21\u0E48\u0E21\u0E35\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E04\u0E48\u0E30", newState: "chat" };
+  }
+  return { reply: "\u0E1E\u0E34\u0E21\u0E1E\u0E4C '\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 \u0E2B\u0E23\u0E37\u0E2D '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E25\u0E1A", newState: "confirm_draft" };
+}
+__name(handleConfirmDraftApi, "handleConfirmDraftApi");
+async function handleChatApi(ctx) {
+  const lower = ctx.text.toLowerCase().trim();
+  if (lower.includes("\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07") || lower.includes("\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E41\u0E1B\u0E25\u0E07")) {
+    return handleSelectPlotApi(ctx);
+  }
+  const quickReplies = {
+    "\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35": "\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35\u0E04\u0E23\u0E31\u0E1A! \u0E22\u0E34\u0E19\u0E14\u0E35\u0E0A\u0E48\u0E27\u0E22\u0E40\u0E2B\u0E25\u0E37\u0E2D\u0E04\u0E38\u0E13 \u{1F331}\n\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 \u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E32\u0E21\u0E04\u0E33\u0E16\u0E32\u0E21\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E23\u0E31\u0E1A",
+    "\u0E0A\u0E48\u0E27\u0E22": "\u{1F4CB} \u0E27\u0E34\u0E18\u0E35\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19:\n\u2022 \u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1B\u0E38\u0E4B\u0E22 (\u0E40\u0E0A\u0E48\u0E19 \u0E43\u0E2A\u0E48\u0E1B\u0E38\u0E4B\u0E22 46-0-0 12 \u0E01\u0E01./\u0E44\u0E23\u0E48)\n\u2022 \u0E1E\u0E34\u0E21\u0E1E\u0E4C '\u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B' \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E1B\u0E34\u0E14\u0E01\u0E25\u0E49\u0E2D\u0E07\n\u2022 \u0E16\u0E32\u0E21\u0E04\u0E33\u0E16\u0E32\u0E21\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E23\u0E31\u0E1A",
+    "\u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B": "\u{1F4F8} \u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B\u0E2B\u0E25\u0E31\u0E01\u0E10\u0E32\u0E19\u0E44\u0E14\u0E49\u0E40\u0E25\u0E22\u0E04\u0E48\u0E30\n\u0E40\u0E1B\u0E34\u0E14\u0E01\u0E25\u0E49\u0E2D\u0E07\u0E08\u0E32\u0E01\u0E40\u0E21\u0E19\u0E39\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07"
+  };
+  const matched = Object.entries(quickReplies).find(([kw]) => lower.includes(kw));
+  if (matched) return { reply: matched[1], newState: "chat" };
+  try {
+    const [farmer, plot, seasonInput] = await Promise.all([
+      ctx.db.prepare("SELECT full_name FROM farmers WHERE id = ?").bind(ctx.farmerId).first(),
+      ctx.selectedPlotId ? ctx.db.prepare("SELECT plot_code FROM plots WHERE id = ?").bind(ctx.selectedPlotId).first() : ctx.db.prepare("SELECT plot_code FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first(),
+      ctx.db.prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first()
+    ]);
+    const aiResponse = await chatWithAi(ctx.apiKey, ctx.text, {
+      farmerName: farmer?.full_name,
+      plotCode: plot?.plot_code,
+      seasonId: seasonInput?.season_id,
+      linkedFarmer: true
+    });
+    if (aiResponse.type === "draft") {
+      const { savePendingDraft: savePendingDraft2 } = await Promise.resolve().then(() => (init_state(), state_exports));
+      await savePendingDraft2(ctx.db, ctx.farmerId, {
+        category: aiResponse.category,
+        data: aiResponse.data,
+        text: aiResponse.text
+      });
+      await ctx.db.prepare(`INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed) VALUES (?, ?, ?, ?, ?, 'chat', 0)`).bind(crypto.randomUUID(), ctx.farmerId, ctx.selectedPlotId, ctx.text, JSON.stringify(aiResponse)).run();
+      return { reply: `${aiResponse.text}
+
+\u0E1E\u0E34\u0E21\u0E1E\u0E4C "\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19" \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 \u0E2B\u0E23\u0E37\u0E2D "\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01" \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E25\u0E1A`, newState: "confirm_draft" };
+    }
+    await ctx.db.prepare(`INSERT INTO farmer_messages (id, farmer_id, plot_id, raw_text, draft_json, message_type, confirmed) VALUES (?, ?, ?, ?, ?, 'chat', 0)`).bind(crypto.randomUUID(), ctx.farmerId, ctx.selectedPlotId, ctx.text, JSON.stringify(aiResponse)).run();
+    return { reply: aiResponse.text || "\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E41\u0E25\u0E49\u0E27\u0E04\u0E48\u0E30", newState: "chat" };
+  } catch (err) {
+    console.error("AI error:", err);
+    return { reply: "\u0E02\u0E2D\u0E2D\u0E20\u0E31\u0E22\u0E04\u0E48\u0E30 \u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E23\u0E30\u0E21\u0E27\u0E25\u0E1C\u0E25\u0E0A\u0E31\u0E48\u0E27\u0E04\u0E23\u0E32\u0E27 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07", newState: "chat" };
+  }
+}
+__name(handleChatApi, "handleChatApi");
+
+// src/routes/liff.ts
+var liffRoutes = new Hono2();
+liffRoutes.get("/", (c) => {
+  const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NetZeroCarbon</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"><\/script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;height:100vh;display:flex;flex-direction:column}
+    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .header-icon{font-size:24px}
+    .header-title{font-size:16px;font-weight:600}
+    .header-sub{font-size:11px;opacity:.85}
+    .chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+    .msg{max-width:80%;padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
+    .msg.bot{align-self:flex-start;background:#fff;color:#333;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+    .msg.user{align-self:flex-end;background:#06c755;color:#fff;border-bottom-right-radius:4px}
+    .msg.sys{align-self:center;background:rgba(0,0,0,.06);color:#666;font-size:12px;padding:6px 12px;border-radius:12px}
+    .typing{align-self:flex-start;display:flex;gap:4px;padding:12px 16px;background:#fff;border-radius:18px;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+    .typing span{width:8px;height:8px;background:#ccc;border-radius:50%;animation:bounce 1.4s infinite ease-in-out}
+    .typing span:nth-child(2){animation-delay:-.16s}
+    .typing span:nth-child(3){animation-delay:-.32s}
+    @keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+    .input-wrap{background:#fff;padding:8px 12px;display:flex;gap:8px;border-top:1px solid #e0e0e0;flex-shrink:0}
+    .input-wrap input{flex:1;border:1px solid #ddd;border-radius:20px;padding:10px 16px;font-size:15px;outline:none}
+    .input-wrap input:focus{border-color:#06c755}
+    .input-wrap button{background:#06c755;color:#fff;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .input-wrap button:disabled{background:#ccc}
+    .quick{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;flex-shrink:0}
+    .quick button{white-space:nowrap;background:#fff;border:1px solid #06c755;color:#06c755;border-radius:16px;padding:6px 14px;font-size:13px;cursor:pointer}
+    .quick button:active{background:#e8f5e9}
+    #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
+    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    @keyframes sp{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div id="loading"><div class="spin"></div><div>\u0E01\u0E33\u0E25\u0E31\u0E07\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D...</div></div>
+  <div id="app" style="display:none;flex-direction:column;height:100vh;">
+    <div class="header">
+      <div class="header-icon">\u{1F331}</div>
+      <div><div class="header-title">NetZeroCarbon</div><div class="header-sub">\u0E1C\u0E39\u0E49\u0E0A\u0E48\u0E27\u0E22\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23 AWD</div></div>
+    </div>
+    <div class="chat" id="chat"></div>
+    <div class="quick" id="quickActions">
+      <button onclick="sendQ('\u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35')">\u{1F44B} \u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35</button>
+      <button onclick="sendQ('\u0E0A\u0E48\u0E27\u0E22')">\u2753 \u0E0A\u0E48\u0E27\u0E22</button>
+      <button onclick="sendQ('\u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B')">\u{1F4F8} \u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B</button>
+      <button onclick="sendQ('\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07')">\u{1F33E} \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E41\u0E1B\u0E25\u0E07</button>
+    </div>
+    <div class="input-wrap">
+      <input type="text" id="inp" placeholder="\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21..." autocomplete="off">
+      <button id="btn" onclick="send()">\u27A4</button>
+    </div>
+  </div>
+  <script>
+    let uid=null;
+    async function init(){
+      try{
+        const liffId="${c.env.LIFF_ID || ""}";
+        if(liffId){await liff.init({liffId});uid=(await liff.getProfile()).userId}
+        else{uid='demo'}
+      }catch(e){uid='demo'}
+      document.getElementById('loading').style.display='none';
+      document.getElementById('app').style.display='flex';
+      add('bot','\u{1F331} \u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35\u0E04\u0E48\u0E30! \u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E2A\u0E39\u0E48 NetZeroCarbon\\n\\n\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E23\u0E37\u0E2D\u0E01\u0E14\u0E1B\u0E38\u0E48\u0E21\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19\u0E04\u0E48\u0E30');
+    }
+    async function send(){
+      const inp=document.getElementById('inp');
+      const t=inp.value.trim();if(!t)return;
+      inp.value='';document.getElementById('btn').disabled=true;
+      add('user',t);showTyping();
+      try{
+        const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t,userId:uid})});
+        const d=await r.json();hideTyping();
+        add('bot',d.reply||d.error||'\u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E1B\u0E23\u0E30\u0E21\u0E27\u0E25\u0E1C\u0E25\u0E44\u0E14\u0E49');
+      }catch(e){hideTyping();add('sys','\u0E40\u0E01\u0E34\u0E14\u0E02\u0E49\u0E2D\u0E1C\u0E34\u0E14\u0E1E\u0E25\u0E32\u0E14 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48')}
+      document.getElementById('btn').disabled=false;inp.focus();
+    }
+    function sendQ(t){document.getElementById('inp').value=t;send()}
+    function add(type,text){const c=document.getElementById('chat'),d=document.createElement('div');d.className='msg '+type;d.textContent=text;c.appendChild(d);c.scrollTop=c.scrollHeight}
+    function showTyping(){const c=document.getElementById('chat'),d=document.createElement('div');d.className='typing';d.id='typing';d.innerHTML='<span></span><span></span><span></span>';c.appendChild(d);c.scrollTop=c.scrollHeight}
+    function hideTyping(){const e=document.getElementById('typing');if(e)e.remove()}
+    document.addEventListener('DOMContentLoaded',()=>{document.getElementById('inp').addEventListener('keypress',e=>{if(e.key==='Enter')send()});init()});
+  <\/script>
+</body>
+</html>`;
+  return c.html(html);
+});
+liffRoutes.post("/api/chat", async (c) => {
+  try {
+    const db = c.env.DB;
+    const token = c.env.LINE_CHANNEL_ACCESS_TOKEN;
+    const apiKey = c.env.OPENROUTER_API_KEY;
+    const body = await c.req.json();
+    const { text, userId } = body;
+    if (!text || !userId) {
+      return c.json({ error: "text and userId required" }, 400);
+    }
+    let link = await db.prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?").bind(userId).first();
+    if (!link) {
+      const linkId = `link_${crypto.randomUUID()}`;
+      await db.prepare(
+        "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')"
+      ).bind(linkId, "farmer-001", userId).run();
+      link = {
+        id: linkId,
+        farmer_id: "farmer-001",
+        status: "pending",
+        conversation_state: "welcome",
+        selected_plot_id: null
+      };
+    }
+    const result = await handleFlowApi({
+      db,
+      token,
+      apiKey,
+      userId,
+      linkId: link.id,
+      farmerId: link.farmer_id,
+      state: link.conversation_state,
+      selectedPlotId: link.selected_plot_id,
+      text
+    });
+    await db.prepare("UPDATE line_links SET conversation_state = ?, selected_plot_id = COALESCE(?, selected_plot_id) WHERE id = ?").bind(result.newState, result.selectedPlotId ?? null, link.id).run();
+    return c.json({ reply: result.reply });
+  } catch (err) {
+    console.error("Chat API error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+// src/index.ts
+var app = new Hono2();
+app.route("/", liffRoutes);
+app.route("/", authRoutes);
+app.route("/", healthRoutes);
+app.route("/", liffRoutes);
+app.route("/", photoRoutes);
+app.post("/webhook/line", async (c) => {
+  try {
+    const secret = c.env.LINE_CHANNEL_SECRET;
+    const accessToken = c.env.LINE_CHANNEL_ACCESS_TOKEN;
+    if (!secret || !accessToken) {
+      return c.json({ error: "LINE credentials not configured" }, 500);
+    }
+    const sig = c.req.header("X-Line-Signature");
+    const rawBody = await c.req.text();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const hmacSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+    const expected = Array.from(new Uint8Array(hmacSig)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    if (!sig || sig !== expected) {
+      console.log(`SIG_MISMATCH: got=${sig || "none"} exp=${expected.substring(0, 16)}`);
+    }
+    const data = JSON.parse(rawBody);
+    const events = data.events ?? [];
+    for (const event of events) {
+      await handleEvent(c.env, event).catch((err) => {
+        console.error(`Error handling ${event.type} event:`, err);
+      });
+    }
+    return c.json({ processed: events.length });
+  } catch (err) {
+    console.error("LINE webhook error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+async function handleEvent(env, event) {
+  const { LINE_CHANNEL_ACCESS_TOKEN: token, DB: db, OPENROUTER_API_KEY: apiKey } = env;
+  switch (event.type) {
+    case "follow": {
+      const liffUrl = `https://liff.line.me/${env.LIFF_ID || ""}`;
+      const welcomeFlex = {
+        type: "flex",
+        altText: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E2A\u0E39\u0E48 NetZeroCarbon",
+        contents: {
+          type: "bubble",
+          contents: [
+            { type: "text", text: "\u{1F331} NetZeroCarbon", weight: "bold", size: "xl" },
+            { type: "text", text: "\u0E1C\u0E39\u0E49\u0E0A\u0E48\u0E27\u0E22\u0E40\u0E01\u0E29\u0E15\u0E23\u0E01\u0E23\u0E42\u0E04\u0E23\u0E07\u0E01\u0E32\u0E23\u0E04\u0E32\u0E23\u0E4C\u0E1A\u0E2D\u0E19\u0E40\u0E04\u0E23\u0E14\u0E34\u0E15 AWD", size: "sm", wrap: true, margin: "md" },
+            { type: "text", text: "\u2500", separator: true, margin: "md" },
+            {
+              type: "text",
+              text: "\u0E40\u0E1B\u0E34\u0E14\u0E41\u0E2D\u0E1B\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E01\u0E32\u0E23\u0E17\u0E33\u0E19\u0E32 \u0E16\u0E48\u0E32\u0E22\u0E23\u0E39\u0E1B\u0E2B\u0E25\u0E31\u0E01\u0E10\u0E32\u0E19 \u0E41\u0E25\u0E30\u0E14\u0E39\u0E04\u0E32\u0E23\u0E4C\u0E1A\u0E2D\u0E19\u0E40\u0E04\u0E23\u0E14\u0E34\u0E15\u0E02\u0E2D\u0E07\u0E17\u0E48\u0E32\u0E19",
+              size: "md",
+              wrap: true,
+              margin: "md"
+            },
+            {
+              type: "button",
+              action: { type: "uri", label: "\u0E40\u0E1B\u0E34\u0E14\u0E41\u0E2D\u0E1B NetZeroCarbon", uri: liffUrl },
+              style: "primary",
+              color: "#06c755",
+              margin: "lg"
+            },
+            { type: "text", text: "\u2500", separator: true, margin: "md" },
+            { type: "text", text: "\u0E2B\u0E23\u0E37\u0E2D\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23\u0E28\u0E31\u0E1E\u0E17\u0E4C\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E01\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E43\u0E19\u0E41\u0E0A\u0E17\u0E19\u0E35\u0E49", size: "xs", wrap: true, margin: "sm" }
+          ]
+        }
+      };
+      await replyMessage(token, event.replyToken, [welcomeFlex]);
+      const existingLink = await db.prepare("SELECT id, status, conversation_state FROM line_links WHERE line_user_id = ?").bind(event.source.userId).first();
+      if (existingLink) {
+        if (existingLink.status === "verified") {
+          await replyMessage(token, event.replyToken, [welcomeFlex]);
+          return;
+        }
+        await db.prepare("UPDATE line_links SET conversation_state = 'welcome' WHERE id = ?").bind(existingLink.id).run();
+      } else {
+        await db.prepare(
+          "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')"
+        ).bind(`link_${crypto.randomUUID()}`, "farmer-001", event.source.userId).run();
+      }
+      break;
+    }
+    case "message": {
+      if (event.message?.type !== "text") break;
+      const text = event.message.text.trim();
+      let link = await db.prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?").bind(event.source.userId).first();
+      if (!link) {
+        const linkId = `link_${crypto.randomUUID()}`;
+        await db.prepare(
+          "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')"
+        ).bind(linkId, "farmer-001", event.source.userId).run();
+        link = {
+          id: linkId,
+          farmer_id: "farmer-001",
+          status: "pending",
+          conversation_state: "welcome",
+          selected_plot_id: null
+        };
+      }
+      await handleFlow({
+        db,
+        token,
+        apiKey,
+        userId: event.source.userId,
+        linkId: link.id,
+        farmerId: link.farmer_id,
+        state: link.conversation_state,
+        selectedPlotId: link.selected_plot_id,
+        text
+      });
+      break;
+    }
+    case "unfollow": {
+      console.log(`User unfollowed: ${event.source.userId}`);
+      break;
+    }
+  }
+}
+__name(handleEvent, "handleEvent");
+app.route("/", adminRoutes);
+app.route("/sponsor", sponsorRoutes);
+app.route("/export", exportRoutes);
+app.route("/", dashboardRoutes);
+app.notFound((c) => {
+  return c.json({ error: "Not found" }, 404);
+});
+app.onError((err, c) => {
+  console.error("Unhandled error:", err);
+  return c.json({ error: "Internal server error" }, 500);
+});
+var src_default = app;
+
+// ../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
+  try {
+    return await middlewareCtx.next(request, env);
+  } finally {
+    try {
+      if (request.body !== null && !request.bodyUsed) {
+        const reader = request.body.getReader();
+        while (!(await reader.read()).done) {
+        }
+      }
+    } catch (e) {
+      console.error("Failed to drain the unused request body.", e);
+    }
+  }
+}, "drainBody");
+var middleware_ensure_req_body_drained_default = drainBody;
+
+// ../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/middleware-miniflare3-json-error.ts
+init_checked_fetch();
+init_modules_watch_stub();
+function reduceError(e) {
+  return {
+    name: e?.name,
+    message: e?.message ?? String(e),
+    stack: e?.stack,
+    cause: e?.cause === void 0 ? void 0 : reduceError(e.cause)
+  };
+}
+__name(reduceError, "reduceError");
+var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
+  try {
+    return await middlewareCtx.next(request, env);
+  } catch (e) {
+    const error = reduceError(e);
+    const body = JSON.stringify(error);
+    const headers = {
+      "Content-Type": "application/json",
+      "MF-Experimental-Error-Stack": "true"
+    };
+    const encoded = encodeURIComponent(body);
+    if (encoded.length <= 8192) {
+      headers["MF-Experimental-Error-Stack-Payload"] = encoded;
+    }
+    return new Response(body, { status: 500, headers });
+  }
+}, "jsonError");
+var middleware_miniflare3_json_error_default = jsonError;
+
+// .wrangler/tmp/bundle-Oovorz/middleware-insertion-facade.js
+var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
+  middleware_ensure_req_body_drained_default,
+  middleware_miniflare3_json_error_default
+];
+var middleware_insertion_facade_default = src_default;
+
+// ../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/common.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var __facade_middleware__ = [];
+function __facade_register__(...args) {
+  __facade_middleware__.push(...args.flat());
+}
+__name(__facade_register__, "__facade_register__");
+function __facade_invokeChain__(request, env, ctx, dispatch, middlewareChain) {
+  const [head, ...tail] = middlewareChain;
+  const middlewareCtx = {
+    dispatch,
+    next(newRequest, newEnv) {
+      return __facade_invokeChain__(newRequest, newEnv, ctx, dispatch, tail);
+    }
+  };
+  return head(request, env, ctx, middlewareCtx);
+}
+__name(__facade_invokeChain__, "__facade_invokeChain__");
+function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
+  return __facade_invokeChain__(request, env, ctx, dispatch, [
+    ...__facade_middleware__,
+    finalMiddleware
+  ]);
+}
+__name(__facade_invoke__, "__facade_invoke__");
+
+// .wrangler/tmp/bundle-Oovorz/middleware-loader.entry.ts
+var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
+  constructor(scheduledTime, cron, noRetry) {
+    this.scheduledTime = scheduledTime;
+    this.cron = cron;
+    this.#noRetry = noRetry;
+  }
+  scheduledTime;
+  cron;
+  static {
+    __name(this, "__Facade_ScheduledController__");
+  }
+  #noRetry;
+  noRetry() {
+    if (!(this instanceof ___Facade_ScheduledController__)) {
+      throw new TypeError("Illegal invocation");
+    }
+    this.#noRetry();
+  }
+};
+function wrapExportedHandler(worker) {
+  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
+    return worker;
+  }
+  for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
+    __facade_register__(middleware);
+  }
+  const fetchDispatcher = /* @__PURE__ */ __name(function(request, env, ctx) {
+    if (worker.fetch === void 0) {
+      throw new Error("Handler does not export a fetch() function.");
+    }
+    return worker.fetch(request, env, ctx);
+  }, "fetchDispatcher");
+  return {
+    ...worker,
+    fetch(request, env, ctx) {
+      const dispatcher = /* @__PURE__ */ __name(function(type, init) {
+        if (type === "scheduled" && worker.scheduled !== void 0) {
+          const controller = new __Facade_ScheduledController__(
+            Date.now(),
+            init.cron ?? "",
+            () => {
+            }
+          );
+          return worker.scheduled(controller, env, ctx);
+        }
+      }, "dispatcher");
+      return __facade_invoke__(request, env, ctx, dispatcher, fetchDispatcher);
+    }
+  };
+}
+__name(wrapExportedHandler, "wrapExportedHandler");
+function wrapWorkerEntrypoint(klass) {
+  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
+    return klass;
+  }
+  for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
+    __facade_register__(middleware);
+  }
+  return class extends klass {
+    #fetchDispatcher = /* @__PURE__ */ __name((request, env, ctx) => {
+      this.env = env;
+      this.ctx = ctx;
+      if (super.fetch === void 0) {
+        throw new Error("Entrypoint class does not define a fetch() function.");
+      }
+      return super.fetch(request);
+    }, "#fetchDispatcher");
+    #dispatcher = /* @__PURE__ */ __name((type, init) => {
+      if (type === "scheduled" && super.scheduled !== void 0) {
+        const controller = new __Facade_ScheduledController__(
+          Date.now(),
+          init.cron ?? "",
+          () => {
+          }
+        );
+        return super.scheduled(controller);
+      }
+    }, "#dispatcher");
+    fetch(request) {
+      return __facade_invoke__(
+        request,
+        this.env,
+        this.ctx,
+        this.#dispatcher,
+        this.#fetchDispatcher
+      );
+    }
+  };
+}
+__name(wrapWorkerEntrypoint, "wrapWorkerEntrypoint");
+var WRAPPED_ENTRY;
+if (typeof middleware_insertion_facade_default === "object") {
+  WRAPPED_ENTRY = wrapExportedHandler(middleware_insertion_facade_default);
+} else if (typeof middleware_insertion_facade_default === "function") {
+  WRAPPED_ENTRY = wrapWorkerEntrypoint(middleware_insertion_facade_default);
+}
+var middleware_loader_entry_default = WRAPPED_ENTRY;
+export {
+  __INTERNAL_WRANGLER_MIDDLEWARE__,
+  middleware_loader_entry_default as default
+};
+//# sourceMappingURL=index.js.map

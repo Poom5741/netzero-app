@@ -1,0 +1,48 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - complementary [ref=f1e3]:
+      - generic [ref=f1e4]:
+        - generic [ref=f1e5]: eco
+        - generic [ref=f1e7]: NetZero
+      - navigation "นำทางหลัก" [ref=f1e8]:
+        - link "ตรวจสอบภาพ" [ref=f1e9] [cursor=pointer]:
+          - /url: /admin
+          - generic [ref=f1e10]: rate_review
+        - link "จัดการผู้ใช้" [ref=f1e12] [cursor=pointer]:
+          - /url: /admin/users
+          - generic [ref=f1e13]: group
+        - link "รายงาน" [ref=f1e15] [cursor=pointer]:
+          - /url: /admin/reports
+          - generic [ref=f1e16]: summarize
+      - generic [ref=f1e19]:
+        - generic [ref=f1e20]: person
+        - generic [ref=f1e22]:
+          - paragraph [ref=f1e23]: System Admin
+          - paragraph [ref=f1e24]: admin@netzerocarbon.com
+    - banner [ref=f1e25]:
+      - generic [ref=f1e26]:
+        - generic [ref=f1e27]: search
+        - textbox "ค้นหาทั่วโลก..." [ref=f1e28]
+      - generic [ref=f1e29]:
+        - generic [ref=f1e30]:
+          - button "การแจ้งเตือน" [ref=f1e31]:
+            - generic [ref=f1e32]: notifications
+          - button "การตั้งค่า" [ref=f1e33]:
+            - generic [ref=f1e34]: settings
+        - generic [ref=f1e36]:
+          - generic [ref=f1e37]: person
+          - generic [ref=f1e39]: Admin
+    - main [ref=f1e40]:
+      - generic [ref=f1e41]:
+        - heading "Review Queue" [level=1] [ref=f1e42]
+        - paragraph [ref=f1e43]: ตรวจสอบและอนุมัติภาพถ่ายหลักฐานจากเกษตรกร
+      - tablist [ref=f1e45]:
+        - tab "ทั้งหมด" [selected] [ref=f1e46]
+        - tab "รอตรวจสอบ" [ref=f1e47]
+        - tab "ถูกธง" [ref=f1e48]
+        - tab "ผ่านแล้ว" [ref=f1e49]
+        - tab "ปฏิเสธแล้ว" [ref=f1e50]
+      - region "รายการตรวจสอบ" [ref=f1e52]:
+        - paragraph [ref=f1e58]: กำลังโหลด...
+  - button "Open Next.js Dev Tools" [ref=f1e64] [cursor=pointer]
+  - alert [ref=f1e68]

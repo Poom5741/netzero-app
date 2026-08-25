@@ -8,7 +8,7 @@ type Bindings = {
 
 export const photoRoutes = new Hono<{ Bindings: Bindings }>();
 
-photoRoutes.post("/photo/upload", async (c) => {
+photoRoutes.post("/api/photo/upload", async (c) => {
   const formData = await c.req.formData();
   const file = formData.get("photo");
   const plotId = formData.get("plot_id");

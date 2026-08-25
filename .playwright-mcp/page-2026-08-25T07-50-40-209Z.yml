@@ -1,0 +1,35 @@
+- generic [active] [ref=f5e1]:
+  - generic [ref=f5e2]:
+    - banner [ref=f5e3]:
+      - generic [ref=f5e5]:
+        - generic [ref=f5e6]: eco
+        - generic [ref=f5e8]: อัปโหลดรูป
+    - main [ref=f5e9]:
+      - generic [ref=f5e10]:
+        - generic [ref=f5e16]:
+          - generic [ref=f5e17]: photo_camera
+          - paragraph [ref=f5e18]: แตะเพื่อถ่ายรูปแปลงนา
+          - paragraph [ref=f5e19]: จัดให้ต้นข้าวอยู่กลางกรอบ
+        - generic [ref=f5e20]:
+          - generic [ref=f5e21]: my_location
+          - generic [ref=f5e22]:
+            - paragraph [ref=f5e23]: กำลังค้นหาตำแหน่ง...
+            - paragraph [ref=f5e24]: ไม่สามารถระบุตำแหน่งได้
+        - button "photo_camera ถ่ายรูป" [ref=f5e25]:
+          - generic [ref=f5e26]: photo_camera
+          - text: ถ่ายรูป
+    - navigation "นำทางหลัก" [ref=f5e27]:
+      - link "chat แชท" [ref=f5e28] [cursor=pointer]:
+        - /url: /chat
+        - generic [ref=f5e29]: chat
+        - generic [ref=f5e30]: แชท
+      - link "photo_camera อัปโหลด" [ref=f5e31] [cursor=pointer]:
+        - /url: /upload
+        - generic [ref=f5e32]: photo_camera
+        - generic [ref=f5e33]: อัปโหลด
+      - link "bar_chart สรุป" [ref=f5e34] [cursor=pointer]:
+        - /url: /summary
+        - generic [ref=f5e35]: bar_chart
+        - generic [ref=f5e36]: สรุป
+  - button "Open Next.js Dev Tools" [ref=f5e42] [cursor=pointer]
+  - alert [ref=f5e46]

@@ -1,0 +1,51 @@
+- generic [active] [ref=f6e1]:
+  - generic [ref=f6e2]:
+    - banner [ref=f6e3]:
+      - generic [ref=f6e4]:
+        - generic [ref=f6e5]:
+          - generic [ref=f6e6]: eco
+          - generic [ref=f6e8]: สรุปฤดูกาล
+        - generic [ref=f6e9]: 25%
+    - main [ref=f6e12]:
+      - generic [ref=f6e13]:
+        - generic [ref=f6e14]:
+          - generic: 💧 ระดับน้ำ (ซม.)
+          - slider: "5"
+          - generic:
+            - generic [ref=f6e15]: 0 ซม.
+            - generic [ref=f6e16]: 5 ซม.
+            - generic [ref=f6e17]: 10 ซม.
+        - generic [ref=f6e18]:
+          - generic: 🌾 การจัดการฟางข้าว
+          - combobox [ref=f6e19]:
+            - option "เลือก..." [selected]
+            - option "ไถกลบ"
+            - option "เผา"
+            - option "มัดขาย"
+            - option "เอาออก"
+        - generic [ref=f6e20]:
+          - generic: ⚡ พลังงานที่ใช้
+          - generic:
+            - generic: น้ำมัน (ลิตร)
+            - spinbutton "น้ำมัน (ลิตร)" [ref=f6e21]
+          - generic:
+            - generic: ไฟฟ้า (kWh)
+            - spinbutton "ไฟฟ้า (kWh)" [ref=f6e22]
+        - button "save บันทึกข้อมูล" [ref=f6e23]:
+          - generic [ref=f6e24]: save
+          - text: บันทึกข้อมูล
+    - navigation "นำทางหลัก" [ref=f6e25]:
+      - link "chat แชท" [ref=f6e26] [cursor=pointer]:
+        - /url: /chat
+        - generic [ref=f6e27]: chat
+        - generic [ref=f6e28]: แชท
+      - link "photo_camera อัปโหลด" [ref=f6e29] [cursor=pointer]:
+        - /url: /upload
+        - generic [ref=f6e30]: photo_camera
+        - generic [ref=f6e31]: อัปโหลด
+      - link "bar_chart สรุป" [ref=f6e32] [cursor=pointer]:
+        - /url: /summary
+        - generic [ref=f6e33]: bar_chart
+        - generic [ref=f6e34]: สรุป
+  - button "Open Next.js Dev Tools" [ref=f6e40] [cursor=pointer]
+  - alert [ref=f6e44]

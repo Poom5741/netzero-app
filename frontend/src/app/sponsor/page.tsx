@@ -57,7 +57,6 @@ function fetchSponsorData(): Promise<ProvinceGroupType[]> {
 const sidebarEntries = [
   { key: "admin", label: "แดชบอร์ดตรวจสอบ", href: "/admin", icon: "fact_check" },
   { key: "sponsor", label: "แดชบอร์ดผู้สนับสนุน", href: "/sponsor", icon: "volunteer_activism", active: true },
-  { key: "reports", label: "รายงาน", href: "/reports", icon: "analytics" },
 ];
 
 const regionCodeMap: Record<string, string> = {
@@ -138,8 +137,8 @@ export default function SponsorDashboardPage() {
       />
       <DashboardHeader userLabel="ผู้ดูแลระบบ" searchPlaceholder="ค้นหาทั่วโลก..." />
 
-      <div className="pl-72">
-        <main className="relative pt-20 min-h-screen bg-surface px-10 py-6">
+      <div className="lg:pl-72">
+        <main className="relative pt-20 min-h-screen bg-surface px-6 lg:px-10 py-6">
           <div className="flex flex-col w-full relative">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 relative z-10">

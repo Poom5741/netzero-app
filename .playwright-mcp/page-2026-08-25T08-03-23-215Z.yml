@@ -1,0 +1,203 @@
+- generic [active] [ref=f19e1]:
+  - complementary [ref=f19e2]:
+    - generic [ref=f19e3]:
+      - generic [ref=f19e4]: eco
+      - generic [ref=f19e6]: NetZero
+    - navigation "นำทางหลัก" [ref=f19e7]:
+      - link "แดชบอร์ดตรวจสอบ" [ref=f19e8] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=f19e9]: fact_check
+      - link "แดชบอร์ดผู้สนับสนุน" [ref=f19e11] [cursor=pointer]:
+        - /url: /sponsor
+        - generic [ref=f19e12]: volunteer_activism
+      - link "รายงาน" [ref=f19e14] [cursor=pointer]:
+        - /url: /reports
+        - generic [ref=f19e15]: analytics
+    - generic [ref=f19e18]:
+      - generic [ref=f19e19]: person
+      - generic [ref=f19e21]:
+        - paragraph [ref=f19e22]: ผู้ดูแลระบบ
+        - paragraph [ref=f19e23]: admin@netzerocarbon.com
+  - banner [ref=f19e24]:
+    - generic [ref=f19e25]:
+      - generic [ref=f19e26]: search
+      - textbox "ค้นหาทั่วโลก..." [ref=f19e27]
+    - generic [ref=f19e28]:
+      - generic [ref=f19e29]:
+        - button "การแจ้งเตือน" [ref=f19e30]:
+          - generic [ref=f19e31]: notifications
+        - button "การตั้งค่า" [ref=f19e32]:
+          - generic [ref=f19e33]: settings
+      - generic [ref=f19e35]:
+        - generic [ref=f19e36]: person
+        - generic [ref=f19e38]: ผู้ดูแลระบบ
+  - main [ref=f19e40]:
+    - generic [ref=f19e41]:
+      - generic [ref=f19e42]:
+        - generic [ref=f19e43]:
+          - paragraph [ref=f19e44]: ติดตามคาร์บอนแบบเรียลไทม์
+          - heading "แดชบอร์ดผู้สนับสนุน" [level=1] [ref=f19e46]
+          - paragraph [ref=f19e47]: ตรวจสอบผลกระทบของคุณแบบเรียลไทม์ ติดตามการลดการปล่อยก๊าซเรือนกระจกจากแปลงเกษตรที่ได้รับการสนับสนุน
+        - generic [ref=f19e48]:
+          - button "calendar_month Q3 2024" [ref=f19e49]:
+            - generic [ref=f19e50]: calendar_month
+            - text: Q3 2024
+          - button "download ส่งออกรายงาน" [ref=f19e51]:
+            - generic [ref=f19e53]: download
+            - generic [ref=f19e54]: ส่งออกรายงาน
+      - generic [ref=f19e55]:
+        - generic [ref=f19e56]:
+          - generic [ref=f19e58]:
+            - heading "CO₂ ที่ลดทั้งหมด" [level=3] [ref=f19e59]
+            - generic [ref=f19e60]: eco
+          - generic [ref=f19e62]:
+            - generic [ref=f19e63]:
+              - generic [ref=f19e64]: "78"
+              - generic [ref=f19e65]: ตัน
+            - paragraph [ref=f19e66]:
+              - generic [ref=f19e67]: trending_up
+              - text: +12% จากไตรมาสที่แล้ว
+        - generic [ref=f19e68]:
+          - generic [ref=f19e70]:
+            - heading "แปลงที่ได้รับการสนับสนุน" [level=3] [ref=f19e71]
+            - generic [ref=f19e72]: landscape
+          - generic [ref=f19e74]:
+            - generic [ref=f19e75]:
+              - generic [ref=f19e76]: "8"
+              - generic [ref=f19e77]: แปลง
+            - paragraph [ref=f19e78]:
+              - generic [ref=f19e79]: trending_up
+              - text: Across 3 จังหวัด
+        - generic [ref=f19e80]:
+          - generic [ref=f19e82]:
+            - heading "การลงทุนทั้งหมด" [level=3] [ref=f19e83]
+            - generic [ref=f19e84]: payments
+          - generic [ref=f19e86]:
+            - generic [ref=f19e87]: $16,000
+            - paragraph [ref=f19e89]:
+              - generic [ref=f19e90]: trending_up
+              - text: ปี 2024
+      - generic [ref=f19e91]:
+        - generic [ref=f19e92]:
+          - heading "รายละเอียดตามภูมิภาค" [level=2] [ref=f19e93]
+          - generic [ref=f19e94]:
+            - generic [ref=f19e95]:
+              - generic [ref=f19e96]:
+                - generic [ref=f19e97]: AY
+                - generic [ref=f19e98]:
+                  - heading "พระนครศรีอยุธยา" [level=3] [ref=f19e99]
+                  - paragraph [ref=f19e100]: 3 แปลง
+              - generic [ref=f19e101]:
+                - paragraph [ref=f19e102]: 30.50 ตัน CO₂
+                - paragraph [ref=f19e103]: การลดที่ได้รับการตรวจสอบ
+            - generic [ref=f19e104]:
+              - generic [ref=f19e105]:
+                - generic [ref=f19e106]: landscape
+                - generic [ref=f19e108]:
+                  - heading "AY-001 (สมชาย วงศ์สุข)" [level=4] [ref=f19e109]
+                  - progressbar "AY-001 progress" [ref=f19e110]
+                  - generic [ref=f19e112]:
+                    - generic [ref=f19e113]: 63% เป้าหมาย
+                    - generic [ref=f19e114]: 12.50 ตัน
+              - generic [ref=f19e115]:
+                - generic [ref=f19e116]: landscape
+                - generic [ref=f19e118]:
+                  - heading "AY-042 (พิชัย ชาญดี)" [level=4] [ref=f19e119]
+                  - progressbar "AY-042 progress" [ref=f19e120]
+                  - generic [ref=f19e122]:
+                    - generic [ref=f19e123]: 42% เป้าหมาย
+                    - generic [ref=f19e124]: 8.30 ตัน
+              - generic [ref=f19e125]:
+                - generic [ref=f19e126]: landscape
+                - generic [ref=f19e128]:
+                  - heading "AY-078 (วิภา ศรีสุข)" [level=4] [ref=f19e129]
+                  - progressbar "AY-078 progress" [ref=f19e130]
+                  - generic [ref=f19e132]:
+                    - generic [ref=f19e133]: 49% เป้าหมาย
+                    - generic [ref=f19e134]: 9.70 ตัน
+          - generic [ref=f19e135]:
+            - generic [ref=f19e136]:
+              - generic [ref=f19e137]:
+                - generic [ref=f19e138]: SP
+                - generic [ref=f19e139]:
+                  - heading "สุพรรณบุรี" [level=3] [ref=f19e140]
+                  - paragraph [ref=f19e141]: 3 แปลง
+              - generic [ref=f19e142]:
+                - paragraph [ref=f19e143]: 32.70 ตัน CO₂
+                - paragraph [ref=f19e144]: การลดที่ได้รับการตรวจสอบ
+            - generic [ref=f19e145]:
+              - generic [ref=f19e146]:
+                - generic [ref=f19e147]: landscape
+                - generic [ref=f19e149]:
+                  - heading "SP-112 (มนตรี บุญศรี)" [level=4] [ref=f19e150]
+                  - progressbar "SP-112 progress" [ref=f19e151]
+                  - generic [ref=f19e153]:
+                    - generic [ref=f19e154]: 73% เป้าหมาย
+                    - generic [ref=f19e155]: 14.50 ตัน
+              - generic [ref=f19e156]:
+                - generic [ref=f19e157]: landscape
+                - generic [ref=f19e159]:
+                  - heading "SP-205 (สมศักดิ์ ทองดี)" [level=4] [ref=f19e160]
+                  - progressbar "SP-205 progress" [ref=f19e161]
+                  - generic [ref=f19e163]:
+                    - generic [ref=f19e164]: 55% เป้าหมาย
+                    - generic [ref=f19e165]: 11 ตัน
+              - generic [ref=f19e166]:
+                - generic [ref=f19e167]: landscape
+                - generic [ref=f19e169]:
+                  - heading "SP-218 (กมล ศรีสุวรรณ)" [level=4] [ref=f19e170]
+                  - progressbar "SP-218 progress" [ref=f19e171]
+                  - generic [ref=f19e173]:
+                    - generic [ref=f19e174]: 36% เป้าหมาย
+                    - generic [ref=f19e175]: 7.20 ตัน
+          - generic [ref=f19e176]:
+            - generic [ref=f19e177]:
+              - generic [ref=f19e178]:
+                - generic [ref=f19e179]: NP
+                - generic [ref=f19e180]:
+                  - heading "นครปฐม" [level=3] [ref=f19e181]
+                  - paragraph [ref=f19e182]: 2 แปลง
+              - generic [ref=f19e183]:
+                - paragraph [ref=f19e184]: 14.90 ตัน CO₂
+                - paragraph [ref=f19e185]: การลดที่ได้รับการตรวจสอบ
+            - generic [ref=f19e186]:
+              - generic [ref=f19e187]:
+                - generic [ref=f19e188]: landscape
+                - generic [ref=f19e190]:
+                  - heading "NP-034 (สุภาพร มณี)" [level=4] [ref=f19e191]
+                  - progressbar "NP-034 progress" [ref=f19e192]
+                  - generic [ref=f19e194]:
+                    - generic [ref=f19e195]: 34% เป้าหมาย
+                    - generic [ref=f19e196]: 6.80 ตัน
+              - generic [ref=f19e197]:
+                - generic [ref=f19e198]: landscape
+                - generic [ref=f19e200]:
+                  - heading "NP-091 (รัตนา แก้วมณี)" [level=4] [ref=f19e201]
+                  - progressbar "NP-091 progress" [ref=f19e202]
+                  - generic [ref=f19e204]:
+                    - generic [ref=f19e205]: 41% เป้าหมาย
+                    - generic [ref=f19e206]: 8.10 ตัน
+        - generic [ref=f19e207]:
+          - generic [ref=f19e208]:
+            - heading "การคำนวณแบบเรียลไทม์" [level=3] [ref=f19e209]
+            - generic [ref=f19e210]:
+              - generic [ref=f19e212]: การสะสมเครือข่ายแบบเรียลไทม์
+              - generic [ref=f19e213]: "78"
+              - generic [ref=f19e215]: อัปเดตแบบเรียลไทม์
+            - generic [ref=f19e216]:
+              - generic [ref=f19e217]:
+                - generic [ref=f19e218]: AWD (การจัดการน้ำสลับ)
+                - generic [ref=f19e219]: 65%
+              - generic [ref=f19e220]:
+                - generic [ref=f19e221]: Biochar (ถ่านชีวภาพ)
+                - generic [ref=f19e222]: 25%
+              - generic [ref=f19e223]:
+                - generic [ref=f19e224]: Fertilization (การใส่ปุ๋ย)
+                - generic [ref=f19e225]: 10%
+          - generic [ref=f19e226]:
+            - heading "การกระจายโครงการ" [level=3] [ref=f19e228]
+            - generic [ref=f19e230]:
+              - generic [ref=f19e231]: map
+              - paragraph [ref=f19e232]: แผนที่โครงการ
+  - button "Open Next.js Dev Tools" [ref=f19e238] [cursor=pointer]
+  - alert [ref=f19e242]

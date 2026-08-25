@@ -1,0 +1,50 @@
+- generic [active] [ref=f20e1]:
+  - generic [ref=f20e2]:
+    - complementary [ref=f20e3]:
+      - generic [ref=f20e4]:
+        - generic [ref=f20e5]: eco
+        - generic [ref=f20e7]: NetZero
+      - navigation "นำทางหลัก" [ref=f20e8]:
+        - link "ตรวจสอบภาพ" [ref=f20e9] [cursor=pointer]:
+          - /url: /admin
+          - generic [ref=f20e10]: rate_review
+        - link "จัดการผู้ใช้" [ref=f20e12] [cursor=pointer]:
+          - /url: /admin/users
+          - generic [ref=f20e13]: group
+        - link "รายงาน" [ref=f20e15] [cursor=pointer]:
+          - /url: /admin/reports
+          - generic [ref=f20e16]: summarize
+      - generic [ref=f20e19]:
+        - generic [ref=f20e20]: person
+        - generic [ref=f20e22]:
+          - paragraph [ref=f20e23]: System Admin
+          - paragraph [ref=f20e24]: admin@netzerocarbon.com
+    - banner [ref=f20e25]:
+      - generic [ref=f20e26]:
+        - generic [ref=f20e27]: search
+        - textbox "ค้นหาทั่วโลก..." [ref=f20e28]
+      - generic [ref=f20e29]:
+        - generic [ref=f20e30]:
+          - button "การแจ้งเตือน" [ref=f20e31]:
+            - generic [ref=f20e32]: notifications
+          - button "การตั้งค่า" [ref=f20e33]:
+            - generic [ref=f20e34]: settings
+        - generic [ref=f20e36]:
+          - generic [ref=f20e37]: person
+          - generic [ref=f20e39]: Admin
+    - main [ref=f20e40]:
+      - generic [ref=f20e41]:
+        - heading "Review Queue" [level=1] [ref=f20e42]
+        - paragraph [ref=f20e43]: ตรวจสอบและอนุมัติภาพถ่ายหลักฐานจากเกษตรกร
+      - tablist [ref=f20e45]:
+        - tab "ทั้งหมด" [selected] [ref=f20e46]
+        - tab "รอตรวจสอบ" [ref=f20e47]
+        - tab "ถูกธง" [ref=f20e48]
+        - tab "ผ่านแล้ว" [ref=f20e49]
+        - tab "ปฏิเสธแล้ว" [ref=f20e50]
+      - region "รายการตรวจสอบ" [ref=f20e52]:
+        - generic [ref=f20e53]:
+          - generic [ref=f20e54]: error
+          - paragraph [ref=f20e55]: ไม่สามารถโหลดข้อมูลได้
+  - button "Open Next.js Dev Tools" [ref=f20e61] [cursor=pointer]
+  - alert [ref=f20e65]

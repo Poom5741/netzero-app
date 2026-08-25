@@ -1,0 +1,48 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - generic [ref=e6]: eco
+          - generic [ref=e8]: Chat Hub
+        - generic [ref=e9]:
+          - button "การแจ้งเตือน" [ref=e10]:
+            - generic [ref=e11]: notifications
+          - generic [ref=e12]: D
+    - main [ref=e14]:
+      - generic [ref=e16]:
+        - generic [ref=e17]: eco
+        - generic [ref=e19]:
+          - paragraph [ref=e20]: สวัสดีครับ! 🌿 ยินดีต้อนรับสู่ NetZeroCarbon วันนี้คุณต้องการให้ผมช่วยบันทึกข้อมูลแปลงนา หรือตรวจสอบยอดคาร์บอนเครดิตครับ?
+          - generic [ref=e21]: 14:18
+    - generic [ref=e23]:
+      - button "add_a_photo ส่งรูปถ่าย" [ref=e24]:
+        - generic [ref=e25]: add_a_photo
+        - text: ส่งรูปถ่าย
+      - button "summarize สรุปฤดูกาล" [ref=e26]:
+        - generic [ref=e27]: summarize
+        - text: สรุปฤดูกาล
+      - button "help สอบถาม" [ref=e28]:
+        - generic [ref=e29]: help
+        - text: สอบถาม
+    - generic [ref=e30]:
+      - button "เพิ่มไฟล์" [ref=e31]:
+        - generic [ref=e32]: add
+      - textbox "พิมพ์ข้อความ" [ref=e33]:
+        - /placeholder: พิมพ์ข้อความ...
+      - button "ส่งข้อความ" [disabled] [ref=e34]:
+        - generic [ref=e35]: send
+    - navigation "นำทางหลัก" [ref=e36]:
+      - link "chat แชท" [ref=e37] [cursor=pointer]:
+        - /url: /chat
+        - generic [ref=e38]: chat
+        - generic [ref=e39]: แชท
+      - link "photo_camera อัปโหลด" [ref=e40] [cursor=pointer]:
+        - /url: /upload
+        - generic [ref=e41]: photo_camera
+        - generic [ref=e42]: อัปโหลด
+      - link "bar_chart สรุป" [ref=e43] [cursor=pointer]:
+        - /url: /summary
+        - generic [ref=e44]: bar_chart
+        - generic [ref=e45]: สรุป
+  - alert [ref=e46]

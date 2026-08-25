@@ -118,9 +118,10 @@ async function handleWelcome(ctx: FlowContext): Promise<FlowResult> {
 async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
   const phone = ctx.text.replace(/[-\s]/g, "");
 
-  if (!/^\d{10}$/.test(phone)) {
+  // Validate Thai phone format: starts with 0, followed by 9 digits
+  if (!/^0\d{9}$/.test(phone)) {
     await safePush(ctx, [
-      { type: "text", text: "กรุณาพิมพ์เบอร์โทรศัพท์ 10 หลัก (เช่น 0812345678)" },
+      { type: "text", text: "เบอร์โทรศัพท์ไม่ถูกต้อง\nกรุณาพิมพ์เบอร์โทรศัพท์ 10 หลักที่ขึ้นต้นด้วย 0 (เช่น 0812345678)" },
     ], ctx.db, ctx.farmerId);
     return { newState: "phone" };
   }

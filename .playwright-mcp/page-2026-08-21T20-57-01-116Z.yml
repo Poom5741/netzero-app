@@ -1,0 +1,45 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: eco
+      - generic [ref=e7]: NetZero
+    - navigation "นำทางหลัก" [ref=e8]:
+      - link "ตรวจสอบภาพ" [ref=e9] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e10]: rate_review
+      - link "จัดการผู้ใช้" [ref=e12] [cursor=pointer]:
+        - /url: /admin/users
+        - generic [ref=e13]: group
+      - link "รายงาน" [ref=e15] [cursor=pointer]:
+        - /url: /admin/reports
+        - generic [ref=e16]: summarize
+    - generic [ref=e19]:
+      - generic [ref=e20]: person
+      - generic [ref=e22]:
+        - paragraph [ref=e23]: System Admin
+        - paragraph [ref=e24]: admin@netzerocarbon.com
+  - banner [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e27]: search
+      - textbox "ค้นหาทั่วโลก..." [ref=e28]
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - button "การแจ้งเตือน" [ref=e31]:
+          - generic [ref=e32]: notifications
+        - button "การตั้งค่า" [ref=e33]:
+          - generic [ref=e34]: settings
+      - generic [ref=e36]:
+        - generic [ref=e37]: person
+        - generic [ref=e39]: Admin
+  - main [ref=e40]:
+    - generic [ref=e41]:
+      - heading "Review Queue" [level=1] [ref=e42]
+      - paragraph [ref=e43]: ตรวจสอบและอนุมัติภาพถ่ายหลักฐานจากเกษตรกร
+    - tablist [ref=e45]:
+      - tab "ทั้งหมด" [selected] [ref=e46]
+      - tab "รอตรวจสอบ" [ref=e47]
+      - tab "ถูกธง" [ref=e48]
+      - tab "ผ่านแล้ว" [ref=e49]
+      - tab "ปฏิเสธแล้ว" [ref=e50]
+    - region "รายการตรวจสอบ" [ref=e52]:
+      - paragraph [ref=e57]: กำลังโหลด...

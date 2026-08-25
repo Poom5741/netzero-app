@@ -1,0 +1,49 @@
+- generic [active] [ref=f21e1]:
+  - generic [ref=f21e2]:
+    - banner [ref=f21e3]:
+      - generic [ref=f21e4]:
+        - generic [ref=f21e5]:
+          - generic [ref=f21e6]: eco
+          - generic [ref=f21e8]: Chat Hub
+        - generic [ref=f21e9]:
+          - button "การแจ้งเตือน" [ref=f21e10]:
+            - generic [ref=f21e11]: notifications
+          - generic [ref=f21e12]: D
+    - main [ref=f21e14]:
+      - generic [ref=f21e16]:
+        - generic [ref=f21e17]: eco
+        - generic [ref=f21e19]:
+          - paragraph [ref=f21e20]: สวัสดีครับ! 🌿 ยินดีต้อนรับสู่ NetZeroCarbon วันนี้คุณต้องการให้ผมช่วยบันทึกข้อมูลแปลงนา หรือตรวจสอบยอดคาร์บอนเครดิตครับ?
+          - generic [ref=f21e21]: 15:03
+    - generic [ref=f21e23]:
+      - button "add_a_photo ส่งรูปถ่าย" [ref=f21e24]:
+        - generic [ref=f21e25]: add_a_photo
+        - text: ส่งรูปถ่าย
+      - button "summarize สรุปฤดูกาล" [ref=f21e26]:
+        - generic [ref=f21e27]: summarize
+        - text: สรุปฤดูกาล
+      - button "help สอบถาม" [ref=f21e28]:
+        - generic [ref=f21e29]: help
+        - text: สอบถาม
+    - generic [ref=f21e30]:
+      - button "เพิ่มไฟล์" [ref=f21e31]:
+        - generic [ref=f21e32]: add
+      - textbox "พิมพ์ข้อความ" [ref=f21e33]:
+        - /placeholder: พิมพ์ข้อความ...
+      - button "ส่งข้อความ" [disabled] [ref=f21e34]:
+        - generic [ref=f21e35]: send
+    - navigation "นำทางหลัก" [ref=f21e36]:
+      - link "chat แชท" [ref=f21e37] [cursor=pointer]:
+        - /url: /chat
+        - generic [ref=f21e38]: chat
+        - generic [ref=f21e39]: แชท
+      - link "photo_camera อัปโหลด" [ref=f21e40] [cursor=pointer]:
+        - /url: /upload
+        - generic [ref=f21e41]: photo_camera
+        - generic [ref=f21e42]: อัปโหลด
+      - link "bar_chart สรุป" [ref=f21e43] [cursor=pointer]:
+        - /url: /summary
+        - generic [ref=f21e44]: bar_chart
+        - generic [ref=f21e45]: สรุป
+  - button "Open Next.js Dev Tools" [ref=f21e51] [cursor=pointer]
+  - alert [ref=f21e55]

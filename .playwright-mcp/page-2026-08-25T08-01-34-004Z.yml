@@ -1,0 +1,40 @@
+- generic [active] [ref=f15e1]:
+  - generic [ref=f15e2]:
+    - banner [ref=f15e3]:
+      - generic [ref=f15e4]:
+        - generic [ref=f15e5]:
+          - generic [ref=f15e6]: eco
+          - generic [ref=f15e8]: อัปโหลดรูป
+        - generic [ref=f15e9]:
+          - generic [ref=f15e10]: location_on
+          - generic [ref=f15e11]: 14.0322, 100.5231
+    - main [ref=f15e12]:
+      - generic [ref=f15e13]:
+        - generic [ref=f15e21]:
+          - generic [ref=f15e22]: photo_camera
+          - paragraph [ref=f15e23]: แตะเพื่อถ่ายรูปแปลงนา
+          - paragraph [ref=f15e24]: จัดให้ต้นข้าวอยู่กลางกรอบ
+        - generic [ref=f15e25]:
+          - generic [ref=f15e26]: my_location
+          - generic [ref=f15e27]:
+            - paragraph [ref=f15e28]: ตำแหน่ง GPS
+            - paragraph [ref=f15e29]: 14.0322, 100.5231 (±10m)
+          - generic [ref=f15e30]: check_circle
+        - button "photo_camera ถ่ายรูป" [ref=f15e31]:
+          - generic [ref=f15e32]: photo_camera
+          - generic [ref=f15e33]: ถ่ายรูป
+    - navigation "นำทางหลัก" [ref=f15e34]:
+      - link "chat แชท" [ref=f15e35] [cursor=pointer]:
+        - /url: /chat
+        - generic [ref=f15e36]: chat
+        - generic [ref=f15e37]: แชท
+      - link "photo_camera อัปโหลด" [ref=f15e38] [cursor=pointer]:
+        - /url: /upload
+        - generic [ref=f15e39]: photo_camera
+        - generic [ref=f15e40]: อัปโหลด
+      - link "bar_chart สรุป" [ref=f15e41] [cursor=pointer]:
+        - /url: /summary
+        - generic [ref=f15e42]: bar_chart
+        - generic [ref=f15e43]: สรุป
+  - button "Open Next.js Dev Tools" [ref=f15e49] [cursor=pointer]
+  - alert [ref=f15e53]

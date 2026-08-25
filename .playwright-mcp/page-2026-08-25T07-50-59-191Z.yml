@@ -1,0 +1,49 @@
+- generic [active] [ref=f9e1]:
+  - generic [ref=f9e2]:
+    - banner [ref=f9e3]:
+      - generic [ref=f9e4]:
+        - generic [ref=f9e5]:
+          - generic [ref=f9e6]: eco
+          - generic [ref=f9e8]: Chat Hub
+        - generic [ref=f9e9]:
+          - button "การแจ้งเตือน" [ref=f9e10]:
+            - generic [ref=f9e11]: notifications
+          - generic [ref=f9e12]: D
+    - main [ref=f9e14]:
+      - generic [ref=f9e16]:
+        - generic [ref=f9e17]: eco
+        - generic [ref=f9e19]:
+          - paragraph [ref=f9e20]: สวัสดีครับ! 🌿 ยินดีต้อนรับสู่ NetZeroCarbon วันนี้คุณต้องการให้ผมช่วยบันทึกข้อมูลแปลงนา หรือตรวจสอบยอดคาร์บอนเครดิตครับ?
+          - generic [ref=f9e21]: 14:50
+    - generic [ref=f9e23]:
+      - button "add_a_photo ส่งรูปถ่าย" [ref=f9e24]:
+        - generic [ref=f9e25]: add_a_photo
+        - text: ส่งรูปถ่าย
+      - button "summarize สรุปฤดูกาล" [ref=f9e26]:
+        - generic [ref=f9e27]: summarize
+        - text: สรุปฤดูกาล
+      - button "help สอบถาม" [ref=f9e28]:
+        - generic [ref=f9e29]: help
+        - text: สอบถาม
+    - generic [ref=f9e30]:
+      - button "เพิ่มไฟล์" [ref=f9e31]:
+        - generic [ref=f9e32]: add
+      - textbox "พิมพ์ข้อความ" [ref=f9e33]:
+        - /placeholder: พิมพ์ข้อความ...
+      - button "ส่งข้อความ" [disabled] [ref=f9e34]:
+        - generic [ref=f9e35]: send
+    - navigation "นำทางหลัก" [ref=f9e36]:
+      - link "chat แชท" [ref=f9e37] [cursor=pointer]:
+        - /url: /chat
+        - generic [ref=f9e38]: chat
+        - generic [ref=f9e39]: แชท
+      - link "photo_camera อัปโหลด" [ref=f9e40] [cursor=pointer]:
+        - /url: /upload
+        - generic [ref=f9e41]: photo_camera
+        - generic [ref=f9e42]: อัปโหลด
+      - link "bar_chart สรุป" [ref=f9e43] [cursor=pointer]:
+        - /url: /summary
+        - generic [ref=f9e44]: bar_chart
+        - generic [ref=f9e45]: สรุป
+  - button "Open Next.js Dev Tools" [ref=f9e51] [cursor=pointer]
+  - alert [ref=f9e55]

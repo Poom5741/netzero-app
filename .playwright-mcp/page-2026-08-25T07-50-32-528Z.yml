@@ -1,0 +1,50 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - complementary [ref=f3e3]:
+      - generic [ref=f3e4]:
+        - generic [ref=f3e5]: eco
+        - generic [ref=f3e7]: NetZero
+      - navigation "นำทางหลัก" [ref=f3e8]:
+        - link "ตรวจสอบภาพ" [ref=f3e9] [cursor=pointer]:
+          - /url: /admin
+          - generic [ref=f3e10]: rate_review
+        - link "จัดการผู้ใช้" [ref=f3e12] [cursor=pointer]:
+          - /url: /admin/users
+          - generic [ref=f3e13]: group
+        - link "รายงาน" [ref=f3e15] [cursor=pointer]:
+          - /url: /admin/reports
+          - generic [ref=f3e16]: summarize
+      - generic [ref=f3e19]:
+        - generic [ref=f3e20]: person
+        - generic [ref=f3e22]:
+          - paragraph [ref=f3e23]: System Admin
+          - paragraph [ref=f3e24]: admin@netzerocarbon.com
+    - banner [ref=f3e25]:
+      - generic [ref=f3e26]:
+        - generic [ref=f3e27]: search
+        - textbox "ค้นหาทั่วโลก..." [ref=f3e28]
+      - generic [ref=f3e29]:
+        - generic [ref=f3e30]:
+          - button "การแจ้งเตือน" [ref=f3e31]:
+            - generic [ref=f3e32]: notifications
+          - button "การตั้งค่า" [ref=f3e33]:
+            - generic [ref=f3e34]: settings
+        - generic [ref=f3e36]:
+          - generic [ref=f3e37]: person
+          - generic [ref=f3e39]: Admin
+    - main [ref=f3e40]:
+      - generic [ref=f3e41]:
+        - heading "Review Queue" [level=1] [ref=f3e42]
+        - paragraph [ref=f3e43]: ตรวจสอบและอนุมัติภาพถ่ายหลักฐานจากเกษตรกร
+      - tablist [ref=f3e45]:
+        - tab "ทั้งหมด" [selected] [ref=f3e46]
+        - tab "รอตรวจสอบ" [ref=f3e47]
+        - tab "ถูกธง" [ref=f3e48]
+        - tab "ผ่านแล้ว" [ref=f3e49]
+        - tab "ปฏิเสธแล้ว" [ref=f3e50]
+      - region "รายการตรวจสอบ" [ref=f3e52]:
+        - generic [ref=f3e53]:
+          - generic [ref=f3e54]: error
+          - paragraph [ref=f3e55]: ไม่สามารถโหลดข้อมูลได้
+  - button "Open Next.js Dev Tools" [ref=f3e61] [cursor=pointer]
+  - alert [ref=f3e65]
