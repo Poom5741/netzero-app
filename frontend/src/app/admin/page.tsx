@@ -9,6 +9,9 @@ import { ReviewDetailPanel } from "@/components/admin-review/review-detail-panel
 import { PrecisionCard } from "@/components/admin-review/precision-card";
 import { getReviewQueue, reviewPhoto, getPrecisionStat, type PhotoReview, type PrecisionStat } from "@/lib/api";
 
+type GateStatus = "idle" | "approved" | "blocked";
+type GateResult = { success: boolean; missing?: string[] } | null;
+
 const sidebarEntries = [
   { key: "review", label: "ตรวจสอบภาพ", href: "/admin", icon: "rate_review", active: true },
 ];
@@ -37,6 +40,8 @@ export default function AdminReviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchedRef = useRef<Set<string>>(new Set());
+  const [gateStatus, setGateStatus] = useState<GateStatus>("idle");
+  const [gateResult, setGateResult] = useState<GateResult>(null);
 
   const fetchQueue = useCallback(async (filter: string) => {
     // Prevent duplicate calls for same filter
@@ -130,6 +135,47 @@ export default function AdminReviewPage() {
             overrides={precision.overrides}
             precision={precision.precision}
           />
+        </div>
+
+        {/* Season gate */}
+        <div className="mb-6 max-w-xs">
+          <div className="neumorphic p-4 rounded-xl">
+            <h3 className="text-sm font-semibold text-on-surface mb-2">สถานะฤดูกาล</h3>
+            {gateStatus === "approved" && (
+              <p className="text-sm text-primary font-medium">อนุมัติสำเร็จ</p>
+            )}
+            {gateStatus === "blocked" && gateResult?.missing && (
+              <div>
+                <p className="text-sm text-error font-medium">ไม่ผ่านการอนุมัติ</p>
+                <ul className="text-xs text-on-surface-variant mt-1 list-disc list-inside">
+                  {gateResult.missing.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/season/approve", { method: "POST" });
+                  const data = await res.json();
+                  if (data.success) {
+                    setGateStatus("approved");
+                    setGateResult(data);
+                  } else {
+                    setGateStatus("blocked");
+                    setGateResult(data);
+                  }
+                } catch {
+                  setGateStatus("blocked");
+                  setGateResult({ success: false, missing: ["ไม่สามารถเชื่อมต่อได้"] });
+                }
+              }}
+              className="mt-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors"
+            >
+              อนุมัติฤดูกาล
+            </button>
+          </div>
         </div>
 
         {/* Content area */}

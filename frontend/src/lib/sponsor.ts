@@ -8,6 +8,8 @@ export type PlotSummary = {
   total_offset_tco2e: number | null;
   latest_season_id: string | null;
   estimate_status: string | null;
+  water_state_tallies?: { flooded: number; dry: number };
+  provenance_counts?: { machine: number; human: number };
 };
 
 export type ProvinceGroup = {

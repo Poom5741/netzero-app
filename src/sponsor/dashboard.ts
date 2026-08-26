@@ -8,6 +8,8 @@ export type PlotSummary = {
   total_offset_tco2e: number | null;
   latest_season_id: string | null;
   estimate_status: string | null;
+  water_state_tallies?: { flooded: number; dry: number };
+  provenance_counts?: { machine: number; human: number };
 };
 
 export type PlotDetail = {
@@ -72,10 +74,22 @@ export async function getPlotsByProvince(db: D1Database): Promise<ProvinceGroup[
       ORDER BY f.addr_province, p.plot_code`,
     )
     .bind()
-    .all<PlotSummary>();
+    .all<Omit<PlotSummary, "water_state_tallies" | "provenance_counts">>();
 
   const rows = results ?? [];
-  return groupByProvince(rows);
+
+  // Enrich each plot with water-state tallies and provenance counts
+  const enriched: PlotSummary[] = await Promise.all(
+    rows.map(async (row) => {
+      const [tallies, provenance] = await Promise.all([
+        getWaterStateTallies(db, row.plot_id, row.latest_season_id),
+        getProvenanceCounts(db, row.plot_id, row.latest_season_id),
+      ]);
+      return { ...row, water_state_tallies: tallies, provenance_counts: provenance };
+    }),
+  );
+
+  return groupByProvince(enriched);
 }
 
 function groupByProvince(rows: PlotSummary[]): ProvinceGroup[] {

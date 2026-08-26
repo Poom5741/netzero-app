@@ -61,6 +61,20 @@ export function ProvinceGroup({ province, plots, regionCode }: ProvinceGroupProp
                   <span>{Math.round(pct)}% เป้าหมาย</span>
                   <span>{formatTons(plot.total_offset_tco2e ?? 0)} ตัน</span>
                 </div>
+                {/* Water-state tallies */}
+                {plot.water_state_tallies && (plot.water_state_tallies.flooded > 0 || plot.water_state_tallies.dry > 0) && (
+                  <div className="flex gap-2 mt-1 text-[11px] text-on-surface-variant">
+                    <span>น้ำขัง: {plot.water_state_tallies.flooded}</span>
+                    <span>แห้ง: {plot.water_state_tallies.dry}</span>
+                  </div>
+                )}
+                {/* Provenance counts */}
+                {plot.provenance_counts && (plot.provenance_counts.machine > 0 || plot.provenance_counts.human > 0) && (
+                  <div className="flex gap-2 mt-1 text-[11px] text-on-surface-variant">
+                    <span>AI: {plot.provenance_counts.machine}</span>
+                    <span>มนุษย์: {plot.provenance_counts.human}</span>
+                  </div>
+                )}
               </div>
             </div>
           );

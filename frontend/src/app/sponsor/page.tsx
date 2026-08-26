@@ -215,7 +215,7 @@ export default function SponsorDashboardPage() {
                     <ProvinceGroup
                       key={group.province}
                       province={group.province}
-                      plots={group.plots}
+                      plots={group.plots as import("@/lib/sponsor").PlotSummary[]}
                       regionCode={getRegionCode(group.province)}
                     />
                   ))
