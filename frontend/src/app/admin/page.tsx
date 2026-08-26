@@ -6,7 +6,8 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { FilterTabs, type FilterTab } from "@/components/admin-review/filter-tabs";
 import { ReviewCard } from "@/components/admin-review/review-card";
 import { ReviewDetailPanel } from "@/components/admin-review/review-detail-panel";
-import { getReviewQueue, reviewPhoto, type PhotoReview } from "@/lib/api";
+import { PrecisionCard } from "@/components/admin-review/precision-card";
+import { getReviewQueue, reviewPhoto, getPrecisionStat, type PhotoReview, type PrecisionStat } from "@/lib/api";
 
 const sidebarEntries = [
   { key: "review", label: "ตรวจสอบภาพ", href: "/admin", icon: "rate_review", active: true },
@@ -32,6 +33,7 @@ export default function AdminReviewPage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [queue, setQueue] = useState<PhotoReview[]>([]);
+  const [precision, setPrecision] = useState<PrecisionStat>({ auditReviewed: 0, overrides: 0, precision: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchedRef = useRef<Set<string>>(new Set());
@@ -57,6 +59,8 @@ export default function AdminReviewPage() {
 
   useEffect(() => {
     fetchQueue(activeFilter);
+    // Fetch precision stat once on mount
+    getPrecisionStat().then(setPrecision).catch(() => {});
   }, [activeFilter, fetchQueue]);
 
   const selectedReview = queue.find((r) => r.id === selectedId) ?? null;
@@ -117,6 +121,15 @@ export default function AdminReviewPage() {
         {/* Filter tabs */}
         <div className="mb-6">
           <FilterTabs tabs={filterTabs} activeKey={activeFilter} onChange={handleFilterChange} />
+        </div>
+
+        {/* Precision stat */}
+        <div className="mb-6 max-w-xs">
+          <PrecisionCard
+            auditReviewed={precision.auditReviewed}
+            overrides={precision.overrides}
+            precision={precision.precision}
+          />
         </div>
 
         {/* Content area */}

@@ -45,6 +45,10 @@ export interface PhotoReview {
   ai_confidence: number;
   admin_status: string;
   photo_url: string;
+  water_state?: string | null;
+  photo_type?: string | null;
+  pre_verified?: number;
+  audit_sample?: number;
 }
 
 export async function getReviewQueue(status?: string): Promise<PhotoReview[]> {
@@ -68,5 +72,18 @@ export async function reviewPhoto(
     body: JSON.stringify({ status, reason }),
   });
   if (!res.ok) throw new Error(`Review error: ${res.status}`);
+  return res.json();
+}
+
+export interface PrecisionStat {
+  auditReviewed: number;
+  overrides: number;
+  precision: number | null;
+}
+
+export async function getPrecisionStat(): Promise<PrecisionStat> {
+  const url = validateApiUrl(`${API_BASE}/api/admin/precision`);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Precision error: ${res.status}`);
   return res.json();
 }

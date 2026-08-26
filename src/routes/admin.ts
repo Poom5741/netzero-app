@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import { getReviewQueue } from "../admin/queue";
 import { reviewPhoto } from "../admin/review";
 import { getPhotoDetail } from "../admin/detail";
+import { getPrecisionStat } from "../admin/precision";
 import { parseSessionCookie } from "../auth/session";
 
 type Bindings = {
@@ -62,10 +63,15 @@ adminRoutes.get("/admin/review", async (c) => {
     .badge.pass { background: #d4edda; color: #155724; }
     .badge.pending { background: #e2e3e5; color: #383d41; }
     .badge.verified { background: #d4edda; color: #155724; }
+    .badge.audit { background: #fff3cd; color: #856404; border: 2px solid #ffc107; }
+    .badge.preverified { background: #d1ecf1; color: #0c5460; }
+    .water-state { font-size: 11px; color: #555; margin-top: 2px; }
+    .item.audit-item { border-left: 4px solid #ffc107; }
     .actions { display: flex; gap: 6px; }
     .btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
     .btn-verify { background: #06c755; color: white; }
     .btn-reject { background: #dc3545; color: white; }
+    .btn-override { background: #fd7e14; color: white; }
     .btn-detail { background: #6c757d; color: white; }
     .empty { text-align: center; padding: 40px; color: #999; }
   </style>
@@ -83,20 +89,31 @@ adminRoutes.get("/admin/review", async (c) => {
     <a href="/admin/review?status=reject" class="${filter === 'reject' ? 'active' : ''}">❌ Reject</a>
   </div>
   <div class="queue">
-    ${queue.length === 0 ? '<div class="empty">ไม่มีภาพในคิว</div>' : queue.map(item => `
-      <div class="item">
+    ${queue.length === 0 ? '<div class="empty">ไม่มีภาพในคิว</div>' : queue.map(item => {
+      const isAudit = item.audit_sample === 1 && item.pre_verified === 1;
+      const isPreVerified = item.pre_verified === 1 && !isAudit;
+      const waterLabel = item.water_state === 'flooded' ? '💧 น้ำขัง' : item.water_state === 'dry' ? '🏜️ แห้ง' : '';
+      return `
+      <div class="item${isAudit ? ' audit-item' : ''}">
         <img src="/api/photo/${item.id}" alt="photo">
         <div class="item-info">
-          <h3>${item.plot_id} <span class="badge ${item.ai_status}">${item.ai_status}</span> <span class="badge ${item.admin_status}">${item.admin_status}</span></h3>
+          <h3>${item.plot_id}
+            <span class="badge ${item.ai_status}">${item.ai_status}</span>
+            <span class="badge ${item.admin_status}">${item.admin_status}</span>
+            ${isAudit ? '<span class="badge audit">🔍 ตรวจตัวอย่าง</span>' : ''}
+            ${isPreVerified ? '<span class="badge preverified">✓ Pre-verified</span>' : ''}
+          </h3>
           <p>${item.ai_label || '-'} | ${(item.ai_confidence * 100).toFixed(0)}% confidence</p>
+          ${waterLabel ? `<p class="water-state">${waterLabel}</p>` : ''}
           <p>${item.ai_reason || ''}</p>
         </div>
         <div class="actions">
+          ${isPreVerified ? `<button class="btn btn-override" onclick="review('${item.id}','rejected')">⚡ Override</button>` : ''}
           <button class="btn btn-verify" onclick="review('${item.id}','verified')">✓ ผ่าน</button>
           <button class="btn btn-reject" onclick="review('${item.id}','rejected')">✗ ตีกลับ</button>
         </div>
-      </div>
-    `).join('')}
+      </div>`;
+    }).join('')}
   </div>
   <script>
     async function review(photoId, status) {
@@ -126,6 +143,17 @@ adminRoutes.get("/api/admin/review", async (c) => {
   const queue = await getReviewQueue(db, filter);
 
   return c.json(queue);
+});
+
+// GET /api/admin/precision — Pre-verify precision stat
+adminRoutes.get("/api/admin/precision", async (c) => {
+  const session = requireAdmin(c, c.env.SECRET);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+
+  const db = c.env.DB;
+  const stat = await getPrecisionStat(db);
+
+  return c.json(stat);
 });
 
 // POST /api/admin/review/:photoId — Review a photo

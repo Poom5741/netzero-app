@@ -54,9 +54,24 @@ export function ReviewCard({ review, selected, onSelect }: ReviewCardProps) {
           <span className="text-xs font-medium text-on-surface">{badgeLabel}</span>
         </div>
 
+        {/* Audit badge — visually distinct */}
+        {review.audit_sample === 1 && (
+          <div className="absolute top-2 right-2 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-sm">
+            ตรวจตัวอย่าง
+          </div>
+        )}
+
         {/* Farm label */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-          <p className="text-sm font-medium text-white">{review.plot_id}</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm font-medium text-white">{review.plot_id}</p>
+            <span className="text-xs text-white/90 font-mono">{Math.round(review.ai_confidence * 100)}%</span>
+          </div>
+          {review.water_state && (
+            <p className="text-xs text-white/90 mb-0.5">
+              {review.water_state === "flooded" ? "💧 น้ำขัง" : "🏜️ แห้ง"}
+            </p>
+          )}
           {review.ai_reason && (
             <p className="text-xs text-white/80 truncate">{review.ai_reason}</p>
           )}
