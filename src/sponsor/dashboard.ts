@@ -26,6 +26,14 @@ export type PlotDetail = {
   sf_o: number | null;
   nitrogen_total_kg_per_rai: number | null;
   verification_label: string;
+  water_state_tallies: {
+    flooded: number;
+    dry: number;
+  };
+  provenance_counts: {
+    machine: number;
+    human: number;
+  };
 };
 
 export type ProvinceGroup = {
@@ -121,9 +129,96 @@ export async function getPlotDetail(db: D1Database, plotId: string): Promise<Plo
       WHERE p.id = ?`,
     )
     .bind(plotId)
-    .all<PlotDetail>();
+    .all<Omit<PlotDetail, "verification_label" | "water_state_tallies" | "provenance_counts">>();
 
   const row = (results ?? [])[0];
   if (!row) return null;
-  return { ...row, verification_label: NOT_VERIFIED };
+
+  // Fetch water-state tallies for this plot-season
+  const waterStateTallies = await getWaterStateTallies(db, plotId, row.season_id);
+  
+  // Fetch provenance counts for this plot-season
+  const provenanceCounts = await getProvenanceCounts(db, plotId, row.season_id);
+
+  return { 
+    ...row, 
+    verification_label: NOT_VERIFIED,
+    water_state_tallies: waterStateTallies,
+    provenance_counts: provenanceCounts,
+  };
+}
+
+/**
+ * Get water-state tallies (flooded/dry counts) for a plot-season.
+ */
+async function getWaterStateTallies(
+  db: D1Database, 
+  plotId: string, 
+  seasonId: string | null
+): Promise<{ flooded: number; dry: number }> {
+  if (!seasonId) {
+    return { flooded: 0, dry: 0 };
+  }
+
+  const { results } = await db
+    .prepare(
+      `SELECT water_state, COUNT(*) as count
+       FROM photo_evidence
+       WHERE plot_id = ? AND season_id = ? AND photo_type = 'wetdry' AND water_state IS NOT NULL
+       GROUP BY water_state`,
+    )
+    .bind(plotId, seasonId)
+    .all<{ water_state: string; count: number }>();
+
+  const tallies = { flooded: 0, dry: 0 };
+  for (const row of results ?? []) {
+    if (row.water_state === "flooded") {
+      tallies.flooded = row.count;
+    } else if (row.water_state === "dry") {
+      tallies.dry = row.count;
+    }
+  }
+  return tallies;
+}
+
+/**
+ * Get provenance counts (machine vs human stamps) for a plot-season.
+ */
+async function getProvenanceCounts(
+  db: D1Database,
+  plotId: string,
+  seasonId: string | null
+): Promise<{ machine: number; human: number }> {
+  if (!seasonId) {
+    return { machine: 0, human: 0 };
+  }
+
+  const { results } = await db
+    .prepare(
+      `SELECT 
+        CASE 
+          WHEN pre_verified = 1 AND superseded = 0 THEN 'machine'
+          WHEN admin_status = 'verified' THEN 'human'
+        END as provenance_type,
+        COUNT(*) as count
+       FROM photo_evidence
+       WHERE plot_id = ? AND season_id = ?
+         AND (
+           (pre_verified = 1 AND superseded = 0)
+           OR admin_status = 'verified'
+         )
+       GROUP BY provenance_type`,
+    )
+    .bind(plotId, seasonId)
+    .all<{ provenance_type: string; count: number }>();
+
+  const counts = { machine: 0, human: 0 };
+  for (const row of results ?? []) {
+    if (row.provenance_type === "machine") {
+      counts.machine = row.count;
+    } else if (row.provenance_type === "human") {
+      counts.human = row.count;
+    }
+  }
+  return counts;
 }

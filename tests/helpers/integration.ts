@@ -191,12 +191,14 @@ export async function createTestApp(): Promise<{
   const { photoRoutes } = await import("../../src/routes/photo");
   const { authRoutes } = await import("../../src/routes/auth");
   const { dashboardRoutes } = await import("../../src/routes/dashboard");
+  const { sponsorRoutes } = await import("../../src/routes/sponsor");
 
   const app = new Hono();
   app.route("/", healthRoutes);
   app.route("/", photoRoutes);
   app.route("/", authRoutes);
   app.route("/", dashboardRoutes);
+  app.route("/sponsor", sponsorRoutes);
 
   app.notFound((c) => c.json({ error: "Not found" }, 404));
 
@@ -314,11 +316,16 @@ export async function seedPhoto(
     taken_at: new Date().toISOString(),
     ai_status: "pending",
     admin_status: "pending",
+    photo_type: overrides?.photo_type ?? null,
+    water_state: overrides?.water_state ?? null,
+    pre_verified: overrides?.pre_verified ?? 0,
+    audit_sample: overrides?.audit_sample ?? 0,
+    superseded: overrides?.superseded ?? 0,
     ...overrides,
   };
   await db
     .prepare(
-      "INSERT OR IGNORE INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT OR IGNORE INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_state, pre_verified, audit_sample, superseded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(
       photo.id,
@@ -331,6 +338,11 @@ export async function seedPhoto(
       photo.taken_at,
       photo.ai_status,
       photo.admin_status,
+      photo.photo_type,
+      photo.water_state,
+      photo.pre_verified,
+      photo.audit_sample,
+      photo.superseded,
     )
     .run();
   return photo;
