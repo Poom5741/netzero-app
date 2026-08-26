@@ -20,14 +20,19 @@ export async function approveSeason(
   if (existing.status !== "closed") return { success: false, error: "season must be closed first" };
 
   const missing: string[] = [];
+  const PHOTO_TYPES = ["prepare", "wetdry", "harvest"] as const;
 
-  const photos = await db
-    .prepare(
-      "SELECT COUNT(*) as cnt FROM photo_evidence WHERE plot_id = ? AND season_id = ? AND admin_status = 'verified'",
-    )
-    .bind(plotId, seasonId)
-    .first<{ cnt: number }>();
-  if (!photos || photos.cnt < 1) missing.push("verified photos");
+  for (const photoType of PHOTO_TYPES) {
+    const count = await db
+      .prepare(
+        `SELECT COUNT(*) as cnt FROM photo_evidence
+         WHERE plot_id = ? AND season_id = ? AND photo_type = ?
+         AND (admin_status = 'verified' OR (pre_verified = 1 AND COALESCE(superseded, 0) = 0))`,
+      )
+      .bind(plotId, seasonId, photoType)
+      .first<{ cnt: number }>();
+    if (!count || count.cnt < 1) missing.push(`${photoType} photo`);
+  }
 
   const fertilizer = await db
     .prepare(

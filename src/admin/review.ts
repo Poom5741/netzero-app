@@ -1,4 +1,4 @@
-type ReviewResult = { success: boolean; error?: string };
+type ReviewResult = { success: boolean; error?: string; promoted?: boolean };
 
 const VALID_STATUSES = ["verified", "rejected"] as const;
 type AdminStatus = (typeof VALID_STATUSES)[number];
@@ -18,13 +18,28 @@ export async function reviewPhoto(
   }
 
   const photo = await db
-    .prepare("SELECT id FROM photo_evidence WHERE id = ?")
+    .prepare("SELECT id, pre_verified, audit_sample FROM photo_evidence WHERE id = ?")
     .bind(photoId)
-    .first<{ id: string }>();
+    .first<{ id: string; pre_verified?: number; audit_sample?: number }>();
 
   if (!photo) {
     return { success: false, error: "Photo not found" };
   }
+
+  // Supersede: admin rejects a pre-verified photo
+  if (adminStatus === "rejected" && photo.pre_verified === 1) {
+    await db
+      .prepare(
+        `UPDATE photo_evidence
+         SET superseded = 1, pre_verified = 0
+         WHERE id = ?`,
+      )
+      .bind(photoId)
+      .run();
+  }
+
+  // Promote: admin confirms an audit-sampled photo → human-verified
+  const promoted = adminStatus === "verified" && photo.audit_sample === 1 && photo.pre_verified === 1;
 
   await db
     .prepare(
@@ -35,5 +50,5 @@ export async function reviewPhoto(
     .bind(adminStatus, reason, photoId)
     .run();
 
-  return { success: true };
+  return { success: true, promoted };
 }

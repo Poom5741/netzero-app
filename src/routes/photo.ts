@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { ClassifyResult } from "../vision/classifier";
+import { shouldPreVerify, shouldAuditSample, type PreVerifyConfig } from "../vision/preverify";
 
 type Bindings = {
   DB: D1Database;
@@ -47,6 +48,20 @@ function classifyFromRequest(
   }
 }
 
+/**
+ * Read pre-verification config from form fields (test overrides) or defaults.
+ * ponytail: ceiling is env-based config table; add when system_config table exists.
+ */
+function getConfig(formData: FormData): PreVerifyConfig {
+  const threshold = formData.get("__threshold");
+  const sampleRate = formData.get("__sample_rate");
+  return {
+    confidenceThreshold: threshold ? Number(threshold) : 0.85,
+    auditSampleRate: sampleRate ? Number(sampleRate) : 0.1,
+    enabled: true,
+  };
+}
+
 type Verdict = "refused" | "flagged" | "pre_verified" | "queued";
 
 photoRoutes.post("/photo/upload", async (c) => {
@@ -70,9 +85,11 @@ photoRoutes.post("/photo/upload", async (c) => {
 
   // Kill switch check
   const killSwitch = formData.get("__kill_switch") === "true";
+  const config = getConfig(formData);
+  if (killSwitch) config.enabled = false;
 
   // Screening for wetdry only
-  if (photoType === "wetdry" && !killSwitch) {
+  if (photoType === "wetdry" && config.enabled) {
     const classification = classifyFromRequest(formData);
 
     if (classification) {
@@ -85,15 +102,15 @@ photoRoutes.post("/photo/upload", async (c) => {
         });
       }
 
-      // Flagged: borderline confidence
-      if (classification.confidence < 0.8) {
+      // Flagged: borderline confidence (below threshold but not refused)
+      if (!shouldPreVerify(classification.confidence, config, classification.valid)) {
         const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
         const key = `evidence/${photoId}.jpg`;
         await c.env.R2.put(key, file);
 
         await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?)`,
+          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0)`,
         )
           .bind(
             photoId,
@@ -105,9 +122,9 @@ photoRoutes.post("/photo/upload", async (c) => {
             gpsAccuracy ?? null,
             takenAt,
             classification.reason,
-            classification.reason,
             classification.confidence,
             photoType,
+            classification.water_state,
           )
           .run();
 
@@ -121,14 +138,16 @@ photoRoutes.post("/photo/upload", async (c) => {
         }, 201);
       }
 
-      // Pre-verified: high confidence pass
+      // Pre-verified: high confidence pass — apply stamp + audit sampling
       const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
       const key = `evidence/${photoId}.jpg`;
       await c.env.R2.put(key, file);
 
+      const isAudit = shouldAuditSample(photoId, config.auditSampleRate);
+
       await c.env.DB.prepare(
-        `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'pending', ?)`,
+        `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
         .bind(
           photoId,
@@ -139,10 +158,15 @@ photoRoutes.post("/photo/upload", async (c) => {
           gpsLng,
           gpsAccuracy ?? null,
           takenAt,
-          classification.reason,
+          'pass',
+          classification.water_state,
           classification.reason,
           classification.confidence,
+          'pending',
           photoType,
+          classification.water_state,
+          1,
+          isAudit ? 1 : 0,
         )
         .run();
 
@@ -153,6 +177,8 @@ photoRoutes.post("/photo/upload", async (c) => {
         photo_type: photoType,
         water_state: classification.water_state,
         ai_confidence: classification.confidence,
+        pre_verified: true,
+        audit_sample: isAudit,
       }, 201);
     }
   }

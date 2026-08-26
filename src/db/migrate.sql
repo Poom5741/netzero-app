@@ -175,3 +175,23 @@ CREATE INDEX IF NOT EXISTS idx_farmer_messages_farmer ON farmer_messages(farmer_
 CREATE INDEX IF NOT EXISTS idx_carbon_estimates_plot ON carbon_estimates(plot_id);
 CREATE INDEX IF NOT EXISTS idx_ai_events_farmer ON ai_events(farmer_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Issue #103: Pre-Verification stamp + audit sampling columns
+ALTER TABLE photo_evidence ADD COLUMN photo_type TEXT CHECK(photo_type IN ('prepare', 'wetdry', 'harvest'));
+ALTER TABLE photo_evidence ADD COLUMN water_state TEXT;
+ALTER TABLE photo_evidence ADD COLUMN pre_verified INTEGER DEFAULT 0;
+ALTER TABLE photo_evidence ADD COLUMN audit_sample INTEGER DEFAULT 0;
+ALTER TABLE photo_evidence ADD COLUMN superseded INTEGER DEFAULT 0;
+
+-- Automation audit log (ADR-0001 traceability)
+CREATE TABLE IF NOT EXISTS automation_audit_log (
+  id TEXT PRIMARY KEY,
+  photo_evidence_id TEXT NOT NULL REFERENCES photo_evidence(id),
+  actor_type TEXT CHECK(actor_type IN ('machine', 'admin')) NOT NULL,
+  action TEXT NOT NULL,
+  confidence REAL,
+  reason TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_automation_audit_log_photo ON automation_audit_log(photo_evidence_id);

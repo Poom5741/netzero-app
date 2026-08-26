@@ -49,11 +49,13 @@ describe("approveSeason", () => {
     expect(r.error).toContain("closed first");
   });
 
-  it("rejects when no verified photos", async () => {
+  it("rejects when no verified photos for any type", async () => {
     const db = mockD1({ seasonStatus: "closed", photoCount: 0 }) as unknown as D1Database;
     const r = await approveSeason(db, "p1", "s1");
     expect(r.success).toBe(false);
-    expect(r.missing).toContain("verified photos");
+    expect(r.missing).toContain("prepare photo");
+    expect(r.missing).toContain("wetdry photo");
+    expect(r.missing).toContain("harvest photo");
   });
 
   it("rejects when no confirmed fertilizer", async () => {
