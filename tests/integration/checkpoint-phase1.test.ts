@@ -47,6 +47,7 @@ describe("Phase 1 — farmer data collection", () => {
     fd.append("gps_lat", "18.7883");
     fd.append("gps_lng", "98.9853");
     fd.append("taken_at", "2026-01-15T10:00:00Z");
+    fd.append("photo_type", "prepare");
 
     const res = await app.request(
       "/photo/upload",

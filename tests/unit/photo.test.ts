@@ -35,6 +35,7 @@ function makeUploadRequest(overrides?: Record<string, string | File>) {
   fd.append("gps_lng", "100.5018");
   fd.append("gps_accuracy", "10");
   fd.append("taken_at", "2025-01-01T12:00:00Z");
+  fd.append("photo_type", "prepare");
   if (overrides) {
     for (const [k, v] of Object.entries(overrides)) {
       fd.set(k, v);

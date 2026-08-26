@@ -4,28 +4,35 @@ import { useState, useRef, useEffect } from "react";
 import { LiffProvider, useLiff } from "@/lib/liff-context";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { PhotoTypePicker } from "@/components/upload/photo-type-picker";
+import { VerdictResult } from "@/components/upload/verdict-result";
+import { uploadPhoto, type UploadVerdict } from "@/lib/photo";
 
 interface PhotoState {
   preview: string | null;
   gps: { lat: number; lng: number; accuracy: number } | null;
   uploading: boolean;
-  uploaded: boolean;
+  verdict: UploadVerdict | null;
+  verdictReason: string | null;
+  verdictWaterState: string | null;
   error: string | null;
 }
 
 function UploadContent() {
   const { userId, isLoading } = useLiff();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoType, setPhotoType] = useState<string | null>(null);
   const [photo, setPhoto] = useState<PhotoState>({
     preview: null,
     gps: null,
     uploading: false,
-    uploaded: false,
+    verdict: null,
+    verdictReason: null,
+    verdictWaterState: null,
     error: null,
   });
   const [gpsLoading, setGpsLoading] = useState(false);
 
-  // Get GPS location
   useEffect(() => {
     if ("geolocation" in navigator) {
       setGpsLoading(true);
@@ -33,18 +40,12 @@ function UploadContent() {
         (pos) => {
           setPhoto((p) => ({
             ...p,
-            gps: {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-            },
+            gps: { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy },
           }));
           setGpsLoading(false);
         },
         () => {
           setGpsLoading(false);
-          // GPS failed - keep gps as null to show warning state
-          console.warn("GPS geolocation failed - upload will proceed without location data");
         },
         { enableHighAccuracy: true, timeout: 10000 },
       );
@@ -58,13 +59,14 @@ function UploadContent() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (ev) => {
       setPhoto((p) => ({
         ...p,
         preview: ev.target?.result as string,
-        uploaded: false,
+        verdict: null,
+        verdictReason: null,
+        verdictWaterState: null,
         error: null,
       }));
     };
@@ -72,12 +74,11 @@ function UploadContent() {
   }
 
   async function handleUpload() {
-    if (!photo.preview || !userId) return;
+    if (!photo.preview || !userId || !photoType) return;
 
-    setPhoto((p) => ({ ...p, uploading: true, error: null }));
+    setPhoto((p) => ({ ...p, uploading: true, error: null, verdict: null }));
 
     try {
-      // Convert data URL to blob
       const res = await fetch(photo.preview);
       const blob = await res.blob();
 
@@ -89,18 +90,33 @@ function UploadContent() {
       formData.append("gps_lng", String(photo.gps?.lng || 0));
       formData.append("gps_accuracy", String(photo.gps?.accuracy || 0));
       formData.append("taken_at", new Date().toISOString());
+      formData.append("photo_type", photoType!);
 
-      const uploadRes = await fetch("/api/photo/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const result = await uploadPhoto(formData);
 
-      if (!uploadRes.ok) throw new Error("Upload failed");
-
-      setPhoto((p) => ({ ...p, uploading: false, uploaded: true }));
+      setPhoto((p) => ({
+        ...p,
+        uploading: false,
+        verdict: result.verdict,
+        verdictReason: result.reason || null,
+        verdictWaterState: result.water_state || null,
+      }));
     } catch {
-      setPhoto((p) => ({ ...p, uploading: false, error: "อัปโหลดล้มเหลว กรุณาลองใหม่" }));
+      setPhoto((p) => ({ ...p, uploading: false, verdict: "failure" }));
     }
+  }
+
+  function handleRetake() {
+    setPhoto({
+      preview: null,
+      gps: photo.gps,
+      uploading: false,
+      verdict: null,
+      verdictReason: null,
+      verdictWaterState: null,
+      error: null,
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   const navItems = [
@@ -117,9 +133,32 @@ function UploadContent() {
     );
   }
 
+  // Show verdict result
+  if (photo.verdict) {
+    return (
+      <div className="flex flex-col h-screen bg-surface-container-low">
+        <header className="glass fixed top-0 w-full z-50 pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+          <div className="h-16 px-5 flex items-center">
+            <span className="font-semibold text-lg text-on-surface">ผลการตรวจสอบ</span>
+          </div>
+        </header>
+        <main className="flex-1 pt-16 pb-24 px-5 flex items-center justify-center overflow-y-auto">
+          <div className="w-full max-w-sm neumorphic rounded-2xl">
+            <VerdictResult
+              verdict={photo.verdict}
+              reason={photo.verdictReason || undefined}
+              water_state={photo.verdictWaterState || undefined}
+              onRetake={photo.verdict === "refused" ? handleRetake : undefined}
+            />
+          </div>
+        </main>
+        <BottomNav items={navItems} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-surface-container-low">
-      {/* Header */}
       <header className="glass fixed top-0 w-full z-50 pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-16 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -143,11 +182,12 @@ function UploadContent() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 pt-16 pb-24 px-5 overflow-y-auto">
         {!photo.preview ? (
-          /* Camera View */
           <div className="flex flex-col gap-5">
+            {/* Photo Type Picker */}
+            <PhotoTypePicker value={photoType} onChange={setPhotoType} />
+
             {/* Camera frame */}
             <div className="w-full aspect-square neumorphic rounded-2xl flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-4 border-2 border-primary/30 rounded-xl pointer-events-none" />
@@ -190,7 +230,6 @@ function UploadContent() {
               )}
             </div>
 
-            {/* GPS Warning */}
             {!photo.gps && !gpsLoading && (
               <div className="w-full bg-error-container/20 border border-error/30 rounded-xl p-3 flex items-start gap-2">
                 <span className="material-symbols-outlined text-error shrink-0 text-sm mt-0.5">warning</span>
@@ -200,10 +239,14 @@ function UploadContent() {
               </div>
             )}
 
-            {/* Capture Button */}
-            <Button onClick={handleCapture} className="w-full claymorphic text-base py-4">
+            {/* Capture Button — disabled until type selected */}
+            <Button
+              onClick={handleCapture}
+              disabled={!photoType}
+              className="w-full claymorphic text-base py-4"
+            >
               <span className="material-symbols-outlined">photo_camera</span>
-              <span>ถ่ายรูป</span>
+              <span>{photoType ? "ถ่ายรูป" : "เลือกประเภทรูปก่อน"}</span>
             </Button>
 
             <input
@@ -216,18 +259,9 @@ function UploadContent() {
             />
           </div>
         ) : (
-          /* Preview */
           <div className="flex flex-col gap-4">
             <div className="w-full aspect-square neumorphic rounded-2xl overflow-hidden relative">
               <img src={photo.preview} alt="Preview" className="w-full h-full object-cover" />
-              {photo.uploaded && (
-                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                  <div className="glass rounded-2xl px-6 py-4 flex items-center gap-3">
-                    <span className="material-symbols-outlined text-primary text-3xl">check_circle</span>
-                    <span className="text-on-surface font-medium">อัปโหลดสำเร็จ!</span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {photo.error && (
@@ -240,21 +274,19 @@ function UploadContent() {
             <div className="flex gap-3">
               <Button
                 variant="secondary"
-                onClick={() => setPhoto({ preview: null, gps: photo.gps, uploading: false, uploaded: false, error: null })}
+                onClick={handleRetake}
                 className="flex-1"
               >
                 ถ่ายใหม่
               </Button>
-              {!photo.uploaded && (
-                <Button
-                  onClick={handleUpload}
-                  loading={photo.uploading}
-                  disabled={!photo.gps}
-                  className="flex-1 claymorphic"
-                >
-                  อัปโหลด
-                </Button>
-              )}
+              <Button
+                onClick={handleUpload}
+                loading={photo.uploading}
+                disabled={!photo.gps}
+                className="flex-1 claymorphic"
+              >
+                อัปโหลด
+              </Button>
             </div>
           </div>
         )}

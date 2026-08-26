@@ -45,6 +45,7 @@ describe("Seam 1 — full vertical slice", () => {
     fd.append("gps_lat", "18.7883");
     fd.append("gps_lng", "98.9853");
     fd.append("taken_at", "2026-01-15T10:00:00Z");
+    fd.append("photo_type", "prepare");
 
     const photoRes = await app.request(
       "/photo/upload",

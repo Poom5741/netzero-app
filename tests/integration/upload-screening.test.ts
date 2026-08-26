@@ -1,0 +1,127 @@
+/**
+ * Issue #102 — Upload screening integration
+ * Tests the upload endpoint with photo_type and AI verdict responses.
+ */
+import { describe, expect, it } from "vitest";
+import { createTestApp, seedFarmer, seedPlot } from "../helpers/integration";
+
+function makeUploadRequest(overrides?: Record<string, string | File>) {
+  const fd = new FormData();
+  fd.append("photo", new File(["bytes"], "test.jpg", { type: "image/jpeg" }));
+  fd.append("plot_id", "plot-1");
+  fd.append("season_id", "2026-01");
+  fd.append("gps_lat", "18.7883");
+  fd.append("gps_lng", "98.9853");
+  fd.append("gps_accuracy", "10");
+  fd.append("taken_at", "2026-01-15T10:00:00Z");
+  fd.append("photo_type", "wetdry");
+  if (overrides) {
+    for (const [k, v] of Object.entries(overrides)) {
+      fd.set(k, v);
+    }
+  }
+  return new Request("http://localhost/photo/upload", { method: "POST", body: fd });
+}
+
+describe("POST /photo/upload — screening verdict", () => {
+  it("returns 400 when photo_type is missing", async () => {
+    const { app } = await createTestApp();
+    const fd = new FormData();
+    fd.append("photo", new File(["bytes"], "test.jpg", { type: "image/jpeg" }));
+    fd.append("plot_id", "plot-1");
+    fd.append("season_id", "2026-01");
+    fd.append("taken_at", "2026-01-15T10:00:00Z");
+    // no photo_type
+
+    const res = await app.request(
+      "/photo/upload",
+      new Request("http://localhost/photo/upload", { method: "POST", body: fd }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("returns verdict 'queued' for prepare type (no screening)", async () => {
+    const { app, r2 } = await createTestApp();
+    const req = makeUploadRequest({ photo_type: "prepare" });
+    const res = await app.request("/photo/upload", req);
+
+    expect(res.status).toBe(201);
+    const body = await res.json<{ id: string; verdict: string; photo_type: string }>();
+    expect(body.verdict).toBe("queued");
+    expect(body.photo_type).toBe("prepare");
+    expect(r2.stored.size).toBe(1);
+  });
+
+  it("returns verdict 'queued' for harvest type (no screening)", async () => {
+    const { app } = await createTestApp();
+    const req = makeUploadRequest({ photo_type: "harvest" });
+    const res = await app.request("/photo/upload", req);
+
+    expect(res.status).toBe(201);
+    const body = await res.json<{ verdict: string; photo_type: string }>();
+    expect(body.verdict).toBe("queued");
+    expect(body.photo_type).toBe("harvest");
+  });
+
+  it("returns verdict 'refused' for wetdry with low confidence; nothing persisted", async () => {
+    const { app, db, r2 } = await createTestApp();
+    // Inject a fake classifier that returns invalid with high confidence
+    const req = makeUploadRequest({
+      photo_type: "wetdry",
+      // Signal to the fake classifier: this should be refused
+      __classifier_result: "reject",
+    });
+    const res = await app.request("/photo/upload", req);
+
+    expect(res.status).toBe(200);
+    const body = await res.json<{ verdict: string; reason: string }>();
+    expect(body.verdict).toBe("refused");
+    expect(body.reason).toBeTruthy();
+    // Nothing persisted — no R2, no DB row
+    expect(r2.stored.size).toBe(0);
+  });
+
+  it("returns verdict 'flagged' for wetdry with borderline confidence", async () => {
+    const { app, r2 } = await createTestApp();
+    const req = makeUploadRequest({
+      photo_type: "wetdry",
+      __classifier_result: "flag",
+    });
+    const res = await app.request("/photo/upload", req);
+
+    expect(res.status).toBe(201);
+    const body = await res.json<{ verdict: string; photo_type: string }>();
+    expect(body.verdict).toBe("flagged");
+    expect(body.photo_type).toBe("wetdry");
+    expect(r2.stored.size).toBe(1);
+  });
+
+  it("returns verdict 'pre_verified' for wetdry with high confidence", async () => {
+    const { app, r2 } = await createTestApp();
+    const req = makeUploadRequest({
+      photo_type: "wetdry",
+      __classifier_result: "pass",
+    });
+    const res = await app.request("/photo/upload", req);
+
+    expect(res.status).toBe(201);
+    const body = await res.json<{ verdict: string; water_state: string }>();
+    expect(body.verdict).toBe("pre_verified");
+    expect(body.water_state).toBeTruthy();
+    expect(r2.stored.size).toBe(1);
+  });
+
+  it("returns verdict 'queued' when kill switch is off (even for wetdry)", async () => {
+    const { app, r2 } = await createTestApp();
+    const req = makeUploadRequest({
+      photo_type: "wetdry",
+      __kill_switch: "true",
+    });
+    const res = await app.request("/photo/upload", req);
+
+    expect(res.status).toBe(201);
+    const body = await res.json<{ verdict: string }>();
+    expect(body.verdict).toBe("queued");
+    expect(r2.stored.size).toBe(1);
+  });
+});

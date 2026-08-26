@@ -1,6 +1,18 @@
 "use client";
 
-export async function uploadPhoto(formData: FormData): Promise<{ id: string; photo_url: string }> {
+export type UploadVerdict = "refused" | "flagged" | "pre_verified" | "queued" | "failure";
+
+export interface UploadResponse {
+  id?: string;
+  photo_url?: string;
+  verdict: UploadVerdict;
+  reason?: string;
+  photo_type?: string;
+  water_state?: string;
+  ai_confidence?: number;
+}
+
+export async function uploadPhoto(formData: FormData): Promise<UploadResponse> {
   const res = await fetch("/api/photo/upload", {
     method: "POST",
     body: formData,
