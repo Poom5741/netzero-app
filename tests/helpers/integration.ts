@@ -192,6 +192,7 @@ export async function createTestApp(): Promise<{
   const { authRoutes } = await import("../../src/routes/auth");
   const { dashboardRoutes } = await import("../../src/routes/dashboard");
   const { sponsorRoutes } = await import("../../src/routes/sponsor");
+  const { adminRoutes } = await import("../../src/routes/admin");
 
   const app = new Hono();
   app.route("/", healthRoutes);
@@ -199,6 +200,7 @@ export async function createTestApp(): Promise<{
   app.route("/", authRoutes);
   app.route("/", dashboardRoutes);
   app.route("/sponsor", sponsorRoutes);
+  app.route("/", adminRoutes);
 
   app.notFound((c) => c.json({ error: "Not found" }, 404));
 

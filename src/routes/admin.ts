@@ -3,10 +3,10 @@
  */
 
 import { Hono } from "hono";
+import { getDecisionHistory } from "../admin/audit-log";
+import { getPrecisionStat } from "../admin/precision";
 import { getReviewQueue } from "../admin/queue";
 import { reviewPhoto } from "../admin/review";
-import { getPhotoDetail } from "../admin/detail";
-import { getPrecisionStat } from "../admin/precision";
 import { parseSessionCookie } from "../auth/session";
 
 type Bindings = {
@@ -18,12 +18,15 @@ type Bindings = {
 export const adminRoutes = new Hono<{ Bindings: Bindings }>();
 
 // Auth helper
-function requireAdmin(c: { req: { header: (name: string) => string | undefined } }, secret: string) {
+function requireAdmin(
+  c: { req: { header: (name: string) => string | undefined } },
+  secret: string,
+) {
   const cookieHeader = c.req.header("Cookie") ?? "";
   const match = cookieHeader.match(/nzc_session=([^;]+)/);
   if (!match?.[1]) return null;
   const session = parseSessionCookie(match[1], secret);
-  if (!session || session.role !== "admin") return null;
+  if (session?.role !== "admin") return null;
   return session;
 }
 
@@ -82,38 +85,50 @@ adminRoutes.get("/admin/review", async (c) => {
     <a href="/admin">← กลับ</a>
   </div>
   <div class="filters">
-    <a href="/admin/review" class="${!filter ? 'active' : ''}">ทั้งหมด</a>
-    <a href="/admin/review?status=flag" class="${filter === 'flag' ? 'active' : ''}">🚩 Flag</a>
-    <a href="/admin/review?status=pending" class="${filter === 'pending' ? 'active' : ''}">⏳ Pending</a>
-    <a href="/admin/review?status=pass" class="${filter === 'pass' ? 'active' : ''}">✅ Pass</a>
-    <a href="/admin/review?status=reject" class="${filter === 'reject' ? 'active' : ''}">❌ Reject</a>
+    <a href="/admin/review" class="${!filter ? "active" : ""}">ทั้งหมด</a>
+    <a href="/admin/review?status=flag" class="${filter === "flag" ? "active" : ""}">🚩 Flag</a>
+    <a href="/admin/review?status=pending" class="${filter === "pending" ? "active" : ""}">⏳ Pending</a>
+    <a href="/admin/review?status=pass" class="${filter === "pass" ? "active" : ""}">✅ Pass</a>
+    <a href="/admin/review?status=reject" class="${filter === "reject" ? "active" : ""}">❌ Reject</a>
   </div>
   <div class="queue">
-    ${queue.length === 0 ? '<div class="empty">ไม่มีภาพในคิว</div>' : queue.map(item => {
-      const isAudit = item.audit_sample === 1 && item.pre_verified === 1;
-      const isPreVerified = item.pre_verified === 1 && !isAudit;
-      const waterLabel = item.water_state === 'flooded' ? '💧 น้ำขัง' : item.water_state === 'dry' ? '🏜️ แห้ง' : '';
-      return `
-      <div class="item${isAudit ? ' audit-item' : ''}">
+    ${
+      queue.length === 0
+        ? '<div class="empty">ไม่มีภาพในคิว</div>'
+        : queue
+            .map((item) => {
+              const isAudit = item.audit_sample === 1 && item.pre_verified === 1;
+              const isPreVerified = item.pre_verified === 1 && !isAudit;
+              const waterLabel =
+                item.water_state === "flooded"
+                  ? "💧 น้ำขัง"
+                  : item.water_state === "dry"
+                    ? "🏜️ แห้ง"
+                    : "";
+              return `
+      <div class="item${isAudit ? " audit-item" : ""}">
         <img src="/api/photo/${item.id}" alt="photo">
         <div class="item-info">
           <h3>${item.plot_id}
             <span class="badge ${item.ai_status}">${item.ai_status}</span>
             <span class="badge ${item.admin_status}">${item.admin_status}</span>
-            ${isAudit ? '<span class="badge audit">🔍 ตรวจตัวอย่าง</span>' : ''}
-            ${isPreVerified ? '<span class="badge preverified">✓ Pre-verified</span>' : ''}
+            ${isAudit ? '<span class="badge audit">🔍 ตรวจตัวอย่าง</span>' : ""}
+            ${isPreVerified ? '<span class="badge preverified">✓ Pre-verified</span>' : ""}
           </h3>
-          <p>${item.ai_label || '-'} | ${(item.ai_confidence * 100).toFixed(0)}% confidence</p>
-          ${waterLabel ? `<p class="water-state">${waterLabel}</p>` : ''}
-          <p>${item.ai_reason || ''}</p>
+          <p>${item.ai_label || "-"} | ${(item.ai_confidence * 100).toFixed(0)}% confidence</p>
+          ${waterLabel ? `<p class="water-state">${waterLabel}</p>` : ""}
+          <p>${item.ai_reason || ""}</p>
         </div>
         <div class="actions">
-          ${isPreVerified ? `<button class="btn btn-override" onclick="review('${item.id}','rejected')">⚡ Override</button>` : ''}
+          <a href="/admin/audit/${item.id}" class="btn btn-detail">📜 History</a>
+          ${isPreVerified ? `<button class="btn btn-override" onclick="review('${item.id}','rejected')">⚡ Override</button>` : ""}
           <button class="btn btn-verify" onclick="review('${item.id}','verified')">✓ ผ่าน</button>
           <button class="btn btn-reject" onclick="review('${item.id}','rejected')">✗ ตีกลับ</button>
         </div>
       </div>`;
-    }).join('')}
+            })
+            .join("")
+    }
   </div>
   <script>
     async function review(photoId, status) {
@@ -156,6 +171,105 @@ adminRoutes.get("/api/admin/precision", async (c) => {
   return c.json(stat);
 });
 
+// GET /api/admin/audit/:photoId — Decision history for a photo (JSON)
+adminRoutes.get("/api/admin/audit/:photoId", async (c) => {
+  const session = requireAdmin(c, c.env.SECRET);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+
+  const db = c.env.DB;
+  const photoId = c.req.param("photoId");
+  const history = await getDecisionHistory(db, photoId);
+  return c.json(history);
+});
+
+// GET /admin/audit/:photoId — Decision history HTML view
+adminRoutes.get("/admin/audit/:photoId", async (c) => {
+  const session = requireAdmin(c, c.env.SECRET);
+  if (!session) return c.html("<!DOCTYPE html><html><body>Unauthorized</body></html>", 401);
+
+  const db = c.env.DB;
+  const photoId = c.req.param("photoId");
+  const history = await getDecisionHistory(db, photoId);
+
+  const actionLabels: Record<string, string> = {
+    pre_verified: "✓ Pre-verified (machine)",
+    flagged: "🚩 Flagged (machine)",
+    refused: "❌ Refused (machine)",
+    verified: "✓ Verified (admin)",
+    rejected: "✗ Rejected (admin)",
+    superseded: "⚡ Superseded (admin override)",
+    promoted: "🎯 Promoted (audit confirmed)",
+  };
+
+  const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decision History - ${photoId}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
+    .header { background: #1a1a2e; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 18px; }
+    .header a { color: #aaa; text-decoration: none; font-size: 14px; }
+    .content { padding: 20px; max-width: 800px; margin: 0 auto; }
+    .photo-id { font-size: 14px; color: #666; margin-bottom: 16px; }
+    .timeline { position: relative; padding-left: 24px; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #ddd; }
+    .entry { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .entry::before { content: ''; position: absolute; left: -20px; top: 20px; width: 12px; height: 12px; border-radius: 50%; background: #06c755; border: 2px solid white; }
+    .entry.machine::before { background: #0dcaf0; }
+    .entry.admin::before { background: #fd7e14; }
+    .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .entry-action { font-weight: 600; font-size: 14px; }
+    .entry-time { font-size: 12px; color: #999; }
+    .entry-meta { font-size: 12px; color: #666; }
+    .entry-reason { font-size: 13px; color: #333; margin-top: 4px; font-style: italic; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+    .badge.machine { background: #d1ecf1; color: #0c5460; }
+    .badge.admin { background: #fff3cd; color: #856404; }
+    .empty { text-align: center; padding: 40px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📜 ประวัติการตัดสินใจ</h1>
+    <a href="/admin/review">← กลับคิว</a>
+  </div>
+  <div class="content">
+    <p class="photo-id">Photo: ${photoId}</p>
+    ${
+      history.length === 0
+        ? '<div class="empty">ไม่มีประวัติการตัดสินใจ</div>'
+        : `
+    <div class="timeline">
+      ${history
+        .map(
+          (entry) => `
+      <div class="entry ${entry.actor_type}">
+        <div class="entry-header">
+          <span class="entry-action">
+            ${actionLabels[entry.action] || entry.action}
+            <span class="badge ${entry.actor_type}">${entry.actor_type === "machine" ? "🤖 machine" : "👤 admin"}</span>
+          </span>
+          <span class="entry-time">${new Date(entry.created_at).toLocaleString("th-TH")}</span>
+        </div>
+        ${entry.confidence ? `<div class="entry-meta">Confidence: ${(entry.confidence * 100).toFixed(0)}%</div>` : ""}
+        ${entry.reason ? `<div class="entry-reason">"${entry.reason}"</div>` : ""}
+      </div>
+      `,
+        )
+        .join("")}
+    </div>
+    `
+    }
+  </div>
+</body>
+</html>`;
+  return c.html(html);
+});
+
 // POST /api/admin/review/:photoId — Review a photo
 adminRoutes.post("/api/admin/review/:photoId", async (c) => {
   const session = requireAdmin(c, c.env.SECRET);
@@ -165,7 +279,12 @@ adminRoutes.post("/api/admin/review/:photoId", async (c) => {
   const photoId = c.req.param("photoId");
   const body = await c.req.json<{ status: string; reason?: string }>();
 
-  const result = await reviewPhoto(db, photoId, body.status as "verified" | "rejected", body.reason || "");
+  const result = await reviewPhoto(
+    db,
+    photoId,
+    body.status as "verified" | "rejected",
+    body.reason || "",
+  );
   if (result.success) {
     return c.json({ ok: true });
   }

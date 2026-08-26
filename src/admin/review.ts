@@ -1,3 +1,5 @@
+import { writeAuditEntry } from "./audit-log";
+
 type ReviewResult = { success: boolean; error?: string; promoted?: boolean };
 
 const VALID_STATUSES = ["verified", "rejected"] as const;
@@ -36,10 +38,38 @@ export async function reviewPhoto(
       )
       .bind(photoId)
       .run();
+
+    await writeAuditEntry(db, {
+      photoId,
+      actorType: "admin",
+      action: "superseded",
+      confidence: null,
+      reason,
+    });
   }
 
   // Promote: admin confirms an audit-sampled photo → human-verified
-  const promoted = adminStatus === "verified" && photo.audit_sample === 1 && photo.pre_verified === 1;
+  const promoted =
+    adminStatus === "verified" && photo.audit_sample === 1 && photo.pre_verified === 1;
+
+  if (promoted) {
+    await writeAuditEntry(db, {
+      photoId,
+      actorType: "admin",
+      action: "promoted",
+      confidence: null,
+      reason,
+    });
+  } else if (!(adminStatus === "rejected" && photo.pre_verified === 1)) {
+    // Normal admin decision (not already logged as superseded)
+    await writeAuditEntry(db, {
+      photoId,
+      actorType: "admin",
+      action: adminStatus,
+      confidence: null,
+      reason,
+    });
+  }
 
   await db
     .prepare(

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
+import { writeAuditEntry } from "../admin/audit-log";
 import type { ClassifyResult } from "../vision/classifier";
-import { shouldPreVerify, shouldAuditSample, type PreVerifyConfig } from "../vision/preverify";
+import { type PreVerifyConfig, shouldAuditSample, shouldPreVerify } from "../vision/preverify";
 
 type Bindings = {
   DB: D1Database;
@@ -15,9 +16,7 @@ export const photoRoutes = new Hono<{ Bindings: Bindings }>();
  * In production this will be replaced by the real bake-off winner strategy.
  * ponytail: ceiling is injectable strategy via env binding; add when real model is wired.
  */
-function classifyFromRequest(
-  formData: FormData,
-): ClassifyResult | null {
+function classifyFromRequest(formData: FormData): ClassifyResult | null {
   const hint = formData.get("__classifier_result") as string | null;
   if (!hint) return null; // no hint → real classifier would run
 
@@ -95,6 +94,14 @@ photoRoutes.post("/photo/upload", async (c) => {
     if (classification) {
       // Refused: invalid photo, don't persist
       if (!classification.valid && classification.confidence < 0.4) {
+        // Audit trail: machine refused
+        await writeAuditEntry(c.env.DB, {
+          photoId: `refused_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          actorType: "machine",
+          action: "refused",
+          confidence: classification.confidence,
+          reason: classification.reason,
+        });
         return c.json({
           verdict: "refused" as Verdict,
           reason: classification.reason,
@@ -128,14 +135,26 @@ photoRoutes.post("/photo/upload", async (c) => {
           )
           .run();
 
-        return c.json({
-          id: photoId,
-          verdict: "flagged" as Verdict,
-          photo_url: key,
-          photo_type: photoType,
-          water_state: classification.water_state,
-          ai_confidence: classification.confidence,
-        }, 201);
+        // Audit trail: machine flagged
+        await writeAuditEntry(c.env.DB, {
+          photoId,
+          actorType: "machine",
+          action: "flagged",
+          confidence: classification.confidence,
+          reason: classification.reason,
+        });
+
+        return c.json(
+          {
+            id: photoId,
+            verdict: "flagged" as Verdict,
+            photo_url: key,
+            photo_type: photoType,
+            water_state: classification.water_state,
+            ai_confidence: classification.confidence,
+          },
+          201,
+        );
       }
 
       // Pre-verified: high confidence pass — apply stamp + audit sampling
@@ -158,11 +177,11 @@ photoRoutes.post("/photo/upload", async (c) => {
           gpsLng,
           gpsAccuracy ?? null,
           takenAt,
-          'pass',
+          "pass",
           classification.water_state,
           classification.reason,
           classification.confidence,
-          'pending',
+          "pending",
           photoType,
           classification.water_state,
           1,
@@ -170,16 +189,28 @@ photoRoutes.post("/photo/upload", async (c) => {
         )
         .run();
 
-      return c.json({
-        id: photoId,
-        verdict: "pre_verified" as Verdict,
-        photo_url: key,
-        photo_type: photoType,
-        water_state: classification.water_state,
-        ai_confidence: classification.confidence,
-        pre_verified: true,
-        audit_sample: isAudit,
-      }, 201);
+      // Audit trail: machine pre-verified
+      await writeAuditEntry(c.env.DB, {
+        photoId,
+        actorType: "machine",
+        action: "pre_verified",
+        confidence: classification.confidence,
+        reason: classification.reason,
+      });
+
+      return c.json(
+        {
+          id: photoId,
+          verdict: "pre_verified" as Verdict,
+          photo_url: key,
+          photo_type: photoType,
+          water_state: classification.water_state,
+          ai_confidence: classification.confidence,
+          pre_verified: true,
+          audit_sample: isAudit,
+        },
+        201,
+      );
     }
   }
 
@@ -195,10 +226,13 @@ photoRoutes.post("/photo/upload", async (c) => {
     .bind(photoId, plotId, seasonId, key, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt, photoType)
     .run();
 
-  return c.json({
-    id: photoId,
-    photo_url: key,
-    verdict: "queued" as Verdict,
-    photo_type: photoType,
-  }, 201);
+  return c.json(
+    {
+      id: photoId,
+      photo_url: key,
+      verdict: "queued" as Verdict,
+      photo_type: photoType,
+    },
+    201,
+  );
 });
