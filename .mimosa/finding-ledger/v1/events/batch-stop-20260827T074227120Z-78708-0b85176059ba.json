@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260827T074227120Z-78708-0b85176059ba",
+  "runId": "20260827T074227120Z-78708-0b85176059ba",
+  "runStatus": "inconclusive",
+  "coverage": {
+    "status": "partial",
+    "reasons": [
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-resnet50.py",
+        "detail": "spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-two-stage.py",
+        "detail": "spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-resnet50.py",
+        "detail": "scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-two-stage.py",
+        "detail": "scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      }
+    ]
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "2f8b7dabe428c1b194433074438b0af46a9b3f99",
+  "diffHash": "c7956deca229fe007410f44bd8499432134eee0ea69b2113b03cec2c98eac081",
+  "rulesVersion": "unavailable",
+  "sessionHash": "a8c7fe4b3505af4e518ed8a52e807efb8a5f2583df3778c43cac06651f13f793",
+  "reportRef": ".mimosa/reports/task-review-sess_7ec4b650-2944-4690-aeb3-677489813515-20260827T074227120Z-78708-0b85176059ba.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-27T07:42:27.503Z"
+}

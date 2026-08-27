@@ -1,0 +1,31 @@
+"use client";
+
+interface NavItem {
+  icon: string;
+  label: string;
+  href: string;
+  active?: boolean;
+}
+
+interface BottomNavProps {
+  items: NavItem[];
+}
+
+export function BottomNav({ items }: BottomNavProps) {
+  return (
+    <nav className="glass border-t border-white/20 px-6 py-2 flex justify-around sticky bottom-0 z-50" aria-label="นำทางหลัก">
+      {items.map((item) => (
+        <a
+          key={item.href}
+          href={item.href}
+          className={`flex flex-col items-center gap-1 touch-target ${
+            item.active ? "text-primary" : "text-on-surface-variant"
+          }`}
+        >
+          <span className="material-symbols-outlined text-xl">{item.icon}</span>
+          <span className={`text-xs ${item.active ? "font-medium" : ""}`}>{item.label}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}

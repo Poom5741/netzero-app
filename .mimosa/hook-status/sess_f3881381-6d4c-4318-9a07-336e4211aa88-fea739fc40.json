@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-08-26T08:19:34.526Z",
+  "sessionId": "sess_f3881381-6d4c-4318-9a07-336e4211aa88",
+  "event": "PostToolUse",
+  "toolName": "Write",
+  "file": "scripts/debug-resize-test.ts",
+  "outcome": "clear",
+  "coverage": "complete",
+  "findingCount": 0,
+  "durationMs": 7,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}

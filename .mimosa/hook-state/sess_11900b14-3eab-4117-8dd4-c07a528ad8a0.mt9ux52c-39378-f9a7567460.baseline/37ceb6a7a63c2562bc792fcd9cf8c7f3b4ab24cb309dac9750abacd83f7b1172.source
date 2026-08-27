@@ -1,0 +1,121 @@
+# Local HTTP wrapper serving the trained T3 artifact to the bake-off harness
+# (issue #97). Server framework is stdlib-only (http.server); torch + Pillow
+# are needed only to run the artifact. Production hosting is deferred —
+# point makeHttpPredictStrategy at http://127.0.0.1:8765/classify.
+#
+# Usage:
+#   python3 training/train.py            # first, where torch exists
+#   python3 training/serve.py --port 8765
+#
+# Contract (mirrors tests/unit/strategies-learned.test.ts):
+#   POST /classify  {"image_base64": "..."}
+#   -> 200 {"validity":"valid|invalid","water_state":"flooded|dry|not_applicable",
+#           "confidence":0.0-1.0,"reason_th":"..."}
+# Any decode/inference failure -> the harness-side FAIL_SAFE, so this returns
+# 500 and lets the injected predictor collapse it.
+
+import argparse
+import base64
+import io
+import json
+import os
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+ARTIFACT_PATH = os.path.join(os.path.dirname(__file__), "artifact.pt")
+
+model = None
+class_map = None
+predict_transform = None
+
+
+def load_artifact():
+    global model, class_map, predict_transform
+    if not os.path.exists(ARTIFACT_PATH):
+        print(
+            f"NOT_TRAINED: {ARTIFACT_PATH} missing — run training/train.py first",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # ponytail: torch.load pickle safety; switch to torch.export/TorchScript when hosting for real.
+    import torch
+    from torchvision import models, transforms
+
+    artifact = torch.load(ARTIFACT_PATH, map_location="cpu", weights_only=False)
+    class_map.update(artifact["class_map"])
+    num_classes = len(class_map)
+    model = models.mobilenet_v3_small(weights=None)
+    model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, num_classes)
+    model.load_state_dict(artifact["state_dict"])
+    model.eval()
+    predict_transform = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
+    print(f"loaded artifact with classes {list(class_map.values())}")
+
+
+def classify_bytes(raw):
+    # Imported lazily; PIL is only required at serve time, not parse time.
+    from PIL import Image
+    import torch
+
+    img = Image.open(io.BytesIO(raw)).convert("RGB")
+    batch = predict_transform(img).unsqueeze(0)
+    with torch.no_grad():
+        probs = torch.softmax(model(batch)[0], dim=0)
+    conf, idx = probs.max(0)
+    label = class_map[int(idx)]
+    validity = "invalid" if label == "invalid" else "valid"
+    water_state = {"flooded": "flooded", "dry": "dry"}.get(label, "not_applicable")
+    return {
+        "validity": validity,
+        "water_state": water_state,
+        "confidence": round(float(conf), 4),
+        "reason_th": f"โมเดลจำแนกเป็น {label} (t3-finetuned)",
+    }
+
+
+class Handler(BaseHTTPRequestHandler):
+    def do_POST(self):  # noqa: N802 - stdlib naming
+        if self.path != "/classify":
+            self.send_error(404)
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            body = json.loads(self.rfile.read(length))
+            raw = base64.b64decode(body["image_base64"])
+            result = classify_bytes(raw)
+            payload = json.dumps(result).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+        except Exception as exc:  # noqa: BLE001 - fail closed, harness applies FAIL_SAFE
+            print(f"classify failed: {exc}", file=sys.stderr)
+            self.send_error(500, "classification failed")
+
+    def log_message(self, fmt, *args):  # quiet default request logging
+        pass
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--port", type=int, default=8765)
+    args = ap.parse_args()
+
+    global class_map
+    class_map = {}
+    load_artifact()
+    server = HTTPServer(("127.0.0.1", args.port), Handler)
+    print(f"serving t3-finetuned on http://127.0.0.1:{args.port}/classify")
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

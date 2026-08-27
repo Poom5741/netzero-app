@@ -1,0 +1,697 @@
+{
+  "version": 1,
+  "seed": 42,
+  "trainRatio": 0.7,
+  "counts": {
+    "train": {
+      "flooded": 57,
+      "dry": 48,
+      "invalid": 14
+    },
+    "holdout": {
+      "flooded": 24,
+      "dry": 20,
+      "invalid": 6
+    }
+  },
+  "train": [
+    {
+      "path": "flooded/download (23).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (18).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (33).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (28).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (4).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (26).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (40).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (3).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (7).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (22).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (11).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (17).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (34).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (16).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (34).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (10).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (3).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (30).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (2).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (5).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (45).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (43).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (16).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (29).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (12).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (25).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (50).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (6).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (46).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (19).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (38).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด.png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (19).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (14).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (7).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/5.png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (39).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (24).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (15).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (2).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (36).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (20).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (49).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (30).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (11).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (32).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (41).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (5).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (8).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (27).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (42).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/1.png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (22).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (20).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (13).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (44).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (8).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "dry/download (40).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (18).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (11).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (20).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (16).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (23).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (38).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (3).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (29).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (31).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (25).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (10).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (32).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (8).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (20).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (28).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (15).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (14).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (4).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/8.png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (15).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (18).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/3.png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (35).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (31).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (17).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (4).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (37).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (5).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (9).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (29).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (7).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (14)(1).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (6).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (1).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (21).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download.jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (14).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (33).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (22).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/2.png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (9).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (33).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (5).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (30).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (8).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (11).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (17).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (8).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (6).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (28).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (27).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (1).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (12).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (7).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (5).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (13).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (10).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/download (3).jpg",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/download (1).jpg",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/download (4).jpg",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/download (6).jpg",
+      "label": "invalid"
+    }
+  ],
+  "holdout": [
+    {
+      "path": "flooded/download (1).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (9).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (21).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download.jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (26).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (23).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (47).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (18).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (31).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (37).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (32).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (25).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (35).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/6.png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (48).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (14).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/download (17).jpg",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (21).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (6).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (1).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (24).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (15).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (12).png",
+      "label": "flooded"
+    },
+    {
+      "path": "flooded/ดาวน์โหลด (4).png",
+      "label": "flooded"
+    },
+    {
+      "path": "dry/download (27).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (12).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (13).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (26).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/4.png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (41).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (19).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (36).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (22).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (10).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (39).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (6).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (34).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (13).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (2).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (7).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (24).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (24).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/ดาวน์โหลด (21).png",
+      "label": "dry"
+    },
+    {
+      "path": "dry/download (12).jpg",
+      "label": "dry"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (9).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/download.jpg",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/download (5).jpg",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (2).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/ดาวน์โหลด (4).png",
+      "label": "invalid"
+    },
+    {
+      "path": "invalid/download (2).jpg",
+      "label": "invalid"
+    }
+  ]
+}

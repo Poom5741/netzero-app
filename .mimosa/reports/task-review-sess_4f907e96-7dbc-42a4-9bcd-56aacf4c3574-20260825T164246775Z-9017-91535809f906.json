@@ -1,0 +1,228 @@
+{
+  "schema_version": "mimosa-task-review/v2",
+  "run_id": "20260825T164246775Z-9017-91535809f906",
+  "run_status": "completed",
+  "errors": [],
+  "coverage": {
+    "schema_version": "mimosa-hook-coverage/v1",
+    "status": "complete",
+    "scope": "hook_observed_diff",
+    "baseline": {
+      "complete": true,
+      "captured_files": 174,
+      "candidate_limit": 5000,
+      "truncated": false,
+      "enumeration_error_count": 0,
+      "snapshot_error_count": 0,
+      "compensated_target_count": 6
+    },
+    "change_tracking": {
+      "touched_observed": 6,
+      "touched_retained": 6,
+      "truncated": false,
+      "bash_mutation": false,
+      "bash_discovered": 0,
+      "bash_discovery_limit": 80,
+      "bash_discovery_truncated": false
+    },
+    "candidates": {
+      "eligible_files": 6,
+      "selected_files": 6,
+      "limit": 20,
+      "truncated": false
+    },
+    "scanning": {
+      "required_files": 6,
+      "scanned_files": 6,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "project_checks_required": 0,
+      "project_checks_completed": 0
+    },
+    "notification": {
+      "eligible_findings": 0,
+      "detailed_findings": 0,
+      "detail_limit": 3,
+      "truncated": false
+    },
+    "reason_counts": {},
+    "reasons": [],
+    "reasons_truncated": false
+  },
+  "generated_at": "2026-08-25T16:42:46.775Z",
+  "session_id": "sess_4f907e96-7dbc-42a4-9bcd-56aacf4c3574",
+  "target": ".",
+  "revision": "db0a6c8321beebd289fc48d08a4492aa8b73d6b4",
+  "rules_version": "unavailable",
+  "diff_hash": "0a6488171bbd0e9b749eb62e0b06237fe3db73b931b4c1a03ec8e1bbd175b922",
+  "diff": {
+    "algorithm": "sha256",
+    "changed_file_count": 6,
+    "changed_files": [
+      {
+        "file": "frontend/src/app/chat/page.tsx",
+        "ranges": [
+          {
+            "start": 25,
+            "end": 44
+          },
+          {
+            "start": 53,
+            "end": 59
+          },
+          {
+            "start": 149,
+            "end": 154
+          },
+          {
+            "start": 193,
+            "end": 193
+          },
+          {
+            "start": 199,
+            "end": 200
+          }
+        ],
+        "before_hash": "e0fc25a8fc52646254254989cf9b456d5180a5201230f7b5db1cb2000b027f93",
+        "after_hash": "a2181bd6ed0a01cb55e59eb0a9d009ae6db750cb360bcaa385737e7d025a8154"
+      },
+      {
+        "file": "frontend/src/app/sponsor/page.tsx",
+        "ranges": [
+          {
+            "start": 150,
+            "end": 150
+          },
+          {
+            "start": 170,
+            "end": 216
+          }
+        ],
+        "before_hash": "73c22492aabcedfcccc03c281473b838c2100f3fb727a4d571279591c4669f08",
+        "after_hash": "e2a6af7b92c682483d1de4a1b37c369b1724dc3552ca0df1ca83a2c1a35da431"
+      },
+      {
+        "file": "frontend/src/components/dashboard/dashboard-header.tsx",
+        "ranges": [
+          {
+            "start": 8,
+            "end": 9
+          },
+          {
+            "start": 15,
+            "end": 18
+          },
+          {
+            "start": 20,
+            "end": 20
+          }
+        ],
+        "before_hash": "512b5ef94beff7bdb17afca552379b723b2c0a4724c088d2e61ba3a3a2157681",
+        "after_hash": "bc2a3fb65c52fb812ca1de8ec6f1228506ed30e1e38a602a0420c87325d742ba"
+      },
+      {
+        "file": "frontend/src/components/sponsor/kpi-card.tsx",
+        "ranges": [
+          {
+            "start": 41,
+            "end": 41
+          },
+          {
+            "start": 50,
+            "end": 50
+          }
+        ],
+        "before_hash": "8deb9b44cbe0854b67c3617658f213293a52ba9fb8f3b5654c2b56c18bdbfb23",
+        "after_hash": "38a33dfa352270208173c563c2de470657da9b04d0d75be7c7e8aa8316225672"
+      },
+      {
+        "file": "frontend/src/components/ui/bottom-nav.tsx",
+        "ranges": [
+          {
+            "start": 3,
+            "end": 4
+          },
+          {
+            "start": 20,
+            "end": 20
+          },
+          {
+            "start": 29,
+            "end": 29
+          }
+        ],
+        "before_hash": "2795f109432573be5bfbb35b5d7fc326643eb4940f509a0de8f7681aa76db764",
+        "after_hash": "5b21649c53ad068d571768b1efb60a379584f832369319fa61f6d11858f5eeae"
+      },
+      {
+        "file": "frontend/src/components/ui/chat-bubble.tsx",
+        "ranges": [
+          {
+            "start": 16,
+            "end": 16
+          },
+          {
+            "start": 19,
+            "end": 19
+          },
+          {
+            "start": 39,
+            "end": 43
+          }
+        ],
+        "before_hash": "6f0476c3cccc427c78bbae12682f26fdcb83c238a8a2c99e92d5cf884cb771fe",
+        "after_hash": "415e2d37e884faf8e26f17910ef352916e8123ce0e0a326a9d711cd2882a6abe"
+      }
+    ]
+  },
+  "timing": {
+    "started_at": "2026-08-25T16:42:46.280Z",
+    "completed_at": "2026-08-25T16:42:46.775Z",
+    "duration_ms": 495,
+    "measurement": "hook_wall_clock"
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "model_calls": 0,
+    "measurement": "known-zero"
+  },
+  "telemetry": {
+    "schemaVersion": "mimosa-gate-telemetry/v1",
+    "profile": "gate",
+    "operation": "Stop",
+    "outcome": "complete",
+    "latencyMs": 495,
+    "peakMemoryBytes": 192675840,
+    "memoryMeasurement": "max-observed-process-rss",
+    "scannedFiles": 6,
+    "cache": {
+      "hits": 0,
+      "misses": 0,
+      "measurement": "not-applicable"
+    },
+    "denyCount": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "total": 0,
+      "modelCalls": 0,
+      "measurement": "known-zero"
+    }
+  },
+  "finding_count": 0,
+  "rewake_finding_count": 0,
+  "evidence_boundary": {
+    "scan": "candidate",
+    "static_fix_verification": "observed_static_only",
+    "runtime_verification": "not_performed"
+  },
+  "finding_events": [],
+  "findings": [],
+  "artifacts": {
+    "immutable_report": ".mimosa/reports/task-review-sess_4f907e96-7dbc-42a4-9bcd-56aacf4c3574-20260825T164246775Z-9017-91535809f906.json",
+    "latest_report": ".mimosa/reports/task-review-sess_4f907e96-7dbc-42a4-9bcd-56aacf4c3574.json",
+    "history_summary": ".mimosa/history/run-20260825T164246775Z-9017-91535809f906.json"
+  }
+}

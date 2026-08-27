@@ -1,0 +1,69 @@
+type ApproveResult = {
+  success: boolean;
+  estimateId?: string;
+  error?: string;
+  missing?: string[];
+};
+
+const REQUIRED_PHOTO_TYPES = ["prepare", "wetdry", "harvest"] as const;
+
+export async function approveSeason(
+  db: D1Database,
+  plotId: string,
+  seasonId: string,
+): Promise<ApproveResult> {
+  const existing = await db
+    .prepare("SELECT status FROM season_inputs WHERE plot_id = ? AND season_id = ?")
+    .bind(plotId, seasonId)
+    .first<{ status: string }>();
+
+  if (!existing) return { success: false, error: "season not found" };
+  if (existing.status === "approved") return { success: false, error: "already approved" };
+  if (existing.status !== "closed") return { success: false, error: "season must be closed first" };
+
+  const missing: string[] = [];
+
+  // ponytail: existence-per-type via plain SELECT (set in JS) instead of
+  // COUNT/GROUP BY — ceiling is photo count per plot-season (a handful).
+  const photos = await db
+    .prepare(
+      `SELECT photo_type FROM photo_evidence
+       WHERE plot_id = ? AND season_id = ? AND admin_status = ?`,
+    )
+    .bind(plotId, seasonId, "verified")
+    .all<{ photo_type: string | null }>();
+  // Legacy rows with NULL photo_type land in a null group and satisfy no type.
+  const verifiedTypes = new Set((photos.results ?? []).map((r) => r.photo_type));
+  for (const t of REQUIRED_PHOTO_TYPES) {
+    if (!verifiedTypes.has(t)) missing.push(`verified ${t} photo`);
+  }
+
+  const fertilizer = await db
+    .prepare("SELECT confirmed FROM fertilizer_entries WHERE plot_id = ? AND season_id = ?")
+    .bind(plotId, seasonId)
+    .all<{ confirmed: number }>();
+  const hasConfirmedFertilizer = (fertilizer.results ?? []).some((r) => r.confirmed === 1);
+  if (!hasConfirmedFertilizer) missing.push("confirmed fertilizer entries");
+
+  if (missing.length > 0) {
+    return { success: false, error: "incomplete", missing };
+  }
+
+  const estimateId = `est_${crypto.randomUUID()}`;
+  await db
+    .prepare(
+      `INSERT INTO carbon_estimates (id, plot_id, season_id, version, status, total_offset_tco2e)
+       VALUES (?, ?, ?, 1, 'draft', 0)`,
+    )
+    .bind(estimateId, plotId, seasonId)
+    .run();
+
+  await db
+    .prepare(
+      "UPDATE season_inputs SET status = 'approved', updated_at = datetime('now') WHERE plot_id = ? AND season_id = ?",
+    )
+    .bind(plotId, seasonId)
+    .run();
+
+  return { success: true, estimateId };
+}

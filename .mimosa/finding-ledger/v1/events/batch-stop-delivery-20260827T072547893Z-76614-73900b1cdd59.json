@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-delivery-20260827T072547893Z-76614-73900b1cdd59",
+  "runId": "20260827T072547893Z-76614-73900b1cdd59",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "StopDelivery"
+  },
+  "revision": "2f8b7dabe428c1b194433074438b0af46a9b3f99",
+  "diffHash": "945d39348696f36160ff3a66d3eacc9b024c6d83741f22528f1180642cab62a9",
+  "rulesVersion": "unavailable",
+  "sessionHash": "a8c7fe4b3505af4e518ed8a52e807efb8a5f2583df3778c43cac06651f13f793",
+  "reportRef": ".mimosa/reports/task-review-sess_7ec4b650-2944-4690-aeb3-677489813515-20260827T072547893Z-76614-73900b1cdd59.json",
+  "events": [
+    {
+      "eventId": "hook-18d2bcdbbb237d2db13afcd6751a6234",
+      "findingId": "mimosa-9219af94a6aed16199124557",
+      "type": "finding_blocked",
+      "at": "2026-08-27T07:25:48.297Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-efficientnet-b3.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 365,
+      "endLine": 365,
+      "reasonCode": "stop_rewake",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 0
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-27T07:25:48.831Z"
+}

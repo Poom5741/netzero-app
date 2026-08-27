@@ -1,0 +1,218 @@
+/**
+ * Swappable VLM provider adapters behind the ClassifyPipePhoto contract
+ * (see ../classifier.ts). Dependencies are injected so tests never hit real APIs:
+ * - makeWorkersAiVision: Workers AI binding (env.AI) or a raw invoke function.
+ * - makeOpenRouterVision: OpenAI-style REST via an injected fetch-like function.
+ * Every invocation emits a structured event through the optional `logEvent`
+ * hook; the caller wires that to the D1 ai_events ledger later.
+ */
+
+import { type ClassifyPipePhoto, FAIL_SAFE, parseClassifierOutput } from "../classifier";
+
+export const MOONDREAM_MODEL = "@cf/moondream/moondream3.1-9B-A2B";
+export const LLAMA4_SCOUT_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
+/** Vision-capable, fast + cheap flash tier with reliable strict-JSON output. */
+export const DEFAULT_OPENROUTER_MODEL = "google/gemini-2.5-flash";
+
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+/** Strict-JSON classification instruction shared by every provider. */
+export function buildPipePrompt(): string {
+  return [
+    "คุณเป็นผู้เชี่ยวชาญตรวจสอบภาพถ่ายท่อน้ำในแปลงนาข้าว (โครงการ AWD)",
+    "จำแนกภาพนี้และตอบด้วย JSON เท่านั้น ห้ามมีข้อความอื่น:",
+    '{"validity":"valid|invalid","water_state":"flooded|dry|not_applicable","confidence":0.0-1.0,"reason_th":"เหตุผลสั้นๆ ภาษาไทย"}',
+    "",
+    "เกณฑ์:",
+    '- validity "valid" = เป็นภาพท่อน้ำ (หลุมส่งน้ำ/ท่อประธาน) ชัดเจน, "invalid" = ไม่ใช่ภาพท่อน้ำ',
+    '- water_state "flooded" = น้ำขังอยู่ในท่อ (ขังน้ำ), "dry" = ไม่มีน้ำ ปล่อยแห้ง, "not_applicable" = ใช้เมื่อ validity เป็น invalid',
+    "- confidence ระบุค่า 0..1 แสดงความมั่นใจ",
+    "- reason_th เป็นภาษาไทย สั้นกระชับ อธิบายเหตุผล",
+  ].join("\n");
+}
+
+// ---------- shared plumbing ----------
+
+type VisionEvent = {
+  provider: string;
+  model: string;
+  ok: boolean;
+  duration_ms: number;
+};
+type VisionEventLogger = (event: VisionEvent) => void | Promise<void>;
+const noopLog: VisionEventLogger = () => {};
+
+async function runAdapter(
+  provider: string,
+  model: string,
+  logEvent: VisionEventLogger,
+  call: () => Promise<string>,
+): Promise<ReturnType<typeof parseClassifierOutput>> {
+  const started = Date.now();
+  let ok = false;
+  try {
+    // Any throw or unusable text below must surface as FAIL_SAFE, never reject.
+    const parsed = parseClassifierOutput(await call());
+    // Unparseable output counts as a failed invocation in the ledger.
+    ok = parsed !== FAIL_SAFE;
+    return parsed;
+  } catch {
+    return FAIL_SAFE;
+  } finally {
+    await logEvent({ provider, model, ok, duration_ms: Date.now() - started });
+  }
+}
+
+function extractWorkersAiText(result: unknown): string {
+  if (typeof result === "string") return result;
+  if (typeof result === "object" && result !== null) {
+    const r = result as Record<string, unknown>;
+    for (const key of ["description", "response", "result", "content", "text"]) {
+      if (typeof r[key] === "string") return r[key];
+    }
+  }
+  return "";
+}
+
+function extractOpenRouterText(json: unknown): string {
+  if (typeof json !== "object" || json === null) return "";
+  const choices = (json as Record<string, unknown>).choices;
+  if (!Array.isArray(choices) || choices.length === 0) return "";
+  const content = (choices[0] as { message?: { content?: unknown } }).message?.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) =>
+        typeof part === "object" &&
+        part !== null &&
+        typeof (part as { text?: unknown }).text === "string"
+          ? (part as { text: string }).text
+          : "",
+      )
+      .join("");
+  }
+  return "";
+}
+
+function toBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  // ponytail: chunked btoa encode; switch to Workers' binary upload if images exceed ~10MB
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
+// ---------- Workers AI adapters ----------
+
+export type AiInvoker = (model: string, input: Record<string, unknown>) => Promise<unknown>;
+
+/** Minimal Workers AI binding shape; accepts the real `Ai` binding or any fake with run(). */
+export type WorkersAiBinding = Ai | { run: AiInvoker };
+
+export function makeWorkersAiVision(
+  modelId: string,
+  deps: { ai: AiInvoker | WorkersAiBinding },
+  logEvent?: VisionEventLogger,
+): ClassifyPipePhoto {
+  const { ai } = deps;
+  const invoke: AiInvoker = typeof ai === "function" ? ai : (model, input) => ai.run(model, input);
+  const log = logEvent ?? noopLog;
+
+  return async (image: ArrayBuffer) =>
+    runAdapter("workers-ai", modelId, log, async () => {
+      const result = await invoke(modelId, {
+        prompt: buildPipePrompt(),
+        image: Array.from(new Uint8Array(image)),
+      });
+      return extractWorkersAiText(result);
+    });
+}
+
+// ---------- OpenRouter adapter ----------
+
+/** Minimal structural fetch so tests pass plain objects instead of Responses. */
+export type FetchLike = (
+  url: string,
+  init?: Record<string, unknown>,
+) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }>;
+
+export function makeOpenRouterVision(
+  deps: { apiKey: string; model?: string; fetchImpl?: typeof fetch },
+  logEvent?: VisionEventLogger,
+): ClassifyPipePhoto {
+  const { apiKey, model = DEFAULT_OPENROUTER_MODEL, fetchImpl = fetch } = deps;
+  const log = logEvent ?? noopLog;
+
+  return async (image: ArrayBuffer) =>
+    runAdapter("openrouter", model, log, async () => {
+      const res = await fetchImpl(OPENROUTER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: buildPipePrompt() },
+                {
+                  type: "image_url",
+                  image_url: { url: `data:image/jpeg;base64,${toBase64(image)}` },
+                },
+              ],
+            },
+          ],
+          max_tokens: 512,
+        }),
+      });
+      if (!res.ok) throw new Error(`openrouter http ${res.status}`);
+      return extractOpenRouterText(await res.json());
+    });
+}
+
+// ---------- config-driven selection ----------
+
+export type VisionProviderName = "moondream" | "llama4scout" | "openrouter";
+
+export interface VisionDeps {
+  /** Workers AI binding or a raw invoker; required for moondream / llama4scout. */
+  ai?: AiInvoker | WorkersAiBinding;
+  /** OpenRouter key from env/bindings only; required for openrouter. */
+  openrouterApiKey?: string;
+  fetchImpl?: typeof fetch;
+}
+
+export interface VisionStrategyConfig {
+  provider: VisionProviderName;
+  openrouterModel?: string;
+}
+
+export function makeVisionStrategy(
+  config: VisionStrategyConfig,
+  deps: VisionDeps,
+  logEvent?: VisionEventLogger,
+): ClassifyPipePhoto {
+  switch (config.provider) {
+    case "moondream":
+      if (!deps.ai) throw new Error("makeVisionStrategy: missing AI binding for moondream");
+      return makeWorkersAiVision(MOONDREAM_MODEL, { ai: deps.ai }, logEvent);
+    case "llama4scout":
+      if (!deps.ai) throw new Error("makeVisionStrategy: missing AI binding for llama4scout");
+      return makeWorkersAiVision(LLAMA4_SCOUT_MODEL, { ai: deps.ai }, logEvent);
+    case "openrouter":
+      if (!deps.openrouterApiKey)
+        throw new Error("makeVisionStrategy: missing OPENROUTER_API_KEY for openrouter");
+      if (!deps.fetchImpl) throw new Error("makeVisionStrategy: missing fetchImpl for openrouter");
+      return makeOpenRouterVision(
+        { apiKey: deps.openrouterApiKey, model: config.openrouterModel, fetchImpl: deps.fetchImpl },
+        logEvent,
+      );
+    default:
+      throw new Error(`makeVisionStrategy: unknown provider "${String(config.provider)}"`);
+  }
+}

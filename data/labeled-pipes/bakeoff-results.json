@@ -1,0 +1,108 @@
+{
+  "generated_at": "2026-08-26T08:15:40.963Z",
+  "scope": "hold-out split",
+  "runs": [
+    {
+      "name": "t1-moondream",
+      "n": 50,
+      "goodAutoPass": 0,
+      "badSlipThrough": 0,
+      "perClassAccuracy": {
+        "flooded": 0,
+        "dry": 0,
+        "invalid": 1
+      },
+      "passed": false
+    },
+    {
+      "name": "t1-llama4scout",
+      "n": 50,
+      "goodAutoPass": 0,
+      "badSlipThrough": 0,
+      "perClassAccuracy": {
+        "flooded": 0,
+        "dry": 0,
+        "invalid": 1
+      },
+      "passed": false
+    },
+    {
+      "name": "t2-detr-rules",
+      "n": 50,
+      "goodAutoPass": 0,
+      "badSlipThrough": 0,
+      "perClassAccuracy": {
+        "flooded": 0,
+        "dry": 0,
+        "invalid": 1
+      },
+      "passed": false
+    },
+    {
+      "name": "t4-color-lines",
+      "n": 50,
+      "goodAutoPass": 0.8409090909090909,
+      "badSlipThrough": 1,
+      "perClassAccuracy": {
+        "flooded": 0,
+        "dry": 0.9,
+        "invalid": 0
+      },
+      "passed": false
+    },
+    {
+      "name": "t7-consensus(2v)",
+      "n": 50,
+      "goodAutoPass": 0,
+      "badSlipThrough": 0,
+      "perClassAccuracy": {
+        "flooded": 0,
+        "dry": 0,
+        "invalid": 1
+      },
+      "passed": false
+    },
+    {
+      "name": "t10-hybrid",
+      "n": 50,
+      "goodAutoPass": 0,
+      "badSlipThrough": 0,
+      "perClassAccuracy": {
+        "flooded": 0,
+        "dry": 0,
+        "invalid": 1
+      },
+      "passed": false
+    },
+    {
+      "name": "t8-temporal(sim-seq)",
+      "n": 16,
+      "goodAutoPass": 0,
+      "badSlipThrough": 0,
+      "perClassAccuracy": {
+        "flooded": 0,
+        "dry": 0,
+        "invalid": 1
+      },
+      "passed": false
+    }
+  ],
+  "not_run": [
+    [
+      "t1-openrouter",
+      "NO_KEY: no OPENROUTER_API_KEY available in this environment"
+    ],
+    [
+      "t6-knn(real-embedder)",
+      "NOT_RUN: @xenova/transformers not installed here; use scripts/embed-knn.ts where model download is possible"
+    ],
+    [
+      "t3-finetuned",
+      "NOT_TRAINED: torch/torchvision absent in this environment; training/train.py ready to run where GPU/torch exists"
+    ],
+    [
+      "t9-active-learn",
+      "CURVE_ONLY: simulated curve over injected results; see module docs"
+    ]
+  ]
+}

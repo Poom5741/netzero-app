@@ -1,0 +1,345 @@
+{
+  "model": "openrouter/minimax/minimax-m3:free",
+  "timestamp": "2026-08-27T04:58:14.046Z",
+  "dataset": {
+    "total": 101,
+    "flooded": 51,
+    "dry": 43,
+    "invalid": 7
+  },
+  "holdout": {
+    "total": 29,
+    "flooded": 15,
+    "dry": 12,
+    "invalid": 2
+  },
+  "metrics": {
+    "floodedAccuracy": 0.9333333333333333,
+    "dryAccuracy": 0.25,
+    "invalidAccuracy": 0,
+    "autoPassRate": 0.8888888888888888,
+    "badSlipRate": 1,
+    "passed": false
+  },
+  "results": [
+    {
+      "id": "flooded/download (1).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "เห็นท่อชัดเจน น้ำขังรอบท่อ ผิวน้ำสะท้อนแสดงสถานะน้ำขัง"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (10).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.9,
+        "reason": "เห็นท่อชัดเจน ภายในมีน้ำขังสะท้อนแสง"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (11).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "เห็นท่อชัดเจน พื้นที่รอบท่อมีน้ำขังและมีผิวน้ำสะท้อนแสง"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (12).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "เห็นท่อชัดเจน มีน้ำขังรอบปากท่อและสะท้อนในกระบอกท่อ"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (13).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน น้ำท่วมขังท่อและพื้นโดยรอบ"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (14).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "เห็นท่อชัดเจน มีน้ำขังรอบปากท่อ ผิวน้ำสะท้อนแสง"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (15).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน น้ำเต็มปากท่อและท่วมขังรอบบริเวณ"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (16).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน น้ำเต็มท่อและมีน้ำขังรอบบริเวณ"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (17).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "เห็นท่อชัดเจน น้ำท่วมขังรอบท่อ พื้นดินแฉะ"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (18).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน น้ำท่วมขังรอบท่อ พื้นที่แฉะ"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (19).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.85,
+        "reason": "เห็นท่อชัดเจน น้ำขังรอบปากท่อ ผิวน้ำสะท้อนแสง"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (2).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": false,
+        "water_state": "not-applicable",
+        "confidence": 0,
+        "reason": "error"
+      },
+      "correct": false
+    },
+    {
+      "id": "flooded/download (20).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อสีฟ้าชัดเจน น้ำท่วมขังรอบท่อ ระดับน้ำอยู่ใต้ขอบท่อ"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (21).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน ภายในท่อมีน้ำขังเต็ม มีเงาสะท้อนของต้นหญ้า/ต้นไม้บนผิวน้ำ บ่งชี้สภาพน้ำขัง"
+      },
+      "correct": true
+    },
+    {
+      "id": "flooded/download (22).jpg",
+      "truth": "flooded",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อ PVC ชัดเจน น้ำท่วมขังรอบท่อ มีต้นข้าวโผล่"
+      },
+      "correct": true
+    },
+    {
+      "id": "dry/download (1).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.88,
+        "reason": "เห็นท่อ PVC สีฟ้าชัดเจน ภายในมีน้ำขังอยู่ พื้นรอบท่อชื้นและมีน้ำ"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (10).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "dry",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน ด้านในท่อแห้ง ไม่มีน้ำขัง มีเพียงดินแห้งตกอยู่ก้นท่อ"
+      },
+      "correct": true
+    },
+    {
+      "id": "dry/download (11).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "dry",
+        "confidence": 0.82,
+        "reason": "เห็นท่อ PVC ชัดเจน แต่ภายในท่อไม่มีน้ำขัง พื้นดินรอบท่อแห้ง ดินในท่อแตกระแหง ไม่พบร่องรอยน้ำท่วมขัง"
+      },
+      "correct": true
+    },
+    {
+      "id": "dry/download (12).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "dry",
+        "confidence": 0.85,
+        "reason": "เห็นท่อ PVC ชัดเจน ไม่มีน้ำขังในท่อ พื้นดินรอบท่อแห้ง มีเศษใบหญ้าแห้ง"
+      },
+      "correct": true
+    },
+    {
+      "id": "dry/download (13).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "เห็นท่อ PVC สีฟ้าชัดเจน ภายในท่อมีน้ำขังอยู่ และมีน้ำไหลซึมออกมาบนดินรอบปากท่อ ระดับน้ำอยู่ใกล้ปากท่อ แสดงสถานะน้ำขัง (flooded)"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (14)(1).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "เห็นท่อ PVC ชัดเจน พื้นดินรอบท่อเปียกชื้นและมีน้ำขัง ดินเป็นโคลน"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (14).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน ภายในท่อมีน้ำขังอยู่"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (15).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน ภายในท่อมีน้ำขังอยู่"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (16).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.95,
+        "reason": "เห็นท่อชัดเจน ภายในท่อมีน้ำขังสีดำคล้ายน้ำท่วมข้างใน"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (17).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.97,
+        "reason": "เห็นท่อชัดเจน ภายในมีน้ำขังสะท้อนเงาต้นไม้"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (18).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.92,
+        "reason": "ท่อ PVC ชัดเจน มีน้ำขังอยู่ภายใน ระดับน้ำสูงเกือบเต็มท่อ พื้นดินรอบท่อชื้นแฉะ"
+      },
+      "correct": false
+    },
+    {
+      "id": "dry/download (19).jpg",
+      "truth": "dry",
+      "predicted": {
+        "valid": false,
+        "water_state": "not-applicable",
+        "confidence": 0,
+        "reason": "error"
+      },
+      "correct": false
+    },
+    {
+      "id": "invalid/download (1).jpg",
+      "truth": "invalid",
+      "predicted": {
+        "valid": true,
+        "water_state": "dry",
+        "confidence": 0.9,
+        "reason": "เห็นท่อชัดเจน (ด้านขวา) แต่รอบท่อแห้ง ไม่มีน้ำขัง ฟางข้าวแห้ง"
+      },
+      "correct": false
+    },
+    {
+      "id": "invalid/download (2).jpg",
+      "truth": "invalid",
+      "predicted": {
+        "valid": true,
+        "water_state": "flooded",
+        "confidence": 0.72,
+        "reason": "เห็นท่อชัดเจน น้ำขังอยู่ในร่องส่งน้ำและแอ่งดินรอบท่อ แต่ท่อยังโผล่พ้นน้ำ ระดับน้ำไม่สูงมาก"
+      },
+      "correct": false
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+/**
+ * T6 real-embedder CLI (issue #97). Embeds the labeled dataset with CLIP
+ * ViT-B/32 via @xenova/transformers, then scores `t6-knn` on the holdout
+ * split using the shared bake-off scorer.
+ *
+ * ponytail: @xenova/transformers is intentionally NOT a devDependency — it
+ * pulls ~hundreds of MB of onnxruntime and downloads model weights at first
+ * run, disproportionate for this environment and forbidden in bun tests.
+ * Upgrade path: `bun add -d @xenova/transformers`, then:
+ *   bun run scripts/embed-knn.ts            # embeds + scores holdout
+ * Weights cache to ~/.cache/xenova after first download; tests never run this.
+ */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { type BakeoffManifest, runStrategy, renderLeaderboard } from "../src/vision/bakeoff";
+import { makeKnnStrategy, type EmbeddingFn } from "../src/vision/strategies-learned";
+import type { LabeledSplit } from "../src/vision/split";
+
+const dataDir = "data/labeled-pipes";
+
+// Dynamic import through an indirect specifier so tsc never resolves the
+// package (it is not installed here) and bun test never touches this module.
+const pkg = "@xenova/transformers";
+let transformers: {
+  pipeline: (task: string, model: string) => Promise<{
+    (image: unknown): Promise<{ data: Float32Array | number[] }>;
+  }>;
+  RawImage: { read: (path: string) => Promise<unknown> };
+};
+try {
+  transformers = await import(pkg);
+} catch {
+  console.error(
+    `@xenova/transformers not installed. Run:\n` +
+      `  bun add -d @xenova/transformers\n` +
+      `then re-run: bun run scripts/embed-knn.ts`,
+  );
+  process.exit(1);
+}
+
+const extractor = await transformers.pipeline("image-feature-extraction", "Xenova/clip-vit-base-patch32");
+const embed: EmbeddingFn = async (image) => {
+  // RawImage.read accepts data URLs; avoids needing a temp file per image.
+  const raw = await transformers.RawImage.read(
+    `data:image/jpeg;base64,${Buffer.from(image).toString("base64")}`,
+  );
+  return [...(await extractor(raw)).data];
+};
+
+const manifest = JSON.parse(readFileSync(join(dataDir, "manifest.json"), "utf8")) as BakeoffManifest;
+const split = JSON.parse(readFileSync(join(dataDir, "split.json"), "utf8")) as LabeledSplit;
+if (split.seed !== 42 || manifest.images.length !== split.train.length + split.holdout.length) {
+  console.error("stale split.json — re-run: bun run scripts/make-split.ts");
+  process.exit(1);
+}
+const loadImage = async (path: string) => {
+  const buf = readFileSync(join(dataDir, path));
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+};
+
+console.log(`embedding ${split.train.length} train + ${split.holdout.length} holdout images...`);
+const knn = makeKnnStrategy({
+  embed,
+  exemplarEntries: split.train,
+  loadImage,
+  k: 5,
+});
+
+const holdoutManifest: BakeoffManifest = { images: split.holdout };
+const run = await runStrategy("t6-knn", knn, holdoutManifest, { dataDir });
+console.log(renderLeaderboard([run]));
+const perLabel = Object.entries(run.score.perClassAccuracy)
+  .map(([l, a]) => `${l}=${a === undefined ? "—" : (a * 100).toFixed(1)}%`)
+  .join(" ");
+console.log(`per-class accuracy: ${perLabel}`);

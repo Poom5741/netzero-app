@@ -1,0 +1,213 @@
+/**
+ * Bake-off engine: makes all pipe-photo classification strategies comparable.
+ * Registry (named ClassifyPipePhoto strategies), runner over the labeled
+ * manifest in data/labeled-pipes/, pure scoring, D17 pass-bar, leaderboard.
+ */
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { type ClassifyPipePhoto, FAIL_SAFE, type PipeClassification } from "./classifier";
+
+export type PipeLabel = "flooded" | "dry" | "invalid";
+/** A prediction reduced to one comparable bucket; "other" = valid + not_applicable. */
+export type PredictedBucket = PipeLabel | "other";
+
+export interface BakeoffManifestEntry {
+  path: string;
+  label: PipeLabel;
+}
+export interface BakeoffManifest {
+  images: BakeoffManifestEntry[];
+}
+
+// ---------------------------------------------------------------------------
+// Registry
+// ---------------------------------------------------------------------------
+
+const registry = new Map<string, ClassifyPipePhoto>();
+
+export function registerStrategy(name: string, strategy: ClassifyPipePhoto): void {
+  if (!name.trim()) throw new Error("strategy name must be non-empty");
+  if (registry.has(name)) throw new Error(`strategy already registered: ${name}`);
+  registry.set(name, strategy);
+}
+
+export function listStrategies(): string[] {
+  return [...registry.keys()].sort();
+}
+
+export function getStrategy(name: string): ClassifyPipePhoto {
+  const strategy = registry.get(name);
+  if (!strategy) throw new Error(`unknown strategy: ${name}`);
+  return strategy;
+}
+
+// ---------------------------------------------------------------------------
+// Scoring (pure)
+// ---------------------------------------------------------------------------
+
+export interface ScoredResult {
+  path: string;
+  label: PipeLabel;
+  classification: PipeClassification;
+}
+
+export interface BakeoffScore {
+  n: number;
+  perTrueClass: Record<PipeLabel, number>;
+  confusion: Record<PipeLabel, Record<PredictedBucket, number>>;
+  perClassAccuracy: Partial<Record<PipeLabel, number>>;
+  /** Fraction of true-invalid photos classified valid (lower is better). */
+  badSlipThrough: number;
+  /** Fraction of true-valid photos classified valid — an auto-pass (higher is better). */
+  goodAutoPass: number;
+}
+
+export function predictBucket(c: PipeClassification): PredictedBucket {
+  if (c.validity === "invalid") return "invalid";
+  if (c.water_state === "flooded") return "flooded";
+  if (c.water_state === "dry") return "dry";
+  return "other";
+}
+
+export function scoreResults(results: ScoredResult[]): BakeoffScore {
+  const perTrueClass: Record<PipeLabel, number> = { flooded: 0, dry: 0, invalid: 0 };
+  const confusion: Record<PipeLabel, Record<PredictedBucket, number>> = {
+    flooded: { flooded: 0, dry: 0, invalid: 0, other: 0 },
+    dry: { flooded: 0, dry: 0, invalid: 0, other: 0 },
+    invalid: { flooded: 0, dry: 0, invalid: 0, other: 0 },
+  };
+  const correct = { flooded: 0, dry: 0, invalid: 0 };
+  let trueValid = 0;
+  let trueValidPassed = 0;
+  let trueInvalid = 0;
+  let trueInvalidSlipped = 0;
+
+  for (const r of results) {
+    const bucket = predictBucket(r.classification);
+    perTrueClass[r.label] += 1;
+    confusion[r.label][bucket] += 1;
+    if (bucket === r.label) correct[r.label] += 1;
+    if (r.label === "invalid") {
+      trueInvalid += 1;
+      if (r.classification.validity === "valid") trueInvalidSlipped += 1;
+    } else {
+      trueValid += 1;
+      if (r.classification.validity === "valid") trueValidPassed += 1;
+    }
+  }
+
+  const accuracy = (label: PipeLabel) =>
+    perTrueClass[label] > 0 ? correct[label] / perTrueClass[label] : undefined;
+
+  return {
+    n: results.length,
+    perTrueClass,
+    confusion,
+    perClassAccuracy: {
+      flooded: accuracy("flooded"),
+      dry: accuracy("dry"),
+      invalid: accuracy("invalid"),
+    },
+    badSlipThrough: trueInvalid > 0 ? trueInvalidSlipped / trueInvalid : 0,
+    goodAutoPass: trueValid > 0 ? trueValidPassed / trueValid : 0,
+  };
+}
+
+/** D17 pass bar. Boundary semantics: slip <= 0.02 and auto-pass >= 0.70 both pass. */
+export function passesBar(score: BakeoffScore): boolean {
+  return score.badSlipThrough <= 0.02 && score.goodAutoPass >= 0.7;
+}
+
+// ---------------------------------------------------------------------------
+// Runner
+// ---------------------------------------------------------------------------
+
+export const FAIL_SAFE_BUCKET = FAIL_SAFE;
+
+export interface BakeoffRun {
+  name: string;
+  results: ScoredResult[];
+  score: BakeoffScore;
+  passed: boolean;
+}
+
+export interface RunOptions {
+  /** Directory image paths in the manifest are relative to (data/labeled-pipes). */
+  dataDir: string;
+  /** Subset selection: skip the first `offset` entries, run at most `limit`. */
+  offset?: number;
+  limit?: number;
+}
+
+/**
+ * Runs a strategy against every (subsetted) manifest entry, loading raw bytes
+ * from disk. Any strategy throw counts as FAIL_SAFE — never crashes the run.
+ */
+export async function runStrategy(
+  name: string,
+  strategy: ClassifyPipePhoto,
+  manifest: BakeoffManifest,
+  opts: RunOptions,
+): Promise<BakeoffRun> {
+  const entries = manifest.images.slice(
+    opts.offset ?? 0,
+    opts.limit === undefined ? undefined : (opts.offset ?? 0) + opts.limit,
+  );
+  const results: ScoredResult[] = [];
+  for (const entry of entries) {
+    let classification: PipeClassification;
+    try {
+      const buf = await readFile(join(opts.dataDir, entry.path));
+      classification = await strategy(
+        buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+      );
+    } catch {
+      // ponytail: throws collapse to FAIL_SAFE; swap for typed failure reasons when Wave-2 needs them.
+      classification = FAIL_SAFE;
+    }
+    results.push({ path: entry.path, label: entry.label, classification });
+  }
+  const score = scoreResults(results);
+  return { name, results, score, passed: passesBar(score) };
+}
+
+// ---------------------------------------------------------------------------
+// Leaderboard
+// ---------------------------------------------------------------------------
+
+const pct = (x: number | undefined) => (x === undefined ? "  — " : (x * 100).toFixed(1));
+
+/** One leaderboard entry; BakeoffRun satisfies this structurally. */
+export interface LeaderboardRow {
+  name: string;
+  score: BakeoffScore;
+  passed: boolean;
+}
+
+/** Plain-text table, best first: passing strategies ahead of failing, then by auto-pass. */
+export function renderLeaderboard(runs: LeaderboardRow[]): string {
+  const rows = [...runs].sort(
+    (a, b) =>
+      Number(b.passed) - Number(a.passed) ||
+      b.score.goodAutoPass - a.score.goodAutoPass ||
+      a.score.badSlipThrough - b.score.badSlipThrough,
+  );
+  const header = "strategy              n  good-pass%  bad-slip%  acc(f/d/i)          verdict";
+  const lines = [header];
+  for (const row of rows) {
+    const s = row.score;
+    lines.push(
+      [
+        row.name.padEnd(20),
+        String(s.n).padStart(4),
+        pct(s.goodAutoPass).padStart(10),
+        pct(s.badSlipThrough).padStart(10),
+        `${pct(s.perClassAccuracy.flooded)}/${pct(s.perClassAccuracy.dry)}/${pct(s.perClassAccuracy.invalid)}`.padEnd(
+          19,
+        ),
+        row.passed ? "PASS" : "FAIL",
+      ].join("  "),
+    );
+  }
+  return lines.join("\n");
+}

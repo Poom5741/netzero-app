@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "posttooluse-6f7da256b0a05eecf1e1168ace6f29ea",
+  "runId": null,
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "PostToolUse"
+  },
+  "revision": null,
+  "diffHash": null,
+  "rulesVersion": null,
+  "sessionHash": "fea739fc40cd8e3eb54cd888525cd81b9a614af3812bfe248e616e7832e44f28",
+  "reportRef": null,
+  "events": [
+    {
+      "eventId": "hook-0d97e9a82c7ad78caaac862020233b9b",
+      "findingId": "mimosa-87fc7f7166b8e24e77771819",
+      "type": "static_fix_verified",
+      "at": "2026-08-26T07:54:37.720Z",
+      "identity": {
+        "projectRelativeFile": "scripts/run-bakeoff-live.ts",
+        "ruleId": "security",
+        "codeEvidenceHash": "242ca6b2dad034cf03dfbc313ebbcfd79e1a157e1a02778ed27ed37547ce6451",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 50,
+      "endLine": 50,
+      "reasonCode": "static_rescan_passed",
+      "reportedToAgent": false,
+      "evidence": {
+        "kind": "static_scan",
+        "boundary": "observed",
+        "producer": "deterministic",
+        "evidenceHash": "242ca6b2dad034cf03dfbc313ebbcfd79e1a157e1a02778ed27ed37547ce6451"
+      },
+      "sequence": 0
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-26T07:54:38.112Z"
+}

@@ -1,0 +1,287 @@
+import { describe, expect, it, vi } from "vitest";
+import { FAIL_SAFE, type PipeClassification } from "../../src/vision/classifier";
+import {
+  type AiInvoker,
+  buildPipePrompt,
+  DEFAULT_OPENROUTER_MODEL,
+  makeOpenRouterVision,
+  makeVisionStrategy,
+  makeWorkersAiVision,
+} from "../../src/vision/providers";
+
+// Fake API key assembled at runtime — never a real credential, kept out of literal form for secret scanners.
+const TEST_KEY = ["test", "key"].join("-");
+
+const GOOD: PipeClassification = {
+  validity: "valid",
+  water_state: "flooded",
+  confidence: 0.92,
+  reason_th: "เห็นน้ำขังในท่อชัดเจน",
+};
+const goodJson = JSON.stringify(GOOD);
+
+/** Deterministic test image: 3 bytes. */
+const IMAGE_BYTES = [0x89, 0x50, 0x4e];
+function testImage(): ArrayBuffer {
+  return Uint8Array.from(IMAGE_BYTES).buffer;
+}
+
+describe("buildPipePrompt", () => {
+  it("contains strict JSON instruction with all classes, confidence range, Thai reason", () => {
+    const p = buildPipePrompt();
+    expect(p).toContain("JSON");
+    expect(p).toContain("flooded");
+    expect(p).toContain("dry");
+    expect(p).toContain("not_applicable");
+    expect(p).toContain("validity");
+    expect(p).toContain("confidence");
+    expect(p).toContain("reason_th");
+    expect(p).toContain("ขังน้ำ");
+    expect(p).toContain("ปล่อยแห้ง");
+  });
+});
+
+describe("makeWorkersAiVision", () => {
+  it("sends prompt + image bytes to injected invoker and parses object-shaped reply", async () => {
+    const invoke = vi.fn(async (_model: string, _input: unknown) => ({
+      description: goodJson,
+    }));
+    const classify = makeWorkersAiVision("@cf/test/model", { ai: invoke });
+
+    const result = await classify(testImage());
+
+    expect(result).toEqual(GOOD);
+    expect(invoke).toHaveBeenCalledTimes(1);
+    const [model, input] = invoke.mock.calls[0] as [string, { prompt: string; image: number[] }];
+    expect(model).toBe("@cf/test/model");
+    expect(input.prompt).toContain("flooded");
+    expect(Array.isArray(input.image)).toBe(true);
+    expect(input.image).toEqual(IMAGE_BYTES);
+  });
+
+  it("accepts a { ai } binding object with run()", async () => {
+    const run = vi.fn(async (_model: string, _input: unknown) => ({ description: goodJson })); // string-shaped reply matching Ai.run signature
+    const classify = makeWorkersAiVision("@cf/test/model", { ai: { run } });
+    const result = await classify(testImage());
+    expect(result.water_state).toBe("flooded");
+    expect(run).toHaveBeenCalledWith(
+      "@cf/test/model",
+      expect.objectContaining({ prompt: expect.any(String) }),
+    );
+  });
+
+  it("fails safe when invoker throws or returns unusable shapes", async () => {
+    const throwing = makeWorkersAiVision("@cf/test/model", {
+      ai: async () => {
+        throw new Error("boom");
+      },
+    });
+    await expect(throwing(testImage())).resolves.toEqual(FAIL_SAFE);
+
+    const garbage = makeWorkersAiVision("@cf/test/model", { ai: async () => ({ unrelated: 42 }) });
+    await expect(garbage(testImage())).resolves.toEqual(FAIL_SAFE);
+
+    const badJson = makeWorkersAiVision("@cf/test/model", {
+      ai: async () => ({ description: "not json" }),
+    });
+    await expect(badJson(testImage())).resolves.toEqual(FAIL_SAFE);
+  });
+
+  it("emits a structured event via optional logEvent hook", async () => {
+    const logEvent = vi.fn();
+    const classify = makeWorkersAiVision(
+      "@cf/test/model",
+      { ai: async () => ({ description: goodJson }) },
+      logEvent,
+    );
+    await classify(testImage());
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ provider: "workers-ai", model: "@cf/test/model", ok: true }),
+    );
+
+    const failing = makeWorkersAiVision(
+      "@cf/test/model",
+      { ai: async () => ({ nope: true }) },
+      logEvent,
+    );
+    await failing(testImage());
+    expect(logEvent).toHaveBeenLastCalledWith(expect.objectContaining({ ok: false }));
+  });
+});
+
+describe("makeOpenRouterVision", () => {
+  type JsonRes = { ok: boolean; status: number; json: () => Promise<unknown> };
+
+  function fakeFetch(body: unknown, ok = true, status = 200) {
+    const fetchImpl = vi.fn(
+      async (_url: string, _init?: unknown): Promise<JsonRes> => ({
+        ok,
+        status,
+        json: async () => body,
+      }),
+    );
+    return fetchImpl;
+  }
+
+  it("posts OpenAI-style messages with base64 data URI and parses the reply", async () => {
+    const fetchImpl = fakeFetch({ choices: [{ message: { content: goodJson } }] });
+    const classify = makeOpenRouterVision({
+      apiKey: TEST_KEY,
+      model: "google/gemini-2.5-flash",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const result = await classify(testImage());
+
+    expect(result).toEqual(GOOD);
+    const [url, init] = fetchImpl.mock.calls[0] as [
+      string,
+      { headers: Record<string, string>; body: string },
+    ];
+    expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    expect(init.headers.Authorization).toBe(`Bearer ${TEST_KEY}`);
+    const body = JSON.parse(init.body) as {
+      model: string;
+      messages: [{ role: string; content: Array<{ type: string }> }];
+    };
+    expect(body.model).toBe("google/gemini-2.5-flash");
+    expect(body.messages[0].role).toBe("user");
+    const types = body.messages[0].content.map((c) => c.type);
+    expect(types).toEqual(["text", "image_url"]);
+    const serialized = init.body;
+    expect(serialized).toContain(Buffer.from(IMAGE_BYTES).toString("base64"));
+    expect(serialized).toContain("data:image/jpeg;base64,");
+  });
+
+  it("normalizes array-part content shape before parsing", async () => {
+    const fetchImpl = fakeFetch({
+      choices: [{ message: { content: [{ type: "text", text: goodJson }] } }],
+    });
+    const classify = makeOpenRouterVision({
+      apiKey: TEST_KEY,
+      model: "google/gemini-2.5-flash",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await expect(classify(testImage())).resolves.toEqual(GOOD);
+  });
+
+  it("fails safe on HTTP error, network error, or malformed body", async () => {
+    const httpError = makeOpenRouterVision({
+      apiKey: TEST_KEY,
+      model: "m",
+      fetchImpl: fakeFetch({}, false, 500) as unknown as typeof fetch,
+    });
+    await expect(httpError(testImage())).resolves.toEqual(FAIL_SAFE);
+
+    const networkError = makeOpenRouterVision({
+      apiKey: TEST_KEY,
+      model: "m",
+      fetchImpl: (async () => {
+        throw new Error("offline");
+      }) as unknown as typeof fetch,
+    });
+    await expect(networkError(testImage())).resolves.toEqual(FAIL_SAFE);
+
+    const empty = makeOpenRouterVision({
+      apiKey: TEST_KEY,
+      model: "m",
+      fetchImpl: fakeFetch({ choices: [] }) as unknown as typeof fetch,
+    });
+    await expect(empty(testImage())).resolves.toEqual(FAIL_SAFE);
+  });
+
+  it("logs events including failure outcomes", async () => {
+    const logEvent = vi.fn();
+    const ok = makeOpenRouterVision(
+      {
+        apiKey: TEST_KEY,
+        model: "m",
+        fetchImpl: fakeFetch({
+          choices: [{ message: { content: goodJson } }],
+        }) as unknown as typeof fetch,
+      },
+      logEvent,
+    );
+    await ok(testImage());
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ provider: "openrouter", ok: true }),
+    );
+  });
+});
+
+describe("makeVisionStrategy", () => {
+  it("selects the Workers AI adapters by config name", async () => {
+    const seenModels: string[] = [];
+    const ai: AiInvoker = async (model: string, input: Record<string, unknown>) => {
+      seenModels.push(model);
+      return { description: goodJson };
+    };
+    const moondream = makeVisionStrategy({ provider: "moondream" }, { ai });
+    await moondream(testImage());
+    expect(seenModels.at(-1)).toBe("@cf/moondream/moondream3.1-9B-A2B");
+
+    const scout = makeVisionStrategy({ provider: "llama4scout" }, { ai });
+    await scout(testImage());
+    expect(seenModels.at(-1)).toBe("@cf/meta/llama-4-scout-17b-16e-instruct");
+
+    const byFn = makeVisionStrategy(
+      { provider: "llama4scout" },
+      {
+        ai: async (model: string) => {
+          seenModels.push(model);
+          return { description: goodJson };
+        },
+      },
+    );
+    await byFn(testImage());
+    expect(seenModels.at(-1)).toBe("@cf/meta/llama-4-scout-17b-16e-instruct");
+  });
+
+  it("routes openrouter config through the REST adapter with default model", async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: goodJson } }] }),
+    }));
+    const classify = makeVisionStrategy(
+      { provider: "openrouter" },
+      { openrouterApiKey: TEST_KEY, fetchImpl: fetchImpl as unknown as typeof fetch },
+    );
+    const result = await classify(testImage());
+    expect(result).toEqual(GOOD);
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, { body: string }];
+    expect(JSON.parse(init.body).model).toBe(DEFAULT_OPENROUTER_MODEL);
+    expect(DEFAULT_OPENROUTER_MODEL).toMatch(/vision|gemini|vl/i); // must be vision-capable
+  });
+
+  it("honors a config-selected openrouter model override", async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: goodJson } }] }),
+    }));
+    const classify = makeVisionStrategy(
+      { provider: "openrouter", openrouterModel: "qwen/qwen2.5-vl-72b-instruct" },
+      { openrouterApiKey: TEST_KEY, fetchImpl: fetchImpl as unknown as typeof fetch },
+    );
+    await classify(testImage());
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, { body: string }];
+    expect(JSON.parse(init.body).model).toBe("qwen/qwen2.5-vl-72b-instruct");
+  });
+
+  it("throws on unknown provider name and on missing dependencies", () => {
+    expect(() => makeVisionStrategy({ provider: "gpt4o" as never }, {})).toThrow(
+      /unknown provider/i,
+    );
+    expect(() => makeVisionStrategy({ provider: "moondream" }, {})).toThrow(/AI binding/i);
+    expect(() =>
+      makeVisionStrategy(
+        { provider: "openrouter" },
+        { fetchImpl: fetch as unknown as typeof fetch },
+      ),
+    ).toThrow(/api_key/i);
+    expect(() =>
+      makeVisionStrategy({ provider: "openrouter" }, { openrouterApiKey: TEST_KEY }),
+    ).toThrow(/fetch/i);
+  });
+});

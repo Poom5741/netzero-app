@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "pretooluse-1edf5f131a00c0ab4a1b4aa325c634ee",
+  "runId": null,
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "PreToolUse"
+  },
+  "revision": null,
+  "diffHash": null,
+  "rulesVersion": null,
+  "sessionHash": "a8c7fe4b3505af4e518ed8a52e807efb8a5f2583df3778c43cac06651f13f793",
+  "reportRef": null,
+  "events": [
+    {
+      "eventId": "hook-7fe461319bebea0fd47167996ae2d6a4",
+      "findingId": "mimosa-c289b422d4d64ecc67e370d3",
+      "type": "finding_blocked",
+      "at": "2026-08-27T09:42:36.738Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-fewshot.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 249,
+      "endLine": 249,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 0
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-27T09:42:37.125Z"
+}

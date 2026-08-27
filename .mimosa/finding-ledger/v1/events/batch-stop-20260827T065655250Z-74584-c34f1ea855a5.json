@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260827T065655250Z-74584-c34f1ea855a5",
+  "runId": "20260827T065655250Z-74584-c34f1ea855a5",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "2f8b7dabe428c1b194433074438b0af46a9b3f99",
+  "diffHash": "126d53906fc7c8a5eb93d2ade8efe4c9a570f988416c5794c517429b46904a1d",
+  "rulesVersion": "unavailable",
+  "sessionHash": "a8c7fe4b3505af4e518ed8a52e807efb8a5f2583df3778c43cac06651f13f793",
+  "reportRef": ".mimosa/reports/task-review-sess_7ec4b650-2944-4690-aeb3-677489813515-20260827T065655250Z-74584-c34f1ea855a5.json",
+  "events": [
+    {
+      "eventId": "hook-3ff5756827b5e288adf0c162526c1b19",
+      "findingId": "mimosa-a26e195c34812af5634f294e",
+      "type": "finding_observed",
+      "at": "2026-08-27T06:56:55.250Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-mobilenet-fast.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "1c41063dc136f2298fe097378e2f08a5e3423244540cd2fbae798ffc8a05ab96",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 301,
+      "endLine": 301,
+      "reasonCode": "observe",
+      "reportedToAgent": false,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "1c41063dc136f2298fe097378e2f08a5e3423244540cd2fbae798ffc8a05ab96"
+      },
+      "sequence": 0
+    }
+  ],
+  "observedFindingIds": [
+    "mimosa-a26e195c34812af5634f294e"
+  ],
+  "verifiedFiles": [
+    {
+      "file": "src/vision/bakeoff/train-mobilenet-fast.py",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-08-27T06:56:55.643Z"
+}

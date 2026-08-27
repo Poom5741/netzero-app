@@ -1,0 +1,45 @@
+"use client";
+
+import { formatWithCommas } from "@/lib/sponsor";
+
+interface LiveCalcProps {
+  liveValue: number;
+  techniques: { name: string; pct: number }[];
+}
+
+export function LiveCalc({ liveValue, techniques }: LiveCalcProps) {
+  return (
+    <div className="neumorphic p-6 relative overflow-hidden">
+      <h3 className="text-headline-md text-on-surface mb-4">สัดส่วนวิธีลดก๊าซ</h3>
+
+      {/* Network total display */}
+      <div className="bg-surface-container p-4 rounded-lg shadow-inner mb-4 flex flex-col items-center justify-center h-32 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent" />
+        <span className="text-label-md text-on-surface-variant mb-1 relative z-10">
+          การสะสมเครือข่ายทั้งหมด
+        </span>
+        <div className="flex items-baseline gap-1 relative z-10">
+          <span className="text-[56px] font-bold text-primary tracking-tighter count-animate">
+            {formatWithCommas(liveValue)}
+          </span>
+        </div>
+        <span className="text-[13px] text-primary bg-primary/10 px-2 py-[2px] rounded-full mt-1 relative z-10">
+          อัปเดตเมื่อโหลดหน้า
+        </span>
+      </div>
+
+      {/* Technique breakdown */}
+      <div className="space-y-2">
+        {techniques.map((t, i) => (
+          <div
+            key={t.name}
+            className={`flex justify-between items-center py-2 ${i < techniques.length - 1 ? "border-b border-surface-variant" : ""}`}
+          >
+            <span className="text-body-md text-on-surface-variant">{t.name}</span>
+            <span className="text-label-md text-on-surface font-medium">{t.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

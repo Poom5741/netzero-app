@@ -1,0 +1,254 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, describe, expect, it } from "vitest";
+import {
+  type BakeoffManifest,
+  type BakeoffRun,
+  FAIL_SAFE_BUCKET,
+  getStrategy,
+  listStrategies,
+  type PipeLabel,
+  type PredictedBucket,
+  passesBar,
+  registerStrategy,
+  renderLeaderboard,
+  runStrategy,
+  type ScoredResult,
+  scoreResults,
+} from "../../src/vision/bakeoff";
+import type { PipeClassification } from "../../src/vision/classifier";
+
+/** Dummy strategy: interprets file bytes as "pred:<bucket>" text (no network, no real images). */
+function predToClassification(pred: PredictedBucket): PipeClassification {
+  switch (pred) {
+    case "flooded":
+      return { validity: "valid", water_state: "flooded", confidence: 0.9, reason_th: "t" };
+    case "dry":
+      return { validity: "valid", water_state: "dry", confidence: 0.8, reason_th: "t" };
+    case "invalid":
+      return {
+        validity: "invalid",
+        water_state: "not_applicable",
+        confidence: 0.95,
+        reason_th: "t",
+      };
+    default:
+      return { validity: "valid", water_state: "not_applicable", confidence: 0.5, reason_th: "t" };
+  }
+}
+
+const dummyStrategy = async (image: ArrayBuffer): Promise<PipeClassification> => {
+  const text = new TextDecoder().decode(image);
+  const m = /^pred:(flooded|dry|invalid|other)$/.exec(text.trim());
+  if (!m) throw new Error(`unparseable bytes: ${text.slice(0, 20)}`);
+  return predToClassification(m[1] as PredictedBucket);
+};
+
+const res = (
+  label: PipeLabel,
+  validity: "valid" | "invalid",
+  water: PipeClassification["water_state"],
+): ScoredResult => ({
+  path: `${label}-${Math.random()}`,
+  label,
+  classification: { validity, water_state: water, confidence: 1, reason_th: "t" },
+});
+
+afterAll(async () => {
+  if (tmpRoot) await rm(tmpRoot, { recursive: true, force: true });
+});
+
+let tmpRoot: string | undefined;
+const manifest: BakeoffManifest = {
+  images: [
+    { path: "f1.png", label: "flooded" }, // valid+flooded -> correct
+    { path: "f2.jpg", label: "flooded" }, // valid+dry -> wrong bucket
+    { path: "d1.png", label: "dry" }, // correct
+    { path: "g.bin", label: "dry" }, // strategy throws -> FAIL_SAFE (invalid)
+    { path: "i1.png", label: "invalid" }, // correct
+    { path: "i2.png", label: "invalid" }, // valid+not_applicable -> slips through
+    { path: "i3.png", label: "invalid" }, // correct
+  ],
+};
+
+async function makeFixture(): Promise<string> {
+  tmpRoot = await mkdtemp(join(tmpdir(), "bakeoff-"));
+  const bytes: Record<string, string> = {
+    "f1.png": "pred:flooded",
+    "f2.jpg": "pred:dry",
+    "d1.png": "pred:dry",
+    "g.bin": "\x00\xFF not an image at all",
+    "i1.png": "pred:invalid",
+    "i2.png": "pred:other",
+    "i3.png": "pred:invalid",
+  };
+  for (const [name, content] of Object.entries(bytes)) {
+    await writeFile(join(tmpRoot, name), Buffer.from(content, "utf8"));
+  }
+  return tmpRoot;
+}
+
+describe("strategy registry", () => {
+  it("registers, lists, and fetches strategies by name", () => {
+    registerStrategy("dummy-a", dummyStrategy);
+    registerStrategy("dummy-b", dummyStrategy);
+    expect(listStrategies()).toContain("dummy-a");
+    expect(listStrategies()).toContain("dummy-b");
+    expect(getStrategy("dummy-a")).toBe(dummyStrategy);
+  });
+
+  it("rejects duplicate names", () => {
+    registerStrategy("dupe-test", dummyStrategy);
+    expect(() => registerStrategy("dupe-test", dummyStrategy)).toThrow(/dupe-test/);
+  });
+
+  it("throws on unknown strategy name", () => {
+    expect(() => getStrategy("no-such-strategy")).toThrow(/no-such-strategy/);
+  });
+});
+
+describe("runStrategy (runner)", () => {
+  it("loads images, tallies counts and confusion vs labels; tolerates non-image bytes via fail-safe", async () => {
+    const dir = await makeFixture();
+    const run = await runStrategy("dummy-a", dummyStrategy, manifest, { dataDir: dir });
+    expect(run.name).toBe("dummy-a");
+    expect(run.score.n).toBe(7);
+    expect(run.results).toHaveLength(7);
+
+    expect(run.score.perTrueClass).toEqual({ flooded: 2, dry: 2, invalid: 3 });
+    expect(run.score.confusion.flooded).toEqual({ flooded: 1, dry: 1, invalid: 0, other: 0 });
+    expect(run.score.confusion.dry).toEqual({ flooded: 0, dry: 1, invalid: 1, other: 0 });
+    expect(run.score.confusion.invalid).toEqual({ flooded: 0, dry: 0, invalid: 2, other: 1 });
+
+    expect(run.score.perClassAccuracy).toEqual({
+      flooded: 0.5,
+      dry: 0.5,
+      invalid: 2 / 3,
+    });
+
+    // bad-slip-through: i2 (true-invalid predicted valid) / 3 invalid = 1/3
+    expect(run.score.badSlipThrough).toBeCloseTo(1 / 3, 12);
+    // good-auto-pass: f1, f2, d1 pass (valid prediction); g.bin failed safe -> 3/4
+    expect(run.score.goodAutoPass).toBeCloseTo(3 / 4, 12);
+    expect(run.passed).toBe(false); // slip 33% >> 2%
+  });
+
+  it("supports subset runs via offset/limit", async () => {
+    const dir = await makeFixture();
+    const run = await runStrategy("dummy-b", dummyStrategy, manifest, {
+      dataDir: dir,
+      offset: 1,
+      limit: 2,
+    });
+    expect(run.results.map((r) => r.path)).toEqual(["f2.jpg", "d1.png"]);
+    expect(run.score.n).toBe(2);
+  });
+
+  it("records FAIL_SAFE for strategies that throw, counting as invalid/not_applicable", async () => {
+    const dir = await makeFixture();
+    const run = await runStrategy(
+      "throwy",
+      async () => {
+        throw new Error("boom");
+      },
+      manifest,
+      { dataDir: dir, limit: 1 },
+    );
+    expect(run.results[0]?.classification).toEqual(FAIL_SAFE_BUCKET);
+    expect(run.score.perClassAccuracy.flooded).toBe(0);
+  });
+});
+
+describe("scoreResults (pure scoring, hand-computed)", () => {
+  it("computes confusion matrix, per-class accuracy, slip/auto-pass rates", () => {
+    const results: ScoredResult[] = [
+      // true flooded x4: F F D O -> acc 2/4
+      res("flooded", "valid", "flooded"),
+      res("flooded", "valid", "flooded"),
+      res("flooded", "valid", "dry"),
+      res("flooded", "valid", "not_applicable"),
+      // true dry x3: D D I -> acc 2/3
+      res("dry", "valid", "dry"),
+      res("dry", "valid", "dry"),
+      res("dry", "invalid", "not_applicable"),
+      // true invalid x5: I I I I V(other) -> acc 4/5, slip 1/5
+      res("invalid", "invalid", "not_applicable"),
+      res("invalid", "invalid", "not_applicable"),
+      res("invalid", "invalid", "not_applicable"),
+      res("invalid", "invalid", "not_applicable"),
+      res("invalid", "valid", "not_applicable"),
+    ];
+    const score = scoreResults(results);
+    expect(score.n).toBe(12);
+    expect(score.perTrueClass).toEqual({ flooded: 4, dry: 3, invalid: 5 });
+    expect(score.confusion.flooded).toEqual({ flooded: 2, dry: 1, invalid: 0, other: 1 });
+    expect(score.confusion.dry).toEqual({ flooded: 0, dry: 2, invalid: 1, other: 0 });
+    expect(score.confusion.invalid).toEqual({ flooded: 0, dry: 0, invalid: 4, other: 1 });
+    expect(score.perClassAccuracy).toEqual({ flooded: 0.5, dry: 2 / 3, invalid: 0.8 });
+    expect(score.badSlipThrough).toBeCloseTo(0.2, 12);
+    // true-valid = 7; valid predictions among them = 6 (the one dry->invalid misses)
+    expect(score.goodAutoPass).toBeCloseTo(6 / 7, 12);
+    expect(passesBar(score)).toBe(false);
+  });
+});
+
+describe("pass-bar verdict (D17)", () => {
+  it("passes exactly at boundaries: bad_slip_through = 0.02 (<=) and good_auto_pass = 0.70 (>=)", () => {
+    const results: ScoredResult[] = [];
+    for (let i = 0; i < 70; i++) results.push(res("flooded", "valid", "flooded")); // auto-pass
+    for (let i = 0; i < 30; i++) results.push(res("dry", "invalid", "not_applicable")); // missed but no slip risk
+    for (let i = 0; i < 49; i++) results.push(res("invalid", "invalid", "not_applicable"));
+    results.push(res("invalid", "valid", "not_applicable")); // 1/50 = 0.02 slip
+    const score = scoreResults(results);
+    expect(score.badSlipThrough).toBe(0.02);
+    expect(score.goodAutoPass).toBe(0.7);
+    expect(passesBar(score)).toBe(true);
+  });
+
+  it("fails when bad_slip_through exceeds 0.02 even with perfect auto-pass", () => {
+    const results: ScoredResult[] = [];
+    for (let i = 0; i < 10; i++) results.push(res("flooded", "valid", "flooded"));
+    for (let i = 0; i < 39; i++) results.push(res("invalid", "invalid", "not_applicable"));
+    results.push(res("invalid", "valid", "not_applicable")); // 1/40 = 0.025 > 0.02
+    expect(passesBar(scoreResults(results))).toBe(false);
+  });
+
+  it("fails when good_auto_pass falls below 0.70 even with zero slip", () => {
+    const results: ScoredResult[] = [];
+    for (let i = 0; i < 69; i++) results.push(res("flooded", "valid", "flooded"));
+    for (let i = 0; i < 31; i++) results.push(res("dry", "invalid", "not_applicable")); // 0.69 auto-pass
+    results.push(res("invalid", "invalid", "not_applicable"));
+    expect(passesBar(scoreResults(results))).toBe(false);
+  });
+});
+
+describe("renderLeaderboard", () => {
+  it("renders a header plus one row per scored strategy including FAIL rows", async () => {
+    const dir = await makeFixture();
+    const failing: BakeoffRun = await runStrategy("row-fail", dummyStrategy, manifest, {
+      dataDir: dir,
+    });
+
+    const passingResults: ScoredResult[] = [];
+    for (let i = 0; i < 80; i++) passingResults.push(res("flooded", "valid", "flooded"));
+    for (let i = 0; i < 20; i++) passingResults.push(res("dry", "valid", "dry"));
+    for (let i = 0; i < 100; i++) passingResults.push(res("invalid", "invalid", "not_applicable"));
+    const passingScore = scoreResults(passingResults);
+
+    const board = renderLeaderboard([
+      { name: "row-pass", score: passingScore, passed: passesBar(passingScore) },
+      failing,
+    ]);
+    const lines = board.split("\n").filter((l) => l.trim().length > 0);
+    expect(lines[0]).toContain("strategy");
+    expect(lines).toHaveLength(3); // header + 2 rows
+    expect(board).toContain("row-pass");
+    expect(board).toContain("row-fail");
+    expect(board).toContain("PASS");
+    expect(board).toContain("FAIL");
+    // best strategy first (passed sorts ahead of failed)
+    expect(lines[1]).toContain("row-pass");
+    expect(lines[2]).toContain("row-fail");
+  });
+});

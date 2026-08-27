@@ -1,0 +1,247 @@
+/**
+ * Batch-4 CONTEXTUAL bake-off strategies (issue #98). Factories only — nothing
+ * registers in the bake-off registry by import side-effect (matches batches 1-3).
+ *
+ * - T8 `t8-temporal`: transition-consistency over a SEQUENCE of photos of the
+ *   same plot. SIMULATION ASSUMPTION: the static dataset has no real sequences,
+ *   so `classifySequence` takes synthetic frames; every returned classification
+ *   is prefixed with SIM_MARKER ("[sim] ") so leaderboard consumers can tell
+ *   simulated rows apart from measured ones.
+ * - T9 `t9-active-learn`: active-learning learning-curve simulation over
+ *   precomputed per-item classifications. SIMULATION ASSUMPTION: once an item
+ *   is queried its human label joins training and the deployed model inherits
+ *   it perfectly (label-correction proxy for accuracy growth).
+ * - T10 `t10-hybrid`: cheap local CV pre-check gates uploads before an
+ *   expensive base (VLM) call; stats side-channel quantifies API-spend
+ *   reduction because ClassifyPipePhoto cannot carry extra fields.
+ */
+import { type PipeLabel, predictBucket } from "./bakeoff";
+import { type ClassifyPipePhoto, FAIL_SAFE, type PipeClassification } from "./classifier";
+import { makeT4ColorLinesStrategy } from "./strategies-cv";
+
+export const T8_TEMPORAL = "t8-temporal";
+export const T9_ACTIVE_LEARN = "t9-active-learn";
+export const T10_HYBRID = "t10-hybrid";
+
+/** Prefix stamped on every simulated output so it is visible on leaderboard rows. */
+export const SIM_MARKER = "[sim] ";
+
+// ---------------------------------------------------------------------------
+// T8 temporal sequence analysis
+// ---------------------------------------------------------------------------
+
+/** Assumed capture interval between consecutive frames when the caller omits one. */
+export const DEFAULT_FRAME_GAP_MS = 10 * 60_000;
+/**
+ * A pipe cannot plausibly go dry -> flooded faster than this; a transition
+ * inside a shorter window is treated as inconsistent and penalized. Gaps above
+ * it make the same transition plausible (weather changes) and pass untouched.
+ */
+export const MAX_FILL_WINDOW_MS = 30 * 60_000;
+
+export const TRANSITION_NOTE_TH = "การเปลี่ยนจากแห้งเป็นท่วมในช่วงเวลาอันสั้นไม่น่าเป็นไปได้";
+export const CONSECUTIVE_INVALID_NOTE_TH =
+  "พบภาพไม่ผ่านเกณฑ์ต่อเนื่อง 3 ครั้งขึ้นไป จำเป็นต้องให้เจ้าหน้าที่ตรวจสอบ";
+
+function tagSim(c: PipeClassification): PipeClassification {
+  return { ...c, reason_th: `${SIM_MARKER}${c.reason_th}` };
+}
+
+/**
+ * Classifies each frame with `base`, then applies temporal consistency:
+ * - dry -> flooded between adjacent frames assumed closer than MAX_FILL_WINDOW_MS:
+ *   that frame's confidence is halved EXACTLY ONCE and TRANSITION_NOTE_TH appended;
+ * - runs of 3+ consecutive invalid frames get CONSECUTIVE_INVALID_NOTE_TH.
+ * Base results are never mutated. Throws from `base` propagate (caller fails safe).
+ */
+export async function classifySequence(
+  base: ClassifyPipePhoto,
+  images: ArrayBuffer[],
+  opts?: { minGapMs?: number },
+): Promise<PipeClassification[]> {
+  const minGapMs = opts?.minGapMs ?? DEFAULT_FRAME_GAP_MS;
+  const out: PipeClassification[] = [];
+  for (const image of images) out.push(tagSim(await base(image)));
+
+  // Pass 1: impossible transitions (each frame has one previous neighbour,
+  // so the halving + note can only ever be applied once per frame).
+  for (const [i, cur] of out.entries()) {
+    const prev = out[i - 1];
+    if (
+      prev?.water_state === "dry" &&
+      cur.water_state === "flooded" &&
+      minGapMs <= MAX_FILL_WINDOW_MS
+    ) {
+      cur.confidence *= 0.5;
+      cur.reason_th = `${cur.reason_th} ${TRANSITION_NOTE_TH}`;
+    }
+  }
+
+  // Pass 2: any run of 3+ consecutive invalid frames gets the needs-human note
+  // on every frame of the run.
+  let run = 0;
+  for (let i = 0; i <= out.length; i++) {
+    if (out[i]?.validity === "invalid") {
+      run += 1;
+      continue;
+    }
+    for (let j = i - run; run >= 3 && j < i; j++) {
+      const frame = out[j];
+      if (frame) frame.reason_th = `${frame.reason_th} ${CONSECUTIVE_INVALID_NOTE_TH}`;
+    }
+    run = 0;
+  }
+  return out;
+}
+
+/** Single-image form so T8 can sit in the bake-off registry like any strategy. */
+export function makeT8TemporalStrategy(base: ClassifyPipePhoto): ClassifyPipePhoto {
+  return async (image) => (await classifySequence(base, [image]))[0] ?? FAIL_SAFE;
+}
+
+// ---------------------------------------------------------------------------
+// T9 active learning simulation (curve, not a single row)
+// ---------------------------------------------------------------------------
+
+export interface AlPoolItem {
+  id: string;
+  trueLabel: PipeLabel;
+}
+
+/** Produces the precomputed per-item prediction (kNN classify, embed+head, fake). */
+export type AlPredictor = (item: AlPoolItem) => PipeClassification | Promise<PipeClassification>;
+
+export interface AlRound {
+  /** 0 = seed-only baseline; then one entry per query round. */
+  round: number;
+  labeledCount: number;
+  /** Items queried this round, most-uncertain-first (ascending confidence). */
+  queriedIds: string[];
+  /** Fraction correct over the FULL pool (queried items count via their human label). */
+  accuracy: number;
+}
+
+export interface AlSimulation {
+  simulated: true;
+  curve: AlRound[];
+}
+
+export interface ActiveLearningParams {
+  labeledPool: AlPoolItem[];
+  embedOrClassify: AlPredictor;
+  /** Initial labeled subset size AND per-round query budget (pool order for seed). */
+  seedSize: number;
+  /** Query rounds after the seed; default runs until the pool is exhausted. */
+  rounds?: number;
+}
+
+/**
+ * Runs the active-learning loop: predict every pool item once up front (that
+ * call log is the injected model), rank unqueried items most-uncertain-first,
+ * add `seedSize` per round, recompute full-pool accuracy. Accuracy never dips:
+ * each query only converts an item to known-correct (see module JSDoc).
+ */
+export async function simulateActiveLearning(params: ActiveLearningParams): Promise<AlSimulation> {
+  const { labeledPool, embedOrClassify, seedSize } = params;
+  const maxRounds = params.rounds ?? Number.POSITIVE_INFINITY;
+  const n = labeledPool.length;
+
+  const scored: { id: string; confidence: number; correct: boolean }[] = [];
+  for (const item of labeledPool) {
+    const pred = await embedOrClassify(item);
+    scored.push({
+      id: item.id,
+      confidence: pred.confidence,
+      correct: predictBucket(pred) === item.trueLabel,
+    });
+  }
+
+  // Most uncertain first (ascending confidence); stable tie-break on pool order.
+  const byUncertainty = [...scored].sort((a, b) => a.confidence - b.confidence);
+
+  const queried = new Set(labeledPool.slice(0, seedSize).map((item) => item.id));
+  const accuracy = () =>
+    n === 0 ? 0 : scored.filter((s) => queried.has(s.id) || s.correct).length / n;
+
+  const curve: AlRound[] = [
+    { round: 0, labeledCount: queried.size, queriedIds: [], accuracy: accuracy() },
+  ];
+
+  let next = 0;
+  for (let round = 1; round <= maxRounds && next < byUncertainty.length; round++) {
+    const batch: string[] = [];
+    while (next < byUncertainty.length && batch.length < seedSize) {
+      const candidate = byUncertainty[next];
+      next += 1;
+      if (!candidate || queried.has(candidate.id)) continue;
+      queried.add(candidate.id);
+      batch.push(candidate.id);
+    }
+    if (batch.length === 0) break;
+    curve.push({ round, labeledCount: queried.size, queriedIds: batch, accuracy: accuracy() });
+  }
+
+  return { simulated: true, curve };
+}
+
+// ---------------------------------------------------------------------------
+// T10 edge-cloud hybrid
+// ---------------------------------------------------------------------------
+
+/** Live counters — read after running to size the API-spend saving. */
+export interface HybridStats {
+  precheck_refused: number;
+  base_called: number;
+}
+
+export interface HybridWithStats {
+  strategy: ClassifyPipePhoto;
+  stats: HybridStats;
+}
+
+export interface HybridDeps {
+  /** Cheap local gate (t4-color-lines in prod, fake in tests). */
+  precheck: ClassifyPipePhoto;
+  /** Expensive remote classifier whose calls the gate avoids. */
+  base: ClassifyPipePhoto;
+}
+
+/**
+ * CV pre-check gate: invalid-quality uploads are refused locally WITHOUT
+ * calling `base`; everything else passes straight through. Bakeoff's
+ * ClassifyPipePhoto cannot carry extra fields, so counters live in this
+ * side-channel `stats` object — the leaderboard row shows accuracy while
+ * estimatedSpendReductionPct(stats) quantifies the API-spend reduction.
+ */
+export function makeHybridWithStats(deps: HybridDeps): HybridWithStats {
+  const stats: HybridStats = { precheck_refused: 0, base_called: 0 };
+  const strategy: ClassifyPipePhoto = async (image) => {
+    let gate: PipeClassification;
+    try {
+      gate = await deps.precheck(image);
+    } catch {
+      gate = FAIL_SAFE;
+    }
+    if (gate.validity === "invalid") {
+      stats.precheck_refused += 1;
+      return gate;
+    }
+    stats.base_called += 1;
+    return deps.base(image);
+  };
+  return { strategy, stats };
+}
+
+/**
+ * Estimated API-spend reduction (%): the refused share of uploads. Assumes the
+ * VLM call dominates cost and the local CV gate is ~free.
+ */
+export function estimatedSpendReductionPct(stats: HybridStats): number {
+  const total = stats.precheck_refused + stats.base_called;
+  return total === 0 ? 0 : (100 * stats.precheck_refused) / total;
+}
+
+/** Convenience composition wiring the t4-color-lines CV core as the gate. */
+export function makeT10HybridStrategy(base: ClassifyPipePhoto): ClassifyPipePhoto {
+  return makeHybridWithStats({ precheck: makeT4ColorLinesStrategy(), base }).strategy;
+}

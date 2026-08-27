@@ -1,0 +1,343 @@
+/**
+ * Bake-off strategies, batch 2 (ticket #96):
+ * - t4-color-lines: traditional-CV heuristic classifier over decoded RGBA pixels
+ *   (color segmentation + brightness/edge stats). Pure functions, deterministic,
+ *   zero network; decode via jpeg-js/pngjs devDependencies.
+ * - t2-detr-rules: Workers AI DETR (@cf/facebook/detr-resnet-50) detections
+ *   mapped through deterministic rules, behind an injected invoker.
+ * Factories only — nothing registers in the bake-off registry by import side-effect.
+ */
+import jpeg from "jpeg-js";
+import { PNG } from "pngjs";
+import { type ClassifyPipePhoto, FAIL_SAFE, type PipeClassification } from "./classifier";
+import type { AiInvoker } from "./providers";
+
+export const T4_COLOR_LINES = "t4-color-lines";
+export const T2_DETR_RULES = "t2-detr-rules";
+export const T2_DETR_MODEL = "@cf/facebook/detr-resnet-50";
+
+// ---------------------------------------------------------------------------
+// T4 traditional CV
+// ---------------------------------------------------------------------------
+
+/** Raw decoded RGBA pixels (row-major, 4 bytes per pixel). */
+export interface DecodedPixels {
+  width: number;
+  height: number;
+  data: Uint8Array | Uint8ClampedArray;
+}
+
+export interface CvOptions {
+  /** Images smaller than this on either axis are rejected as low-res. */
+  minSize: number;
+  /** Mean luminance (0..255) below which the photo counts as unusably dark. */
+  darkMeanLum: number;
+  /** Bluish-water fraction required inside the lower pipe area for flooded. */
+  waterFracMin: number;
+  /** Earth/pipe-tone fraction required anywhere in frame for dry. */
+  sceneFracMin: number;
+}
+
+const CV_DEFAULTS: CvOptions = {
+  minSize: 64,
+  darkMeanLum: 24,
+  waterFracMin: 0.3,
+  sceneFracMin: 0.35,
+};
+
+function pixelBuckets(r: number, g: number, b: number): { water: boolean; scene: boolean } {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lum = (r + g + b) / 3;
+  // Bluish water hue: blue clearly dominates red and at least matches green.
+  const water = b >= r + 15 && b >= g + 5 && b > 40;
+  // Pipe/earth evidence: warm clay-soil tones or neutral gray PVC.
+  const warm = r > g && g > b && r - b >= 20 && lum > 30;
+  const grayPvc = max - min <= 30 && lum >= 60 && lum <= 235;
+  return { water, scene: warm || grayPvc };
+}
+
+/**
+ * Deterministic heuristic classification over decoded pixels:
+ * quality gates first (resolution, darkness), then color-segmentation fractions —
+ * bluish region in the lower pipe area -> flooded; earth/pipe tones without
+ * water -> dry; no pipe evidence -> invalid. A horizontal luminance step across
+ * the lower region acts as a small water-surface-line confidence hint.
+ */
+export function analyzePixels(
+  pixels: DecodedPixels,
+  opts?: Partial<CvOptions>,
+): PipeClassification {
+  const o = { ...CV_DEFAULTS, ...opts };
+  const { width, height, data } = pixels;
+
+  if (width < o.minSize || height < o.minSize) {
+    return {
+      validity: "invalid",
+      water_state: "not_applicable",
+      confidence: 0.2,
+      reason_th: "ภาพความละเอียดต่ำเกินไป",
+    };
+  }
+
+  let waterCount = 0;
+  let sceneCount = 0;
+  let total = 0;
+  let lumSum = 0;
+  const rowLum: number[] = [];
+  const midRow = Math.floor(height / 2);
+
+  for (let y = 0; y < height; y++) {
+    let rowSum = 0;
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      // `?? 0`: noUncheckedIndexedAccess guard; decode() guarantees RGBA length.
+      const r = data[i] ?? 0;
+      const g = data[i + 1] ?? 0;
+      const b = data[i + 2] ?? 0;
+      rowSum += (r + g + b) / 3;
+      const buckets = pixelBuckets(r, g, b);
+      if (y >= midRow && buckets.water) waterCount += 1;
+      if (buckets.scene) sceneCount += 1;
+      total += 1;
+    }
+    rowLum.push(rowSum / width);
+    lumSum += rowSum;
+  }
+
+  const meanLum = lumSum / total;
+  if (meanLum < o.darkMeanLum) {
+    return {
+      validity: "invalid",
+      water_state: "not_applicable",
+      confidence: 0.2,
+      reason_th: "ภาพมืดหรือตัดแสงเกินไป",
+    };
+  }
+
+  const lowerRows = height - midRow;
+  const lowerWaterFrac = waterCount / (lowerRows * width);
+
+  if (lowerWaterFrac >= o.waterFracMin) {
+    // Water-surface line hint: a sharp brightness step between adjacent rows
+    // in the lower region nudges confidence up slightly.
+    let lineHint = false;
+    for (let y = midRow + 1; y < height; y++) {
+      if (Math.abs((rowLum[y] ?? 0) - (rowLum[y - 1] ?? 0)) > 12) lineHint = true;
+    }
+    const confidence = Math.min(0.92, 0.5 + 0.4 * lowerWaterFrac + (lineHint ? 0.03 : 0));
+    return {
+      validity: "valid",
+      water_state: "flooded",
+      confidence,
+      reason_th: "พบร่องรอยน้ำสีอมฟ้าบริเวณท่อช่วงล่าง",
+    };
+  }
+
+  const sceneFrac = sceneCount / total;
+  if (sceneFrac >= o.sceneFracMin) {
+    return {
+      validity: "valid",
+      water_state: "dry",
+      confidence: Math.min(0.75, 0.55 + 0.2 * sceneFrac),
+      reason_th: "ไม่พบน้ำในท่อ ภาพมีโทนท่อ/ดินชัดเจน",
+    };
+  }
+
+  return {
+    validity: "invalid",
+    water_state: "not_applicable",
+    confidence: 0.3,
+    reason_th: "ไม่พบท่อน้ำหรือน้ำในภาพ",
+  };
+}
+
+/** Magic-byte sniffed JPEG/PNG decode; anything else throws (caller fails safe). */
+function decodePixels(buf: ArrayBuffer): DecodedPixels {
+  const bytes = new Uint8Array(buf);
+  if (bytes.length > 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    const img = jpeg.decode(bytes, { useTArray: true });
+    return { width: img.width, height: img.height, data: img.data };
+  }
+  if (
+    bytes.length > 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
+    const img = PNG.sync.read(Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+    return { width: img.width, height: img.height, data: img.data };
+  }
+  throw new Error("t4-color-lines: unsupported image format (expected JPEG or PNG)");
+}
+
+export function makeT4ColorLinesStrategy(opts?: Partial<CvOptions>): ClassifyPipePhoto {
+  return async (image: ArrayBuffer) => {
+    try {
+      return analyzePixels(decodePixels(image), opts);
+    } catch {
+      return FAIL_SAFE;
+    }
+  };
+}
+
+// ---------------------------------------------------------------------------
+// T2 object detection rules over Workers AI DETR
+// ---------------------------------------------------------------------------
+
+export interface DetrBox {
+  x_min: number;
+  y_min: number;
+  x_max: number;
+  y_max: number;
+}
+
+export interface DetrDetection {
+  label: string;
+  score: number;
+  box: DetrBox;
+}
+
+export interface DetrRuleOptions {
+  model: string;
+  /** COCO classes accepted as plausible pipe-like candidates. */
+  pipeLabels: string[];
+  /** COCO classes treated as standing-water evidence. */
+  waterLabels: string[];
+  pipeScoreMin: number;
+  waterScoreMin: number;
+  /** Intersection-over-smaller-box required to call the water "in the pipe". */
+  overlapMin: number;
+  /** Fixed confidence for the dry verdict (pipe present, no water evidence). */
+  dryConfidence: number;
+}
+
+const DETR_DEFAULTS: DetrRuleOptions = {
+  model: T2_DETR_MODEL,
+  pipeLabels: ["cup", "bottle"],
+  waterLabels: ["bowl"],
+  pipeScoreMin: 0.5,
+  waterScoreMin: 0.35,
+  overlapMin: 0.2,
+  dryConfidence: 0.55,
+};
+
+function num(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v);
+}
+
+function normalizeBox(box: unknown): DetrBox | null {
+  if (Array.isArray(box) && box.length >= 4) {
+    const [x1, y1, x2, y2] = box;
+    if (num(x1) && num(y1) && num(x2) && num(y2)) {
+      return { x_min: x1, y_min: y1, x_max: x2, y_max: y2 };
+    }
+    return null;
+  }
+  if (typeof box === "object" && box !== null) {
+    const b = box as Record<string, unknown>;
+    if (num(b.x_min) && num(b.y_min) && num(b.x_max) && num(b.y_max)) {
+      return { x_min: b.x_min, y_min: b.y_min, x_max: b.x_max, y_max: b.y_max };
+    }
+  }
+  return null;
+}
+
+/**
+ * Defensive normalization of DETR output: accepts {predictions:[...]}, the
+ * nested {result:{predictions:[...]}} shape, or a bare array. Any structural
+ * surprise yields null so the caller routes to FAIL_SAFE.
+ */
+export function normalizeDetections(raw: unknown): DetrDetection[] | null {
+  let list: unknown;
+  if (Array.isArray(raw)) {
+    list = raw;
+  } else if (typeof raw === "object" && raw !== null) {
+    const r = raw as Record<string, unknown>;
+    const result =
+      typeof r.result === "object" && r.result !== null
+        ? (r.result as Record<string, unknown>).predictions
+        : undefined;
+    list = r.predictions ?? result;
+  }
+  if (!Array.isArray(list)) return null;
+
+  const out: DetrDetection[] = [];
+  for (const det of list) {
+    if (typeof det !== "object" || det === null) return null;
+    const d = det as Record<string, unknown>;
+    if (typeof d.label !== "string" || !num(d.score)) return null;
+    const box = normalizeBox(d.box);
+    if (!box) return null;
+    out.push({ label: d.label.toLowerCase(), score: d.score, box });
+  }
+  return out;
+}
+
+/** Intersection area divided by the smaller box's area (1 = one contains other). */
+function overlapRatio(a: DetrBox, b: DetrBox): number {
+  const w = Math.min(a.x_max, b.x_max) - Math.max(a.x_min, b.x_min);
+  const h = Math.min(a.y_max, b.y_max) - Math.max(a.y_min, b.y_min);
+  if (w <= 0 || h <= 0) return 0;
+  const areaA = (a.x_max - a.x_min) * (a.y_max - a.y_min);
+  const areaB = (b.x_max - b.x_min) * (b.y_max - b.y_min);
+  const smaller = Math.min(areaA, areaB);
+  return smaller > 0 ? (w * h) / smaller : 0;
+}
+
+export function makeT2DetrRulesStrategy(
+  deps: { ai: AiInvoker },
+  opts?: Partial<DetrRuleOptions>,
+): ClassifyPipePhoto {
+  const o = { ...DETR_DEFAULTS, ...opts };
+  return async (image: ArrayBuffer) => {
+    let detections: DetrDetection[];
+    try {
+      const raw = await deps.ai(o.model, {
+        image: Array.from(new Uint8Array(image)),
+      });
+      const normalized = normalizeDetections(raw);
+      if (!normalized) return FAIL_SAFE;
+      detections = normalized;
+    } catch {
+      return FAIL_SAFE;
+    }
+
+    const bestPipe = detections
+      .filter((d) => o.pipeLabels.includes(d.label) && d.score >= o.pipeScoreMin)
+      .sort((a, b) => b.score - a.score)[0];
+
+    if (!bestPipe) {
+      return {
+        validity: "invalid",
+        water_state: "not_applicable",
+        confidence: 0.45,
+        reason_th: "ไม่พบวัตถุที่คล้ายท่อน้ำในภาพ",
+      };
+    }
+
+    const waterHit = detections.find(
+      (d) =>
+        o.waterLabels.includes(d.label) &&
+        d.score >= o.waterScoreMin &&
+        overlapRatio(d.box, bestPipe.box) >= o.overlapMin,
+    );
+
+    if (waterHit) {
+      return {
+        validity: "valid",
+        water_state: "flooded",
+        confidence: Math.min(0.92, Math.max(0.6, Math.min(bestPipe.score, waterHit.score))),
+        reason_th: "ตรวจพบวัตถุคล้ายท่อพร้อมร่องรอยน้ำทับซ้อนกัน",
+      };
+    }
+
+    return {
+      validity: "valid",
+      water_state: "dry",
+      confidence: o.dryConfidence,
+      reason_th: "ตรวจพบวัตถุคล้ายท่อ แต่ไม่มีหลักฐานน้ำขัง",
+    };
+  };
+}

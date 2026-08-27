@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-08-27T10:30:13.156Z",
+  "sessionId": "sess_7ec4b650-2944-4690-aeb3-677489813515",
+  "event": "PostToolUse",
+  "toolName": "Write",
+  "file": "src/vision/bakeoff/BAKEOFF-RESULTS.md",
+  "outcome": "clear",
+  "coverage": "complete",
+  "findingCount": 0,
+  "durationMs": 3,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}

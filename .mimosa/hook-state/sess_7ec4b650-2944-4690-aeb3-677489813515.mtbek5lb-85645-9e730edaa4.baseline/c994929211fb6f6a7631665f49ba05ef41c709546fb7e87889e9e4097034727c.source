@@ -1,0 +1,101 @@
+/**
+ * Issue #103 — Admin review supersede + promote
+ * When admin rejects a pre-verified photo → supersede the stamp.
+ * When admin confirms an audit-sampled photo → promote to human-verified.
+ */
+import { describe, expect, it } from "vitest";
+import { reviewPhoto } from "../../src/admin/review";
+
+function mockD1ForPreVerify(photo: Record<string, unknown>) {
+  const calls: { sql: string; args: unknown[] }[] = [];
+  return {
+    calls,
+    prepare(sql: string) {
+      return {
+        bind(...args: unknown[]) {
+          calls.push({ sql, args });
+          if (sql.includes("SELECT") && sql.includes("photo_evidence")) {
+            return { first: async () => photo };
+          }
+          return { run: async () => ({ success: true }) };
+        },
+      };
+    },
+  };
+}
+
+describe("reviewPhoto — supersede pre-verification", () => {
+  it("supersedes pre_verified when admin rejects a pre-verified photo", async () => {
+    const mock = mockD1ForPreVerify({
+      id: "photo-1",
+      ai_status: "pass",
+      admin_status: "pending",
+      pre_verified: 1,
+      audit_sample: 0,
+    });
+    const db = mock as unknown as D1Database;
+
+    const result = await reviewPhoto(db, "photo-1", "rejected", "ภาพไม่ถูกต้อง");
+
+    expect(result.success).toBe(true);
+    // Should contain supersede update
+    const supersedeCall = mock.calls.find(
+      (c) => c.sql.includes("superseded") || c.sql.includes("pre_verified"),
+    );
+    expect(supersedeCall).toBeDefined();
+  });
+
+  it("does not supersede when rejecting a non-pre-verified photo", async () => {
+    const mock = mockD1ForPreVerify({
+      id: "photo-1",
+      ai_status: "flag",
+      admin_status: "pending",
+      pre_verified: 0,
+      audit_sample: 0,
+    });
+    const db = mock as unknown as D1Database;
+
+    const result = await reviewPhoto(db, "photo-1", "rejected", "blurry");
+
+    expect(result.success).toBe(true);
+    // Should NOT contain supersede logic
+    const supersedeCall = mock.calls.find(
+      (c) => c.sql.includes("superseded"),
+    );
+    expect(supersedeCall).toBeUndefined();
+  });
+});
+
+describe("reviewPhoto — promote audit sample", () => {
+  it("promotes to human-verified when admin confirms an audit-sampled photo", async () => {
+    const mock = mockD1ForPreVerify({
+      id: "photo-1",
+      ai_status: "pass",
+      admin_status: "pending",
+      pre_verified: 1,
+      audit_sample: 1,
+    });
+    const db = mock as unknown as D1Database;
+
+    const result = await reviewPhoto(db, "photo-1", "verified", "");
+
+    expect(result.success).toBe(true);
+    expect(result.promoted).toBe(true);
+  });
+
+  it("does not mark as promoted when verifying a non-audit photo", async () => {
+    const mock = mockD1ForPreVerify({
+      id: "photo-1",
+      ai_status: "flag",
+      admin_status: "pending",
+      pre_verified: 0,
+      audit_sample: 0,
+    });
+    const db = mock as unknown as D1Database;
+
+    const result = await reviewPhoto(db, "photo-1", "verified", "looks good");
+
+    expect(result.success).toBe(true);
+    expect(result.promoted).toBe(false);
+  });
+});

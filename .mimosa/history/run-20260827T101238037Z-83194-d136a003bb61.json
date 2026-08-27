@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "mimosa-finding-history/v1",
+  "runId": "20260827T101238037Z-83194-d136a003bb61",
+  "runStatus": "inconclusive",
+  "errors": [
+    "scan:src/vision/bakeoff/train-clip-fewshot.py: scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+    "scan:src/vision/bakeoff/train-clip-tuned.py: scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+    "scan:src/vision/bakeoff/train-clip-large.py: scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+    "scan:src/vision/bakeoff/train-clip-threshold.py: scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+    "scan:src/vision/bakeoff/train-clip-more-examples.py: scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT"
+  ],
+  "target": ".",
+  "revision": "2f8b7dabe428c1b194433074438b0af46a9b3f99",
+  "diffHash": "7994c6e0835323bb4ada667ec51b69fec31911b93fc45d577679bd86439d8799",
+  "rulesVersion": "unavailable",
+  "recordedAt": "2026-08-27T10:12:38.037Z",
+  "timing": {
+    "startedAt": "2026-08-27T10:12:35.569Z",
+    "completedAt": "2026-08-27T10:12:38.037Z",
+    "durationMs": 2468
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "modelCalls": 0,
+    "measurement": "known-zero"
+  },
+  "findings": {
+    "total": 2,
+    "bySeverity": {
+      "high": 2
+    },
+    "byStatus": {
+      "blocked": 2
+    }
+  },
+  "coverage": {
+    "status": "partial",
+    "reasonCounts": {
+      "baseline_partial": 1,
+      "scanner_failed": 5,
+      "project_check_failed": 5
+    }
+  },
+  "evidenceBoundary": "static_only",
+  "immutableReport": ".mimosa/reports/task-review-sess_7ec4b650-2944-4690-aeb3-677489813515-20260827T101238037Z-83194-d136a003bb61.json"
+}

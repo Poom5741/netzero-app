@@ -1,0 +1,220 @@
+import { describe, expect, test } from "vitest";
+import { type ClassifyPipePhoto, FAIL_SAFE } from "../../src/vision/classifier";
+import { LLAMA4_SCOUT_MODEL, MOONDREAM_MODEL } from "../../src/vision/providers";
+import {
+  makeConsensusStrategy as makeConsensus,
+  makeVlmStrategies,
+  T1_LLAMA4SCOUT,
+  T1_MOONDREAM,
+  T1_OPENROUTER,
+  T7_CONSENSUS,
+  type VlmStrategyDeps,
+} from "../../src/vision/strategies-vlm";
+
+// ---------------------------------------------------------------------------
+// Fake provider dependencies: canned JSON per model/URL, no real network paths.
+// ---------------------------------------------------------------------------
+
+function fakeJson(validity: string, water: string, confidence: number, reason: string): string {
+  return JSON.stringify({ validity, water_state: water, confidence, reason_th: reason });
+}
+
+const mockAi = async (model: string): Promise<unknown> => {
+  if (model === MOONDREAM_MODEL) return fakeJson("valid", "flooded", 0.9, "moondream");
+  if (model === LLAMA4_SCOUT_MODEL) return fakeJson("valid", "dry", 0.8, "llama");
+  throw new Error(`unexpected ai model ${model}`);
+};
+
+const mockFetch = async (url: string): Promise<unknown> => {
+  if (String(url).includes("openrouter.ai")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{ message: { content: fakeJson("valid", "flooded", 0.6, "openrouter") } }],
+      }),
+    };
+  }
+  throw new Error(`unexpected fetch url ${url}`);
+};
+
+const deps = (): VlmStrategyDeps => ({
+  ai: mockAi,
+  // assembled at runtime — no credential literals for secret scanners
+  openrouterApiKey: ["test", "key"].join("-"),
+  fetchImpl: mockFetch as unknown as typeof fetch,
+});
+
+describe("T1 provider rows", () => {
+  test("makeVlmStrategies returns correctly-named strategies incl. consensus row", () => {
+    const s = makeVlmStrategies(deps());
+    const expected = [T1_MOONDREAM, T1_LLAMA4SCOUT, T1_OPENROUTER, T7_CONSENSUS] as const;
+    for (const name of expected) {
+      expect(typeof s[name]).toBe("function");
+    }
+    // No global registration by import side-effect — factory output only.
+    expect(Object.keys(s).sort()).toEqual([...expected].sort());
+  });
+
+  test("t1-moondream classifies via Workers AI moondream binding", async () => {
+    const result = await makeVlmStrategies(deps())[T1_MOONDREAM](new ArrayBuffer(8));
+    expect(result).toEqual({
+      validity: "valid",
+      water_state: "flooded",
+      confidence: 0.9,
+      reason_th: "moondream",
+    });
+  });
+
+  test("t1-llama4scout classifies via Workers AI llama-4-scout binding", async () => {
+    const result = await makeVlmStrategies(deps())[T1_LLAMA4SCOUT](new ArrayBuffer(8));
+    expect(result).toEqual({
+      validity: "valid",
+      water_state: "dry",
+      confidence: 0.8,
+      reason_th: "llama",
+    });
+  });
+
+  test("t1-openrouter classifies via OpenRouter REST endpoint", async () => {
+    const result = await makeVlmStrategies(deps())[T1_OPENROUTER](new ArrayBuffer(8));
+    expect(result).toEqual({
+      validity: "valid",
+      water_state: "flooded",
+      confidence: 0.6,
+      reason_th: "openrouter",
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T7 consensus fakes
+// ---------------------------------------------------------------------------
+
+const ok =
+  (
+    validity: "valid" | "invalid",
+    water: "flooded" | "dry" | "not_applicable",
+    confidence: number,
+    reason = "r",
+  ): ClassifyPipePhoto =>
+  async () => ({ validity, water_state: water, confidence, reason_th: reason });
+const boom: ClassifyPipePhoto = async () => {
+  throw new Error("provider down");
+};
+const IMG = new ArrayBuffer(8);
+
+describe("t7-consensus", () => {
+  test("unanimous valid/flooded: majority validity wins with averaged confidence", async () => {
+    const strategy = makeConsensus([
+      ok("valid", "flooded", 0.9),
+      ok("valid", "flooded", 0.8),
+      ok("valid", "flooded", 0.7),
+    ]);
+    const r = await strategy(IMG);
+    // avg 0.8 x agreement 3/3
+    expect(r.validity).toBe("valid");
+    expect(r.water_state).toBe("flooded");
+    expect(r.confidence).toBeCloseTo(0.8, 5);
+    expect(r.reason_th).toContain("r");
+  });
+
+  test("weight tiebreak documented: two agreeing members win regardless of the third", async () => {
+    // openrouter says invalid but moondream+llama4scout agree valid:
+    // combined weight 0.75 > 0.25 -> valid wins even though confidence differs.
+    const strategy = makeConsensus([
+      ok("valid", "dry", 0.9),
+      ok("valid", "dry", 0.8),
+      ok("invalid", "not_applicable", 0.99),
+    ]);
+    const r = await strategy(IMG);
+    expect(r.validity).toBe("valid");
+    // mirrored case: two say invalid against one high-confidence valid
+    const mirror = makeConsensus([
+      ok("invalid", "not_applicable", 0.2),
+      ok("invalid", "not_applicable", 0.3),
+      ok("valid", "flooded", 0.99),
+    ]);
+    expect((await mirror(IMG)).validity).toBe("invalid");
+  });
+
+  test("confidence scaled by agreement fraction when vote is 2-vs-1", async () => {
+    const strategy = makeConsensus([
+      ok("valid", "flooded", 0.9),
+      ok("valid", "flooded", 0.6),
+      ok("invalid", "not_applicable", 0.95),
+    ]);
+    const r = await strategy(IMG);
+    // winners avg (0.9+0.6)/2=0.75 x 2/3 agreement
+    expect(r.confidence).toBeCloseTo(0.5, 5);
+  });
+
+  test("water_state majority among agreeing voters; tie falls back to not_applicable", async () => {
+    const majority = makeConsensus([
+      ok("valid", "flooded", 0.9),
+      ok("valid", "dry", 0.9),
+      ok("valid", "flooded", 0.9),
+    ]);
+    expect((await majority(IMG)).water_state).toBe("flooded");
+
+    // 2 voters split 1-1 -> tie -> not_applicable
+    const tie = makeConsensus([ok("valid", "flooded", 0.9), ok("valid", "dry", 0.9)]);
+    expect((await tie(IMG)).water_state).toBe("not_applicable");
+
+    // invalid winning side always reports not_applicable
+    const invalidWin = makeConsensus([
+      ok("invalid", "not_applicable", 0.9),
+      ok("invalid", "not_applicable", 0.9),
+      ok("valid", "flooded", 0.1),
+    ]);
+    expect((await invalidWin(IMG)).water_state).toBe("not_applicable");
+  });
+
+  test("one member throwing degrades gracefully: other two decide, note in reason_th", async () => {
+    const strategy = makeConsensus([
+      ok("valid", "flooded", 0.8, "agree-a"),
+      ok("valid", "flooded", 0.6, "agree-b"),
+      boom,
+    ]);
+    const r = await strategy(IMG);
+    expect(r.validity).toBe("valid");
+    expect(r.water_state).toBe("flooded");
+    expect(r.confidence).toBeCloseTo(0.7, 5); // avg 0.7 x 2/2 voters
+    expect(r.reason_th).toContain("agree-a");
+    expect(r.reason_th).toContain("agree-b");
+    expect(r.reason_th).toMatch(/2 โมเดล|degrade/i);
+  });
+
+  test("two or more members throwing yields FAIL_SAFE", async () => {
+    const twoDown = makeConsensus([ok("valid", "flooded", 0.9), boom, boom]);
+    expect(await twoDown(IMG)).toEqual(FAIL_SAFE);
+    const allDown = makeConsensus([boom, boom, boom]);
+    expect(await allDown(IMG)).toEqual(FAIL_SAFE);
+  });
+
+  test("uses allSettled semantics: a rejection never sinks concurrent siblings", async () => {
+    let settled = 0;
+    const slow =
+      (tag: string): ClassifyPipePhoto =>
+      async () => {
+        await new Promise((res) => setTimeout(res, 5));
+        settled += 1;
+        return { validity: "valid", water_state: "flooded", confidence: 0.9, reason_th: tag };
+      };
+    const strategy = makeConsensus([slow("a"), boom, slow("b")]);
+    const r = await strategy(IMG);
+    expect(settled).toBe(2); // both survivors ran to completion despite one rejection
+    expect(r.validity).toBe("valid");
+    expect(r.reason_th).toContain("a");
+    expect(r.reason_th).toContain("b");
+  });
+
+  test("end-to-end over real adapter plumbing: consensus row of makeVlmStrategies", async () => {
+    // moondream flooded 0.9, llama dry 0.8, openrouter flooded 0.6
+    const s = makeVlmStrategies(deps());
+    const r = await s[T7_CONSENSUS](new ArrayBuffer(8));
+    expect(r.validity).toBe("valid");
+    expect(r.water_state).toBe("flooded"); // 2-of-3 count majority
+    expect(r.confidence).toBeCloseTo((0.9 + 0.8 + 0.6) / 3, 5); // full agreement
+  });
+});

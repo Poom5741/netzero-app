@@ -1,0 +1,318 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260827T101238037Z-83194-d136a003bb61",
+  "runId": "20260827T101238037Z-83194-d136a003bb61",
+  "runStatus": "inconclusive",
+  "coverage": {
+    "status": "partial",
+    "reasons": [
+      {
+        "code": "baseline_partial",
+        "stage": "baseline",
+        "target": ".",
+        "detail": "baseline capture had enumeration or snapshot errors",
+        "affectsCompletion": false
+      },
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-fewshot.py",
+        "detail": "spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-tuned.py",
+        "detail": "spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-large.py",
+        "detail": "spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-threshold.py",
+        "detail": "spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-more-examples.py",
+        "detail": "spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-fewshot.py",
+        "detail": "scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-tuned.py",
+        "detail": "scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-large.py",
+        "detail": "scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-threshold.py",
+        "detail": "scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "src/vision/bakeoff/train-clip-more-examples.py",
+        "detail": "scanner_failed: spawnSync /Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      }
+    ]
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "2f8b7dabe428c1b194433074438b0af46a9b3f99",
+  "diffHash": "7994c6e0835323bb4ada667ec51b69fec31911b93fc45d577679bd86439d8799",
+  "rulesVersion": "unavailable",
+  "sessionHash": "a8c7fe4b3505af4e518ed8a52e807efb8a5f2583df3778c43cac06651f13f793",
+  "reportRef": ".mimosa/reports/task-review-sess_7ec4b650-2944-4690-aeb3-677489813515-20260827T101238037Z-83194-d136a003bb61.json",
+  "events": [
+    {
+      "eventId": "hook-7fe461319bebea0fd47167996ae2d6a4",
+      "findingId": "mimosa-c289b422d4d64ecc67e370d3",
+      "type": "finding_blocked",
+      "at": "2026-08-27T09:42:36.738Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-fewshot.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 249,
+      "endLine": 249,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 0
+    },
+    {
+      "eventId": "hook-25ef7af87ebbdc07f786cc9ecfcab5df",
+      "findingId": "mimosa-c289b422d4d64ecc67e370d3",
+      "type": "finding_blocked",
+      "at": "2026-08-27T09:43:41.731Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-fewshot.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 256,
+      "endLine": 256,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 1
+    },
+    {
+      "eventId": "hook-b682f71bdd4a9ed22c3f7d65d37f98b1",
+      "findingId": "mimosa-77b738dce842706c49992ca1",
+      "type": "finding_blocked",
+      "at": "2026-08-27T10:04:05.436Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-more-examples.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 239,
+      "endLine": 239,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 2
+    },
+    {
+      "eventId": "hook-3a27b9026a1b546abc55e2ac87da1001",
+      "findingId": "mimosa-77b738dce842706c49992ca1",
+      "type": "finding_blocked",
+      "at": "2026-08-27T10:05:09.537Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-more-examples.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 242,
+      "endLine": 242,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 3
+    },
+    {
+      "eventId": "hook-47a26b7b5460da99afc079a8c0b5d18f",
+      "findingId": "mimosa-77b738dce842706c49992ca1",
+      "type": "finding_blocked",
+      "at": "2026-08-27T10:06:13.049Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-more-examples.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 240,
+      "endLine": 240,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 4
+    },
+    {
+      "eventId": "hook-f41c36a4ee0231054aca3b329b01acd9",
+      "findingId": "mimosa-77b738dce842706c49992ca1",
+      "type": "finding_blocked",
+      "at": "2026-08-27T10:07:12.190Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-more-examples.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 242,
+      "endLine": 242,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 5
+    },
+    {
+      "eventId": "hook-0cd8a75e84adcc320d577a767e3c72cc",
+      "findingId": "mimosa-77b738dce842706c49992ca1",
+      "type": "finding_blocked",
+      "at": "2026-08-27T10:08:25.595Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-more-examples.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 246,
+      "endLine": 246,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 6
+    },
+    {
+      "eventId": "hook-dbbcf48b5b880934279bc5354c568eb5",
+      "findingId": "mimosa-77b738dce842706c49992ca1",
+      "type": "finding_blocked",
+      "at": "2026-08-27T10:09:33.298Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-more-examples.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 246,
+      "endLine": 246,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 7
+    },
+    {
+      "eventId": "hook-4a6e9fed8291588298c76124cbae19ac",
+      "findingId": "mimosa-77b738dce842706c49992ca1",
+      "type": "finding_blocked",
+      "at": "2026-08-27T10:10:30.959Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/train-clip-more-examples.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 240,
+      "endLine": 240,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "0a16da6456c29b095d7df7aa7e004e943512dcdbe1214483ff12acd034eefb23"
+      },
+      "sequence": 8
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-27T10:12:38.451Z"
+}

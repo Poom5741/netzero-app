@@ -1,0 +1,218 @@
+{
+  "timestamp": "2026-08-27T06:05:43.725Z",
+  "dataset": {
+    "total": 101,
+    "flooded": 51,
+    "dry": 43,
+    "invalid": 7
+  },
+  "holdout": {
+    "total": 29,
+    "flooded": 15,
+    "dry": 12,
+    "invalid": 2
+  },
+  "leaderboard": [
+    {
+      "name": "object-detection-rules",
+      "description": "YOLO-like pipe detection + water region heuristic",
+      "metrics": {
+        "floodedAccuracy": 0.4666666666666667,
+        "dryAccuracy": 0.5833333333333334,
+        "invalidAccuracy": 0.5,
+        "autoPassRate": 0.8888888888888888,
+        "badSlipRate": 0.5,
+        "passed": false,
+        "floodedCorrect": 7,
+        "floodedTotal": 15,
+        "dryCorrect": 7,
+        "dryTotal": 12,
+        "invalidCorrect": 1,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 290.37931034482756,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "traditional-cv",
+      "description": "Color histogram + edge density — no ML, pure OpenCV-style",
+      "metrics": {
+        "floodedAccuracy": 0,
+        "dryAccuracy": 0.5,
+        "invalidAccuracy": 0,
+        "autoPassRate": 0.07407407407407407,
+        "badSlipRate": 1,
+        "passed": false,
+        "floodedCorrect": 0,
+        "floodedTotal": 15,
+        "dryCorrect": 6,
+        "dryTotal": 12,
+        "invalidCorrect": 0,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 208.44827586206895,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "moondream-3.1",
+      "description": "Moondream 3.1 via Workers AI — fast, small vision model",
+      "metrics": {
+        "floodedAccuracy": 0,
+        "dryAccuracy": 0,
+        "invalidAccuracy": 1,
+        "autoPassRate": 0,
+        "badSlipRate": 0,
+        "passed": false,
+        "floodedCorrect": 0,
+        "floodedTotal": 15,
+        "dryCorrect": 0,
+        "dryTotal": 12,
+        "invalidCorrect": 2,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 19.03448275862069,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "llama4-scout",
+      "description": "Llama 4 Scout via Workers AI — larger multimodal model",
+      "metrics": {
+        "floodedAccuracy": 0,
+        "dryAccuracy": 0,
+        "invalidAccuracy": 1,
+        "autoPassRate": 0,
+        "badSlipRate": 0,
+        "passed": false,
+        "floodedCorrect": 0,
+        "floodedTotal": 15,
+        "dryCorrect": 0,
+        "dryTotal": 12,
+        "invalidCorrect": 2,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 20.24137931034483,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "openrouter-qwen-vl",
+      "description": "OpenRouter Qwen-VL-Max — commercial vision API",
+      "metrics": {
+        "floodedAccuracy": 0,
+        "dryAccuracy": 0,
+        "invalidAccuracy": 1,
+        "autoPassRate": 0,
+        "badSlipRate": 0,
+        "passed": false,
+        "floodedCorrect": 0,
+        "floodedTotal": 15,
+        "dryCorrect": 0,
+        "dryTotal": 12,
+        "invalidCorrect": 2,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 22,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "multi-model-consensus",
+      "description": "Majority vote across all three VLMs",
+      "metrics": {
+        "floodedAccuracy": 0,
+        "dryAccuracy": 0,
+        "invalidAccuracy": 1,
+        "autoPassRate": 0,
+        "badSlipRate": 0,
+        "passed": false,
+        "floodedCorrect": 0,
+        "floodedTotal": 15,
+        "dryCorrect": 0,
+        "dryTotal": 12,
+        "invalidCorrect": 2,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 33.89655172413793,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "vlm-prompt-cot",
+      "description": "VLM with chain-of-thought structured prompt",
+      "metrics": {
+        "floodedAccuracy": 0,
+        "dryAccuracy": 0,
+        "invalidAccuracy": 1,
+        "autoPassRate": 0,
+        "badSlipRate": 0,
+        "passed": false,
+        "floodedCorrect": 0,
+        "floodedTotal": 15,
+        "dryCorrect": 0,
+        "dryTotal": 12,
+        "invalidCorrect": 2,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 23.413793103448278,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "vlm-prompt-fewshot",
+      "description": "VLM with 5 in-context reference examples",
+      "metrics": {
+        "floodedAccuracy": 0,
+        "dryAccuracy": 0,
+        "invalidAccuracy": 1,
+        "autoPassRate": 0,
+        "badSlipRate": 0,
+        "passed": false,
+        "floodedCorrect": 0,
+        "floodedTotal": 15,
+        "dryCorrect": 0,
+        "dryTotal": 12,
+        "invalidCorrect": 2,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 19.137931034482758,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "few-shot-embeddings",
+      "description": "CLIP embeddings + kNN classifier with ~20 reference images",
+      "metrics": {
+        "floodedAccuracy": 0.13333333333333333,
+        "dryAccuracy": 0.4166666666666667,
+        "invalidAccuracy": 0.5,
+        "autoPassRate": 0,
+        "badSlipRate": 0.5,
+        "passed": false,
+        "floodedCorrect": 2,
+        "floodedTotal": 15,
+        "dryCorrect": 5,
+        "dryTotal": 12,
+        "invalidCorrect": 1,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 154.6206896551724,
+      "totalCostUsd": 0
+    },
+    {
+      "name": "fine-tuned-resnet",
+      "description": "Fine-tuned ResNet-50 on labeled pipe photos",
+      "metrics": {
+        "floodedAccuracy": 0.13333333333333333,
+        "dryAccuracy": 0.9166666666666666,
+        "invalidAccuracy": 0,
+        "autoPassRate": 0,
+        "badSlipRate": 1,
+        "passed": false,
+        "floodedCorrect": 2,
+        "floodedTotal": 15,
+        "dryCorrect": 11,
+        "dryTotal": 12,
+        "invalidCorrect": 0,
+        "invalidTotal": 2
+      },
+      "avgLatencyMs": 487.82758620689657,
+      "totalCostUsd": 0
+    }
+  ],
+  "winner": null
+}

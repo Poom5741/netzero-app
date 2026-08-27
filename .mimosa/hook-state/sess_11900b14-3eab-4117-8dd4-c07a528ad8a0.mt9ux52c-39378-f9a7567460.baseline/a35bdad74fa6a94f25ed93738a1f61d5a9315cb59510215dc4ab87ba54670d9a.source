@@ -1,0 +1,223 @@
+/**
+ * Batch-3 LEARNED bake-off strategies (issue #97). Factories only — nothing
+ * registers in the bake-off registry by import side-effect (matches batch 1).
+ *
+ * - T6 `t6-knn`: k-NN vote over train-split exemplars using an INJECTED
+ *   EmbeddingFn; embeddings cached by SHA-256 content hash so bun tests never
+ *   re-embed and the real embedder pays each image once.
+ * - T3 `t3-finetuned`: calls an INJECTED HTTP predictor backed by
+ *   training/serve.py (fine-tuned CNN artifact). Hosting decision deferred.
+ *
+ * Tie-break policy for the kNN vote (deterministic, documented): most votes ->
+ * smallest summed cosine distance -> earliest exemplar index. The final
+ * earliest-index rule keeps exact ties stable and reproducible.
+ */
+
+import type { PipeLabel } from "./bakeoff";
+import { type ClassifyPipePhoto, FAIL_SAFE, parseClassifierOutput } from "./classifier";
+
+export const T6_KNN = "t6-knn";
+export const T3_FINETUNED = "t3-finetuned";
+/** Path training/serve.py listens on — the wrapper contract. */
+export const T3_ENDPOINT_PATH = "/classify";
+
+/**
+ * Honest build-environment status: python3 exists here but torch/torchvision
+ * are NOT installed, so no artifact was trained and no accuracy is claimed.
+ * Run training/train.py where torch exists, then serve via training/serve.py
+ * and point makeHttpPredictStrategy at it.
+ */
+export const T3_STATUS = {
+  trained: false,
+  status: "NOT_TRAINED: torch/torchvision unavailable in build environment",
+} as const;
+
+// ---------- T6 k-NN over injected embeddings ----------
+
+/** Embeds raw image bytes; injected so tests use fakes and prod uses CLIP. */
+export type EmbeddingFn = (image: ArrayBuffer) => Promise<number[]>;
+
+export interface Exemplar {
+  label: PipeLabel;
+  embedding: number[];
+}
+
+export interface SplitEntryLike {
+  path: string;
+  label: PipeLabel;
+}
+
+export const DEFAULT_KNN_K = 5;
+
+const REASON_TH: Record<PipeLabel, string> = {
+  flooded: "ใกล้เคียงภาพท่อน้ำขังจากชุดตัวอย่าง",
+  dry: "ใกล้เคียงภาพท่อปล่อยแห้งจากชุดตัวอย่าง",
+  invalid: "ไม่ตรงกับภาพท่อน้ำมาตรฐานในชุดตัวอย่าง",
+};
+
+/**
+ * Cosine distance in [0, 2]. Zero-norm vector -> 1 (max uncertainty, never NaN).
+ * Length mismatch -> NaN so callers can filter it as malformed.
+ */
+export function cosineDistance(a: number[], b: number[]): number {
+  if (a.length !== b.length) return Number.NaN;
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  for (const [i, x] of a.entries()) {
+    const y = b[i];
+    if (y === undefined) return Number.NaN;
+    dot += x * y;
+    na += x * x;
+    nb += y * y;
+  }
+  if (na === 0 || nb === 0) return 1;
+  return 1 - dot / Math.sqrt(na * nb);
+}
+
+const isFiniteVec = (v: number[], dim?: number): boolean =>
+  Array.isArray(v) &&
+  v.length > 0 &&
+  (dim === undefined || v.length === dim) &&
+  v.every((x) => Number.isFinite(x));
+
+async function sha256Hex(image: ArrayBuffer): Promise<string> {
+  // ponytail: crypto.subtle works on Workers too, unlike node:crypto; swap to a
+  // blake3/fast hash only if embedding throughput ever matters.
+  const digest = await crypto.subtle.digest("SHA-256", image);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export interface KnnDeps {
+  /** Injected embedder (fake in tests; CLIP via scripts/embed-knn.ts in real runs). */
+  embed: EmbeddingFn;
+  /** Train-split entries to embed lazily as exemplars. */
+  exemplarEntries: SplitEntryLike[];
+  loadImage: (path: string) => Promise<ArrayBuffer>;
+  /** Neighbours per vote; clamped to the exemplar count. */
+  k?: number;
+}
+
+export function makeKnnStrategy(deps: KnnDeps): ClassifyPipePhoto {
+  const k = deps.k ?? DEFAULT_KNN_K;
+  const cache = new Map<string, number[]>();
+  let exemplars: Exemplar[] | null = null;
+
+  const embedCached = async (image: ArrayBuffer): Promise<number[]> => {
+    const key = await sha256Hex(image);
+    const hit = cache.get(key);
+    if (hit) return hit;
+    const vec = await deps.embed(image);
+    cache.set(key, vec);
+    return vec;
+  };
+
+  const ensureExemplars = async (): Promise<Exemplar[]> => {
+    if (!exemplars) {
+      exemplars = [];
+      for (const e of deps.exemplarEntries) {
+        exemplars.push({
+          label: e.label,
+          embedding: await embedCached(await deps.loadImage(e.path)),
+        });
+      }
+    }
+    return exemplars;
+  };
+
+  return async (image: ArrayBuffer) => {
+    try {
+      const exs = await ensureExemplars();
+      if (exs.length === 0) return FAIL_SAFE;
+      const dim = exs[0]?.embedding.length;
+      const query = await embedCached(image);
+      if (!isFiniteVec(query, dim)) return FAIL_SAFE;
+
+      const kk = Math.min(k, exs.length);
+      const ranked = exs
+        .map((e, i) => ({ i, label: e.label, d: cosineDistance(query, e.embedding) }))
+        .filter((r) => Number.isFinite(r.d))
+        .sort((a, b) => a.d - b.d || a.i - b.i)
+        .slice(0, kk);
+
+      // Tally per label: votes -> summed cosine distance -> earliest index.
+      const tally = new Map<PipeLabel, { votes: number; sum: number; bestIdx: number }>();
+      for (const r of ranked) {
+        const cur = tally.get(r.label);
+        if (cur) {
+          cur.votes += 1;
+          cur.sum += r.d;
+        } else {
+          tally.set(r.label, { votes: 1, sum: r.d, bestIdx: r.i });
+        }
+      }
+      let winner: { label: PipeLabel; votes: number; sum: number; bestIdx: number } | null = null;
+      for (const [label, t] of tally) {
+        if (
+          !winner ||
+          t.votes > winner.votes ||
+          (t.votes === winner.votes &&
+            (t.sum < winner.sum || (t.sum === winner.sum && t.bestIdx < winner.bestIdx)))
+        ) {
+          winner = { label, ...t };
+        }
+      }
+      if (!winner) return FAIL_SAFE;
+
+      const label = winner.label;
+      return {
+        validity: label === "invalid" ? "invalid" : "valid",
+        water_state: label === "flooded" ? "flooded" : label === "dry" ? "dry" : "not_applicable",
+        confidence: Number((winner.votes / kk).toFixed(4)),
+        reason_th: `${REASON_TH[label]} (${T6_KNN}, k=${kk})`,
+      };
+    } catch {
+      return FAIL_SAFE;
+    }
+  };
+}
+
+// ---------- T3 fine-tuned classifier over injected HTTP predictor ----------
+
+type FetchTextLike = (
+  url: string,
+  init?: Record<string, unknown>,
+) => Promise<{ ok: boolean; status: number; text: () => Promise<string> }>;
+
+export interface HttpPredictDeps {
+  /** Full endpoint URL, e.g. http://127.0.0.1:8765/classify from training/serve.py. */
+  url: string;
+  fetchImpl?: FetchTextLike;
+}
+
+function toBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  // ponytail: chunked btoa like providers/index.ts; binary upload if artifacts grow.
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
+/**
+ * Wraps training/serve.py's contract: POST JSON {image_base64} to `url`,
+ * expecting a PipeClassification JSON body. Malformed output, non-2xx, or
+ * transport failure all collapse to FAIL_SAFE — never throws.
+ */
+export function makeHttpPredictStrategy(deps: HttpPredictDeps): ClassifyPipePhoto {
+  const doFetch = deps.fetchImpl ?? fetch;
+  return async (image: ArrayBuffer) => {
+    try {
+      const res = await doFetch(deps.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64: toBase64(image) }),
+      });
+      if (!res.ok) return FAIL_SAFE;
+      return parseClassifierOutput(await res.text());
+    } catch {
+      return FAIL_SAFE;
+    }
+  };
+}

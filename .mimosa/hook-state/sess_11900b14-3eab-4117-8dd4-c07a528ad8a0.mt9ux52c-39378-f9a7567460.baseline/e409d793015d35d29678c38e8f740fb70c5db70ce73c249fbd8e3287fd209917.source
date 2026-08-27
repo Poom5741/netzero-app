@@ -1,0 +1,24 @@
+"use client";
+
+interface DashboardHeaderProps {
+  userLabel: string;
+}
+
+/**
+ * Sticky glassmorphic top header with the signed-in user.
+ * Shared by the dashboards.
+ */
+export function DashboardHeader({
+  userLabel = "System Admin",
+}: DashboardHeaderProps) {
+  return (
+    <header className="fixed top-0 left-0 lg:left-72 right-0 h-20 bg-surface/60 backdrop-blur-xl z-40 px-6 lg:px-10 flex items-center justify-end border-b border-surface-container-highest/30 shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+          <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
+        </div>
+        <span className="text-sm text-on-surface">{userLabel}</span>
+      </div>
+    </header>
+  );
+}

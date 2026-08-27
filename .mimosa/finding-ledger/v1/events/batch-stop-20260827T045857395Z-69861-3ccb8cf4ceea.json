@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260827T045857395Z-69861-3ccb8cf4ceea",
+  "runId": "20260827T045857395Z-69861-3ccb8cf4ceea",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": [
+      {
+        "code": "baseline_partial",
+        "stage": "baseline",
+        "target": ".",
+        "detail": "baseline capture had enumeration or snapshot errors",
+        "affectsCompletion": false
+      }
+    ]
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "2f8b7dabe428c1b194433074438b0af46a9b3f99",
+  "diffHash": "c3217a3a51dab32ef326ec0f1dc938af560b1cefefc03ffea33a0861467a677e",
+  "rulesVersion": "unavailable",
+  "sessionHash": "a8c7fe4b3505af4e518ed8a52e807efb8a5f2583df3778c43cac06651f13f793",
+  "reportRef": ".mimosa/reports/task-review-sess_7ec4b650-2944-4690-aeb3-677489813515-20260827T045857395Z-69861-3ccb8cf4ceea.json",
+  "events": [
+    {
+      "eventId": "hook-083a5e5c4d6793b0a421ef1f0ce4cb99",
+      "findingId": "mimosa-092fa050bbb89ea24c28a309",
+      "type": "finding_blocked",
+      "at": "2026-08-27T04:37:20.021Z",
+      "identity": {
+        "projectRelativeFile": "test-vision-model.ts",
+        "ruleId": "security",
+        "codeEvidenceHash": "fa077d44563cd513b0ebcafd511ecb83a491987a04cd0f5fe658496d03cabaf1",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 32,
+      "endLine": 32,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "fa077d44563cd513b0ebcafd511ecb83a491987a04cd0f5fe658496d03cabaf1"
+      },
+      "sequence": 0
+    },
+    {
+      "eventId": "hook-3c3ee5cc4c2ed882d030c50ee072e90f",
+      "findingId": "mimosa-092fa050bbb89ea24c28a309",
+      "type": "static_fix_verified",
+      "at": "2026-08-27T04:37:38.038Z",
+      "identity": {
+        "projectRelativeFile": "test-vision-model.ts",
+        "ruleId": "security",
+        "codeEvidenceHash": "fa077d44563cd513b0ebcafd511ecb83a491987a04cd0f5fe658496d03cabaf1",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 32,
+      "endLine": 32,
+      "reasonCode": "static_rescan_passed",
+      "reportedToAgent": false,
+      "evidence": {
+        "kind": "static_scan",
+        "boundary": "observed",
+        "producer": "deterministic",
+        "evidenceHash": "fa077d44563cd513b0ebcafd511ecb83a491987a04cd0f5fe658496d03cabaf1"
+      },
+      "sequence": 1
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "test-vision-model.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-08-27T04:58:57.581Z"
+}

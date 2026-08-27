@@ -1,0 +1,137 @@
+import { describe, expect, it } from "vitest";
+import {
+  type ClassifyPipePhoto,
+  type PipeClassification,
+  parseClassifierOutput,
+} from "../../src/vision/classifier";
+
+function expectFailSafe(result: PipeClassification) {
+  expect(result.validity).toBe("invalid");
+  expect(result.water_state).toBe("not_applicable");
+  expect(result.confidence).toBeLessThanOrEqual(0.3);
+  expect(result.reason_th.length).toBeGreaterThan(0);
+}
+
+describe("parseClassifierOutput", () => {
+  it("parses well-formed valid flooded JSON", () => {
+    const raw = JSON.stringify({
+      validity: "valid",
+      water_state: "flooded",
+      confidence: 0.92,
+      reason_th: "เห็นน้ำขังในท่อน้ำชัดเจน",
+    });
+    const result = parseClassifierOutput(raw);
+    expect(result).toEqual({
+      validity: "valid",
+      water_state: "flooded",
+      confidence: 0.92,
+      reason_th: "เห็นน้ำขังในท่อน้ำชัดเจน",
+    });
+  });
+
+  it("parses well-formed valid dry JSON", () => {
+    const raw = JSON.stringify({
+      validity: "valid",
+      water_state: "dry",
+      confidence: 0.87,
+      reason_th: "ท่อน้ำแห้ง ไม่มีน้ำขัง",
+    });
+    const result = parseClassifierOutput(raw);
+    expect(result.validity).toBe("valid");
+    expect(result.water_state).toBe("dry");
+    expect(result.confidence).toBe(0.87);
+  });
+
+  it("parses well-formed invalid JSON with not_applicable state", () => {
+    const raw = JSON.stringify({
+      validity: "invalid",
+      water_state: "not_applicable",
+      confidence: 0.95,
+      reason_th: "ภาพไม่ใช่ท่อน้ำ",
+    });
+    const result = parseClassifierOutput(raw);
+    expect(result.validity).toBe("invalid");
+    expect(result.water_state).toBe("not_applicable");
+    expect(result.reason_th).toBe("ภาพไม่ใช่ท่อน้ำ");
+  });
+
+  it("fails safe on malformed JSON", () => {
+    expectFailSafe(parseClassifierOutput("not json at all"));
+    expectFailSafe(parseClassifierOutput('{"validity": "valid", '));
+    expectFailSafe(parseClassifierOutput(""));
+  });
+
+  it("fails safe on missing required fields", () => {
+    expectFailSafe(parseClassifierOutput("{}"));
+    expectFailSafe(parseClassifierOutput(JSON.stringify({ validity: "valid", confidence: 0.9 })));
+    expectFailSafe(
+      parseClassifierOutput(
+        JSON.stringify({ validity: "valid", water_state: "flooded", confidence: 0.9 }),
+      ),
+    );
+  });
+
+  it("fails safe on out-of-range confidence", () => {
+    for (const confidence of [1.5, -0.1, Number.NaN]) {
+      expectFailSafe(
+        parseClassifierOutput(
+          JSON.stringify({
+            validity: "valid",
+            water_state: "flooded",
+            confidence,
+            reason_th: "ทดสอบ",
+          }),
+        ),
+      );
+    }
+  });
+
+  it("fails safe on unexpected labels", () => {
+    for (const [validity, water_state] of [
+      ["partially_valid", "flooded"],
+      ["valid", "wet"],
+      ["VALID", "dry"],
+    ] as const) {
+      expectFailSafe(
+        parseClassifierOutput(
+          JSON.stringify({ validity, water_state, confidence: 0.9, reason_th: "ทดสอบ" }),
+        ),
+      );
+    }
+  });
+
+  it("tolerates unknown extra fields", () => {
+    const raw = JSON.stringify({
+      validity: "valid",
+      water_state: "flooded",
+      confidence: 0.8,
+      reason_th: "น้ำขัง",
+      model: "vision-v1",
+      tokens_used: 42,
+    });
+    const result = parseClassifierOutput(raw);
+    expect(result.validity).toBe("valid");
+    expect(result.water_state).toBe("flooded");
+  });
+
+  it("fails safe on non-object JSON (array, number, null)", () => {
+    expectFailSafe(parseClassifierOutput("[1,2,3]"));
+    expectFailSafe(parseClassifierOutput("42"));
+    expectFailSafe(parseClassifierOutput("null"));
+  });
+});
+
+describe("ClassifyPipePhoto", () => {
+  it("is an async strategy over ArrayBuffer returning PipeClassification", async () => {
+    // Compile-time shape check + minimal runtime probe with a stub strategy.
+    const stub: ClassifyPipePhoto = (_image: ArrayBuffer) =>
+      Promise.resolve<PipeClassification>({
+        validity: "valid",
+        water_state: "dry",
+        confidence: 1,
+        reason_th: "สตับสำหรับทดสอบ",
+      });
+    const result = await stub(new ArrayBuffer(8));
+    expect(result.water_state).toBe("dry");
+  });
+});

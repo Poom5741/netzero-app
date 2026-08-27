@@ -1,0 +1,281 @@
+/**
+ * Batch-4 contextual strategies (issue #98), all simulation-based and tested
+ * against fakes — no models, no network:
+ * - T8 `t8-temporal`: transition-consistency over a synthetic image sequence.
+ * - T9 `t9-active-learn`: active-learning learning-curve simulation.
+ * - T10 `t10-hybrid`: CV pre-check gate in front of an expensive base strategy.
+ */
+
+import { describe, expect, it } from "vitest";
+import type { ClassifyPipePhoto, PipeClassification } from "../../src/vision/classifier";
+import { FAIL_SAFE } from "../../src/vision/classifier";
+import {
+  CONSECUTIVE_INVALID_NOTE_TH,
+  classifySequence,
+  DEFAULT_FRAME_GAP_MS,
+  estimatedSpendReductionPct,
+  MAX_FILL_WINDOW_MS,
+  makeHybridWithStats,
+  makeT8TemporalStrategy,
+  makeT10HybridStrategy,
+  SIM_MARKER,
+  simulateActiveLearning,
+  T8_TEMPORAL,
+  T10_HYBRID,
+  TRANSITION_NOTE_TH,
+} from "../../src/vision/strategies-contextual";
+
+// ---------- helpers ----------
+
+const textImage = (s: string): ArrayBuffer =>
+  new TextEncoder().encode(s).buffer.slice(0) as ArrayBuffer;
+
+const cls = (
+  validity: PipeClassification["validity"],
+  water_state: PipeClassification["water_state"],
+  confidence: number,
+  reason_th = "เหตุผลทดสอบ",
+): PipeClassification => ({ validity, water_state, confidence, reason_th });
+
+/** Scripted base strategy: maps image text to a result, records call order. */
+function fakeBase(results: Record<string, PipeClassification>) {
+  const calls: string[] = [];
+  const fn: ClassifyPipePhoto = async (image) => {
+    const key = new TextDecoder().decode(image);
+    calls.push(key);
+    const scripted = results[key];
+    if (!scripted) throw new Error(`no scripted result for ${key}`);
+    return { ...scripted };
+  };
+  return { fn, calls };
+}
+
+const DRY = cls("valid", "dry", 0.8, "ท่อแห้ง");
+const FLOODED = cls("valid", "flooded", 0.6, "ท่อมีน้ำ");
+const BAD = cls("invalid", "not_applicable", 0.3, "ภาพไม่ผ่าน");
+
+// ---------- T8 temporal sequence ----------
+
+describe("classifySequence (t8-temporal)", () => {
+  it("penalizes a dry->flooded transition exactly once with the Thai note", async () => {
+    const base = fakeBase({ f1: DRY, f2: FLOODED });
+    const out = await classifySequence(base.fn, [textImage("f1"), textImage("f2")]);
+
+    expect(out).toHaveLength(2);
+    // First frame untouched apart from the sim marker.
+    expect(out[0]?.confidence).toBe(0.8);
+    expect(out[0]?.reason_th).toBe(`${SIM_MARKER}ท่อแห้ง`);
+    // Second frame halved exactly once and annotated.
+    expect(out[1]?.confidence).toBeCloseTo(0.3); // 0.6 * 0.5
+    expect(out[1]?.reason_th).toContain(TRANSITION_NOTE_TH);
+    expect(out[1]?.reason_th.indexOf(TRANSITION_NOTE_TH)).toBe(
+      out[1]!.reason_th.lastIndexOf(TRANSITION_NOTE_TH),
+    );
+    expect(out[1]?.reason_th.startsWith(SIM_MARKER)).toBe(true);
+  });
+
+  it("leaves plausible transitions untouched (flooded->dry, or dry->flooded over a long gap)", async () => {
+    const drain = fakeBase({ f1: FLOODED, f2: DRY });
+    const drained = await classifySequence(drain.fn, [textImage("f1"), textImage("f2")]);
+    expect(drained[1]?.confidence).toBe(0.8);
+    expect(drained[1]?.reason_th).not.toContain(TRANSITION_NOTE_TH);
+
+    const slowFill = fakeBase({ f1: DRY, f2: FLOODED });
+    const filled = await classifySequence(slowFill.fn, [textImage("f1"), textImage("f2")], {
+      minGapMs: MAX_FILL_WINDOW_MS + 1,
+    });
+    expect(filled[1]?.confidence).toBe(0.6);
+    expect(filled[1]?.reason_th).not.toContain(TRANSITION_NOTE_TH);
+  });
+
+  it("appends the needs-human note to runs of 3+ consecutive invalid frames", async () => {
+    const base = fakeBase({ f1: BAD, f2: BAD, f3: BAD });
+    const run = await classifySequence(base.fn, [
+      textImage("f1"),
+      textImage("f2"),
+      textImage("f3"),
+    ]);
+    for (const frame of run) expect(frame?.reason_th).toContain(CONSECUTIVE_INVALID_NOTE_TH);
+
+    const pairBase = fakeBase({ f1: BAD, f2: BAD });
+    const pair = await classifySequence(pairBase.fn, [textImage("f1"), textImage("f2")]);
+    for (const frame of pair) expect(frame?.reason_th).not.toContain(CONSECUTIVE_INVALID_NOTE_TH);
+  });
+
+  it("behaves like plain base for a single-frame sequence (marker aside)", async () => {
+    const base = fakeBase({ only: DRY });
+    const out = await classifySequence(base.fn, [textImage("only")]);
+    expect(base.calls).toEqual(["only"]);
+    expect(out[0]).toEqual({ ...DRY, reason_th: `${SIM_MARKER}${DRY.reason_th}` });
+  });
+
+  it("prefixes every returned classification with the [sim] marker", async () => {
+    const base = fakeBase({ a: DRY, b: FLOODED, c: BAD });
+    const out = await classifySequence(base.fn, [textImage("a"), textImage("b"), textImage("c")]);
+    for (const frame of out) expect(frame?.reason_th.startsWith(SIM_MARKER)).toBe(true);
+    expect(DEFAULT_FRAME_GAP_MS).toBeGreaterThan(0);
+  });
+
+  it("exposes the registry name t8-temporal and a single-image factory", async () => {
+    expect(T8_TEMPORAL).toBe("t8-temporal");
+    const base = fakeBase({ x: FLOODED });
+    const strategy = makeT8TemporalStrategy(base.fn);
+    expect(await strategy(textImage("x"))).toEqual({
+      ...FLOODED,
+      reason_th: `${SIM_MARKER}${FLOODED.reason_th}`,
+    });
+  });
+});
+
+// ---------- T9 active learning ----------
+
+describe("simulateActiveLearning (t9-active-learn)", () => {
+  // Hand-computed fixture: correctness per item vs its model confidence.
+  // Uncertain-first query order must be: b(0.2 wrong), d(0.4 ok), c(0.6 wrong), e(0.8 ok).
+  const pool = [
+    { id: "a", trueLabel: "flooded" },
+    { id: "b", trueLabel: "flooded" },
+    { id: "c", trueLabel: "dry" },
+    { id: "d", trueLabel: "dry" },
+    { id: "e", trueLabel: "invalid" },
+  ] as const;
+  const predictions: Record<string, PipeClassification> = {
+    a: cls("valid", "flooded", 0.9), // correct
+    b: cls("valid", "dry", 0.2), // WRONG (low confidence -> queried first)
+    c: cls("valid", "flooded", 0.6), // WRONG
+    d: cls("valid", "dry", 0.4), // correct
+    e: cls("invalid", "not_applicable", 0.8), // correct
+  };
+
+  function predictor() {
+    const calls: string[] = [];
+    const fn = async (item: { id: string }) => {
+      calls.push(item.id);
+      return { ...(predictions[item.id] ?? FAIL_SAFE) };
+    };
+    return { fn, calls };
+  }
+
+  it("produces a monotonic seed->full accuracy curve on the hand-computed fixture", async () => {
+    const { fn } = predictor();
+    const sim = await simulateActiveLearning({
+      labeledPool: [...pool],
+      embedOrClassify: fn,
+      seedSize: 2,
+    });
+    expect(sim.simulated).toBe(true);
+    // Round 0 (seed a,b labeled): c wrong, d ok, e ok -> 4/5.
+    expect(sim.curve[0]).toMatchObject({ round: 0, labeledCount: 2, accuracy: 0.8 });
+    // Round 1 adds d,c (both now human-labeled -> counted correct): e still ok -> 5/5.
+    expect(sim.curve[1]).toMatchObject({ round: 1, labeledCount: 4, accuracy: 1 });
+    // Round 2 adds e: saturated at 1 with the full pool labeled.
+    expect(sim.curve[2]).toMatchObject({ round: 2, labeledCount: 5, accuracy: 1 });
+    const accs = sim.curve.map((r) => r.accuracy);
+    for (let i = 1; i < accs.length; i++) expect(accs[i]).toBeGreaterThanOrEqual(accs[i - 1]!);
+  });
+
+  it("queries most-uncertain-first and classifies each pool item exactly once", async () => {
+    const p = predictor();
+    const sim = await simulateActiveLearning({
+      labeledPool: [...pool],
+      embedOrClassify: p.fn,
+      seedSize: 2,
+    });
+    expect(p.calls.sort()).toEqual(["a", "b", "c", "d", "e"]);
+    // Seed takes pool order (a,b); queries then go ascending-confidence among the rest.
+    expect(sim.curve[0]!.queriedIds).toEqual([]);
+    expect(sim.curve[1]!.queriedIds).toEqual(["d", "c"]);
+    expect(sim.curve[2]!.queriedIds).toEqual(["e"]);
+  });
+
+  it("honors the requested round count", async () => {
+    const { fn } = predictor();
+    const sim = await simulateActiveLearning({
+      labeledPool: [...pool],
+      embedOrClassify: fn,
+      seedSize: 2,
+      rounds: 1,
+    });
+    expect(sim.curve).toHaveLength(2); // seed + one query round
+    expect(sim.curve[1]!.queriedIds).toEqual(["d", "c"]);
+  });
+
+  it("handles a seed covering the whole pool and stops when the queue is empty", async () => {
+    const { fn } = predictor();
+    const whole = await simulateActiveLearning({
+      labeledPool: [...pool],
+      embedOrClassify: fn,
+      seedSize: 5,
+    });
+    expect(whole.curve).toHaveLength(1);
+    expect(whole.curve[0]).toMatchObject({ round: 0, labeledCount: 5, accuracy: 1 });
+
+    const oversized = await simulateActiveLearning({
+      labeledPool: [...pool],
+      embedOrClassify: fn,
+      seedSize: 9,
+      rounds: 4,
+    });
+    expect(oversized.curve).toHaveLength(1);
+    expect(oversized.curve[0]!.labeledCount).toBe(5);
+  });
+});
+
+// ---------- T10 edge-cloud hybrid ----------
+
+describe("makeHybridWithStats (t10-hybrid)", () => {
+  it("refuses bad pre-checks locally without ever calling the base strategy", async () => {
+    const precheck = fakeBase({ img: BAD });
+    const base = fakeBase({});
+    const { strategy, stats } = makeHybridWithStats({ precheck: precheck.fn, base: base.fn });
+
+    const out = await strategy(textImage("img"));
+    expect(out).toEqual(BAD);
+    expect(base.calls).toEqual([]); // spy proves base never invoked
+    expect(stats.precheck_refused).toBe(1);
+    expect(stats.base_called).toBe(0);
+  });
+
+  it("passes good pre-checks through to the base exactly once", async () => {
+    const precheck = fakeBase({ good: DRY });
+    const base = fakeBase({ good: FLOODED });
+    const { strategy, stats } = makeHybridWithStats({
+      precheck: precheck.fn,
+      base: base.fn,
+    });
+
+    const out = await strategy(textImage("good"));
+    expect(out).toEqual(FLOODED);
+    expect(precheck.calls).toEqual(["good"]);
+    expect(base.calls).toEqual(["good"]);
+    expect(stats.base_called).toBe(1);
+    expect(stats.precheck_refused).toBe(0);
+  });
+
+  it("counts mixed traffic exactly and derives the spend-reduction percentage", async () => {
+    const precheck = fakeBase({ r1: BAD, r2: BAD, r3: BAD, g1: DRY, g2: DRY });
+    const base = fakeBase({ g1: FLOODED, g2: FLOODED });
+    const { strategy, stats } = makeHybridWithStats({ precheck: precheck.fn, base: base.fn });
+
+    for (const key of ["r1", "g1", "r2", "g2", "r3"]) await strategy(textImage(key));
+    expect(stats.precheck_refused).toBe(3);
+    expect(stats.base_called).toBe(2);
+    expect(estimatedSpendReductionPct(stats)).toBeCloseTo(60); // 3 refused of 5 uploads
+  });
+
+  it("fails safe (and counts it as a local refusal) when the pre-check throws", async () => {
+    const throwingPrecheck: ClassifyPipePhoto = async () => {
+      throw new Error("cv gate down");
+    };
+    const base = fakeBase({ x: FLOODED });
+    const { strategy, stats } = makeHybridWithStats({ precheck: throwingPrecheck, base: base.fn });
+    expect(await strategy(textImage("x"))).toEqual(FAIL_SAFE);
+    expect(base.calls).toEqual([]);
+    expect(stats.precheck_refused).toBe(1);
+  });
+
+  it("exposes the registry name t10-hybrid and a t4-gated convenience factory", () => {
+    expect(T10_HYBRID).toBe("t10-hybrid");
+    expect(typeof makeT10HybridStrategy).toBe("function");
+  });
+});

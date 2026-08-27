@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260827T192752185Z-98409-928bfde4e09a",
+  "runId": "20260827T192752185Z-98409-928bfde4e09a",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "d604479faa990656aa24e6f91e8d57b870bc198b",
+  "diffHash": "e8fe03edca049221af6bfc5d143c699e388c74cc53526ab3c3bf9f4bf8a8b85b",
+  "rulesVersion": "unavailable",
+  "sessionHash": "f3954f1bae5b03e1d27b68eeb9fd18d289024761c6c14afaf78ea179a1603c80",
+  "reportRef": ".mimosa/reports/task-review-sess_5624d544-6f19-47fc-9fdb-f54e3a843ab0-20260827T192752185Z-98409-928bfde4e09a.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "src/routes/photo.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/unit/farmer-trust.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/unit/farmer-trust-update.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/integration/preverify-flow.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/helpers/integration.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/integration/audit-trail.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/integration/upload-screening.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/integration/temporal-upload.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/integration/admin-trust.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/admin/review.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/unit/preverify-review.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/unit/photo.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-08-27T19:27:52.382Z"
+}

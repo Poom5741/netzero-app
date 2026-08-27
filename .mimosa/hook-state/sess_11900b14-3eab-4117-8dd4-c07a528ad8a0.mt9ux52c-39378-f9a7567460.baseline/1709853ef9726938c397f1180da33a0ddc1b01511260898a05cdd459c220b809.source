@@ -1,0 +1,56 @@
+/**
+ * The single classifier interface every pipe-photo classification strategy implements.
+ * See data/labeled-pipes/README.md for the labeled dataset this operates on.
+ */
+
+export type WaterState = "flooded" | "dry" | "not_applicable";
+export type Validity = "valid" | "invalid";
+
+export interface PipeClassification {
+  validity: Validity;
+  water_state: WaterState;
+  confidence: number; // 0..1
+  reason_th: string; // short Thai explanation
+}
+
+/** Strategy contract: classify a photo's bytes into a structured result. */
+export type ClassifyPipePhoto = (image: ArrayBuffer) => Promise<PipeClassification>;
+
+/** Returned whenever model output cannot be trusted — routes the photo to human review. */
+export const FAIL_SAFE: PipeClassification = {
+  validity: "invalid",
+  water_state: "not_applicable",
+  confidence: 0.1,
+  reason_th: "ไม่สามารถแปลผล AI ได้ จำเป็นต้องให้เจ้าหน้าที่ตรวจสอบภาพ",
+};
+
+function isPipeClassification(parsed: unknown): parsed is PipeClassification {
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return false;
+  const p = parsed as Record<string, unknown>;
+  return (
+    (p.validity === "valid" || p.validity === "invalid") &&
+    (p.water_state === "flooded" ||
+      p.water_state === "dry" ||
+      p.water_state === "not_applicable") &&
+    typeof p.confidence === "number" &&
+    Number.isFinite(p.confidence) &&
+    p.confidence >= 0 &&
+    p.confidence <= 1 &&
+    typeof p.reason_th === "string"
+  );
+}
+
+/**
+ * Strict parser for classifier JSON output. Any malformed JSON, missing field,
+ * out-of-range confidence, or unexpected label yields FAIL_SAFE (never throws).
+ */
+export function parseClassifierOutput(raw: string): PipeClassification {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return FAIL_SAFE;
+  }
+  if (!isPipeClassification(parsed)) return FAIL_SAFE;
+  return parsed;
+}

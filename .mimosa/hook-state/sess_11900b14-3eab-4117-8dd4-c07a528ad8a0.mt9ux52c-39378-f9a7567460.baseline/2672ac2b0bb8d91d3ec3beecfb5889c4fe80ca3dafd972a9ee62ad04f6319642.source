@@ -1,0 +1,134 @@
+/**
+ * VLM bake-off strategies, batch 1: one leaderboard row per provider (T1) plus a
+ * weighted multi-model consensus (T7). Factories only — nothing registers in the
+ * bake-off registry by import side-effect; a later composition module calls
+ * registerStrategy with these names. `t1-`/`t7-` prefixes avoid collisions.
+ */
+import { type ClassifyPipePhoto, FAIL_SAFE, type PipeClassification } from "./classifier";
+import {
+  type AiInvoker,
+  DEFAULT_OPENROUTER_MODEL,
+  LLAMA4_SCOUT_MODEL,
+  MOONDREAM_MODEL,
+  makeOpenRouterVision,
+  makeWorkersAiVision,
+} from "./providers";
+
+export const T1_MOONDREAM = "t1-moondream";
+export const T1_LLAMA4SCOUT = "t1-llama4scout";
+export const T1_OPENROUTER = "t1-openrouter";
+export const T7_CONSENSUS = "t7-consensus";
+
+/** Consensus weights: moondream > llama4scout > openrouter (fixed by ticket #95). */
+const WEIGHTS: Record<string, number> = {
+  [T1_MOONDREAM]: 0.4,
+  [T1_LLAMA4SCOUT]: 0.35,
+  [T1_OPENROUTER]: 0.25,
+};
+const MEMBER_NAMES = [T1_MOONDREAM, T1_LLAMA4SCOUT, T1_OPENROUTER] as const;
+
+export interface VlmStrategyDeps {
+  ai?: AiInvoker;
+  openrouterApiKey?: string;
+  fetchImpl?: typeof fetch;
+}
+
+export function makeT1Strategies(
+  deps: VlmStrategyDeps,
+): Record<typeof T1_MOONDREAM | typeof T1_LLAMA4SCOUT | typeof T1_OPENROUTER, ClassifyPipePhoto> {
+  if (!deps.ai) throw new Error("makeT1Strategies: missing ai invoker for Workers AI rows");
+  return {
+    [T1_MOONDREAM]: makeWorkersAiVision(MOONDREAM_MODEL, { ai: deps.ai }),
+    [T1_LLAMA4SCOUT]: makeWorkersAiVision(LLAMA4_SCOUT_MODEL, { ai: deps.ai }),
+    [T1_OPENROUTER]: makeOpenRouterVision({
+      apiKey: deps.openrouterApiKey ?? "",
+      model: DEFAULT_OPENROUTER_MODEL,
+      fetchImpl: deps.fetchImpl,
+    }),
+  };
+}
+
+/** All four rows: three T1 providers plus T7 consensus over them. */
+export function makeVlmStrategies(
+  deps: VlmStrategyDeps,
+): Record<
+  typeof T1_MOONDREAM | typeof T1_LLAMA4SCOUT | typeof T1_OPENROUTER | typeof T7_CONSENSUS,
+  ClassifyPipePhoto
+> {
+  const t1 = makeT1Strategies(deps);
+  return {
+    ...t1,
+    [T7_CONSENSUS]: makeConsensusStrategy(MEMBER_NAMES.map((n) => t1[n])),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// T7 consensus — weighted vote over the three T1 rows
+// ---------------------------------------------------------------------------
+
+function shortReasons(results: { result: PipeClassification }[]): string {
+  // ponytail: naive concat capped at ~120 chars; summarize/dedup if reasons grow noisy.
+  return results
+    .map((r) => r.result.reason_th)
+    .join(" / ")
+    .slice(0, 120);
+}
+
+/**
+ * Weighted vote on validity; within the winning side, confidence is the mean of
+ * agreeing members scaled by agreement fraction, and water_state is the count
+ * majority among agreeing voters (tie -> not_applicable). >=2 member throws ->
+ * FAIL_SAFE; exactly 1 throw -> degrade to 2 voters with a reason_th note.
+ */
+export function makeConsensusStrategy(members: ClassifyPipePhoto[]): ClassifyPipePhoto {
+  return async (image: ArrayBuffer) => {
+    const settled = await Promise.allSettled(members.map((m) => m(image)));
+    const ok: { name: string; result: PipeClassification }[] = [];
+    let thrown = 0;
+    for (const [i, s] of settled.entries()) {
+      if (s.status === "fulfilled") {
+        ok.push({ name: MEMBER_NAMES[i] ?? `member-${i}`, result: s.value });
+      } else {
+        thrown += 1;
+      }
+    }
+
+    if (thrown >= 2 || ok.length < 2) return FAIL_SAFE;
+
+    const weightFor = (name: string) => WEIGHTS[name] ?? 0;
+
+    // Weighted vote on validity. Two agreeing members always beat any third
+    // (0.4+0.35 / 0.4+0.25 / 0.35+0.25 all > the remaining single weight).
+    const tally: Record<PipeClassification["validity"], number> = { valid: 0, invalid: 0 };
+    for (const r of ok) tally[r.result.validity] += weightFor(r.name);
+    const winningValidity: PipeClassification["validity"] =
+      tally.valid >= tally.invalid ? "valid" : "invalid";
+
+    const winners = ok.filter((r) => r.result.validity === winningValidity);
+
+    // Water state: plain majority count among winning-side voters; tie -> not_applicable.
+    const waterTally: Record<PipeClassification["water_state"], number> = {
+      flooded: 0,
+      dry: 0,
+      not_applicable: 0,
+    };
+    for (const r of winners) waterTally[r.result.water_state] += 1;
+    const maxWater = Math.max(waterTally.flooded, waterTally.dry, waterTally.not_applicable);
+    const top = (Object.keys(waterTally) as PipeClassification["water_state"][]).filter(
+      (k) => waterTally[k] === maxWater,
+    );
+
+    const agreementFraction = winners.length / ok.length;
+    const [leaderWater] = top;
+    return {
+      validity: winningValidity,
+      water_state:
+        winningValidity === "invalid" || top.length !== 1 || !leaderWater
+          ? "not_applicable"
+          : leaderWater,
+      confidence:
+        (winners.reduce((s, r) => s + r.result.confidence, 0) / winners.length) * agreementFraction,
+      reason_th: `${shortReasons(winners)}${thrown === 1 ? " (เฉพาะ 2 โมเดลตอบสนอง)" : ""}`,
+    };
+  };
+}

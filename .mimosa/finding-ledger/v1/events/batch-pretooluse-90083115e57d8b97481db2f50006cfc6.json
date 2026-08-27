@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "pretooluse-90083115e57d8b97481db2f50006cfc6",
+  "runId": null,
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "PreToolUse"
+  },
+  "revision": null,
+  "diffHash": null,
+  "rulesVersion": null,
+  "sessionHash": "a8c7fe4b3505af4e518ed8a52e807efb8a5f2583df3778c43cac06651f13f793",
+  "reportRef": null,
+  "events": [
+    {
+      "eventId": "hook-151a3eea51ddab143dd61a5416f7d73f",
+      "findingId": "mimosa-2c2ae15f34bfdb1873eea651",
+      "type": "finding_blocked",
+      "at": "2026-08-27T05:33:29.765Z",
+      "identity": {
+        "projectRelativeFile": "src/vision/bakeoff/strategies/vlm-adapter.ts",
+        "ruleId": "security",
+        "codeEvidenceHash": "77c09427d0d044ef8576e307f9da1a82091ebd6bee11932d59318d0780cb25bb",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 22,
+      "endLine": 22,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "77c09427d0d044ef8576e307f9da1a82091ebd6bee11932d59318d0780cb25bb"
+      },
+      "sequence": 0
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-27T05:33:29.948Z"
+}

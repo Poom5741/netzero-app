@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "pretooluse-4bb1517698d9eed8487fd0e509e536a1",
+  "runId": null,
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "PreToolUse"
+  },
+  "revision": null,
+  "diffHash": null,
+  "rulesVersion": null,
+  "sessionHash": "fea739fc40cd8e3eb54cd888525cd81b9a614af3812bfe248e616e7832e44f28",
+  "reportRef": null,
+  "events": [
+    {
+      "eventId": "hook-4d6912384db0206e604d6bb8beb60fae",
+      "findingId": "mimosa-9197bf283583bb854d551cb4",
+      "type": "finding_blocked",
+      "at": "2026-08-26T07:50:01.730Z",
+      "identity": {
+        "projectRelativeFile": "scripts/run-bakeoff-live.ts",
+        "ruleId": "security",
+        "codeEvidenceHash": "3dd7bea8368f782e846f64dbd3fa4c5489be2b7fd0c324d0be6a07130cb9f374",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 44,
+      "endLine": 44,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "3dd7bea8368f782e846f64dbd3fa4c5489be2b7fd0c324d0be6a07130cb9f374"
+      },
+      "sequence": 0
+    },
+    {
+      "eventId": "hook-547ac3d3280810144d33ad96b4c46f65",
+      "findingId": "mimosa-276eab74c68abbe2bc695e47",
+      "type": "finding_blocked",
+      "at": "2026-08-26T07:50:01.730Z",
+      "identity": {
+        "projectRelativeFile": "scripts/run-bakeoff-live.ts",
+        "ruleId": "security",
+        "codeEvidenceHash": "c4ad533146a06f169f281a958186d8353236d0415256c31595fb619d90c5308d",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 45,
+      "endLine": 45,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "c4ad533146a06f169f281a958186d8353236d0415256c31595fb619d90c5308d"
+      },
+      "sequence": 1
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-26T07:50:02.139Z"
+}

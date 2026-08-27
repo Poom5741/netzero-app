@@ -1,0 +1,129 @@
+# Fine-tuned pipe classifier — training pipeline (issue #97, T3 `t3-finetuned`).
+#
+# Transfer-learns a small CNN (torchvision mobilenet_v3_small, 3-class head)
+# on the TRAIN split of data/labeled-pipes and writes:
+#   training/artifact.pt   - model weights + class map
+#   training/model_card.json - label schema matching src/vision/classifier.ts
+#
+# Status: NOT_TRAINED in the build environment (python3 present but torch
+# missing) — run where torch exists. Never report accuracy from a run that
+# did not happen.
+#
+# Usage: python3 training/train.py --data-dir data/labeled-pipes --epochs 10
+#
+# ponytail: full fine-tune + augmentation + early stopping when holdout
+# accuracy stalls; head-only transfer is enough to validate the serving path.
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+import torch
+import torch.nn as nn
+from PIL import Image
+from torch.utils.data import DataLoader, Dataset
+from torchvision import models, transforms
+
+CLASSES = ["flooded", "dry", "invalid"]
+# Maps dataset labels onto the PipeClassification schema of the harness.
+LABEL_SCHEMA = {
+    "flooded": {"validity": "valid", "water_state": "flooded"},
+    "dry": {"validity": "valid", "water_state": "dry"},
+    "invalid": {"validity": "invalid", "water_state": "not_applicable"},
+}
+
+
+class PipeDataset(Dataset):
+    def __init__(self, data_dir: Path, split_key):
+        self.root = Path(data_dir)
+        self.manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        self.split = json.loads((self.root / "split.json").read_text(encoding="utf-8"))
+        self.entries = self.split[split_key]
+        self.tf = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
+
+    def __len__(self):
+        return len(self.entries)
+
+    def __getitem__(self, i):
+        e = self.entries[i]
+        img = Image.open(self.root / e["path"]).convert("RGB")
+        return self.tf(img), CLASSES.index(e["label"])
+
+
+def _safe_dir(p: str) -> Path:
+    """Trust boundary: output/data dirs must resolve inside the repo working tree."""
+    real = Path(p).resolve()
+    cwd = Path.cwd()
+    if not (real == cwd or cwd in real.parents):
+        raise SystemExit(f"path escapes repo, refusing: {p}")
+    return real
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data-dir", default="data/labeled-pipes")
+    ap.add_argument("--epochs", type=int, default=10)
+    ap.add_argument("--batch-size", type=int, default=8)
+    ap.add_argument("--out", default="training")
+    args = ap.parse_args()
+
+    data_dir = _safe_dir(args.data_dir)
+    out_dir = _safe_dir(args.out)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    train_ds = PipeDataset(data_dir, "train")
+    train_dl = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
+
+    # mobilenet_v3_small: smallest torchvision backbone that still transfers well.
+    model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
+    model.classifier[3] = nn.Linear(model.classifier[3].in_features, len(CLASSES))
+    model.to(device)
+
+    opt = torch.optim.AdamW(model.parameters(), lr=1e-4)
+    loss_fn = nn.CrossEntropyLoss()
+
+    model.train()
+    for epoch in range(args.epochs):
+        total, correct, running = 0, 0, 0.0
+        for xb, yb in train_dl:
+            xb, yb = xb.to(device), yb.to(device)
+            opt.zero_grad()
+            out = model(xb)
+            loss = loss_fn(out, yb)
+            loss.backward()
+            opt.step()
+            running += loss.item() * len(yb)
+            total += len(yb)
+            correct += (out.argmax(1) == yb).sum().item()
+        print(f"epoch {epoch + 1}/{args.epochs} loss={running / total:.4f} acc={correct / total:.4f}")
+
+    class_map = {i: c for i, c in enumerate(CLASSES)}
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    torch.save({"state_dict": model.state_dict(), "class_map": class_map}, out_path / "artifact.pt")
+    card = {
+        "model": "mobilenet_v3_small",
+        "classes": CLASSES,
+        "class_map": class_map,
+        "label_schema": LABEL_SCHEMA,
+        "output_schema": "PipeClassification {validity, water_state, confidence, reason_th}",
+        "epochs": args.epochs,
+        "train_size": len(train_ds),
+        "status": "TRAINED" if args.epochs > 0 else "NOT_TRAINED",
+    }
+    (out_path / "model_card.json").write_text(
+        json.dumps(card, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    print(f"artifact written to {out_path / 'artifact.pt'}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
