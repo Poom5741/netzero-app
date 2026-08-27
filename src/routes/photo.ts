@@ -1,7 +1,14 @@
 import { Hono } from "hono";
 import { writeAuditEntry } from "../admin/audit-log";
 import type { ClassifyResult } from "../vision/classifier";
-import { type PreVerifyConfig, shouldAuditSample, shouldPreVerify } from "../vision/preverify";
+import { type PreVerifyConfig, shouldAuditSample } from "../vision/preverify";
+import { CLIPClassifier } from "../vision/clip-classifier";
+import { clipInference } from "../vision/clip-inference";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+import { getFarmerTrust } from "../trust/farmer-trust";
+import { evaluateAutoVerify } from "../vision/auto-verify";
+import { composeRetakeMessage } from "../vision/retake-message";
 
 type Bindings = {
   DB: D1Database;
@@ -11,40 +18,32 @@ type Bindings = {
 
 export const photoRoutes = new Hono<{ Bindings: Bindings }>();
 
-/**
- * Fake classifier for testing — reads hints from form fields.
- * In production this will be replaced by the real bake-off winner strategy.
- * ponytail: ceiling is injectable strategy via env binding; add when real model is wired.
- */
-function classifyFromRequest(formData: FormData): ClassifyResult | null {
-  const hint = formData.get("__classifier_result") as string | null;
-  if (!hint) return null; // no hint → real classifier would run
+// Lazy-loaded CLIP classifier (cached after first load)
+let clipClassifier: CLIPClassifier | null = null;
+let clipLoadAttempted = false;
 
-  switch (hint) {
-    case "reject":
-      return {
-        valid: false,
-        water_state: "not-applicable",
-        confidence: 0.1,
-        reason: "ไม่พบท่อวัด กรุณาถ่ายให้เห็นท่อ",
-      };
-    case "flag":
-      return {
-        valid: true,
-        water_state: "flooded",
-        confidence: 0.55,
-        reason: "ภาพไม่ชัดเจน — เจ้าหน้าที่จะตรวจสอบ",
-      };
-    case "pass":
-      return {
-        valid: true,
-        water_state: "flooded",
-        confidence: 0.95,
-        reason: "เห็นน้ำขังชัดเจน",
-      };
-    default:
-      return null;
+async function getCLIPClassifier(): Promise<CLIPClassifier | null> {
+  if (clipLoadAttempted) return clipClassifier;
+  clipLoadAttempted = true;
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const bakeoffDir = resolve(__dirname, "../vision/bakeoff");
+    clipClassifier = await CLIPClassifier.load(bakeoffDir);
+  } catch (err) {
+    console.error("Failed to load CLIP classifier:", err);
+    clipClassifier = null;
   }
+  return clipClassifier;
+}
+
+function toClassifyResult(clipResult: { label: string; confidence: number; reason: string }): ClassifyResult {
+  return {
+    valid: clipResult.label !== "invalid",
+    water_state: clipResult.label === "invalid" ? "not-applicable" : clipResult.label,
+    confidence: clipResult.confidence,
+    reason: clipResult.reason,
+  };
 }
 
 /**
@@ -89,30 +88,139 @@ photoRoutes.post("/photo/upload", async (c) => {
 
   // Screening for wetdry only
   if (photoType === "wetdry" && config.enabled) {
-    const classification = classifyFromRequest(formData);
+    // Use CLIP classifier for real inference
+    const classifier = await getCLIPClassifier();
+    let classification: ClassifyResult | null = null;
+
+    if (classifier) {
+      try {
+        const imageBuffer = Buffer.from(await file.arrayBuffer());
+        const clipResult = await clipInference(classifier, imageBuffer);
+        classification = toClassifyResult(clipResult);
+      } catch (err) {
+        console.error("CLIP inference failed:", err);
+        classification = null;
+      }
+    }
 
     if (classification) {
-      // Refused: invalid photo, don't persist
-      if (!classification.valid && classification.confidence < 0.4) {
-        // Audit trail: machine refused
-        await writeAuditEntry(c.env.DB, {
-          photoId: `refused_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          actorType: "machine",
-          action: "refused",
-          confidence: classification.confidence,
-          reason: classification.reason,
-        });
-        return c.json({
-          verdict: "refused" as Verdict,
-          reason: classification.reason,
-          photo_type: photoType,
-        });
-      }
+      // Get farmer trust score (derive farmer_id from plot_id for now)
+      const farmerId = `farmer_${plotId}`;
+      const farmerTrust = await getFarmerTrust(c.env.DB, farmerId);
+      
+      // Evaluate auto-verify rules
+      const autoVerifyResult = evaluateAutoVerify({
+        confidence: classification.confidence,
+        trustScore: farmerTrust.trust_score,
+        valid: classification.valid,
+      });
 
-      // Flagged: borderline confidence (below threshold but not refused)
-      if (!shouldPreVerify(classification.confidence, config, classification.valid)) {
-        const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-        const key = `evidence/${photoId}.jpg`;
+      const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const key = `evidence/${photoId}.jpg`;
+
+      if (autoVerifyResult.decision === "auto_verify") {
+        // Auto-verify: pre_verified=1, admin_status='verified'
+        await c.env.R2.put(key, file);
+        const isAudit = shouldAuditSample(photoId, config.auditSampleRate);
+
+        await c.env.DB.prepare(
+          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'verified', ?, ?, 1, ?)`,
+        )
+          .bind(
+            photoId,
+            plotId,
+            seasonId,
+            key,
+            gpsLat,
+            gpsLng,
+            gpsAccuracy ?? null,
+            takenAt,
+            classification.water_state,
+            classification.reason,
+            classification.confidence,
+            photoType,
+            classification.water_state,
+            isAudit ? 1 : 0,
+          )
+          .run();
+
+        await writeAuditEntry(c.env.DB, {
+          photoId,
+          actorType: "machine",
+          action: "pre_verified",
+          confidence: classification.confidence,
+          reason: autoVerifyResult.reason,
+        });
+
+        return c.json(
+          {
+            id: photoId,
+            verdict: "pre_verified" as Verdict,
+            photo_url: key,
+            photo_type: photoType,
+            water_state: classification.water_state,
+            ai_confidence: classification.confidence,
+            pre_verified: true,
+            audit_sample: isAudit,
+          },
+          201,
+        );
+      } else if (autoVerifyResult.decision === "auto_reject") {
+        // Auto-reject: ai_status='reject', admin_status='rejected'
+        await c.env.R2.put(key, file);
+
+        await c.env.DB.prepare(
+          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reject', ?, ?, ?, 'rejected', ?, ?, 0, 0)`,
+        )
+          .bind(
+            photoId,
+            plotId,
+            seasonId,
+            key,
+            gpsLat,
+            gpsLng,
+            gpsAccuracy ?? null,
+            takenAt,
+            classification.water_state,
+            classification.reason,
+            classification.confidence,
+            photoType,
+            classification.water_state,
+          )
+          .run();
+
+        await writeAuditEntry(c.env.DB, {
+          photoId,
+          actorType: "machine",
+          action: "rejected",
+          confidence: classification.confidence,
+          reason: autoVerifyResult.reason,
+        });
+
+        // Send retake notification to farmer
+        const retakeMsg = composeRetakeMessage(classification.reason);
+        const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        await c.env.DB.prepare(
+          `INSERT INTO farmer_messages (id, farmer_id, message_type, raw_text, locale)
+           VALUES (?, ?, ?, ?, ?)`,
+        )
+          .bind(msgId, farmerId, retakeMsg.message_type, retakeMsg.raw_text, retakeMsg.locale)
+          .run();
+
+        return c.json(
+          {
+            id: photoId,
+            verdict: "refused" as Verdict,
+            photo_url: key,
+            photo_type: photoType,
+            reason: autoVerifyResult.reason,
+          },
+          200,
+        );
+      } else {
+        // Queue for admin: ai_status='flag', admin_status='pending'
         await c.env.R2.put(key, file);
 
         await c.env.DB.prepare(
@@ -128,6 +236,7 @@ photoRoutes.post("/photo/upload", async (c) => {
             gpsLng,
             gpsAccuracy ?? null,
             takenAt,
+            classification.water_state,
             classification.reason,
             classification.confidence,
             photoType,
@@ -135,13 +244,12 @@ photoRoutes.post("/photo/upload", async (c) => {
           )
           .run();
 
-        // Audit trail: machine flagged
         await writeAuditEntry(c.env.DB, {
           photoId,
           actorType: "machine",
           action: "flagged",
           confidence: classification.confidence,
-          reason: classification.reason,
+          reason: autoVerifyResult.reason,
         });
 
         return c.json(
@@ -156,61 +264,6 @@ photoRoutes.post("/photo/upload", async (c) => {
           201,
         );
       }
-
-      // Pre-verified: high confidence pass — apply stamp + audit sampling
-      const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-      const key = `evidence/${photoId}.jpg`;
-      await c.env.R2.put(key, file);
-
-      const isAudit = shouldAuditSample(photoId, config.auditSampleRate);
-
-      await c.env.DB.prepare(
-        `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-        .bind(
-          photoId,
-          plotId,
-          seasonId,
-          key,
-          gpsLat,
-          gpsLng,
-          gpsAccuracy ?? null,
-          takenAt,
-          "pass",
-          classification.water_state,
-          classification.reason,
-          classification.confidence,
-          "pending",
-          photoType,
-          classification.water_state,
-          1,
-          isAudit ? 1 : 0,
-        )
-        .run();
-
-      // Audit trail: machine pre-verified
-      await writeAuditEntry(c.env.DB, {
-        photoId,
-        actorType: "machine",
-        action: "pre_verified",
-        confidence: classification.confidence,
-        reason: classification.reason,
-      });
-
-      return c.json(
-        {
-          id: photoId,
-          verdict: "pre_verified" as Verdict,
-          photo_url: key,
-          photo_type: photoType,
-          water_state: classification.water_state,
-          ai_confidence: classification.confidence,
-          pre_verified: true,
-          audit_sample: isAudit,
-        },
-        201,
-      );
     }
   }
 
