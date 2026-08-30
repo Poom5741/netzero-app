@@ -2,7 +2,7 @@
 
 ## Issue identifiers found (from Multica)
 
-!`cd /root/netzero-app && multica issue list --output json | jq -r '.issues[] | select(.status == "todo") | .identifier' 2>/dev/null | tr '\n' ',' | sed 's/,$//'`
+!`cd /root/netzero-app && multica issue list --status todo --output json | jq -r '.issues[] | .identifier' 2>/dev/null | tr '\n' ',' | sed 's/,$//'`
 
 ## Recent commits (last 5)
 
