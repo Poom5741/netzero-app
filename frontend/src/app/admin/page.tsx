@@ -142,14 +142,14 @@ export default function AdminReviewPage() {
               {/* Season gate */}
               <div className="mb-6 max-w-xs">
                 <div className="neumorphic p-4 rounded-xl">
-                  <h3 className="text-sm font-semibold text-on-surface mb-2">สถานะฤดูกาล</h3>
+                  <h3 className="text-label-md font-semibold text-on-surface mb-2">สถานะฤดูกาล</h3>
                   {gateStatus === "approved" && (
-                    <p className="text-sm text-primary font-medium">อนุมัติสำเร็จ</p>
+                    <p className="text-label-md text-primary font-medium">อนุมัติสำเร็จ</p>
                   )}
                   {gateStatus === "blocked" && gateResult?.missing && (
                     <div>
-                      <p className="text-sm text-error font-medium">ไม่ผ่านการอนุมัติ</p>
-                      <ul className="text-xs text-on-surface-variant mt-1 list-disc list-inside">
+                      <p className="text-label-md text-error font-medium">ไม่ผ่านการอนุมัติ</p>
+                      <ul className="text-[12px] text-on-surface-variant mt-1 list-disc list-inside">
                         {gateResult.missing.map((m) => (
                           <li key={m}>{m}</li>
                         ))}
@@ -173,7 +173,7 @@ export default function AdminReviewPage() {
                         setGateResult({ success: false, missing: ["ไม่สามารถเชื่อมต่อได้"] });
                       }
                     }}
-                    className="mt-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors"
+                    className="mt-2 px-4 py-2 bg-primary text-white rounded-lg text-label-md hover:bg-primary/90 transition-colors"
                   >
                     อนุมัติฤดูกาล
                   </button>
@@ -187,7 +187,7 @@ export default function AdminReviewPage() {
                     <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
                     <p className="text-body-md text-on-surface mb-2">{error}</p>
                     {error.includes("401") && (
-                      <p className="text-sm text-on-surface-variant mb-4">
+                      <p className="text-label-md text-on-surface-variant mb-4">
                         กรุณาเข้าสู่ระบบเพื่อดูข้อมูล
                       </p>
                     )}

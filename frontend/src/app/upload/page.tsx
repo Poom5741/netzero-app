@@ -139,7 +139,7 @@ function UploadContent() {
       <div className="flex flex-col h-screen bg-surface-container-low">
         <header className="glass fixed top-0 w-full z-50 pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <div className="h-16 px-5 flex items-center">
-            <span className="font-semibold text-lg text-on-surface">ผลการตรวจสอบ</span>
+            <span className="font-headline-md text-headline-md text-on-surface">ผลการตรวจสอบ</span>
           </div>
         </header>
         <main className="flex-1 pt-16 pb-24 px-5 flex items-center justify-center overflow-y-auto">
@@ -163,16 +163,16 @@ function UploadContent() {
         <div className="h-16 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-sm">eco</span>
+              <span className="material-symbols-outlined text-white text-[14px]">eco</span>
             </div>
-            <span className="font-semibold text-lg text-on-surface">อัปโหลดรูป</span>
+            <span className="font-headline-md text-headline-md text-on-surface">อัปโหลดรูป</span>
           </div>
           {!gpsLoading && (
             <div className={`neumorphic-inset px-3 py-1 rounded-full flex items-center gap-1 ${!photo.gps ? 'border border-error/30' : ''}`}>
-              <span className={`material-symbols-outlined text-sm ${photo.gps ? 'text-primary' : 'text-error'}`}>
+              <span className={`material-symbols-outlined text-[14px] ${photo.gps ? 'text-primary' : 'text-error'}`}>
                 {photo.gps ? 'location_on' : 'location_off'}
               </span>
-              <span className="text-xs text-on-surface-variant">
+              <span className="text-[12px] text-on-surface-variant">
                 {photo.gps
                   ? `${photo.gps.lat.toFixed(4)}, ${photo.gps.lng.toFixed(4)}`
                   : "ไม่มี GPS"}
@@ -201,8 +201,8 @@ function UploadContent() {
               </div>
               <div className="flex flex-col items-center gap-3 text-on-surface-variant px-8">
                 <span className="material-symbols-outlined text-5xl text-primary/40">photo_camera</span>
-                <p className="text-base text-center leading-relaxed">แตะเพื่อถ่ายรูปแปลงนา</p>
-                <p className="text-sm text-center text-on-surface-variant/60 leading-relaxed">
+                <p className="text-body-md text-center leading-relaxed">แตะเพื่อถ่ายรูปแปลงนา</p>
+                <p className="text-label-md text-center text-on-surface-variant/60 leading-relaxed">
                   จัดให้ต้นข้าวอยู่กลางกรอบ
                 </p>
               </div>
@@ -214,10 +214,10 @@ function UploadContent() {
                 {photo.gps ? 'my_location' : 'location_off'}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-on-surface">
+                <p className="text-label-md font-medium text-on-surface">
                   {gpsLoading ? "กำลังค้นหาตำแหน่ง..." : "ตำแหน่ง GPS"}
                 </p>
-                <p className="text-sm text-on-surface-variant break-all">
+                <p className="text-label-md text-on-surface-variant break-all">
                   {gpsLoading
                     ? "กำลังรอสัญญาณ GPS..."
                     : photo.gps
@@ -232,8 +232,8 @@ function UploadContent() {
 
             {!photo.gps && !gpsLoading && (
               <div className="w-full bg-error-container/20 border border-error/30 rounded-xl p-3 flex items-start gap-2">
-                <span className="material-symbols-outlined text-error shrink-0 text-sm mt-0.5">warning</span>
-                <p className="text-xs text-on-surface">
+                <span className="material-symbols-outlined text-error shrink-0 text-[14px] mt-0.5">warning</span>
+                <p className="text-[12px] text-on-surface">
                   กรุณาเปิดใช้งาน GPS เพื่อระบุตำแหน่งแปลงนา
                 </p>
               </div>
@@ -243,7 +243,7 @@ function UploadContent() {
             <Button
               onClick={handleCapture}
               disabled={!photoType}
-              className="w-full claymorphic text-base py-4"
+              className="w-full claymorphic text-body-md py-4"
             >
               <span className="material-symbols-outlined">photo_camera</span>
               <span>{photoType ? "ถ่ายรูป" : "เลือกประเภทรูปก่อน"}</span>
@@ -267,7 +267,7 @@ function UploadContent() {
             {photo.error && (
               <div className="w-full bg-error-container rounded-xl p-3 flex items-center gap-2">
                 <span className="material-symbols-outlined text-error shrink-0">error</span>
-                <span className="text-sm text-on-error-container">{photo.error}</span>
+                <span className="text-label-md text-on-error-container">{photo.error}</span>
               </div>
             )}
 

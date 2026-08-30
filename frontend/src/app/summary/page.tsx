@@ -98,11 +98,11 @@ function SummaryContent() {
         <div className="h-16 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-sm">eco</span>
+              <span className="material-symbols-outlined text-white text-[14px]">eco</span>
             </div>
-            <span className="font-semibold text-lg text-on-surface">สรุปฤดูกาล</span>
+            <span className="font-headline-md text-headline-md text-on-surface">สรุปฤดูกาล</span>
           </div>
-          <span className="text-sm text-on-surface-variant">{progress}%</span>
+          <span className="text-label-md text-on-surface-variant">{progress}%</span>
         </div>
         {/* Progress bar */}
         <div className="h-1 bg-surface-container-highest">
@@ -118,7 +118,7 @@ function SummaryContent() {
         {saved ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 px-5">
             <span className="material-symbols-outlined text-primary text-6xl">check_circle</span>
-            <h2 className="text-xl font-semibold text-on-surface text-center">บันทึกสำเร็จ!</h2>
+            <h2 className="font-headline-md text-headline-md font-semibold text-on-surface text-center">บันทึกสำเร็จ!</h2>
             <p className="text-on-surface-variant text-center max-w-sm">ข้อมูลสรุปฤดูกาลถูกบันทึกเรียบร้อยแล้ว</p>
             <Button onClick={() => setSaved(false)} variant="secondary" className="whitespace-nowrap">
               แก้ไขข้อมูล
@@ -128,7 +128,7 @@ function SummaryContent() {
           <div className="space-y-4 w-full">
             {/* Water Level */}
             <div className="neumorphic rounded-xl p-4">
-              <label className="block text-sm font-medium text-on-surface mb-3">
+              <label className="block text-label-md font-medium text-on-surface mb-3">
                 💧 ระดับน้ำ (ซม.)
               </label>
               <input
@@ -141,15 +141,15 @@ function SummaryContent() {
                 className="w-full accent-primary"
               />
               <div className="flex justify-between mt-2">
-                <span className="text-xs text-on-surface-variant">0 ซม.</span>
-                <span className="text-sm font-medium text-primary">{form.waterLevel} ซม.</span>
-                <span className="text-xs text-on-surface-variant">10 ซม.</span>
+                <span className="text-[12px] text-on-surface-variant">0 ซม.</span>
+                <span className="text-label-md font-medium text-primary">{form.waterLevel} ซม.</span>
+                <span className="text-[12px] text-on-surface-variant">10 ซม.</span>
               </div>
             </div>
 
             {/* Straw Management */}
             <div className="neumorphic rounded-xl p-4">
-              <label className="block text-sm font-medium text-on-surface mb-3">
+              <label className="block text-label-md font-medium text-on-surface mb-3">
                 🌾 การจัดการฟางข้าว <span className="text-error">*</span>
               </label>
               <select
@@ -166,12 +166,12 @@ function SummaryContent() {
                 ))}
               </select>
               {validationError && validationError.includes("ฟางข้าว") && (
-                <p className="text-sm text-error mt-2">{validationError}</p>
+                <p className="text-label-md text-error mt-2">{validationError}</p>
               )}
               {form.strawManagement === "burn" && (
                 <div className="mt-3 p-3 bg-tertiary-container/20 rounded-lg flex items-start gap-2">
-                  <span className="material-symbols-outlined text-tertiary text-sm mt-0.5 shrink-0">warning</span>
-                  <p className="text-sm text-on-tertiary-container">
+                  <span className="material-symbols-outlined text-tertiary text-[14px] mt-0.5 shrink-0">warning</span>
+                  <p className="text-label-md text-on-tertiary-container">
                     การเผาฟางปล่อยก๊าซเรือนกระจกและ PM 2.5 แนะนำให้ไถกลบเพื่อรับคาร์บอนเครดิต
                   </p>
                 </div>
@@ -180,7 +180,7 @@ function SummaryContent() {
 
             {/* Energy */}
             <div className="neumorphic rounded-xl p-4 space-y-3">
-              <label className="block text-sm font-medium text-on-surface">
+              <label className="block text-label-md font-medium text-on-surface">
                 ⚡ พลังงานที่ใช้
               </label>
               <Input
@@ -206,7 +206,7 @@ function SummaryContent() {
             {error && (
               <div className="bg-error-container rounded-xl p-3 flex items-center gap-2">
                 <span className="material-symbols-outlined text-error shrink-0">error</span>
-                <span className="text-sm text-on-error-container">{error}</span>
+                <span className="text-label-md text-on-error-container">{error}</span>
               </div>
             )}
 
@@ -214,7 +214,7 @@ function SummaryContent() {
               onClick={handleSave}
               loading={saving}
               disabled={!isFormValid}
-              className="w-full claymorphic text-base py-4 whitespace-nowrap"
+              className="w-full claymorphic text-body-md py-4 whitespace-nowrap"
             >
               <span className="material-symbols-outlined">save</span>
               <span>บันทึกข้อมูล</span>

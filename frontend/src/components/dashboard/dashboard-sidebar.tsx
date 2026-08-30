@@ -65,8 +65,8 @@ export function DashboardSidebar({
             <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-surface-container-lowest text-sm font-medium truncate">{userName}</p>
-            <p className="text-surface-container-highest text-xs truncate">{userEmail}</p>
+            <p className="text-surface-container-lowest text-label-md font-medium truncate">{userName}</p>
+            <p className="text-surface-container-highest text-[12px] truncate">{userEmail}</p>
           </div>
         </div>
       </div>

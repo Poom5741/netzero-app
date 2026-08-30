@@ -14,7 +14,7 @@ const TYPES = [
 export function PhotoTypePicker({ value, onChange }: PhotoTypePickerProps) {
   return (
     <div className="flex flex-col gap-2" role="radiogroup" aria-label="ประเภทรูป">
-      <span className="text-sm font-medium text-on-surface">ประเภทรูปภาพ</span>
+      <span className="text-label-md font-medium text-on-surface">ประเภทรูปภาพ</span>
       <div className="grid grid-cols-3 gap-2">
         {TYPES.map((t) => (
           <button
@@ -32,7 +32,7 @@ export function PhotoTypePicker({ value, onChange }: PhotoTypePickerProps) {
             `}
           >
             <span className="material-symbols-outlined text-xl">{t.icon}</span>
-            <span className="text-xs leading-tight text-center">{t.label}</span>
+            <span className="text-[12px] leading-tight text-center">{t.label}</span>
           </button>
         ))}
       </div>
