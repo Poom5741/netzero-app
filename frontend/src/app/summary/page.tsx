@@ -128,8 +128,9 @@ function SummaryContent() {
           <div className="space-y-4 w-full">
             {/* Water Level */}
             <div className="neumorphic rounded-xl p-4">
-              <label className="block text-label-md font-medium text-on-surface mb-3">
-                💧 ระดับน้ำ (ซม.)
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">water_drop</span>
+                ระดับน้ำ (ซม.)
               </label>
               <input
                 type="range"
@@ -149,8 +150,9 @@ function SummaryContent() {
 
             {/* Straw Management */}
             <div className="neumorphic rounded-xl p-4">
-              <label className="block text-label-md font-medium text-on-surface mb-3">
-                🌾 การจัดการฟางข้าว <span className="text-error">*</span>
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">grass</span>
+                การจัดการฟางข้าว <span className="text-error">*</span>
               </label>
               <select
                 value={form.strawManagement}
@@ -180,8 +182,9 @@ function SummaryContent() {
 
             {/* Energy */}
             <div className="neumorphic rounded-xl p-4 space-y-3">
-              <label className="block text-label-md font-medium text-on-surface">
-                ⚡ พลังงานที่ใช้
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">bolt</span>
+                พลังงานที่ใช้
               </label>
               <Input
                 label="น้ำมัน (ลิตร)"
