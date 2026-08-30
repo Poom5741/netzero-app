@@ -77,6 +77,7 @@ export interface PhotoReview {
   photo_type?: string | null;
   pre_verified?: number;
   audit_sample?: number;
+  farmer_name?: string | null;
 }
 
 export async function getReviewQueue(status?: string): Promise<PhotoReview[]> {
