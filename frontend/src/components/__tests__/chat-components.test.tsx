@@ -71,7 +71,8 @@ describe("BottomNav", () => {
     const items = [{ icon: "chat", label: "แชท", href: "/chat", active: true }];
     render(<BottomNav items={items} />);
     const link = screen.getByText("แชท").closest("a");
-    expect(link).toHaveClass("text-primary");
+    expect(link).toHaveClass("claymorphic");
+    expect(link).toHaveClass("text-white");
   });
 
   it("has aria-label", () => {

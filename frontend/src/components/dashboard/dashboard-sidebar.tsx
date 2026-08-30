@@ -48,7 +48,7 @@ export function DashboardSidebar({
               "flex items-center touch-target px-4 rounded-lg transition-all",
               entry.active
                 ? "bg-primary-container text-on-primary-container font-bold"
-                : "text-surface-container-highest hover:bg-white/10",
+                : "text-surface-container-highest hover:bg-white/10 font-label-md text-label-md",
             ].join(" ")}
           >
             <span aria-hidden="true" className="material-symbols-outlined mr-4 text-[20px]">
@@ -65,8 +65,8 @@ export function DashboardSidebar({
             <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-surface-container-lowest text-sm font-medium truncate">{userName}</p>
-            <p className="text-surface-container-highest text-xs truncate">{userEmail}</p>
+            <p className="text-surface-container-lowest text-label-md font-medium truncate">{userName}</p>
+            <p className="text-surface-container-highest text-[12px] truncate">{userEmail}</p>
           </div>
         </div>
       </div>

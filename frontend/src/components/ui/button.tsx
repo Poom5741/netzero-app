@@ -12,14 +12,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantStyles: Record<ButtonVariant, string> = {
   primary: "claymorphic text-white font-semibold",
   secondary: "neumorphic text-on-surface font-medium hover:shadow-lg transition-shadow",
-  danger: "bg-error text-on-error font-semibold hover:bg-red-700 transition-colors",
+  danger: "bg-gradient-to-b from-[#EF5350] to-[#BA1A1A] text-on-error font-semibold shadow-[0_4px_10px_rgba(186,26,26,0.3),inset_0_2px_4px_rgba(255,255,255,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all",
   ghost: "bg-transparent text-on-surface-variant hover:bg-surface-container-low transition-colors",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-4 py-2 text-sm min-h-[36px]",
-  md: "px-6 py-3 text-base min-h-[44px]",
-  lg: "px-8 py-4 text-lg min-h-[48px]",
+  sm: "px-4 py-2 text-label-md min-h-[36px]",
+  md: "px-6 py-3 text-body-md min-h-[44px]",
+  lg: "px-8 py-4 text-body-lg min-h-[48px]",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

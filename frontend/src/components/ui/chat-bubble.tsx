@@ -16,7 +16,7 @@ export function ChatBubble({ type, avatar, timestamp, children }: ChatBubbleProp
         <div className="claymorphic rounded-2xl rounded-br-sm p-4 text-white relative">
           {children}
           {timestamp && (
-            <span className="text-[11px] text-white/70 mt-2 block font-medium text-right">
+            <span className="text-[11px] text-white/70 mt-2 block font-label-md text-right">
               {timestamp}
             </span>
           )}
@@ -33,11 +33,11 @@ export function ChatBubble({ type, avatar, timestamp, children }: ChatBubbleProp
           <span className="material-symbols-outlined text-primary text-sm">eco</span>
         </div>
       )}
-      <div className="bg-white/80 backdrop-blur-md rounded-2xl rounded-bl-sm p-4 shadow-[0_4px_16px_rgba(0,0,0,0.03)] relative overflow-hidden">
+      <div className="bg-surface-container-lowest/80 backdrop-blur-md rounded-2xl rounded-bl-sm p-4 shadow-[0_4px_16px_rgba(0,0,0,0.03)] relative overflow-hidden">
         <div className="absolute inset-0 border border-white/40 rounded-2xl rounded-bl-sm pointer-events-none" />
         {children}
         {timestamp && (
-          <span className="text-[11px] text-on-surface-variant/60 mt-2 block font-medium">
+          <span className="text-[11px] text-on-surface-variant/60 mt-2 block font-label-md">
             {timestamp}
           </span>
         )}

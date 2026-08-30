@@ -47,7 +47,7 @@ export function DashboardHeader({
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
           </div>
-          <span className="text-sm text-on-surface">{userLabel}</span>
+          <span className="text-label-md text-on-surface">{userLabel}</span>
         </div>
       </div>
     </header>

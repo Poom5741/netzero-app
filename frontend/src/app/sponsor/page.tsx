@@ -226,17 +226,12 @@ export default function SponsorDashboardPage() {
               <div className="lg:col-span-4 flex flex-col gap-6">
                 <LiveCalc liveValue={Math.round(totalCO2)} techniques={techniques} />
 
-                {/* Map placeholder */}
+                {/* Map */}
                 <div className="neumorphic overflow-hidden flex flex-col h-64">
                   <div className="p-4 pb-0">
-                    <h3 className="text-[18px] text-on-surface font-semibold">การกระจายโครงการ</h3>
+                    <h3 className="font-headline-md text-[18px] text-on-surface">การกระจายโครงการ</h3>
                   </div>
-                  <div className="flex-1 w-full bg-surface-container rounded-b-xl flex items-center justify-center">
-                    <div className="text-center text-on-surface-variant">
-                      <span className="material-symbols-outlined text-[48px] mb-2 block">map</span>
-                      <p className="text-label-md">แผนที่โครงการ</p>
-                    </div>
-                  </div>
+                  <div className="flex-1 w-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAVG86o0n-MoR-4dNoH0sh1Yu4QC9LeHaXXbgBA3RlmKu5F-1um9QCDuROM2VrrwHp1gy04UagLdUBHlpsDm3qnbdTXbvJ_aGU6NqA2LOsg3OgWzelFWVd-w9E-SFtJAcqyFxPQQWzIvQy6SIFx7n4qa_Ay7IQB9ik_5wmVOa4pPJa8661GwOK3fo-eRNZ9yHQrQvm0RWtJ2sWxmMOvXJLDBqJ59nsyxvZdQiBMX3jVGtQEyA3EjG3LbA')" }} />
                 </div>
               </div>
             </div>

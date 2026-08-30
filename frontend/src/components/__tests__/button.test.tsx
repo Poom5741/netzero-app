@@ -23,7 +23,8 @@ describe("Button", () => {
   it("renders with danger variant", () => {
     render(<Button variant="danger">Danger</Button>);
     const btn = screen.getByRole("button");
-    expect(btn).toHaveClass("bg-error");
+    expect(btn).toHaveClass("bg-gradient-to-b");
+    expect(btn).toHaveClass("text-on-error");
   });
 
   it("renders disabled state", () => {

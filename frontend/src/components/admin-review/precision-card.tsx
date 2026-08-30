@@ -19,7 +19,7 @@ export function PrecisionCard({ auditReviewed, overrides, precision }: Precision
           <p className="text-headline-lg font-bold text-primary">
             {Math.round(precision * 100)}%
           </p>
-          <p className="text-label-sm text-on-surface-variant mt-1">
+          <p className="text-[12px] text-on-surface-variant mt-1">
             ตรวจแล้ว {auditReviewed} รายการ | ยกเลิก {overrides} รายการ
           </p>
         </>

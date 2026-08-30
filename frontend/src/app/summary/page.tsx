@@ -98,27 +98,27 @@ function SummaryContent() {
         <div className="h-16 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-sm">eco</span>
+              <span className="material-symbols-outlined text-white text-[14px]">eco</span>
             </div>
-            <span className="font-semibold text-lg text-on-surface">สรุปฤดูกาล</span>
+            <span className="font-headline-md text-headline-md text-on-surface">สรุปฤดูกาล</span>
           </div>
-          <span className="text-sm text-on-surface-variant">{progress}%</span>
+          <span className="text-label-md text-on-surface-variant">{progress}%</span>
+        </div>
+        {/* Progress bar */}
+        <div className="h-1 bg-surface-container-highest">
+          <div
+            className="h-full bg-gradient-to-r from-primary-container to-line-green-dark transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </header>
-      {/* Progress bar — sticky below header */}
-      <div className="fixed top-16 left-0 w-full h-1.5 bg-surface-container-highest z-40">
-        <div
-          className="h-full bg-gradient-to-r from-primary via-primary-container to-line-green-dark transition-all duration-300 rounded-r-full"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
 
       {/* Form */}
-      <main className="flex-1 pt-20 pb-24 px-5 overflow-y-auto pb-safe">
+      <main className="flex-1 pt-20 pb-24 px-5 overflow-y-auto">
         {saved ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 px-5">
             <span className="material-symbols-outlined text-primary text-6xl">check_circle</span>
-            <h2 className="text-xl font-semibold text-on-surface text-center">บันทึกสำเร็จ!</h2>
+            <h2 className="font-headline-md text-headline-md font-semibold text-on-surface text-center">บันทึกสำเร็จ!</h2>
             <p className="text-on-surface-variant text-center max-w-sm">ข้อมูลสรุปฤดูกาลถูกบันทึกเรียบร้อยแล้ว</p>
             <Button onClick={() => setSaved(false)} variant="secondary" className="whitespace-nowrap">
               แก้ไขข้อมูล
@@ -127,9 +127,10 @@ function SummaryContent() {
         ) : (
           <div className="space-y-4 w-full">
             {/* Water Level */}
-            <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-              <label className="block text-headline-md font-bold text-primary mb-3">
-                💧 ระดับน้ำ (ซม.)
+            <div className="neumorphic rounded-xl p-4">
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">water_drop</span>
+                ระดับน้ำ (ซม.)
               </label>
               <input
                 type="range"
@@ -138,19 +139,20 @@ function SummaryContent() {
                 step="0.5"
                 value={form.waterLevel}
                 onChange={(e) => setForm({ ...form, waterLevel: Number(e.target.value) })}
-                className="custom-slider w-full"
+                className="w-full accent-primary"
               />
               <div className="flex justify-between mt-2">
-                <span className="text-xs text-on-surface-variant">0 ซม.</span>
-                <span className="text-sm font-medium text-primary">{form.waterLevel} ซม.</span>
-                <span className="text-xs text-on-surface-variant">10 ซม.</span>
+                <span className="text-[12px] text-on-surface-variant">0 ซม.</span>
+                <span className="text-label-md font-medium text-primary">{form.waterLevel} ซม.</span>
+                <span className="text-[12px] text-on-surface-variant">10 ซม.</span>
               </div>
             </div>
 
             {/* Straw Management */}
-            <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-              <label className="block text-headline-md font-bold text-primary mb-3">
-                🌾 การจัดการฟางข้าว <span className="text-error">*</span>
+            <div className="neumorphic rounded-xl p-4">
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">grass</span>
+                การจัดการฟางข้าว <span className="text-error">*</span>
               </label>
               <select
                 value={form.strawManagement}
@@ -166,12 +168,12 @@ function SummaryContent() {
                 ))}
               </select>
               {validationError && validationError.includes("ฟางข้าว") && (
-                <p className="text-sm text-error mt-2">{validationError}</p>
+                <p className="text-label-md text-error mt-2">{validationError}</p>
               )}
               {form.strawManagement === "burn" && (
                 <div className="mt-3 p-3 bg-tertiary-container/20 rounded-lg flex items-start gap-2">
-                  <span className="material-symbols-outlined text-tertiary text-sm mt-0.5 shrink-0">warning</span>
-                  <p className="text-sm text-on-tertiary-container">
+                  <span className="material-symbols-outlined text-tertiary text-[14px] mt-0.5 shrink-0">warning</span>
+                  <p className="text-label-md text-on-tertiary-container">
                     การเผาฟางปล่อยก๊าซเรือนกระจกและ PM 2.5 แนะนำให้ไถกลบเพื่อรับคาร์บอนเครดิต
                   </p>
                 </div>
@@ -179,9 +181,10 @@ function SummaryContent() {
             </div>
 
             {/* Energy */}
-            <div className="bg-surface-container-lowest rounded-2xl p-5 space-y-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-              <label className="block text-headline-md font-bold text-primary">
-                ⚡ พลังงานที่ใช้
+            <div className="neumorphic rounded-xl p-4 space-y-3">
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">bolt</span>
+                พลังงานที่ใช้
               </label>
               <Input
                 label="น้ำมัน (ลิตร)"
@@ -206,7 +209,7 @@ function SummaryContent() {
             {error && (
               <div className="bg-error-container rounded-xl p-3 flex items-center gap-2">
                 <span className="material-symbols-outlined text-error shrink-0">error</span>
-                <span className="text-sm text-on-error-container">{error}</span>
+                <span className="text-label-md text-on-error-container">{error}</span>
               </div>
             )}
 
@@ -214,7 +217,7 @@ function SummaryContent() {
               onClick={handleSave}
               loading={saving}
               disabled={!isFormValid}
-              className="w-full claymorphic text-base py-4 whitespace-nowrap"
+              className="w-full claymorphic text-body-md py-4 whitespace-nowrap"
             >
               <span className="material-symbols-outlined">save</span>
               <span>บันทึกข้อมูล</span>
