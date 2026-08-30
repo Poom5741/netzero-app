@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { LiffProvider, useLiff } from "@/lib/liff-context";
 import { sendChatMessage } from "@/lib/api";
-import { Button } from "@/components/ui/button";
 import { ChatBubble } from "@/components/ui/chat-bubble";
 import { QuickActions } from "@/components/ui/quick-actions";
 import { BottomNav } from "@/components/ui/bottom-nav";
@@ -45,9 +44,9 @@ function ChatContent() {
   ];
 
   const navItems = [
-    { icon: "chat", label: "แชท", href: "/chat", active: true },
-    { icon: "photo_camera", label: "อัปโหลด", href: "/upload" },
-    { icon: "bar_chart", label: "สรุป", href: "/summary" },
+    { icon: "chat_bubble", label: "แชท", href: "/chat", active: true },
+    { icon: "cloud_upload", label: "อัปโหลด", href: "/upload" },
+    { icon: "analytics", label: "สรุป", href: "/summary" },
   ];
 
   async function handleSend(text?: string) {
@@ -103,10 +102,8 @@ function ChatContent() {
       <header className="fixed top-0 w-full z-50 glass pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-16 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-sm">eco</span>
-            </div>
-            <span className="font-semibold text-lg text-on-surface">Chat Hub</span>
+            <img alt="NetZeroCarbon Logo" className="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBczoX7NrPcRVpSCyIRt8QCTQ4tQTNdiw3X3JqXh_YDY30hP8yC8iAP1jlNbEM6OTCf9MdvcG4TpBZAOkkwonGSQl10ndDAgImtKnfhG7XhDlJA0ARhNqzWf24YrTl9V9yfQE-lnKGeNAFh1vwAflUw2ZMU8I7k8aKo2tu6zARyM_V7bz7KbhcueZA9o1DpQ3QrJnN7k_G5zSBao3cDGj5tNqLtSG5ZpX15l11xUdxhnZWlQQeTj6CvIA" />
+            <span className="font-headline-md text-headline-md text-on-surface truncate">Chat Hub</span>
           </div>
           <div className="flex items-center gap-2">
             <button className="w-10 h-10 flex items-center justify-center" aria-label="การแจ้งเตือน">
@@ -139,43 +136,45 @@ function ChatContent() {
                 ) : undefined
               }
             >
-              <p className="text-[16px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+              <p className="text-body-md leading-relaxed whitespace-pre-wrap">{msg.text}</p>
             </ChatBubble>
           ))}
 
           {isTyping && <TypingIndicator />}
 
+          {/* Quick Actions */}
+          <QuickActions actions={quickActions} />
+
           <div ref={chatEndRef} />
         </div>
       </main>
 
-      {/* Quick Actions */}
-      <div className="px-5 pb-2 flex-shrink-0">
-        <QuickActions actions={quickActions} />
-      </div>
-
-      {/* Input Bar */}
-      <div className="glass px-5 py-3 flex gap-2 items-center sticky bottom-14 z-40 border-t border-white/20">
-        <button className="w-10 h-10 rounded-full neumorphic flex items-center justify-center flex-shrink-0" aria-label="เพิ่มไฟล์">
-          <span className="material-symbols-outlined text-on-surface-variant">add</span>
-        </button>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="พิมพ์ข้อความ..."
-          aria-label="พิมพ์ข้อความ"
-          className="flex-1 neumorphic-inset px-4 py-3 rounded-full text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary-container text-[16px]"
-        />
-        <Button
-          onClick={() => handleSend()}
-          disabled={!input.trim()}
-          aria-label="ส่งข้อความ"
-          className="w-10 h-10 rounded-full p-0 claymorphic flex-shrink-0"
-        >
-          <span className="material-symbols-outlined text-white">send</span>
-        </Button>
+      {/* Floating Input Bar (Neumorphic) */}
+      <div className="p-4 bg-transparent pb-safe relative z-10">
+        <div className="bg-surface-container-lowest rounded-[24px] p-2 flex items-center gap-2 shadow-[5px_5px_15px_#D1D9E6,-5px_-5px_15px_#FFFFFF] relative z-20">
+          <button className="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-primary/10 transition-colors shrink-0" aria-label="เพิ่มไฟล์">
+            <span className="material-symbols-outlined">add_circle</span>
+          </button>
+          <div className="flex-1 bg-surface-container-low rounded-xl px-4 py-3 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),inset_-2px_-2px_5px_rgba(255,255,255,0.5)]">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              placeholder="พิมพ์ข้อความที่นี่..."
+              aria-label="พิมพ์ข้อความ"
+              className="w-full bg-transparent border-none outline-none text-body-md text-on-surface placeholder:text-on-surface-variant/50"
+            />
+          </div>
+          <button
+            onClick={() => handleSend()}
+            disabled={!input.trim()}
+            aria-label="ส่งข้อความ"
+            className="w-12 h-12 rounded-full claymorphic flex items-center justify-center text-white shrink-0 transform transition-transform active:scale-95 disabled:opacity-50 disabled:grayscale"
+          >
+            <span className="material-symbols-outlined">send</span>
+          </button>
+        </div>
       </div>
 
       {/* Bottom Nav */}
