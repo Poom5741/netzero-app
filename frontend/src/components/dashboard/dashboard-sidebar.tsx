@@ -48,7 +48,7 @@ export function DashboardSidebar({
               "flex items-center touch-target px-4 rounded-lg transition-all",
               entry.active
                 ? "bg-primary-container text-on-primary-container font-bold"
-                : "text-surface-container-highest hover:bg-white/10",
+                : "text-surface-container-highest hover:bg-white/10 font-label-md text-label-md",
             ].join(" ")}
           >
             <span aria-hidden="true" className="material-symbols-outlined mr-4 text-[20px]">

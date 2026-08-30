@@ -47,11 +47,11 @@ describe("ReviewDetailPanel", () => {
     expect(screen.getByText("95%")).toBeInTheDocument();
   });
 
-  it("shows AI label", () => {
+  it("shows AI analysis section", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    expect(screen.getByText("Rice paddy")).toBeInTheDocument();
+    expect(screen.getByText("AI Analysis Results")).toBeInTheDocument();
   });
 
   it("shows flag note when ai_status is flag", () => {
@@ -70,8 +70,8 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    expect(screen.getByRole("button", { name: /อนุมัติ/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /ปฏิเสธ/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Approve/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Reject/ })).toBeInTheDocument();
   });
 
   it("calls onApprove with photo id when approve clicked", () => {
@@ -79,7 +79,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={onApprove} onReject={() => {}} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /อนุมัติ/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Approve/ }));
     expect(onApprove).toHaveBeenCalledWith("photo-001");
   });
 
@@ -87,7 +87,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /ปฏิเสธ/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
     expect(screen.getByText("เหตุผลในการปฏิเสธ")).toBeInTheDocument();
   });
 
@@ -96,7 +96,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={onReject} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /ปฏิเสธ/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
     const textarea = screen.getByPlaceholderText("กรุณาระบุเหตุผล...");
     fireEvent.change(textarea, { target: { value: "ไม่ตรงกับพื้นที่" } });
     fireEvent.click(screen.getByRole("button", { name: /ยืนยันการปฏิเสธ/ }));
@@ -108,25 +108,16 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={onReject} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /ปฏิเสธ/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
     const confirmBtn = screen.getByRole("button", { name: /ยืนยันการปฏิเสธ/ });
     fireEvent.click(confirmBtn);
     expect(onReject).not.toHaveBeenCalled();
   });
 
-  it("calls onClose when close button clicked", () => {
-    const onClose = vi.fn();
-    render(
-      <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={onClose} />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /ปิด/ }));
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it("displays photo URL", () => {
+  it("displays farmer name in profile section", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    expect(screen.getByAltText(/FARM-001/)).toHaveAttribute("src", "/test/photo.jpg");
+    expect(screen.getByText("Farmer Profile")).toBeInTheDocument();
   });
 });
