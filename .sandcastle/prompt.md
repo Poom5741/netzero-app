@@ -1,12 +1,8 @@
 # Context
 
-## Debug: issue fetch diagnostics
+## Issue numbers found (labeled: sandcastle)
 
-!`cd /root/netzero-app && gh project item-list 10 --owner Poom5741 --limit 200 --format json > /tmp/sc-issues.json 2>/tmp/sc-issues.err; echo "exit=$? bytes=$(wc -c < /tmp/sc-issues.json) stderr=$(head -c 200 /tmp/sc-issues.err)"`
-
-## Issue numbers found
-
-!`cat /tmp/sc-issues.json | jq -r '[.items[] | select(.status == "Todo") | .content.number] | join(",")' 2>&1`
+!`cd /root/netzero-app && gh issue list --label sandcastle --state open --limit 50 --json number -q '.[].number' | tr '\n' ',' | sed 's/,$//'`
 
 ## Recent commits (last 5)
 
