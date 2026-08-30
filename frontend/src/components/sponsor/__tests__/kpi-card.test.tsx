@@ -36,9 +36,9 @@ describe("KpiCard", () => {
     expect(screen.queryByText(/จากไตรมาสที่แล้ว/)).not.toBeInTheDocument();
   });
 
-  it("renders with count-animate class for animation", () => {
+  it("renders with counter-animate class for animation", () => {
     render(<KpiCard title="Test" value={100} suffix="unit" icon="eco" />);
     const animated = screen.getByText("100");
-    expect(animated.className).toContain("count-animate");
+    expect(animated.className).toContain("counter-animate");
   });
 });

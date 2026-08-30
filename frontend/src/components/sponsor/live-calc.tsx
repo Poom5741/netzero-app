@@ -19,7 +19,7 @@ export function LiveCalc({ liveValue, techniques }: LiveCalcProps) {
           การสะสมเครือข่ายแบบเรียลไทม์
         </span>
         <div className="flex items-baseline gap-1 relative z-10">
-          <span className="text-[56px] font-bold text-primary tracking-tighter count-animate">
+          <span className="text-[56px] font-bold text-primary tracking-tighter counter-animate" data-target={liveValue}>
             {formatWithCommas(liveValue)}
           </span>
         </div>
