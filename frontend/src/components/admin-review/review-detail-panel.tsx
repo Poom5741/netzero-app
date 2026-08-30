@@ -169,7 +169,7 @@ export function ReviewDetailPanel({
           aria-modal="true"
           aria-labelledby="reject-modal-title"
         >
-          <div className="neumorphic bg-surface-container-low p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
+          <div className="neumorphic p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
             <h3 id="reject-modal-title" className="text-headline-md font-bold text-on-surface mb-4">
               เหตุผลในการปฏิเสธ
             </h3>
