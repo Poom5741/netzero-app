@@ -104,17 +104,17 @@ function SummaryContent() {
           </div>
           <span className="text-sm text-on-surface-variant">{progress}%</span>
         </div>
-        {/* Progress bar */}
-        <div className="h-1 bg-surface-container-highest">
-          <div
-            className="h-full bg-gradient-to-r from-primary-container to-line-green-dark transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
       </header>
+      {/* Progress bar — sticky below header */}
+      <div className="fixed top-16 left-0 w-full h-1.5 bg-surface-container-highest z-40">
+        <div
+          className="h-full bg-gradient-to-r from-primary via-primary-container to-line-green-dark transition-all duration-300 rounded-r-full"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
       {/* Form */}
-      <main className="flex-1 pt-20 pb-24 px-5 overflow-y-auto">
+      <main className="flex-1 pt-20 pb-24 px-5 overflow-y-auto pb-safe">
         {saved ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 px-5">
             <span className="material-symbols-outlined text-primary text-6xl">check_circle</span>
@@ -127,8 +127,8 @@ function SummaryContent() {
         ) : (
           <div className="space-y-4 w-full">
             {/* Water Level */}
-            <div className="neumorphic rounded-xl p-4">
-              <label className="block text-sm font-medium text-on-surface mb-3">
+            <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <label className="block text-headline-md font-bold text-primary mb-3">
                 💧 ระดับน้ำ (ซม.)
               </label>
               <input
@@ -138,7 +138,7 @@ function SummaryContent() {
                 step="0.5"
                 value={form.waterLevel}
                 onChange={(e) => setForm({ ...form, waterLevel: Number(e.target.value) })}
-                className="w-full accent-primary"
+                className="custom-slider w-full"
               />
               <div className="flex justify-between mt-2">
                 <span className="text-xs text-on-surface-variant">0 ซม.</span>
@@ -148,8 +148,8 @@ function SummaryContent() {
             </div>
 
             {/* Straw Management */}
-            <div className="neumorphic rounded-xl p-4">
-              <label className="block text-sm font-medium text-on-surface mb-3">
+            <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <label className="block text-headline-md font-bold text-primary mb-3">
                 🌾 การจัดการฟางข้าว <span className="text-error">*</span>
               </label>
               <select
@@ -179,8 +179,8 @@ function SummaryContent() {
             </div>
 
             {/* Energy */}
-            <div className="neumorphic rounded-xl p-4 space-y-3">
-              <label className="block text-sm font-medium text-on-surface">
+            <div className="bg-surface-container-lowest rounded-2xl p-5 space-y-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+              <label className="block text-headline-md font-bold text-primary">
                 ⚡ พลังงานที่ใช้
               </label>
               <Input
