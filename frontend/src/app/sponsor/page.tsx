@@ -39,6 +39,7 @@ function fetchSponsorData(): Promise<ProvinceGroupType[]> {
       const endpoint = validateApiUrl(`${apiBase}/sponsor/`);
       const xhr = new XMLHttpRequest();
       xhr.open("GET", endpoint);
+      xhr.withCredentials = true; // send Cloudflare Access cookies cross-origin
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(JSON.parse(xhr.responseText) as ProvinceGroupType[]);
