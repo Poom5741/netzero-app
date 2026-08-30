@@ -100,7 +100,7 @@ function SummaryContent() {
             <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
               <span className="material-symbols-outlined text-white text-[14px]">eco</span>
             </div>
-            <span className="font-headline-md text-headline-md text-on-surface">สรุปฤดูกาล</span>
+            <span className="text-headline-md text-on-surface">สรุปฤดูกาล</span>
           </div>
           <span className="text-label-md text-on-surface-variant">{progress}%</span>
         </div>
@@ -118,7 +118,7 @@ function SummaryContent() {
         {saved ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 px-5">
             <span className="material-symbols-outlined text-primary text-6xl">check_circle</span>
-            <h2 className="font-headline-md text-headline-md font-semibold text-on-surface text-center">บันทึกสำเร็จ!</h2>
+            <h2 className="text-headline-md font-semibold text-on-surface text-center">บันทึกสำเร็จ!</h2>
             <p className="text-on-surface-variant text-center max-w-sm">ข้อมูลสรุปฤดูกาลถูกบันทึกเรียบร้อยแล้ว</p>
             <Button onClick={() => setSaved(false)} variant="secondary" className="whitespace-nowrap">
               แก้ไขข้อมูล
@@ -128,7 +128,7 @@ function SummaryContent() {
           <div className="space-y-4 w-full">
             {/* Water Level */}
             <div className="neumorphic rounded-xl p-4">
-              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+              <label className="flex items-center gap-2 text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">water_drop</span>
                 ระดับน้ำ (ซม.)
               </label>
@@ -150,7 +150,7 @@ function SummaryContent() {
 
             {/* Straw Management */}
             <div className="neumorphic rounded-xl p-4">
-              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+              <label className="flex items-center gap-2 text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">grass</span>
                 การจัดการฟางข้าว <span className="text-error">*</span>
               </label>
@@ -182,7 +182,7 @@ function SummaryContent() {
 
             {/* Energy */}
             <div className="neumorphic rounded-xl p-4 space-y-3">
-              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+              <label className="flex items-center gap-2 text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">bolt</span>
                 พลังงานที่ใช้
               </label>

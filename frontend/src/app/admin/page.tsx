@@ -114,15 +114,15 @@ export default function AdminReviewPage() {
         <span className="ml-4 text-body-md text-on-surface font-semibold">Review Queue</span>
       </header>
 
-      <main className="lg:ml-72 pt-20 lg:pt-24 px-4 lg:px-10 pb-10">
+      <main className="sidebar-offset pt-20 lg:pt-24 px-4 lg:px-10 pb-10">
         <div className="flex flex-col w-full h-[calc(100vh-80px)]">
           <div className="flex h-full w-full gap-6">
             {/* Main Grid Area */}
             <div className="flex-1 flex flex-col h-full bg-surface-container-low rounded-xl overflow-hidden shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="font-headline-lg text-headline-lg text-on-surface">Review Queue</h2>
-                  <p className="font-body-md text-body-md text-on-surface-variant mt-2">
+                  <h2 className="text-headline-lg text-on-surface">Review Queue</h2>
+                  <p className="text-body-md text-on-surface-variant mt-2">
                     {loading ? "กำลังโหลด..." : `${queue.length} รายการรอตรวจสอบ`}
                   </p>
                 </div>

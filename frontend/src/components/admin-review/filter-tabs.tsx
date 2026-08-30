@@ -27,7 +27,7 @@ export function FilterTabs({ tabs, activeKey, onChange }: FilterTabsProps) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(tab.key)}
-            className={`px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+            className={`px-4 py-2 rounded-full text-label-md transition-all ${
               isActive
                 ? "bg-primary text-on-primary shadow-md hover:scale-105"
                 : "text-on-surface-variant hover:bg-surface-container-high"

@@ -85,6 +85,7 @@ const techniques = [
 export default function SponsorDashboardPage() {
   const [groups, setGroups] = useState<ProvinceGroupType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,8 +97,8 @@ export default function SponsorDashboardPage() {
           setLoading(false);
         }
       } catch {
-        // Fallback data is always returned by getSponsorDashboardData
         if (!cancelled) {
+          setError("ไม่สามารถโหลดข้อมูลได้");
           setLoading(false);
         }
       }
@@ -137,7 +138,7 @@ export default function SponsorDashboardPage() {
       />
       <DashboardHeader userLabel="ผู้ดูแลระบบ" searchPlaceholder="ค้นหาทั่วโลก..." />
 
-      <div className="lg:pl-72">
+      <div className="sidebar-offset-pl">
         <main className="relative pt-20 min-h-screen bg-surface px-6 lg:px-10 py-6">
           <div className="flex flex-col w-full relative">
             {/* Header Section */}
@@ -206,9 +207,19 @@ export default function SponsorDashboardPage() {
               {/* Regional Breakdown (8 cols) */}
               <div className="lg:col-span-8 flex flex-col gap-6">
                 <h2 className="text-headline-lg text-on-surface">รายละเอียดตามภูมิภาค</h2>
-                {loading ? (
-                  <div className="bg-surface-container p-6 rounded-xl">
-                    <p className="text-on-surface-variant">กำลังโหลดข้อมูล...</p>
+                {error ? (
+                  <div className="neumorphic p-6 text-center">
+                    <span className="material-symbols-outlined text-error text-4xl mb-2 block">error</span>
+                    <p className="text-body-md text-on-surface mb-2">{error}</p>
+                  </div>
+                ) : loading ? (
+                  <div className="neumorphic p-6 text-center">
+                    <div className="flex justify-center gap-2 mb-2">
+                      <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
+                      <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
+                      <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
+                    </div>
+                    <p className="text-body-md text-on-surface-variant">กำลังโหลดข้อมูล...</p>
                   </div>
                 ) : (
                   groups.map((group) => (
@@ -229,7 +240,7 @@ export default function SponsorDashboardPage() {
                 {/* Map */}
                 <div className="neumorphic overflow-hidden flex flex-col h-64">
                   <div className="p-4 pb-0">
-                    <h3 className="font-headline-md text-[18px] text-on-surface">การกระจายโครงการ</h3>
+                    <h3 className="text-[18px] text-on-surface">การกระจายโครงการ</h3>
                   </div>
                   <div className="flex-1 w-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAVG86o0n-MoR-4dNoH0sh1Yu4QC9LeHaXXbgBA3RlmKu5F-1um9QCDuROM2VrrwHp1gy04UagLdUBHlpsDm3qnbdTXbvJ_aGU6NqA2LOsg3OgWzelFWVd-w9E-SFtJAcqyFxPQQWzIvQy6SIFx7n4qa_Ay7IQB9ik_5wmVOa4pPJa8661GwOK3fo-eRNZ9yHQrQvm0RWtJ2sWxmMOvXJLDBqJ59nsyxvZdQiBMX3jVGtQEyA3EjG3LbA')" }} />
                 </div>

@@ -139,7 +139,7 @@ function UploadContent() {
       <div className="flex flex-col h-screen bg-surface-container-low">
         <header className="glass fixed top-0 w-full z-50 pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <div className="h-16 px-5 flex items-center">
-            <span className="font-headline-md text-headline-md text-on-surface">ผลการตรวจสอบ</span>
+            <span className="text-headline-md text-on-surface">ผลการตรวจสอบ</span>
           </div>
         </header>
         <main className="flex-1 pt-16 pb-24 px-5 flex items-center justify-center overflow-y-auto">
@@ -165,7 +165,7 @@ function UploadContent() {
             <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
               <span className="material-symbols-outlined text-white text-[14px]">eco</span>
             </div>
-            <span className="font-headline-md text-headline-md text-on-surface">อัปโหลดรูป</span>
+            <span className="text-headline-md text-on-surface">อัปโหลดรูป</span>
           </div>
           {!gpsLoading && (
             <div className={`neumorphic-inset px-3 py-1 rounded-full flex items-center gap-1 ${!photo.gps ? 'border border-error/30' : ''}`}>

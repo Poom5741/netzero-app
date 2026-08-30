@@ -103,7 +103,7 @@ function ChatContent() {
         <div className="h-16 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img alt="NetZeroCarbon Logo" className="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBczoX7NrPcRVpSCyIRt8QCTQ4tQTNdiw3X3JqXh_YDY30hP8yC8iAP1jlNbEM6OTCf9MdvcG4TpBZAOkkwonGSQl10ndDAgImtKnfhG7XhDlJA0ARhNqzWf24YrTl9V9yfQE-lnKGeNAFh1vwAflUw2ZMU8I7k8aKo2tu6zARyM_V7bz7KbhcueZA9o1DpQ3QrJnN7k_G5zSBao3cDGj5tNqLtSG5ZpX15l11xUdxhnZWlQQeTj6CvIA" />
-            <span className="font-headline-md text-headline-md text-on-surface truncate">Chat Hub</span>
+            <span className="text-headline-md text-on-surface truncate">Chat Hub</span>
           </div>
           <div className="flex items-center gap-2">
             <button className="w-10 h-10 flex items-center justify-center" aria-label="การแจ้งเตือน">

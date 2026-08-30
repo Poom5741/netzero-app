@@ -16,7 +16,7 @@ export function ChatBubble({ type, avatar, timestamp, children }: ChatBubbleProp
         <div className="claymorphic rounded-2xl rounded-br-sm p-4 text-white relative">
           {children}
           {timestamp && (
-            <span className="text-[11px] text-white/70 mt-2 block font-label-md text-right">
+            <span className="text-[11px] text-white/70 mt-2 block text-right">
               {timestamp}
             </span>
           )}
@@ -37,7 +37,7 @@ export function ChatBubble({ type, avatar, timestamp, children }: ChatBubbleProp
         <div className="absolute inset-0 border border-white/40 rounded-2xl rounded-bl-sm pointer-events-none" />
         {children}
         {timestamp && (
-          <span className="text-[11px] text-on-surface-variant/60 mt-2 block font-label-md">
+          <span className="text-[11px] text-on-surface-variant/60 mt-2 block">
             {timestamp}
           </span>
         )}
