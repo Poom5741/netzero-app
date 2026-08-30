@@ -4,6 +4,7 @@ import { sponsorRoutes } from "../../src/routes/sponsor";
 
 type Bindings = {
   DB: D1Database;
+  SECRET: string;
 };
 
 function mockD1Prepare(
@@ -37,7 +38,7 @@ function mockD1Prepare(
 function buildApp(db: D1Database) {
   const app = new Hono<{ Bindings: Bindings }>();
   app.use("*", async (c, next) => {
-    c.env = { DB: db } as { DB: D1Database };
+    c.env = { DB: db, SECRET: "test" } as { DB: D1Database; SECRET: string };
     await next();
   });
   app.route("/sponsor", sponsorRoutes);
@@ -96,7 +97,9 @@ describe("GET /sponsor/:plotId", () => {
   it("returns plot detail with live math fields", async () => {
     const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/plot-1");
+    const res = await app.request("/sponsor/plot-1", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = await res.json<DetailBody>();
 
     expect(res.status).toBe(200);
@@ -109,7 +112,9 @@ describe("GET /sponsor/:plotId", () => {
   it("shows estimate — not yet verified label", async () => {
     const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/plot-1");
+    const res = await app.request("/sponsor/plot-1", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = await res.json<DetailBody>();
 
     expect(body.verification_label).toBe("estimate — not yet verified");
@@ -118,7 +123,9 @@ describe("GET /sponsor/:plotId", () => {
   it("returns plot metadata: code, area, farmer, province", async () => {
     const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/plot-1");
+    const res = await app.request("/sponsor/plot-1", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = await res.json<DetailBody>();
 
     expect(body.plot_code).toBe("P-001");
@@ -130,7 +137,9 @@ describe("GET /sponsor/:plotId", () => {
   it("returns water management from season inputs", async () => {
     const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/plot-1");
+    const res = await app.request("/sponsor/plot-1", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = await res.json<DetailBody>();
 
     expect(body.water_management).toBe("alternate wetting and drying");
@@ -139,7 +148,9 @@ describe("GET /sponsor/:plotId", () => {
   it("returns water-state tallies per plot-season", async () => {
     const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/plot-1");
+    const res = await app.request("/sponsor/plot-1", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = await res.json<DetailBody>();
 
     expect(body.water_state_tallies).toEqual({
@@ -151,7 +162,9 @@ describe("GET /sponsor/:plotId", () => {
   it("returns provenance counts (machine vs human stamps)", async () => {
     const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/plot-1");
+    const res = await app.request("/sponsor/plot-1", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = await res.json<DetailBody>();
 
     expect(body.provenance_counts).toEqual({
@@ -163,7 +176,9 @@ describe("GET /sponsor/:plotId", () => {
   it("returns 404 when plot not found", async () => {
     const db = mockD1Prepare([]) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/nonexistent");
+    const res = await app.request("/sponsor/nonexistent", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
 
     expect(res.status).toBe(404);
   });

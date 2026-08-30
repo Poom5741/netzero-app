@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { cfAccessGuard } from "./middleware/cf-access";
 import { authRoutes } from "./routes/auth";
 import { dashboardRoutes } from "./routes/dashboard";
 import { exportRoutes } from "./routes/export";
@@ -231,16 +232,22 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
   }
 }
 
-// Admin review dashboard
+// Admin review dashboard — Cloudflare Access gate (defense-in-depth)
+app.use("/admin/*", cfAccessGuard());
+app.use("/api/admin/*", cfAccessGuard());
 app.route("/", adminRoutes);
 
-// Sponsor dashboard + detail
+// Sponsor dashboard + detail — Cloudflare Access gate
+app.use("/sponsor/*", cfAccessGuard());
+app.use("/api/sponsor/*", cfAccessGuard());
 app.route("/sponsor", sponsorRoutes);
 
 // Export estimates (JSON/CSV)
 app.route("/export", exportRoutes);
 
 // Dashboard (admin/sponsor) — mounted after API routes
+app.use("/admin", cfAccessGuard());
+app.use("/sponsor", cfAccessGuard());
 app.route("/", dashboardRoutes);
 
 // 404 handler

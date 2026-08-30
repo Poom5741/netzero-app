@@ -4,6 +4,7 @@ import { sponsorRoutes } from "../../src/routes/sponsor";
 
 type Bindings = {
   DB: D1Database;
+  SECRET: string;
 };
 
 function mockD1(rows: Record<string, unknown>[]) {
@@ -21,7 +22,7 @@ function mockD1(rows: Record<string, unknown>[]) {
 function buildApp(db: D1Database) {
   const app = new Hono<{ Bindings: Bindings }>();
   app.use("*", async (c, next) => {
-    c.env = { DB: db } as { DB: D1Database };
+    c.env = { DB: db, SECRET: "test" } as { DB: D1Database; SECRET: string };
     await next();
   });
   app.route("/sponsor", sponsorRoutes);
@@ -44,7 +45,9 @@ describe("GET /sponsor", () => {
   it("returns 200 with plot list grouped by province", async () => {
     const db = mockD1([PLOT_ROW]) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor");
+    const res = await app.request("/sponsor", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = (await res.json()) as {
       provinces: { province: string; plots: Record<string, unknown>[] }[];
     };
@@ -57,7 +60,9 @@ describe("GET /sponsor", () => {
   it("shows net tCO2e per plot", async () => {
     const db = mockD1([PLOT_ROW]) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor");
+    const res = await app.request("/sponsor", {
+      headers: { "Cf-Access-Authenticated-User-Email": "poom@charoenyost.com" },
+    });
     const body = (await res.json()) as {
       provinces: { plots: { total_offset_tco2e: number }[] }[];
     };
