@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  async rewrites() {
+// STATIC_EXPORT=1 produces a static `out/` directory for Cloudflare assets
+// deploy; API calls go to NEXT_PUBLIC_API_BASE instead of the dev rewrite.
+const isStaticExport = process.env.STATIC_EXPORT === "1";
+
+const nextConfig: NextConfig = isStaticExport
+  ? { output: "export" }
+  : {
+      async rewrites() {
     return [
       {
         source: "/api/:path*",
@@ -9,6 +15,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-};
+}
 
 export default nextConfig;

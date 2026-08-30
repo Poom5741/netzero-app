@@ -7,7 +7,7 @@ import { FilterTabs, type FilterTab } from "@/components/admin-review/filter-tab
 import { ReviewCard } from "@/components/admin-review/review-card";
 import { ReviewDetailPanel } from "@/components/admin-review/review-detail-panel";
 import { PrecisionCard } from "@/components/admin-review/precision-card";
-import { getReviewQueue, reviewPhoto, getPrecisionStat, type PhotoReview, type PrecisionStat } from "@/lib/api";
+import { getReviewQueue, reviewPhoto, getPrecisionStat, apiRequest, type PhotoReview, type PrecisionStat } from "@/lib/api";
 
 type GateStatus = "idle" | "approved" | "blocked";
 type GateResult = { success: boolean; missing?: string[] } | null;
@@ -159,8 +159,8 @@ export default function AdminReviewPage() {
                   <button
                     onClick={async () => {
                       try {
-                        const res = await fetch("/api/season/approve", { method: "POST" });
-                        const data = await res.json();
+                        const res = await apiRequest<{ success: boolean; missing?: string[] }>("/api/season/approve", { method: "POST" });
+                        const data = res.data;
                         if (data.success) {
                           setGateStatus("approved");
                           setGateResult(data);

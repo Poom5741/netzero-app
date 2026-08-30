@@ -11,6 +11,41 @@ function validateApiUrl(url: string): string {
   return url;
 }
 
+export interface ApiResult<T> {
+  ok: boolean;
+  status: number;
+  data: T;
+}
+
+/**
+ * Browser-side API call via XHR. All client→API traffic goes through here so
+ * request targets are always validateApiUrl()-checked before sending.
+ */
+export function apiRequest<T = unknown>(
+  path: string,
+  init?: { method?: string; json?: unknown; formData?: FormData },
+): Promise<ApiResult<T>> {
+  const url = validateApiUrl(`${API_BASE}${path}`);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(init?.method || "GET", url);
+    if (init?.json !== undefined) {
+      xhr.setRequestHeader("Content-Type", "application/json");
+    }
+    xhr.onload = () => {
+      let data: T;
+      try {
+        data = JSON.parse(xhr.responseText) as T;
+      } catch {
+        data = xhr.responseText as unknown as T;
+      }
+      resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data });
+    };
+    xhr.onerror = () => reject(new Error(`API request failed: ${url}`));
+    xhr.send(init?.json !== undefined ? JSON.stringify(init.json) : init?.formData);
+  });
+}
+
 export interface ChatMessage {
   text: string;
   userId: string;
@@ -22,18 +57,11 @@ export interface ChatResponse {
 }
 
 export async function sendChatMessage(message: ChatMessage): Promise<ChatResponse> {
-  const url = validateApiUrl(`${API_BASE}/api/chat`);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(message),
-  });
-
+  const res = await apiRequest<ChatResponse>("/api/chat", { method: "POST", json: message });
   if (!res.ok) {
     throw new Error(`Chat API error: ${res.status}`);
   }
-
-  return res.json();
+  return res.data;
 }
 
 export interface PhotoReview {
@@ -52,12 +80,9 @@ export interface PhotoReview {
 }
 
 export async function getReviewQueue(status?: string): Promise<PhotoReview[]> {
-  const url = status
-    ? validateApiUrl(`${API_BASE}/api/admin/review?status=${status}`)
-    : validateApiUrl(`${API_BASE}/api/admin/review`);
-  const res = await fetch(url);
+  const res = await apiRequest<PhotoReview[]>(status ? `/api/admin/review?status=${status}` : "/api/admin/review");
   if (!res.ok) throw new Error(`Review queue error: ${res.status}`);
-  return res.json();
+  return res.data;
 }
 
 export async function reviewPhoto(
@@ -65,14 +90,12 @@ export async function reviewPhoto(
   status: "verified" | "rejected",
   reason?: string,
 ): Promise<{ ok: boolean }> {
-  const url = validateApiUrl(`${API_BASE}/api/admin/review/${photoId}`);
-  const res = await fetch(url, {
+  const res = await apiRequest<{ ok: boolean }>(`/api/admin/review/${photoId}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, reason }),
+    json: { status, reason },
   });
   if (!res.ok) throw new Error(`Review error: ${res.status}`);
-  return res.json();
+  return res.data;
 }
 
 export interface PrecisionStat {
@@ -82,8 +105,7 @@ export interface PrecisionStat {
 }
 
 export async function getPrecisionStat(): Promise<PrecisionStat> {
-  const url = validateApiUrl(`${API_BASE}/api/admin/precision`);
-  const res = await fetch(url);
+  const res = await apiRequest<PrecisionStat>("/api/admin/precision");
   if (!res.ok) throw new Error(`Precision error: ${res.status}`);
-  return res.json();
+  return res.data;
 }

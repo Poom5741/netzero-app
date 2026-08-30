@@ -42,12 +42,15 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
 
   useEffect(() => {
     async function initLiff() {
+      // Standalone mode: LINE integration is down for now (2026-08 decision) —
+      // run as a self-contained chat app with a demo user, no liff.init/login.
+      const standalone = process.env.NEXT_PUBLIC_STANDALONE === "1";
       try {
         const liffModule = await import("@line/liff");
         const liff = liffModule.default;
 
         const id = liffId || process.env.NEXT_PUBLIC_LIFF_ID || "";
-        if (!id) {
+        if (standalone || !id) {
           // Demo mode
           setLiff(liff);
           setUserId("demo-user");

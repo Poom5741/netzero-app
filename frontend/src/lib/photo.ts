@@ -1,5 +1,7 @@
 "use client";
 
+import { apiRequest } from "./api";
+
 export type UploadVerdict = "refused" | "flagged" | "pre_verified" | "queued" | "failure";
 
 export interface UploadResponse {
@@ -13,17 +15,13 @@ export interface UploadResponse {
 }
 
 export async function uploadPhoto(formData: FormData): Promise<UploadResponse> {
-  const res = await fetch("/api/photo/upload", {
-    method: "POST",
-    body: formData,
-  });
+  const res = await apiRequest<UploadResponse>("/api/photo/upload", { method: "POST", formData });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Upload failed" }));
-    throw new Error(error.error || "Upload failed");
+    throw new Error((res.data as { error?: string })?.error || "Upload failed");
   }
 
-  return res.json();
+  return res.data;
 }
 
 export function getGpsLocation(): Promise<GeolocationPosition> {

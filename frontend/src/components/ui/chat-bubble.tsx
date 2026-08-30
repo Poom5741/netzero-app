@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 
 interface ChatBubbleProps {
-  type: "system" | "user";
+  type: "system" | "user" | "bot";
   avatar?: ReactNode;
   timestamp?: string;
   children: ReactNode;

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { authRoutes } from "./routes/auth";
 import { dashboardRoutes } from "./routes/dashboard";
 import { exportRoutes } from "./routes/export";
@@ -18,6 +19,7 @@ type Bindings = {
   R2: R2Bucket;
   AI: Ai;
   ENVIRONMENT: string;
+  LINE_WEBHOOK_ENABLED?: string;
   SECRET: string;
   LINE_CHANNEL_ACCESS_TOKEN: string;
   LINE_CHANNEL_SECRET: string;
@@ -35,6 +37,13 @@ type WebhookEvent = {
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
+
+// Allow the deployed LIFF frontend (and local dev on :3000) to call the API
+app.use("*", cors({
+  origin: ["https://netzero-frontend.poom-a1d.workers.dev", "http://localhost:3000"],
+  allowMethods: ["GET", "POST", "OPTIONS"],
+  allowHeaders: ["Content-Type"],
+}));
 
 // LIFF chat app
 app.route("/", liffRoutes);
@@ -54,9 +63,14 @@ app.route("/", photoRoutes);
 // Season inputs
 app.route("/", seasonRoutes);
 
-// LINE webhook
+// LINE webhook — disabled by default (2026-08 decision: CF↔LINE latency;
+// standalone chat in the LIFF frontend is the farmer-facing path until the
+// full LINE migration). Set LINE_WEBHOOK_ENABLED="true" to re-enable.
 app.post("/webhook/line", async (c) => {
   try {
+    if (c.env.LINE_WEBHOOK_ENABLED !== "true") {
+      return c.json({ error: "LINE webhook is disabled (standalone mode)" }, 503);
+    }
     const secret = c.env.LINE_CHANNEL_SECRET;
     const accessToken = c.env.LINE_CHANNEL_ACCESS_TOKEN;
     if (!secret || !accessToken) {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LiffProvider, useLiff } from "@/lib/liff-context";
+import { apiRequest } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BottomNav } from "@/components/ui/bottom-nav";
@@ -56,17 +57,16 @@ function SummaryContent() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/season", {
+      const res = await apiRequest("/api/season", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        json: {
           plot_id: "plot-004",
           season_id: "2568-napi",
           water_level_cm: form.waterLevel,
           straw_mgmt: form.strawManagement,
           fuel_liters: form.fuelLiters,
           electricity_kwh: form.electricityKwh,
-        }),
+        },
       });
       if (!res.ok) throw new Error("Save failed");
       setSaved(true);
