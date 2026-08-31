@@ -6,6 +6,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { KpiCard } from "@/components/sponsor/kpi-card";
 import { ProvinceGroup } from "@/components/sponsor/province-group";
 import { LiveCalc } from "@/components/sponsor/live-calc";
+import { AuthGuard } from "@/components/auth/auth-guard";
 import {
   getFallbackData,
   generateExportCSV,
@@ -83,6 +84,14 @@ const techniques = [
 ];
 
 export default function SponsorDashboardPage() {
+  return (
+    <AuthGuard requiredRole="sponsor">
+      <SponsorDashboardContent />
+    </AuthGuard>
+  );
+}
+
+function SponsorDashboardContent() {
   const [groups, setGroups] = useState<ProvinceGroupType[]>([]);
   const [loading, setLoading] = useState(true);
 

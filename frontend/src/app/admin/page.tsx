@@ -7,6 +7,7 @@ import { FilterTabs, type FilterTab } from "@/components/admin-review/filter-tab
 import { ReviewCard } from "@/components/admin-review/review-card";
 import { ReviewDetailPanel } from "@/components/admin-review/review-detail-panel";
 import { PrecisionCard } from "@/components/admin-review/precision-card";
+import { AuthGuard } from "@/components/auth/auth-guard";
 import { getReviewQueue, reviewPhoto, getPrecisionStat, apiRequest, type PhotoReview, type PrecisionStat } from "@/lib/api";
 
 type GateStatus = "idle" | "approved" | "blocked";
@@ -33,6 +34,14 @@ const filterToApiStatus: Record<string, string | undefined> = {
 };
 
 export default function AdminReviewPage() {
+  return (
+    <AuthGuard requiredRole="admin">
+      <AdminReviewContent />
+    </AuthGuard>
+  );
+}
+
+function AdminReviewContent() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [queue, setQueue] = useState<PhotoReview[]>([]);

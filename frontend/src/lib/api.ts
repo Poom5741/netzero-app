@@ -29,6 +29,7 @@ export function apiRequest<T = unknown>(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(init?.method || "GET", url);
+    xhr.withCredentials = true;
     if (init?.json !== undefined) {
       xhr.setRequestHeader("Content-Type", "application/json");
     }

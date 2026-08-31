@@ -56,4 +56,9 @@ describe("DashboardHeader", () => {
     render(<DashboardHeader userLabel="System Admin" />);
     expect(screen.getByText("System Admin")).toBeInTheDocument();
   });
+
+  it("renders a logout button", () => {
+    render(<DashboardHeader userLabel="System Admin" />);
+    expect(screen.getByLabelText(/ออกจากระบบ/i)).toBeInTheDocument();
+  });
 });
