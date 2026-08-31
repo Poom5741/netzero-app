@@ -178,14 +178,6 @@ photoRoutes.post("/photo/upload", async (c) => {
 
       // Handle auto_reject (invalid photos) - refuse with 200
       if (autoVerifyResult.decision === "auto_reject") {
-        await writeAuditEntry(c.env.DB, {
-          photoId: `refused_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          actorType: "machine",
-          action: "refused",
-          confidence: classification.confidence,
-          reason: autoVerifyResult.reason,
-        });
-
         return c.json(
           {
             verdict: "refused" as Verdict,

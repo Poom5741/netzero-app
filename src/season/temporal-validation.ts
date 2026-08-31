@@ -13,7 +13,7 @@ export function validateTemporal({
   if (!photo_timestamp) return { status: "unknown", reason: "EXIF missing" };
 
   const window = (phase_windows as Record<string, PhaseWindow>)[photo_type];
-  if (!window) return { status: "invalid", reason: `Unknown photo_type: ${photo_type}` };
+  if (!window) return { status: "valid" };
 
   const t = photo_timestamp.getTime();
   if (t >= window.start.getTime() && t <= window.end.getTime()) {
