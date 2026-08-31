@@ -239,10 +239,10 @@ export async function createTestApp(): Promise<{
   app.route("/", healthRoutes);
   app.route("/", photoRoutes);
   app.route("/", authRoutes);
-  app.route("/", dashboardRoutes);
   app.route("/sponsor", sponsorRoutes);
   app.route("/", adminRoutes);
   app.route("/", seasonRoutes);
+  app.route("/", dashboardRoutes);
 
   app.notFound((c) => c.json({ error: "Not found" }, 404));
 
@@ -266,9 +266,9 @@ export async function createTestApp(): Promise<{
 
 // ── Session cookie helper ──────────────────────────────────────────
 
-export function makeSessionCookie(role: "admin" | "sponsor", secret = "test-secret-key"): string {
+export async function makeSessionCookie(role: "admin" | "sponsor", secret = "test-secret-key"): Promise<string> {
   const data = { userId: `${role}-1`, role, email: `${role}@test.com` };
-  const raw = createSessionCookie(data, secret);
+  const raw = await createSessionCookie(data, secret);
   // extract value: Set-Cookie -> "nzc_session=<payload>.<sig>; Path=/..."
   // we need just "nzc_session=<payload>.<sig>"
   const cookiePair = raw.split(";")[0] ?? raw;

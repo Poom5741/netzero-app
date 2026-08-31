@@ -18,21 +18,21 @@ type Bindings = {
 export const adminRoutes = new Hono<{ Bindings: Bindings }>();
 
 // Auth helper
-function requireAdmin(
+async function requireAdmin(
   c: { req: { header: (name: string) => string | undefined } },
   secret: string,
 ) {
   const cookieHeader = c.req.header("Cookie") ?? "";
   const match = cookieHeader.match(/nzc_session=([^;]+)/);
   if (!match?.[1]) return null;
-  const session = parseSessionCookie(match[1], secret);
+  const session = await parseSessionCookie(match[1], secret);
   if (session?.role !== "admin") return null;
   return session;
 }
 
 // GET /admin/review — Photo review queue
 adminRoutes.get("/admin/review", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
+  const session = await requireAdmin(c, c.env.SECRET);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
 
   const db = c.env.DB;
@@ -150,7 +150,7 @@ adminRoutes.get("/admin/review", async (c) => {
 
 // GET /api/admin/review — Photo review queue (JSON API)
 adminRoutes.get("/api/admin/review", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
+  const session = await requireAdmin(c, c.env.SECRET);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
 
   const db = c.env.DB;
@@ -162,7 +162,7 @@ adminRoutes.get("/api/admin/review", async (c) => {
 
 // GET /api/admin/precision — Pre-verify precision stat
 adminRoutes.get("/api/admin/precision", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
+  const session = await requireAdmin(c, c.env.SECRET);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
 
   const db = c.env.DB;
@@ -173,7 +173,7 @@ adminRoutes.get("/api/admin/precision", async (c) => {
 
 // GET /api/admin/audit/:photoId — Decision history for a photo (JSON)
 adminRoutes.get("/api/admin/audit/:photoId", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
+  const session = await requireAdmin(c, c.env.SECRET);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
 
   const db = c.env.DB;
@@ -184,7 +184,7 @@ adminRoutes.get("/api/admin/audit/:photoId", async (c) => {
 
 // GET /admin/audit/:photoId — Decision history HTML view
 adminRoutes.get("/admin/audit/:photoId", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
+  const session = await requireAdmin(c, c.env.SECRET);
   if (!session) return c.html("<!DOCTYPE html><html><body>Unauthorized</body></html>", 401);
 
   const db = c.env.DB;
@@ -272,7 +272,7 @@ adminRoutes.get("/admin/audit/:photoId", async (c) => {
 
 // POST /api/admin/review/:photoId — Review a photo
 adminRoutes.post("/api/admin/review/:photoId", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
+  const session = await requireAdmin(c, c.env.SECRET);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
 
   const db = c.env.DB;

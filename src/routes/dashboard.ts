@@ -72,7 +72,7 @@ function renderSponsorDashboard(): string {
 </html>`;
 }
 
-function extractSession(
+async function extractSession(
   c: { req: { header: (name: string) => string | undefined } },
   secret: string,
 ) {
@@ -84,7 +84,7 @@ function extractSession(
 
 dashboardRoutes.get("/admin", async (c) => {
   const secret = c.env.SECRET;
-  const session = extractSession(c, secret);
+  const session = await extractSession(c, secret);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
   if (session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
   return c.html(renderAdminDashboard());
@@ -92,7 +92,7 @@ dashboardRoutes.get("/admin", async (c) => {
 
 dashboardRoutes.get("/sponsor", async (c) => {
   const secret = c.env.SECRET;
-  const session = extractSession(c, secret);
+  const session = await extractSession(c, secret);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
   if (session.role !== "sponsor") return c.json({ error: "Forbidden" }, 403);
   return c.html(renderSponsorDashboard());

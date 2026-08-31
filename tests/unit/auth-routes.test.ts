@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { createSessionCookie } from "../../src/auth/session";
+import { hashPassword } from "../../src/auth/password";
 import { authRoutes } from "../../src/routes/auth";
 
 const SECRET = "test-auth-secret";
@@ -11,91 +12,74 @@ function makeApp() {
   return app;
 }
 
-function _loginRequest(email: string, password: string) {
-  const body = new URLSearchParams({ email, password });
-  return new Request("http://localhost/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
+function mockDB(user: { id: string; email: string; password_hash: string; role: string } | null) {
+  return {
+    prepare: () => ({
+      bind: () => ({
+        first: async () => user,
+      }),
+    }),
+  } as never;
 }
 
-function _cookieFrom(res: Response): string {
-  const setCookie = res.headers.get("Set-Cookie") ?? "";
-  return setCookie.split(";")[0]?.split("=").slice(1).join("=") ?? "";
-}
-
-describe("GET /login", () => {
-  it("renders login page with form", async () => {
+describe("POST /login", () => {
+  it("returns 400 for missing credentials", async () => {
     const app = makeApp();
-    const res = await app.request("/login", {}, { SECRET } as never);
+    const res = await app.request("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }, { SECRET, DB: mockDB(null) } as never);
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 401 for unknown user", async () => {
+    const app = makeApp();
+    const res = await app.request("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "nobody@test.com", password: "x" }),
+    }, { SECRET, DB: mockDB(null) } as never);
+    expect(res.status).toBe(401);
+  });
+
+  it("returns JSON with email and role on success", async () => {
+    const hash = await hashPassword("pass123");
+    const app = makeApp();
+    const res = await app.request("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "admin@test.com", password: "pass123" }),
+    }, { SECRET, DB: mockDB({ id: "u1", email: "admin@test.com", password_hash: hash, role: "admin" }) } as never);
     expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("<form");
-    expect(html).toContain('name="email"');
-    expect(html).toContain('name="password"');
-    expect(html).toContain('type="submit"');
+    const body = await res.json<{ email: string; role: string }>();
+    expect(body.email).toBe("admin@test.com");
+    expect(body.role).toBe("admin");
+    const setCookie = res.headers.get("Set-Cookie") ?? "";
+    expect(setCookie).toContain("nzc_session=");
+    expect(setCookie).toContain("HttpOnly");
   });
 });
 
-describe("POST /login", () => {
-  it("sets session cookie on valid credentials and redirects to /admin", async () => {
-    const _app = makeApp();
-    const _mockDB = {
-      prepare: () => ({
-        bind: () => ({
-          first: async () => ({
-            id: "u1",
-            email: "admin@test.com",
-            password_hash: "", // bypass verify for mock
-            role: "admin",
-          }),
-        }),
-      }),
-    };
-    // We need to mock verifyPassword — in the real route, it checks the hash.
-    // For testing, we'll pass a special password that bypasses.
-    // Actually, let's test the redirect logic by pre-setting a session.
-    // Better approach: test the full flow with a mock DB that returns the right user.
-    // The route calls verifyPassword, which will fail with empty hash.
-    // So let's test the redirect separately.
+describe("GET /me", () => {
+  it("returns 401 without cookie", async () => {
+    const app = makeApp();
+    const res = await app.request("/me", {}, { SECRET } as never);
+    expect(res.status).toBe(401);
   });
 
-  it("redirects admin to /admin after login", async () => {
+  it("returns session data with valid cookie", async () => {
     const app = makeApp();
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "admin@test.com" },
       SECRET,
     );
-    // Simulate already logged in — test the redirect endpoint
-    const res = await app.request(
-      "/redirect",
-      { headers: { Cookie: `nzc_session=${cookie.split(";")[0]?.split("=").slice(1).join("=")}` } },
-      { SECRET } as never,
-    );
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Location")).toBe("/admin");
-  });
-
-  it("redirects sponsor to /sponsor after login", async () => {
-    const app = makeApp();
-    const cookie = createSessionCookie(
-      { userId: "u2", role: "sponsor", email: "sponsor@test.com" },
-      SECRET,
-    );
     const raw = cookie.split(";")[0]?.split("=").slice(1).join("=") ?? "";
-    const res = await app.request("/redirect", { headers: { Cookie: `nzc_session=${raw}` } }, {
-      SECRET,
-    } as never);
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Location")).toBe("/sponsor");
-  });
-
-  it("redirects unauthenticated to /login", async () => {
-    const app = makeApp();
-    const res = await app.request("/redirect", {}, { SECRET } as never);
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Location")).toBe("/login");
+    const res = await app.request("/me", { headers: { Cookie: `nzc_session=${raw}` } }, { SECRET } as never);
+    expect(res.status).toBe(200);
+    const body = await res.json<{ email: string; role: string }>();
+    expect(body.email).toBe("admin@test.com");
+    expect(body.role).toBe("admin");
   });
 });
 

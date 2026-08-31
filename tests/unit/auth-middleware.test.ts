@@ -15,19 +15,19 @@ function appWithRole(requiredRole: string) {
   return app;
 }
 
-function cookieHeader(session: ReturnType<typeof createSessionCookie>) {
-  const raw = session.split(";")[0]?.split("=").slice(1).join("=") ?? "";
+async function cookieHeader(cookie: string) {
+  const raw = cookie.split(";")[0]?.split("=").slice(1).join("=") ?? "";
   return { Cookie: `nzc_session=${raw}` };
 }
 
 describe("requireRole middleware", () => {
   it("allows request with matching role", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "a@test.com" },
       SECRET,
     );
-    const res = await app.request("/protected", { headers: cookieHeader(cookie) });
+    const res = await app.request("/protected", { headers: await cookieHeader(cookie) });
     expect(res.status).toBe(200);
     const body = await res.json<{ ok: boolean; role: string }>();
     expect(body.ok).toBe(true);
@@ -36,11 +36,11 @@ describe("requireRole middleware", () => {
 
   it("blocks request with wrong role", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "sponsor", email: "s@test.com" },
       SECRET,
     );
-    const res = await app.request("/protected", { headers: cookieHeader(cookie) });
+    const res = await app.request("/protected", { headers: await cookieHeader(cookie) });
     expect(res.status).toBe(403);
   });
 
@@ -52,7 +52,7 @@ describe("requireRole middleware", () => {
 
   it("blocks request with tampered cookie", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "a@test.com" },
       SECRET,
     );
@@ -64,11 +64,11 @@ describe("requireRole middleware", () => {
 
   it("stores session data in context", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "a@test.com" },
       SECRET,
     );
-    const res = await app.request("/protected", { headers: cookieHeader(cookie) });
+    const res = await app.request("/protected", { headers: await cookieHeader(cookie) });
     const body = await res.json<{ ok: boolean; role: string }>();
     expect(body.ok).toBe(true);
   });

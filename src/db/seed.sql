@@ -20,7 +20,9 @@ VALUES
   ('line-001', 'farmer-001', 'U1234567890abcdef', 'verified'),
   ('line-002', 'farmer-003', 'UTESTFARMER000001', 'verified');
 
--- Users
+-- Users (demo credentials — use seed.ts for proper password hashing)
+-- admin@netzero.local / admin123
+-- sponsor@netzero.local / sponsor123
 INSERT OR IGNORE INTO users (id, email, password_hash, role, name)
 VALUES
   ('user-admin', 'admin@netzero.local', 'placeholder-hash', 'admin', 'Admin User'),

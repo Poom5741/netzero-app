@@ -117,7 +117,7 @@ describe("Audit trail — admin decisions", () => {
     const photoId = body.id;
 
     // Admin overrides it
-    const cookie = makeSessionCookie("admin");
+    const cookie = await makeSessionCookie("admin");
     const reviewRes = await app.request(`/api/admin/review/${photoId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: cookie },
@@ -150,7 +150,7 @@ describe("Audit trail — admin decisions", () => {
     const photoId = body.id;
 
     // Admin verifies (promotes)
-    const cookie = makeSessionCookie("admin");
+    const cookie = await makeSessionCookie("admin");
     const reviewRes = await app.request(`/api/admin/review/${photoId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: cookie },
@@ -185,7 +185,7 @@ describe("Audit trail — admin decisions", () => {
     const photoId = body.id;
 
     // Admin verifies
-    const cookie = makeSessionCookie("admin");
+    const cookie = await makeSessionCookie("admin");
     await app.request(`/api/admin/review/${photoId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: cookie },
@@ -217,7 +217,7 @@ describe("GET /api/admin/audit/:photoId — decision history API", () => {
     const photoId = body.id;
 
     // Admin promotes
-    const cookie = makeSessionCookie("admin");
+    const cookie = await makeSessionCookie("admin");
     await app.request(`/api/admin/review/${photoId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: cookie },
@@ -237,7 +237,7 @@ describe("GET /api/admin/audit/:photoId — decision history API", () => {
 
   it("returns empty array for photo with no audit entries", async () => {
     const { app } = await createTestApp();
-    const cookie = makeSessionCookie("admin");
+    const cookie = await makeSessionCookie("admin");
     const auditRes = await app.request("/api/admin/audit/nonexistent", {
       headers: { Cookie: cookie },
     });

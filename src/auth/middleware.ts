@@ -7,10 +7,29 @@ export function requireRole(requiredRole: string, secret: string) {
     const match = cookie.match(/nzc_session=([^;]+)/);
     if (!match) return c.json({ error: "Unauthorized" }, 401);
 
-    const session = parseSessionCookie(match[1] ?? "", secret);
+    const session = await parseSessionCookie(match[1] ?? "", secret);
     if (!session) return c.json({ error: "Unauthorized" }, 401);
 
     if (session.role !== requiredRole) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    c.set("session", session);
+    await next();
+  };
+}
+
+/** Require admin OR sponsor role. */
+export function requireAdminOrSponsor(secret: string) {
+  return async (c: Context, next: Next) => {
+    const cookie = c.req.header("Cookie") ?? "";
+    const match = cookie.match(/nzc_session=([^;]+)/);
+    if (!match) return c.json({ error: "Unauthorized" }, 401);
+
+    const session = await parseSessionCookie(match[1] ?? "", secret);
+    if (!session) return c.json({ error: "Unauthorized" }, 401);
+
+    if (session.role !== "admin" && session.role !== "sponsor") {
       return c.json({ error: "Forbidden" }, 403);
     }
 

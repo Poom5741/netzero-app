@@ -147,14 +147,20 @@ async function insertLineLinks(db: D1Like): Promise<number> {
 }
 
 async function insertUsers(db: D1Like): Promise<string[]> {
+  const { hashPassword } = await import("../auth/password");
   const roles: string[] = [];
+  const passwords: Record<string, string> = {
+    "user-admin": "admin123",
+    "user-sponsor": "sponsor123",
+  };
   for (const u of USERS) {
+    const hash = await hashPassword(passwords[u.id] ?? "changeme");
     await db
       .prepare(
         `INSERT OR IGNORE INTO users (id, email, password_hash, role, name)
          VALUES (?, ?, ?, ?, ?)`,
       )
-      .bind(u.id, u.email, "placeholder-hash", u.role, u.name)
+      .bind(u.id, u.email, hash, u.role, u.name)
       .run();
     roles.push(u.role);
   }

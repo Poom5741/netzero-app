@@ -97,7 +97,7 @@ describe("Seam 1 — full vertical slice", () => {
     expect(estimate.total_offset_tco2e).toBeGreaterThan(0);
 
     // Step 7: Sponsor access
-    const sponsorCookie = makeSessionCookie("sponsor");
+    const sponsorCookie = await makeSessionCookie("sponsor");
     const sponsorRes = await app.request(
       "/sponsor",
       new Request("http://localhost/sponsor", {
@@ -105,8 +105,8 @@ describe("Seam 1 — full vertical slice", () => {
       }),
     );
     expect(sponsorRes.status).toBe(200);
-    const html = await sponsorRes.text();
-    expect(html).toContain("Sponsor Dashboard");
+    const body = await sponsorRes.json() as { provinces: unknown[] };
+    expect(body).toHaveProperty("provinces");
   });
 
   it("404 returned for unknown routes", async () => {

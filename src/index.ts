@@ -43,6 +43,7 @@ app.use("*", cors({
   origin: ["https://netzero-frontend.poom-a1d.workers.dev", "http://localhost:3000"],
   allowMethods: ["GET", "POST", "OPTIONS"],
   allowHeaders: ["Content-Type"],
+  credentials: true,
 }));
 
 // LIFF chat app
