@@ -9,6 +9,8 @@ import { sponsorRoutes } from "./routes/sponsor";
 import { adminRoutes } from "./routes/admin";
 import { liffRoutes } from "./routes/liff";
 import { seasonRoutes } from "./routes/season";
+import { farmerSignupRoutes } from "./routes/farmer-signup";
+import { adminFarmerRoutes } from "./routes/admin-farmers";
 import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
@@ -47,6 +49,9 @@ app.use("*", cors({
 
 // LIFF chat app
 app.route("/", liffRoutes);
+
+// Farmer self-signup
+app.route("/", farmerSignupRoutes);
 
 // Auth (login/logout)
 app.route("/", authRoutes);
@@ -233,6 +238,9 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
 
 // Admin review dashboard
 app.route("/", adminRoutes);
+
+// Admin farmer approval
+app.route("/", adminFarmerRoutes);
 
 // Sponsor dashboard + detail
 app.route("/sponsor", sponsorRoutes);

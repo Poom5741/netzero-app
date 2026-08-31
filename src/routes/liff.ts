@@ -5,6 +5,7 @@
 import { Hono } from "hono";
 import { getStaticAssets } from "hono/static";
 import { handleFlowApi, type FlowApiResult } from "../line/flow";
+import { checkFarmerApproved } from "../chat/guard";
 
 type Bindings = {
   DB: D1Database;
@@ -124,6 +125,18 @@ liffRoutes.post("/api/chat", async (c) => {
 
     if (!text || !userId) {
       return c.json({ error: "text and userId required" }, 400);
+    }
+
+    // Guard: block non-approved farmers from AI chat (resolve via line_link)
+    const existingLink = await db
+      .prepare("SELECT farmer_id FROM line_links WHERE line_user_id = ?")
+      .bind(userId)
+      .first<{ farmer_id: string }>();
+    if (existingLink) {
+      const guard = await checkFarmerApproved(existingLink.farmer_id, db);
+      if (!guard.allowed) {
+        return c.json({ error: "บัญชีรอการอนุมัติ", reason: guard.reason }, 403);
+      }
     }
 
     // Get or create link

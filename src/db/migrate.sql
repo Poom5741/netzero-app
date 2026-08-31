@@ -176,6 +176,9 @@ CREATE INDEX IF NOT EXISTS idx_carbon_estimates_plot ON carbon_estimates(plot_id
 CREATE INDEX IF NOT EXISTS idx_ai_events_farmer ON ai_events(farmer_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
+-- Farmer self-signup approval status (POOM-165)
+ALTER TABLE farmers ADD COLUMN status TEXT CHECK(status IN ('pending', 'approved', 'rejected')) DEFAULT 'approved';
+
 -- Issue #103: Pre-Verification stamp + audit sampling columns
 ALTER TABLE photo_evidence ADD COLUMN photo_type TEXT CHECK(photo_type IN ('prepare', 'wetdry', 'harvest'));
 ALTER TABLE photo_evidence ADD COLUMN water_state TEXT;
