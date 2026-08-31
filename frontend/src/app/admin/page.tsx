@@ -8,6 +8,7 @@ import { ReviewCard } from "@/components/admin-review/review-card";
 import { ReviewDetailPanel } from "@/components/admin-review/review-detail-panel";
 import { PrecisionCard } from "@/components/admin-review/precision-card";
 import { getReviewQueue, reviewPhoto, getPrecisionStat, apiRequest, type PhotoReview, type PrecisionStat } from "@/lib/api";
+import { useAuthGuard } from "@/lib/auth";
 
 type GateStatus = "idle" | "approved" | "blocked";
 type GateResult = { success: boolean; missing?: string[] } | null;
@@ -33,6 +34,7 @@ const filterToApiStatus: Record<string, string | undefined> = {
 };
 
 export default function AdminReviewPage() {
+  const authState = useAuthGuard("admin");
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [queue, setQueue] = useState<PhotoReview[]>([]);
@@ -94,6 +96,25 @@ export default function AdminReviewPage() {
     setActiveFilter(key);
     setSelectedId(null);
   };
+
+  if (authState === "loading" || authState === "redirecting") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-container-low">
+        <p className="text-body-md text-on-surface-variant">กำลังตรวจสอบ...</p>
+      </div>
+    );
+  }
+  if (authState === "denied") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-container-low p-4">
+        <div className="neumorphic p-8 text-center max-w-sm">
+          <span className="material-symbols-outlined text-error text-5xl mb-3">block</span>
+          <h2 className="text-headline-md font-bold text-on-surface mb-2">ไม่มีสิทธิ์เข้าถึง</h2>
+          <p className="text-body-md text-on-surface-variant">บัญชีของคุณไม่มีสิทธิ์เข้าถึงหน้านี้</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface">

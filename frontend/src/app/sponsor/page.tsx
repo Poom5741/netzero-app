@@ -12,6 +12,7 @@ import {
   formatUSD,
   type ProvinceGroup as ProvinceGroupType,
 } from "@/lib/sponsor";
+import { useAuthGuard } from "@/lib/auth";
 
 const PRIVATE_IP_PREFIXES = ["10.", "172.", "192.168."];
 
@@ -83,6 +84,7 @@ const techniques = [
 ];
 
 export default function SponsorDashboardPage() {
+  const authState = useAuthGuard("sponsor");
   const [groups, setGroups] = useState<ProvinceGroupType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -126,6 +128,25 @@ export default function SponsorDashboardPage() {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 100);
   };
+
+  if (authState === "loading" || authState === "redirecting") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-container-low">
+        <p className="text-body-md text-on-surface-variant">กำลังตรวจสอบ...</p>
+      </div>
+    );
+  }
+  if (authState === "denied") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-container-low p-4">
+        <div className="neumorphic p-8 text-center max-w-sm">
+          <span className="material-symbols-outlined text-error text-5xl mb-3">block</span>
+          <h2 className="text-headline-md font-bold text-on-surface mb-2">ไม่มีสิทธิ์เข้าถึง</h2>
+          <p className="text-body-md text-on-surface-variant">บัญชีของคุณไม่มีสิทธิ์เข้าถึงหน้านี้</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

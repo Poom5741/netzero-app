@@ -1,5 +1,7 @@
 "use client";
 
+import { apiRequest } from "@/lib/api";
+
 interface DashboardHeaderProps {
   userLabel: string;
   searchPlaceholder?: string;
@@ -49,6 +51,17 @@ export function DashboardHeader({
           </div>
           <span className="text-label-md text-on-surface">{userLabel}</span>
         </div>
+        <button
+          type="button"
+          onClick={async () => {
+            await apiRequest("/logout", { method: "POST" }).catch(() => {});
+            window.location.href = "/login";
+          }}
+          className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high"
+          aria-label="ออกจากระบบ"
+        >
+          <span className="material-symbols-outlined">logout</span>
+        </button>
       </div>
     </header>
   );
