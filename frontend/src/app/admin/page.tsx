@@ -131,7 +131,7 @@ export default function AdminReviewPage() {
               </div>
 
               {/* Precision stat */}
-              <div className="mb-6 max-w-xs">
+              <div className="mb-6" style={{ maxWidth: 384 }}>
                 <PrecisionCard
                   auditReviewed={precision.auditReviewed}
                   overrides={precision.overrides}
@@ -140,7 +140,7 @@ export default function AdminReviewPage() {
               </div>
 
               {/* Season gate */}
-              <div className="mb-6 max-w-xs">
+              <div className="mb-6" style={{ maxWidth: 384 }}>
                 <div className="neumorphic p-4 rounded-xl">
                   <h3 className="text-label-md font-semibold text-on-surface mb-2">สถานะฤดูกาล</h3>
                   {gateStatus === "approved" && (
