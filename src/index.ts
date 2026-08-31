@@ -13,6 +13,7 @@ import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
 import { handleFlow, type ConversationState } from "./line/flow";
+import { checkFloodGate, recordUsage } from "./rate-limit/flood-gate";
 
 type Bindings = {
   DB: D1Database;
@@ -184,6 +185,15 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
       if (event.message?.type !== "text") break;
       const text = event.message.text.trim();
 
+      // Flood gate: per-user rate limit + global daily budget
+      const rateCheck = await checkFloodGate(event.source.userId, db);
+      if (!rateCheck.allowed) {
+        await replyMessage(token, event.replyToken, [
+          { type: "text", text: rateCheck.message },
+        ]);
+        break;
+      }
+
       // Get or create link
       let link = await db
         .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
@@ -221,6 +231,9 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         selectedPlotId: link.selected_plot_id,
         text,
       });
+
+      // Record usage after successful processing
+      await recordUsage(event.source.userId, db);
       break;
     }
 

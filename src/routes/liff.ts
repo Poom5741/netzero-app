@@ -5,6 +5,7 @@
 import { Hono } from "hono";
 import { getStaticAssets } from "hono/static";
 import { handleFlowApi, type FlowApiResult } from "../line/flow";
+import { checkFloodGate, recordUsage } from "../rate-limit/flood-gate";
 
 type Bindings = {
   DB: D1Database;
@@ -126,6 +127,16 @@ liffRoutes.post("/api/chat", async (c) => {
       return c.json({ error: "text and userId required" }, 400);
     }
 
+    // Flood gate: per-user rate limit + global daily budget
+    const rateCheck = await checkFloodGate(userId, db);
+    if (!rateCheck.allowed) {
+      return c.json(
+        { error: rateCheck.message, retry_after: rateCheck.retryAfter },
+        rateCheck.status,
+        { headers: { "Retry-After": String(rateCheck.retryAfter) } },
+      );
+    }
+
     // Get or create link
     let link = await db
       .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
@@ -168,6 +179,9 @@ liffRoutes.post("/api/chat", async (c) => {
       .prepare("UPDATE line_links SET conversation_state = ?, selected_plot_id = COALESCE(?, selected_plot_id) WHERE id = ?")
       .bind(result.newState, result.selectedPlotId ?? null, link.id)
       .run();
+
+    // Record usage after successful processing
+    await recordUsage(userId, db);
 
     return c.json({ reply: result.reply });
   } catch (err) {
