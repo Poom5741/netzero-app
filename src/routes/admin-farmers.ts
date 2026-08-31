@@ -42,7 +42,7 @@ adminFarmerRoutes.post("/api/admin/farmers/:id/approve", async (c) => {
   const id = c.req.param("id");
   await c.env.DB
     .prepare("UPDATE farmers SET status = 'approved', updated_at = datetime('now') WHERE id = ?")
-    .bind("approved", id)
+    .bind(id)
     .run();
 
   return c.json({ ok: true });
@@ -55,7 +55,7 @@ adminFarmerRoutes.post("/api/admin/farmers/:id/reject", async (c) => {
   const id = c.req.param("id");
   await c.env.DB
     .prepare("UPDATE farmers SET status = 'rejected', updated_at = datetime('now') WHERE id = ?")
-    .bind("rejected", id)
+    .bind(id)
     .run();
 
   return c.json({ ok: true });

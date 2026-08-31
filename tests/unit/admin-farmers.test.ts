@@ -20,25 +20,90 @@ function mockD1(farmers: Record<string, unknown>[] = []) {
             return {
               run: async () => {
                 if (sql.includes("UPDATE")) {
-                  const id = args[args.length - 1];
-                  const status = args[0];
-                  const farmer = store.find(f => f.id === id) as Record<string, unknown> | undefined;
-                  if (farmer) farmer.status = status;
+                  // D1 binds args positionally to ? placeholders
+                  // Parse SET clause for hardcoded values and ? placeholders
+                  const setMatch = sql.match(/SET\s+(.+?)\s+WHERE/i);
+                  const whereMatch = sql.match(/WHERE\s+(.+?)$/i);
+                  
+                  let argIndex = 0;
+                  const updates: Record<string, unknown> = {};
+                  
+                  if (setMatch?.[1]) {
+                    // Parse each SET assignment
+                    const assignments = setMatch[1].split(",").map(s => s.trim());
+                    for (const assignment of assignments) {
+                      const [col, val] = assignment.split("=").map(s => s.trim());
+                      if (val === "?") {
+                        updates[col] = args[argIndex++];
+                      } else if (val.startsWith("'") && val.endsWith("'")) {
+                        updates[col] = val.slice(1, -1);
+                      } else if (val === "datetime('now')") {
+                        updates[col] = new Date().toISOString();
+                      }
+                    }
+                  }
+                  
+                  // Parse WHERE clause
+                  let whereCol = "";
+                  let whereVal: unknown;
+                  if (whereMatch?.[1]) {
+                    const condition = whereMatch[1].trim();
+                    const [col, val] = condition.split("=").map(s => s.trim());
+                    whereCol = col;
+                    if (val === "?") {
+                      whereVal = args[argIndex++];
+                    } else if (val.startsWith("'") && val.endsWith("'")) {
+                      whereVal = val.slice(1, -1);
+                    }
+                  }
+                  
+                  // Apply update
+                  const farmer = store.find(f => f[whereCol] === whereVal) as Record<string, unknown> | undefined;
+                  if (farmer) {
+                    Object.assign(farmer, updates);
+                  }
                 }
                 return { success: true };
               },
               first: async <T>() => {
-                if (sql.includes("WHERE id")) {
-                  const id = args[0];
-                  return (store.find(f => f.id === id) as T) ?? null;
+                if (sql.includes("WHERE")) {
+                  // Map bind args to ? placeholders in WHERE clause
+                  const whereMatch = sql.match(/WHERE\s+(.+?)$/i);
+                  if (whereMatch?.[1]) {
+                    const conditions = whereMatch[1].split(/\s+AND\s+/i);
+                    const filters: Record<string, unknown> = {};
+                    let argIndex = 0;
+                    for (const cond of conditions) {
+                      const [col, val] = cond.split("=").map(s => s.trim());
+                      if (val === "?") {
+                        filters[col] = args[argIndex++];
+                      } else if (val.startsWith("'") && val.endsWith("'")) {
+                        filters[col] = val.slice(1, -1);
+                      }
+                    }
+                    return (store.find(f => Object.entries(filters).every(([k, v]) => f[k] === v)) as T) ?? null;
+                  }
                 }
                 return null;
               },
               all: async <T>() => {
                 let results = [...store] as T[];
-                if (sql.includes("WHERE status")) {
-                  const status = args[0];
-                  results = store.filter(f => f.status === status) as T[];
+                if (sql.includes("WHERE")) {
+                  const whereMatch = sql.match(/WHERE\s+(.+?)(?:\s+ORDER|\s+GROUP|\s+LIMIT|$)/i);
+                  if (whereMatch?.[1]) {
+                    const conditions = whereMatch[1].split(/\s+AND\s+/i);
+                    const filters: Record<string, unknown> = {};
+                    let argIndex = 0;
+                    for (const cond of conditions) {
+                      const [col, val] = cond.split("=").map(s => s.trim());
+                      if (val === "?") {
+                        filters[col] = args[argIndex++];
+                      } else if (val.startsWith("'") && val.endsWith("'")) {
+                        filters[col] = val.slice(1, -1);
+                      }
+                    }
+                    results = store.filter(f => Object.entries(filters).every(([k, v]) => f[k] === v)) as T[];
+                  }
                 }
                 return { results };
               },
