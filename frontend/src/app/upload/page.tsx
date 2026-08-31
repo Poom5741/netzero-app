@@ -189,7 +189,7 @@ function UploadContent() {
             <PhotoTypePicker value={photoType} onChange={setPhotoType} />
 
             {/* Camera frame */}
-            <div className="w-full aspect-square neumorphic rounded-2xl flex items-center justify-center relative overflow-hidden">
+            <div className="w-full neumorphic rounded-2xl flex items-center justify-center relative overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
               <div className="absolute inset-4 border-2 border-primary/30 rounded-xl pointer-events-none" />
               <div className="absolute top-4 left-4 right-4 flex justify-between">
                 <div className="w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl-lg" />
@@ -260,7 +260,7 @@ function UploadContent() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="w-full aspect-square neumorphic rounded-2xl overflow-hidden relative">
+            <div className="w-full neumorphic rounded-2xl overflow-hidden relative" style={{ aspectRatio: "1 / 1" }}>
               <img src={photo.preview} alt="Preview" className="w-full h-full object-cover" />
             </div>
 

@@ -40,12 +40,23 @@ export function ReviewCard({ review, selected, onSelect }: ReviewCardProps) {
           : "rounded-xl",
       ].join(" ")}
     >
-      <div className="aspect-square rounded-xl overflow-hidden shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl">
+      <div className="rounded-xl overflow-hidden shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl bg-surface-container-high relative" style={{ aspectRatio: "1 / 1" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="w-full h-full object-cover"
           src={review.photo_url}
           alt={`ภาพพื้นที่ ${review.plot_id}`}
+          onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            img.style.display = 'none';
+            const parent = img.parentElement;
+            if (parent && !parent.querySelector('.fallback-icon')) {
+              const icon = document.createElement('div');
+              icon.className = 'fallback-icon absolute inset-0 flex items-center justify-center';
+              icon.innerHTML = '<span class="material-symbols-outlined text-outline text-4xl">image_not_supported</span>';
+              parent.appendChild(icon);
+            }
+          }}
         />
 
         {/* AI Badge */}
