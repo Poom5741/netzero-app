@@ -6,6 +6,7 @@ import type { PhotoReview } from "@/lib/api";
 const mockReview: PhotoReview = {
   id: "photo-001",
   plot_id: "FARM-001",
+  farmer_name: "สมชาย ใจดี",
   ai_status: "pass",
   ai_label: "Rice paddy",
   ai_reason: null,
@@ -17,6 +18,7 @@ const mockReview: PhotoReview = {
 const flaggedReview: PhotoReview = {
   id: "photo-002",
   plot_id: "FARM-002",
+  farmer_name: "สมหญิง รักนา",
   ai_status: "flag",
   ai_label: "Water level",
   ai_reason: "น้ำท่วมขังเกินกำหนด",
@@ -37,7 +39,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    expect(screen.getAllByText("FARM-001").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("สมชาย ใจดี")).toBeInTheDocument();
   });
 
   it("shows AI confidence as percentage in progress bar", () => {

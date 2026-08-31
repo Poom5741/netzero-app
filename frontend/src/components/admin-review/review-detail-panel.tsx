@@ -72,7 +72,7 @@ export function ReviewDetailPanel({
                 {review.plot_id.charAt(0)}
               </div>
               <div>
-                <p className="text-label-md text-on-surface text-[16px]">{review.plot_id}</p>
+                <p className="text-label-md text-on-surface text-[16px]">{review.farmer_name || review.plot_id}</p>
                 <p className="text-body-md text-on-surface-variant text-[12px]">ID: {review.plot_id}</p>
               </div>
             </div>

@@ -114,7 +114,7 @@ export default function AdminReviewPage() {
         <span className="ml-4 text-body-md text-on-surface font-semibold">Review Queue</span>
       </header>
 
-      <main className="sidebar-offset pt-20 lg:pt-24 px-4 lg:px-10 pb-10">
+      <main className="dashboard-main pt-20 lg:pt-24 px-4 lg:px-10 pb-10">
         <div className="flex flex-col w-full h-[calc(100vh-80px)]">
           <div className="flex h-full w-full gap-6">
             {/* Main Grid Area */}

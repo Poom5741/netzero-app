@@ -85,7 +85,6 @@ const techniques = [
 export default function SponsorDashboardPage() {
   const [groups, setGroups] = useState<ProvinceGroupType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,10 +96,8 @@ export default function SponsorDashboardPage() {
           setLoading(false);
         }
       } catch {
-        if (!cancelled) {
-          setError("ไม่สามารถโหลดข้อมูลได้");
-          setLoading(false);
-        }
+        // fetchSponsorData always resolves with fallback data
+        if (!cancelled) setLoading(false);
       }
     }
     fetch();
@@ -138,7 +135,7 @@ export default function SponsorDashboardPage() {
       />
       <DashboardHeader userLabel="ผู้ดูแลระบบ" searchPlaceholder="ค้นหาทั่วโลก..." />
 
-      <div className="sidebar-offset-pl">
+      <div className="dashboard-main">
         <main className="relative pt-20 min-h-screen bg-surface px-6 lg:px-10 py-6">
           <div className="flex flex-col w-full relative">
             {/* Header Section */}
@@ -207,12 +204,7 @@ export default function SponsorDashboardPage() {
               {/* Regional Breakdown (8 cols) */}
               <div className="lg:col-span-8 flex flex-col gap-6">
                 <h2 className="text-headline-lg text-on-surface">รายละเอียดตามภูมิภาค</h2>
-                {error ? (
-                  <div className="neumorphic p-6 text-center">
-                    <span className="material-symbols-outlined text-error text-4xl mb-2 block">error</span>
-                    <p className="text-body-md text-on-surface mb-2">{error}</p>
-                  </div>
-                ) : loading ? (
+                {loading ? (
                   <div className="neumorphic p-6 text-center">
                     <div className="flex justify-center gap-2 mb-2">
                       <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
