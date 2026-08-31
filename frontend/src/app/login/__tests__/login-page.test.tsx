@@ -44,7 +44,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     fireEvent.change(screen.getByLabelText(/อีเมล/i), { target: { value: "sponsor@netzero.local" } });
-    fireEvent.change(screen.getByLabelText(/รหัสผ่าน/i), { target: { value: "sponsor123" } });
+    fireEvent.change(screen.getByLabelText(/รหัสผ่าน/i), { target: { value: "admin123" } });
     fireEvent.click(screen.getByRole("button", { name: /เข้าสู่ระบบ/i }));
 
     await waitFor(() => {

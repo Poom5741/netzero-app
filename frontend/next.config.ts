@@ -13,6 +13,18 @@ const nextConfig: NextConfig = isStaticExport
         source: "/api/:path*",
         destination: "http://localhost:8787/api/:path*",
       },
+      {
+        source: "/login",
+        destination: "http://localhost:8787/login",
+      },
+      {
+        source: "/logout",
+        destination: "http://localhost:8787/logout",
+      },
+      {
+        source: "/me",
+        destination: "http://localhost:8787/me",
+      },
     ];
   },
 }

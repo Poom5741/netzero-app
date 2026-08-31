@@ -151,7 +151,7 @@ async function insertUsers(db: D1Like): Promise<string[]> {
   const roles: string[] = [];
   const passwords: Record<string, string> = {
     "user-admin": "admin123",
-    "user-sponsor": "sponsor123",
+    "user-sponsor": "admin123",
   };
   for (const u of USERS) {
     const hash = await hashPassword(passwords[u.id] ?? "changeme");
