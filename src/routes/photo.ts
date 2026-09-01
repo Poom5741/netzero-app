@@ -12,6 +12,13 @@ import { composeRetakeMessage } from "../vision/retake-message";
 import { calculatePhaseWindows } from "../season/phase-windows";
 import { validateTemporal } from "../season/temporal-validation";
 
+// Placeholder SVG for missing evidence images (POC local dev)
+const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect fill="#e8edf2" width="400" height="400"/>
+  <text x="200" y="190" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#999">หลักฐานภาพ</text>
+  <text x="200" y="215" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#bbb">Photo Evidence</text>
+</svg>`;
+
 type Bindings = {
   DB: D1Database;
   R2: R2Bucket;
@@ -63,6 +70,16 @@ function getConfig(formData: FormData): PreVerifyConfig {
 }
 
 type Verdict = "refused" | "flagged" | "pre_verified" | "queued";
+
+// GET /evidence/:key — serve photo evidence image (placeholder for local dev)
+photoRoutes.get("/evidence/:key", async (c) => {
+  const key = c.req.param("key");
+  // In production, fetch from R2: c.env.R2.get(`evidence/${key}`)
+  // For POC local dev, return placeholder SVG
+  return new Response(PLACEHOLDER_SVG, {
+    headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" },
+  });
+});
 
 photoRoutes.post("/photo/upload", async (c) => {
   const formData = await c.req.formData();

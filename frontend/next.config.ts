@@ -25,6 +25,10 @@ const nextConfig: NextConfig = isStaticExport
         source: "/redirect",
         destination: "http://localhost:8787/redirect",
       },
+      {
+        source: "/evidence/:path*",
+        destination: "http://localhost:8787/evidence/:path*",
+      },
     ];
   },
 }
