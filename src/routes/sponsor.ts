@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getPlotDetail, getPlotsByProvince } from "../sponsor/dashboard";
+import { getPlotDetail, getPlotsByProvince, getSponsorSummary, getSponsorFarmers } from "../sponsor/dashboard";
 
 type Bindings = {
   DB: D1Database;
@@ -11,6 +11,18 @@ sponsorRoutes.get("/", async (c) => {
   const db = c.env.DB;
   const provinces = await getPlotsByProvince(db);
   return c.json({ provinces });
+});
+
+sponsorRoutes.get("/summary", async (c) => {
+  const db = c.env.DB;
+  const summary = await getSponsorSummary(db);
+  return c.json(summary);
+});
+
+sponsorRoutes.get("/farmers", async (c) => {
+  const db = c.env.DB;
+  const farmers = await getSponsorFarmers(db);
+  return c.json({ farmers });
 });
 
 sponsorRoutes.get("/:plotId", async (c) => {

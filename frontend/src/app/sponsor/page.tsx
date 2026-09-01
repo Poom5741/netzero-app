@@ -11,6 +11,8 @@ import {
   generateExportCSV,
   formatUSD,
   type ProvinceGroup as ProvinceGroupType,
+  type SponsorSummary,
+  type SponsorFarmerRow,
 } from "@/lib/sponsor";
 
 const PRIVATE_IP_PREFIXES = ["10.", "172.", "192.168."];
@@ -31,6 +33,27 @@ function validateApiUrl(url: string): string {
   return url;
 }
 
+const EMPTY_SUMMARY: SponsorSummary = {
+  totalCO2Tons: 0,
+  totalPlots: 0,
+  totalFarmers: 0,
+  paymentEstimateUSD: 0,
+  methodologyBreakdown: { awd: 0, biochar: 0, fertilization: 0 },
+};
+
+async function fetchJson<T>(path: string, fallback: T): Promise<T> {
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+  if (!apiBase) return fallback;
+  try {
+    const endpoint = validateApiUrl(`${apiBase}${path}`);
+    const res = await fetch(endpoint);
+    if (!res.ok) return fallback;
+    return (await res.json()) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 function fetchSponsorData(): Promise<ProvinceGroupType[]> {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE;
   if (!apiBase) return Promise.resolve(getFallbackData());
@@ -41,7 +64,9 @@ function fetchSponsorData(): Promise<ProvinceGroupType[]> {
       xhr.open("GET", endpoint);
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(JSON.parse(xhr.responseText) as ProvinceGroupType[]);
+          const data = JSON.parse(xhr.responseText);
+          // Backend wraps in { provinces: [...] }
+          resolve(data.provinces ?? data);
         } else {
           resolve(getFallbackData());
         }
@@ -72,49 +97,47 @@ const regionCodeMap: Record<string, string> = {
 
 function getRegionCode(province: string): string {
   if (regionCodeMap[province]) return regionCodeMap[province];
-  // Fallback: use first two characters of province name
   return province.slice(0, 2).toUpperCase();
 }
 
-const techniques = [
-  { name: "AWD (การจัดการน้ำสลับ)", pct: 65 },
-  { name: "Biochar (ถ่านชีวภาพ)", pct: 25 },
-  { name: "Fertilization (การใส่ปุ๋ย)", pct: 10 },
-];
-
 export default function SponsorDashboardPage() {
   const [groups, setGroups] = useState<ProvinceGroupType[]>([]);
+  const [summary, setSummary] = useState<SponsorSummary>(EMPTY_SUMMARY);
+  const [farmers, setFarmers] = useState<SponsorFarmerRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    async function fetch() {
+    async function load() {
       try {
-        const data = await fetchSponsorData();
+        const [data, summaryData, farmersData] = await Promise.all([
+          fetchSponsorData(),
+          fetchJson<SponsorSummary>("/sponsor/summary", EMPTY_SUMMARY),
+          fetchJson<{ farmers: SponsorFarmerRow[] }>("/sponsor/farmers", { farmers: [] }),
+        ]);
         if (!cancelled) {
           setGroups(data);
+          setSummary(summaryData);
+          setFarmers(farmersData.farmers ?? []);
           setLoading(false);
         }
       } catch {
-        // Fallback data is always returned by getSponsorDashboardData
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
-    fetch();
-    return () => {
-      cancelled = true;
-    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
-  // Compute KPIs
-  const totalCO2 = groups.reduce(
-    (sum, g) => sum + g.plots.reduce((s, p) => s + (p.total_offset_tco2e ?? 0), 0),
-    0,
-  );
-  const totalPlots = groups.reduce((sum, g) => sum + g.plots.length, 0);
-  const totalInvestment = totalPlots * 2000; // estimate: $2000 per plot
+  const totalCO2 = summary.totalCO2Tons;
+  const totalPlots = summary.totalPlots;
+  const totalInvestment = summary.paymentEstimateUSD;
+
+  const techniques = [
+    { name: "AWD (การจัดการน้ำสลับ)", pct: summary.methodologyBreakdown.awd },
+    { name: "Biochar (ถ่านชีวภาพ)", pct: summary.methodologyBreakdown.biochar },
+    { name: "การใส่ปุ๋ย (Fertilization)", pct: summary.methodologyBreakdown.fertilization },
+  ];
 
   const handleExport = () => {
     const csv = generateExportCSV(groups);
@@ -126,6 +149,8 @@ export default function SponsorDashboardPage() {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 100);
   };
+
+  const isEmpty = !loading && totalPlots === 0 && farmers.length === 0;
 
   return (
     <>
@@ -172,69 +197,81 @@ export default function SponsorDashboardPage() {
               </div>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 relative z-10">
-              <KpiCard
-                title="CO₂ ที่ลดทั้งหมด"
-                value={Math.round(totalCO2)}
-                suffix="ตัน"
-                icon="eco"
-                color="primary"
-                trend="+12% จากไตรมาสที่แล้ว"
-              />
-              <KpiCard
-                title="แปลงที่ได้รับการสนับสนุน"
-                value={totalPlots}
-                suffix="แปลง"
-                icon="landscape"
-                color="secondary"
-                trend={`Across ${groups.length} จังหวัด`}
-              />
-              <KpiCard
-                title="การลงทุนทั้งหมด"
-                value={totalInvestment}
-                suffix=""
-                icon="payments"
-                color="tertiary"
-                trend="ปี 2024"
-                formatValue={formatUSD}
-              />
-            </div>
-
-            {/* Bento Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
-              {/* Regional Breakdown (8 cols) */}
-              <div className="lg:col-span-8 flex flex-col gap-6">
-                <h2 className="text-headline-lg text-on-surface">รายละเอียดตามภูมิภาค</h2>
-                {loading ? (
-                  <div className="bg-surface-container p-6 rounded-xl">
-                    <p className="text-on-surface-variant">กำลังโหลดข้อมูล...</p>
-                  </div>
-                ) : (
-                  groups.map((group) => (
-                    <ProvinceGroup
-                      key={group.province}
-                      province={group.province}
-                      plots={group.plots as import("@/lib/sponsor").PlotSummary[]}
-                      regionCode={getRegionCode(group.province)}
-                    />
-                  ))
-                )}
+            {isEmpty ? (
+              <div className="bg-surface-container p-12 rounded-xl text-center">
+                <span className="material-symbols-outlined text-64 text-on-surface-variant mb-4">eco</span>
+                <h2 className="text-headline-lg text-on-surface mt-4">ยังไม่มีข้อมูล</h2>
+                <p className="text-body-lg text-on-surface-variant mt-2">
+                  ยังไม่มีข้อมูลคาร์บอนเครดิตในระบบ ข้อมูลจะปรากฏเมื่อเกษตรกรเริ่มบันทึกข้อมูล
+                </p>
               </div>
-
-              {/* Live Calculation + Map (4 cols) */}
-              <div className="lg:col-span-4 flex flex-col gap-6">
-                <LiveCalc liveValue={Math.round(totalCO2)} techniques={techniques} />
-
-                {/* Map */}
-                <div className="neumorphic overflow-hidden flex flex-col h-64">
-                  <div className="p-4 pb-0">
-                    <h3 className="font-headline-md text-[18px] text-on-surface">การกระจายโครงการ</h3>
-                  </div>
-                  <div className="flex-1 w-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAVG86o0n-MoR-4dNoH0sh1Yu4QC9LeHaXXbgBA3RlmKu5F-1um9QCDuROM2VrrwHp1gy04UagLdUBHlpsDm3qnbdTXbvJ_aGU6NqA2LOsg3OgWzelFWVd-w9E-SFtJAcqyFxPQQWzIvQy6SIFx7n4qa_Ay7IQB9ik_5wmVOa4pPJa8661GwOK3fo-eRNZ9yHQrQvm0RWtJ2sWxmMOvXJLDBqJ59nsyxvZdQiBMX3jVGtQEyA3EjG3LbA')" }} />
+            ) : (
+              <>
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 relative z-10">
+                  <KpiCard
+                    title="CO₂ ที่ลดทั้งหมด"
+                    value={Math.round(totalCO2)}
+                    suffix="ตัน"
+                    icon="eco"
+                    color="primary"
+                    trend={loading ? "กำลังโหลด..." : undefined}
+                  />
+                  <KpiCard
+                    title="แปลงที่ได้รับการสนับสนุน"
+                    value={totalPlots}
+                    suffix="แปลง"
+                    icon="landscape"
+                    color="secondary"
+                    trend={loading ? "กำลังโหลด..." : `Across ${groups.length} จังหวัด • ${summary.totalFarmers} เกษตรกร`}
+                  />
+                  <KpiCard
+                    title="การลงทุนทั้งหมด"
+                    value={totalInvestment}
+                    suffix=""
+                    icon="payments"
+                    color="tertiary"
+                    trend="ปี 2024"
+                    formatValue={formatUSD}
+                  />
                 </div>
-              </div>
-            </div>
+
+                {/* Bento Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
+                  {/* Regional Breakdown (8 cols) */}
+                  <div className="lg:col-span-8 flex flex-col gap-6">
+                    <h2 className="text-headline-lg text-on-surface">รายละเอียดตามภูมิภาค</h2>
+                    {loading ? (
+                      <div className="bg-surface-container p-6 rounded-xl">
+                        <p className="text-on-surface-variant">กำลังโหลดข้อมูล...</p>
+                      </div>
+                    ) : (
+                      groups.map((group) => (
+                        <ProvinceGroup
+                          key={group.province}
+                          province={group.province}
+                          plots={group.plots as import("@/lib/sponsor").PlotSummary[]}
+                          regionCode={getRegionCode(group.province)}
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  {/* Live Calculation + Map (4 cols) */}
+                  <div className="lg:col-span-4 flex flex-col gap-6">
+                    <LiveCalc liveValue={Math.round(totalCO2)} techniques={techniques} />
+
+                    {/* Map */}
+                    <div className="neumorphic overflow-hidden flex flex-col h-64">
+                      <div className="p-4 pb-0">
+                        <h3 className="font-headline-md text-[18px] text-on-surface">การกระจายโครงการ</h3>
+                      </div>
+                      <div className="flex-1 w-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAVG86o0n-MoR-4dNoH0sh1Yu4QC9LeHaXXbgBA3RlmKu5F-1um9QCDuROM2VrrwHp1gy04UagLdUBHlpsDm3qnbdTXbvJ_aGU6NqA2LOsg3OgWzelFWVd-w9E-SFtJAcqyFxPQQWzIvQy6SIFx7n4qa_Ay7IQB9ik_5wmVOa4pPJa8661GwOK3fo-eRNZ9yHQrQvm0RWtJ2sWxmMOvXJLDBqJ59nsyxvZdQiBMX3jVGtQEyA3EjG3LbA')" }} />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>

@@ -23,6 +23,23 @@ export type SponsorOverview = {
   totalInvestmentUSD: number;
 };
 
+export type SponsorSummary = {
+  totalCO2Tons: number;
+  totalPlots: number;
+  totalFarmers: number;
+  paymentEstimateUSD: number;
+  methodologyBreakdown: { awd: number; biochar: number; fertilization: number };
+};
+
+export type SponsorFarmerRow = {
+  farmer_id: string;
+  farmer_name: string;
+  province: string;
+  plotCount: number;
+  totalTCO2e: number;
+  progressPercent: number;
+};
+
 // ─── Pure helpers ───
 
 /** Format a number with comma separators. */
