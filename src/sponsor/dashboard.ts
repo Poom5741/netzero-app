@@ -236,3 +236,100 @@ async function getProvenanceCounts(
   }
   return counts;
 }
+
+// ─── Sponsor summary & farmers aggregation ───
+
+// ponytail: POC carbon price constant. Upgrade: move to env var or config table when pricing becomes dynamic.
+const CARBON_PRICE_USD_PER_TON = 200;
+
+export type SponsorSummary = {
+  totalCO2Tons: number;
+  totalPlots: number;
+  totalFarmers: number;
+  paymentEstimateUSD: number;
+  methodologyBreakdown: { awd: number; biochar: number; fertilization: number };
+};
+
+export type SponsorFarmerRow = {
+  farmer_id: string;
+  farmer_name: string;
+  province: string;
+  plotCount: number;
+  totalTCO2e: number;
+  progressPercent: number;
+};
+
+export async function getSponsorSummary(db: D1Database): Promise<SponsorSummary> {
+  const [co2Row, plotsRow, farmersRow, methodRows] = await Promise.all([
+    db.prepare(`SELECT SUM(coalesce(ce.total_offset_tco2e, 0)) as total_co2 FROM carbon_estimates ce`).bind().all<{ total_co2: number | null }>(),
+    db.prepare(`SELECT COUNT(DISTINCT p.id) as total_plots FROM plots p`).bind().all<{ total_plots: number }>(),
+    db.prepare(`SELECT COUNT(DISTINCT f.id) as total_farmers FROM farmers f`).bind().all<{ total_farmers: number }>(),
+    db.prepare(
+      `SELECT si.water_management, COUNT(*) as cnt FROM season_inputs si GROUP BY si.water_management`,
+    ).bind().all<{ water_management: string | null; cnt: number }>(),
+  ]);
+
+  const totalCO2Tons = (co2Row.results?.[0]?.total_co2) ?? 0;
+  const totalPlots = plotsRow.results?.[0]?.total_plots ?? 0;
+  const totalFarmers = farmersRow.results?.[0]?.total_farmers ?? 0;
+
+  // Methodology breakdown: compute percentages from season_inputs water_management values
+  const methodCounts = methodRows.results ?? [];
+  const total = methodCounts.reduce((s, r) => s + r.cnt, 0);
+  const pct = (key: string) => {
+    if (total === 0) return 0;
+    const row = methodCounts.find((r) => r.water_management === key);
+    return Math.round(((row?.cnt ?? 0) / total) * 100);
+  };
+
+  return {
+    totalCO2Tons,
+    totalPlots,
+    totalFarmers,
+    paymentEstimateUSD: totalCO2Tons * CARBON_PRICE_USD_PER_TON,
+    methodologyBreakdown: {
+      awd: pct("AWD"),
+      biochar: pct("Biochar"),
+      fertilization: pct("Fertilization"),
+    },
+  };
+}
+
+export async function getSponsorFarmers(db: D1Database): Promise<SponsorFarmerRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT
+        f.id AS farmer_id,
+        f.full_name AS farmer_name,
+        f.addr_province AS province,
+        COUNT(DISTINCT p.id) AS plot_count,
+        COALESCE(SUM(ce.total_offset_tco2e), 0) AS total_tco2e,
+        COUNT(CASE WHEN pe.admin_status = 'verified' THEN 1 END) AS verified_photos,
+        COUNT(pe.id) AS total_photos
+      FROM farmers f
+      JOIN plots p ON p.farmer_id = f.id
+      LEFT JOIN carbon_estimates ce ON ce.plot_id = p.id
+      LEFT JOIN photo_evidence pe ON pe.plot_id = p.id
+      GROUP BY f.id, f.full_name, f.addr_province
+      ORDER BY total_tco2e DESC`,
+    )
+    .bind()
+    .all<{
+      farmer_id: string;
+      farmer_name: string;
+      province: string;
+      plot_count: number;
+      total_tco2e: number;
+      verified_photos: number;
+      total_photos: number;
+    }>();
+
+  return (results ?? []).map((r) => ({
+    farmer_id: r.farmer_id,
+    farmer_name: r.farmer_name,
+    province: r.province,
+    plotCount: r.plot_count,
+    totalTCO2e: r.total_tco2e,
+    progressPercent: r.total_photos > 0 ? Math.round((r.verified_photos / r.total_photos) * 100) : 0,
+  }));
+}
