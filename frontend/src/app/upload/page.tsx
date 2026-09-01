@@ -189,7 +189,15 @@ function UploadContent() {
             <PhotoTypePicker value={photoType} onChange={setPhotoType} />
 
             {/* Camera frame */}
-            <div className="w-full aspect-square neumorphic rounded-2xl flex items-center justify-center relative overflow-hidden">
+            <div
+              data-testid="camera-frame"
+              role="button"
+              tabIndex={0}
+              aria-label="ถ่ายรูป"
+              onClick={handleCapture}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleCapture(); }}
+              className="w-full aspect-square neumorphic rounded-2xl flex items-center justify-center relative overflow-hidden cursor-pointer"
+            >
               <div className="absolute inset-4 border-2 border-primary/30 rounded-xl pointer-events-none" />
               <div className="absolute top-4 left-4 right-4 flex justify-between">
                 <div className="w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl-lg" />
