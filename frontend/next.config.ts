@@ -10,6 +10,10 @@ const nextConfig: NextConfig = isStaticExport
       async rewrites() {
     return [
       {
+        source: "/api/auth/:path*",
+        destination: "http://localhost:8787/:path*",
+      },
+      {
         source: "/api/:path*",
         destination: "http://localhost:8787/api/:path*",
       },
