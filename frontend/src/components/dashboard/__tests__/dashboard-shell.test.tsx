@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import { DashboardSidebar } from "../dashboard-sidebar";
 import { DashboardHeader } from "../dashboard-header";
 
@@ -55,5 +55,26 @@ describe("DashboardHeader", () => {
   it("renders the user label", () => {
     render(<DashboardHeader userLabel="System Admin" />);
     expect(screen.getByText("System Admin")).toBeInTheDocument();
+  });
+
+  it("renders a logout button", () => {
+    render(<DashboardHeader userLabel="System Admin" />);
+    expect(screen.getByLabelText("ออกจากระบบ")).toBeInTheDocument();
+  });
+
+  it("POSTs to /api/auth/logout and redirects on click", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+    global.fetch = mockFetch;
+    const mockAssign = vi.fn();
+    delete (window as any).location;
+    (window as any).location = { assign: mockAssign } as any;
+
+    render(<DashboardHeader userLabel="System Admin" />);
+    fireEvent.click(screen.getByLabelText("ออกจากระบบ"));
+
+    await vi.waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith("/api/auth/logout", { method: "POST" });
+      expect(mockAssign).toHaveBeenCalledWith("/login");
+    });
   });
 });

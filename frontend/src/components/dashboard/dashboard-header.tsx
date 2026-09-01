@@ -5,6 +5,11 @@ interface DashboardHeaderProps {
   searchPlaceholder?: string;
 }
 
+async function handleLogout() {
+  await fetch("/api/auth/logout", { method: "POST" });
+  window.location.assign("/login");
+}
+
 /**
  * Sticky glassmorphic top header with search, notifications, settings,
  * and the signed-in user. Shared by the dashboards.
@@ -40,6 +45,14 @@ export function DashboardHeader({
             aria-label="การตั้งค่า"
           >
             <span className="material-symbols-outlined">settings</span>
+          </button>
+          <button
+            type="button"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high"
+            aria-label="ออกจากระบบ"
+            onClick={handleLogout}
+          >
+            <span className="material-symbols-outlined">logout</span>
           </button>
         </div>
         <div className="h-8 w-px bg-outline-variant/30" />
