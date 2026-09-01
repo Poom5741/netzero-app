@@ -26,3 +26,26 @@ export function QuickActions({ actions }: QuickActionsProps) {
     </div>
   );
 }
+
+/**
+ * Returns state-aware quick actions based on conversation state.
+ * Before consent (welcome/phone/pending): consent + ask.
+ * After identification (chat/confirm_draft/select_plot): summary + upload + ask.
+ */
+export function getQuickActions(
+  state: string,
+  onSend: (text: string) => void,
+  onNavigate: (href: string) => void,
+): QuickAction[] {
+  if (state === "welcome" || state === "phone" || state === "pending") {
+    return [
+      { icon: "check_circle", label: "ยอมรับเงื่อนไข", onClick: () => onSend("ยอมรับ") },
+      { icon: "help", label: "สอบถาม", onClick: () => onSend("ช่วย") },
+    ];
+  }
+  return [
+    { icon: "summarize", label: "บันทึกข้อมูล", onClick: () => onNavigate("/summary") },
+    { icon: "add_a_photo", label: "ถ่ายรูป", onClick: () => onNavigate("/upload") },
+    { icon: "help", label: "สอบถาม", onClick: () => onSend("ช่วย") },
+  ];
+}

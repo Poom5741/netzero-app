@@ -122,7 +122,7 @@ function UploadContent() {
   const navItems = [
     { icon: "chat", label: "แชท", href: "/chat" },
     { icon: "photo_camera", label: "อัปโหลด", href: "/upload", active: true },
-    { icon: "bar_chart", label: "สรุป", href: "/summary" },
+    { icon: "bar_chart", label: "สรุปผล", href: "/summary" },
   ];
 
   if (isLoading) {

@@ -54,6 +54,7 @@ export interface ChatMessage {
 export interface ChatResponse {
   reply: string;
   error?: string;
+  state?: string;
 }
 
 export async function sendChatMessage(message: ChatMessage): Promise<ChatResponse> {
