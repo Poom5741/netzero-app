@@ -473,10 +473,45 @@ export async function handleFlowApi(ctx: FlowContext): Promise<FlowApiResult> {
 async function handleWelcomeApi(ctx: FlowContext): Promise<FlowApiResult> {
   const lower = ctx.text.toLowerCase().trim();
   if (["ยอมรับ", "accept", "ตกลง", "同意", "ok"].includes(lower)) {
-    await ctx.db.prepare("UPDATE line_links SET conversation_state = 'phone' WHERE id = ?").bind(ctx.linkId).run();
-    return { reply: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)", newState: "phone" };
+    // POC: skip phone/pending, go directly to plot selection
+    return handlePlotSelectionAfterConsentApi(ctx);
   }
   return { reply: "กรุณายอมรับเงื่อนไขก่อนใช้งาน\nพิมพ์ 'ยอมรับ' เพื่อยอมรับเงื่อนไขทั้งหมด", newState: "welcome" };
+}
+
+/**
+ * After consent, look up farmer's plots and guide to next step.
+ */
+async function handlePlotSelectionAfterConsentApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const plots = await ctx.db
+    .prepare("SELECT id, plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY plot_code")
+    .bind(ctx.farmerId)
+    .all<{ id: string; plot_code: string; area_rai: number }>();
+
+  if (!plots.results || plots.results.length === 0) {
+    return {
+      reply: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nยังไม่มีแปลงนาในระบบ\nกรุณาพิมพ์ 'ลงทะเบียนแปลง' เพื่อเพิ่มแปลงนาใหม่ค่ะ",
+      newState: "select_plot",
+    };
+  }
+
+  if (plots.results.length === 1) {
+    const plot = plots.results[0];
+    return {
+      reply: `✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nเลือกแปลง ${plot.plot_code} (${plot.area_rai} ไร่)\n\nพร้อมเริ่มทำงานได้เลยค่ะ\nพิมพ์ข้อมูลปุ๋ย ถ่ายรูป หรือถามคำถามได้เลย`,
+      newState: "chat",
+      selectedPlotId: plot.id,
+    };
+  }
+
+  const plotList = plots.results
+    .map((p, i) => `${i + 1}. ${p.plot_code} (${p.area_rai} ไร่)`)
+    .join("\n");
+
+  return {
+    reply: `✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\n📋 แปลงนาของท่าน:\n${plotList}\n\nพิมพ์หมายเลขเพื่อเลือกแปลง`,
+    newState: "select_plot",
+  };
 }
 
 async function handlePhoneApi(ctx: FlowContext): Promise<FlowApiResult> {
