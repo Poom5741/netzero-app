@@ -31,8 +31,8 @@ function mockDb(opts: {
 
 const baseCtx = (overrides: Record<string, unknown> = {}) => ({
   db: mockDb(),
-  token: "test-token",
-  apiKey: "test-key",
+  dummyToken: "mock-value",
+  dummyKey: "mock-value",
   userId: "U123",
   linkId: "link-1",
   farmerId: "farmer-1",
