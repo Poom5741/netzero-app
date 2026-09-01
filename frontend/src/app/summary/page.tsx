@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LiffProvider, useLiff } from "@/lib/liff-context";
 import { apiRequest } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BottomNav } from "@/components/ui/bottom-nav";
+
+interface Plot {
+  id: string;
+  plot_code: string;
+  area_rai: number;
+  deed_no: string;
+}
+
+interface Season {
+  id: string;
+  name: string;
+  status: string;
+}
 
 interface FormData {
   waterLevel: number;
@@ -14,8 +27,15 @@ interface FormData {
   electricityKwh: number;
 }
 
+// Demo user maps to farmer-001
+const DEMO_FARMER_ID = "farmer-001";
+
 function SummaryContent() {
   const { userId, isLoading } = useLiff();
+  const [plots, setPlots] = useState<Plot[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedPlot, setSelectedPlot] = useState<string>("");
+  const [selectedSeason, setSelectedSeason] = useState<string>("");
   const [form, setForm] = useState<FormData>({
     waterLevel: 5,
     strawManagement: "",
@@ -27,6 +47,39 @@ function SummaryContent() {
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Derive farmer_id from userId
+  const farmerId = userId === "demo-user" ? DEMO_FARMER_ID : userId;
+
+  // Fetch plots on mount
+  useEffect(() => {
+    if (!farmerId) return;
+    apiRequest<{ plots: Plot[] }>(`/api/plots?farmer_id=${farmerId}`)
+      .then((res) => {
+        if (res.ok) {
+          setPlots(res.data.plots);
+          if (res.data.plots.length > 0) {
+            setSelectedPlot(res.data.plots[0].id);
+          }
+        }
+      })
+      .catch(() => setError("โหลดข้อมูลแปลงล้มเหลว"));
+  }, [farmerId]);
+
+  // Fetch seasons when plot changes
+  useEffect(() => {
+    if (!selectedPlot) return;
+    apiRequest<{ seasons: Season[] }>(`/api/seasons?plot_id=${selectedPlot}`)
+      .then((res) => {
+        if (res.ok) {
+          setSeasons(res.data.seasons);
+          // Default to active season or first
+          const active = res.data.seasons.find((s) => s.status === "active");
+          setSelectedSeason(active?.id || res.data.seasons[0]?.id || "");
+        }
+      })
+      .catch(() => setError("โหลดข้อมูลฤดูกาลล้มเหลว"));
+  }, [selectedPlot]);
+
   const progress = Math.round(
     ((form.waterLevel > 0 ? 1 : 0) +
       (form.strawManagement ? 1 : 0) +
@@ -36,7 +89,7 @@ function SummaryContent() {
       100,
   );
 
-  const isFormValid = form.strawManagement !== "";
+  const isFormValid = form.strawManagement !== "" && selectedPlot !== "" && selectedSeason !== "";
 
   const strawOptions = [
     { value: "plough_under", label: "ไถกลบ" },
@@ -48,7 +101,11 @@ function SummaryContent() {
   async function handleSave() {
     setValidationError(null);
     
-    // Validate required fields
+    if (!selectedPlot || !selectedSeason) {
+      setValidationError("กรุณาเลือกแปลงและฤดูกาล");
+      return;
+    }
+
     if (!form.strawManagement) {
       setValidationError("กรุณาเลือกการจัดการฟางข้าว");
       return;
@@ -60,8 +117,8 @@ function SummaryContent() {
       const res = await apiRequest("/api/season", {
         method: "POST",
         json: {
-          plot_id: "plot-004",
-          season_id: "2568-napi",
+          plot_id: selectedPlot,
+          season_id: selectedSeason,
           water_level_cm: form.waterLevel,
           straw_mgmt: form.strawManagement,
           fuel_liters: form.fuelLiters,
@@ -126,6 +183,47 @@ function SummaryContent() {
           </div>
         ) : (
           <div className="space-y-4 w-full">
+            {/* Plot Selector */}
+            <div className="neumorphic rounded-xl p-4">
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">landscape</span>
+                เลือกแปลงนา
+              </label>
+              <select
+                value={selectedPlot}
+                onChange={(e) => setSelectedPlot(e.target.value)}
+                className="w-full neumorphic-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+              >
+                <option value="">เลือกแปลง...</option>
+                {plots.map((plot) => (
+                  <option key={plot.id} value={plot.id}>
+                    {plot.plot_code} ({plot.area_rai} ไร่)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Season Selector */}
+            <div className="neumorphic rounded-xl p-4">
+              <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
+                <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+                ฤดูกาล
+              </label>
+              <select
+                value={selectedSeason}
+                onChange={(e) => setSelectedSeason(e.target.value)}
+                className="w-full neumorphic-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+                disabled={!selectedPlot}
+              >
+                <option value="">เลือกฤดูกาล...</option>
+                {seasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {season.name} {season.status === "active" ? "●" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Water Level */}
             <div className="neumorphic rounded-xl p-4">
               <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">

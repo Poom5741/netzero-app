@@ -11,8 +11,16 @@ VALUES
 INSERT OR IGNORE INTO plots (id, farmer_id, plot_code, deed_no, doc_type, tenure, area_rai, centroid_lat, centroid_lng)
 VALUES
   ('plot-001', 'farmer-001', 'CM-001', '12345', 'chanote', 'owner', 15.5, 18.82, 98.98),
+  ('plot-004', 'farmer-001', 'CM-002', '12346', 'chanote', 'owner', 8.0, 18.83, 98.99),
   ('plot-002', 'farmer-002', 'CR-001', '67890', 'ns3k', 'tenant', 22.0, 19.91, 100.08),
   ('plot-003', 'farmer-003', 'TEST-001', '99999', 'chanote', 'owner', 10.0, 13.85, 100.57);
+
+-- Seasons
+INSERT OR IGNORE INTO seasons (id, plot_id, name, status)
+VALUES
+  ('2568-napi', 'plot-001', 'นาปี 2568', 'active'),
+  ('2568-prang', 'plot-001', 'นาปรัง 2568', 'closed'),
+  ('2568-napi-p4', 'plot-004', 'นาปี 2568 (แปลง 2)', 'active');
 
 -- LINE Links
 INSERT OR IGNORE INTO line_links (id, farmer_id, line_user_id, status)

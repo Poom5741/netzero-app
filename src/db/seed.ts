@@ -68,6 +68,17 @@ const PLOTS = [
     lng: 98.98,
   },
   {
+    id: "plot-004",
+    farmerId: "farmer-001",
+    code: "CM-002",
+    deed: "12346",
+    docType: "chanote",
+    tenure: "owner",
+    area: 8.0,
+    lat: 18.83,
+    lng: 98.99,
+  },
+  {
     id: "plot-002",
     farmerId: "farmer-002",
     code: "CR-001",
@@ -89,6 +100,12 @@ const PLOTS = [
     lat: 13.85,
     lng: 100.57,
   },
+];
+
+const SEASONS = [
+  { id: "2568-napi", plotId: "plot-001", name: "นาปี 2568", status: "active" },
+  { id: "2568-prang", plotId: "plot-001", name: "นาปรัง 2568", status: "closed" },
+  { id: "2568-napi-p4", plotId: "plot-004", name: "นาปี 2568 (แปลง 2)", status: "active" },
 ];
 
 const LINE_LINKS = [
@@ -131,6 +148,21 @@ async function insertPlots(db: D1Like): Promise<number> {
   return count;
 }
 
+async function insertSeasons(db: D1Like): Promise<number> {
+  let count = 0;
+  for (const s of SEASONS) {
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO seasons (id, plot_id, name, status)
+         VALUES (?, ?, ?, ?)`,
+      )
+      .bind(s.id, s.plotId, s.name, s.status)
+      .run();
+    count++;
+  }
+  return count;
+}
+
 async function insertLineLinks(db: D1Like): Promise<number> {
   let count = 0;
   for (const l of LINE_LINKS) {
@@ -164,6 +196,7 @@ async function insertUsers(db: D1Like): Promise<string[]> {
 export async function seedData(db: D1Like): Promise<SeedResult> {
   const farmerPhones = await insertFarmers(db);
   const plots = await insertPlots(db);
+  await insertSeasons(db);
   const lineLinks = await insertLineLinks(db);
   const userRoles = await insertUsers(db);
 
