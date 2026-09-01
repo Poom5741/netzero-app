@@ -78,6 +78,9 @@ export interface PhotoReview {
   pre_verified?: number;
   audit_sample?: number;
   farmer_name?: string | null;
+  gps_lat?: number | null;
+  gps_lng?: number | null;
+  taken_at?: string | null;
 }
 
 export async function getReviewQueue(status?: string): Promise<PhotoReview[]> {

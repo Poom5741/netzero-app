@@ -120,4 +120,47 @@ describe("ReviewDetailPanel", () => {
     );
     expect(screen.getByText("Farmer Profile")).toBeInTheDocument();
   });
+
+  it("displays the photo image from photo_url", () => {
+    render(
+      <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
+    );
+    const img = screen.getByAltText(/FARM-001/);
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute("src", "/test/photo.jpg");
+  });
+
+  it("calls onClose when close button is clicked", () => {
+    const onClose = vi.fn();
+    render(
+      <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={onClose} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("displays photo_type when available", () => {
+    const reviewWithType = { ...mockReview, photo_type: "awd_midseason" };
+    render(
+      <ReviewDetailPanel review={reviewWithType} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
+    );
+    expect(screen.getByText("awd_midseason")).toBeInTheDocument();
+  });
+
+  it("displays GPS coordinates when available", () => {
+    const reviewWithGps = { ...mockReview, gps_lat: 13.7563, gps_lng: 100.5018 };
+    render(
+      <ReviewDetailPanel review={reviewWithGps} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
+    );
+    expect(screen.getByText(/13\.7563/)).toBeInTheDocument();
+    expect(screen.getByText(/100\.5018/)).toBeInTheDocument();
+  });
+
+  it("displays taken_at date when available", () => {
+    const reviewWithDate = { ...mockReview, taken_at: "2025-08-15T10:30:00Z" };
+    render(
+      <ReviewDetailPanel review={reviewWithDate} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
+    );
+    expect(screen.getByText(/2025-08-15/)).toBeInTheDocument();
+  });
 });
