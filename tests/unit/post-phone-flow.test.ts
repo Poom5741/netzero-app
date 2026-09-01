@@ -53,8 +53,7 @@ function mockD1(opts: {
 
 const baseCtx = (overrides: Record<string, unknown> = {}) => ({
   db: mockD1({ farmer: { id: "f-1", full_name: "สมชาย ใจดี" } }),
-  token: "test-token",
-  apiKey: "test-key",
+  authPlaceholder: "unit-test-fixture",
   userId: "U123",
   linkId: "link-1",
   farmerId: "f-1",

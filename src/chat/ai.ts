@@ -92,11 +92,14 @@ export async function chatWithAi(
       ],
       max_tokens: 512,
       temperature: 0.3,
+      // Qwen3.6 is a reasoning model — without this all tokens go to `reasoning`
+      // and `content` comes back null (finish_reason: length).
+      reasoning: { enabled: false },
     }),
   });
 
   const json = await res.json() as {
-    choices?: Array<{ message?: { content?: string } }>;
+    choices?: Array<{ message?: { content?: string | null; reasoning?: string } }>;
     error?: { message?: string };
   };
 
@@ -105,7 +108,8 @@ export async function chatWithAi(
     return { type: "reply", text: "ขออภัยค่ะ ระบบประมวลผลชั่วคราว กรุณาลองใหม่อีกครั้ง" };
   }
 
-  const rawText = json.choices?.[0]?.message?.content ?? "";
+  const choice = json.choices?.[0]?.message;
+  const rawText = choice?.content ?? choice?.reasoning ?? "";
 
   // Try to parse as JSON
   let parsed: Record<string, unknown> | null = null;

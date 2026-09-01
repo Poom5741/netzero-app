@@ -41,31 +41,40 @@ const EMPTY_SUMMARY: SponsorSummary = {
   methodologyBreakdown: { awd: 0, biochar: 0, fertilization: 0 },
 };
 
-async function fetchJson<T>(path: string, fallback: T): Promise<T> {
+function fetchJson<T>(path: string, fallback: T): Promise<T> {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE;
-  if (!apiBase) return fallback;
-  try {
-    const endpoint = validateApiUrl(`${apiBase}${path}`);
-    const res = await fetch(endpoint);
-    if (!res.ok) return fallback;
-    return (await res.json()) as T;
-  } catch {
-    return fallback;
-  }
+  // Dev (no API base): relative path goes through the Next.js rewrite proxy —
+  // same-origin, fixed route string, no user input.
+  const endpoint = apiBase ? validateApiUrl(`${apiBase}${path}`) : path;
+  return new Promise((resolve) => {
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", endpoint);
+      xhr.onload = () => {
+        try {
+          resolve(xhr.status >= 200 && xhr.status < 300 ? (JSON.parse(xhr.responseText) as T) : fallback);
+        } catch {
+          resolve(fallback);
+        }
+      };
+      xhr.onerror = () => resolve(fallback);
+      xhr.send();
+    } catch {
+      resolve(fallback);
+    }
+  });
 }
 
 function fetchSponsorData(): Promise<ProvinceGroupType[]> {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE;
-  if (!apiBase) return Promise.resolve(getFallbackData());
+  const endpoint = apiBase ? validateApiUrl(`${apiBase}/sponsor`) : "/sponsor";
   return new Promise((resolve) => {
     try {
-      const endpoint = validateApiUrl(`${apiBase}/sponsor/`);
       const xhr = new XMLHttpRequest();
       xhr.open("GET", endpoint);
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const data = JSON.parse(xhr.responseText);
-          // Backend wraps in { provinces: [...] }
           resolve(data.provinces ?? data);
         } else {
           resolve(getFallbackData());

@@ -33,6 +33,10 @@ const nextConfig: NextConfig = isStaticExport
         source: "/evidence/:path*",
         destination: "http://localhost:8787/evidence/:path*",
       },
+      {
+        source: "/sponsor/:path*",
+        destination: "http://localhost:8787/sponsor/:path*",
+      },
     ];
   },
 }
