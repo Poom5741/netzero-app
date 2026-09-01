@@ -157,7 +157,13 @@ adminRoutes.get("/api/admin/review", async (c) => {
   const filter = c.req.query("status") || undefined;
   const queue = await getReviewQueue(db, filter);
 
-  return c.json(queue);
+  // Transform raw R2 keys to servable URLs
+  const withUrls = queue.map((item) => ({
+    ...item,
+    photo_url: `/api/photo/${item.id}`,
+  }));
+
+  return c.json(withUrls);
 });
 
 // GET /api/admin/precision — Pre-verify precision stat
@@ -291,8 +297,11 @@ adminRoutes.post("/api/admin/review/:photoId", async (c) => {
   return c.json({ error: result.error }, 400);
 });
 
-// GET /api/photo/:photoId — Serve photo from R2
+// GET /api/photo/:photoId — Serve photo from R2 (admin auth required)
 adminRoutes.get("/api/photo/:photoId", async (c) => {
+  const session = requireAdmin(c, c.env.SECRET);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
+
   const photoId = c.req.param("photoId");
   const r2 = c.env.R2;
 
