@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { LiffProvider, useLiff } from "@/lib/liff-context";
 import { sendChatMessage } from "@/lib/api";
 import { ChatBubble } from "@/components/ui/chat-bubble";
-import { QuickActions } from "@/components/ui/quick-actions";
+import { QuickActions, getQuickActions } from "@/components/ui/quick-actions";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { TypingIndicator } from "@/components/ui/typing-indicator";
 
@@ -31,22 +31,23 @@ function ChatContent() {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [conversationState, setConversationState] = useState("welcome");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const quickActions = [
-    { icon: "add_a_photo", label: "ส่งรูปถ่าย", onClick: () => handleSend("ถ่ายรูป") },
-    { icon: "summarize", label: "สรุปฤดูกาล", onClick: () => handleSend("สรุปฤดู") },
-    { icon: "help", label: "สอบถาม", onClick: () => handleSend("ช่วย") },
-  ];
+  const quickActions = getQuickActions(
+    conversationState,
+    (text) => handleSend(text),
+    (href) => window.location.href = href,
+  );
 
   const navItems = [
     { icon: "chat_bubble", label: "แชท", href: "/chat", active: true },
     { icon: "cloud_upload", label: "อัปโหลด", href: "/upload" },
-    { icon: "analytics", label: "สรุป", href: "/summary" },
+    { icon: "analytics", label: "สรุปผล", href: "/summary" },
   ];
 
   async function handleSend(text?: string) {
@@ -65,6 +66,7 @@ function ChatContent() {
     setIsTyping(true);
     try {
       const response = await sendChatMessage({ text: messageText, userId });
+      if (response.state) setConversationState(response.state);
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",

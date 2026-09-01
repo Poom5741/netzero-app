@@ -4,6 +4,7 @@ import { ChatBubble } from "../ui/chat-bubble";
 import { QuickActions } from "../ui/quick-actions";
 import { BottomNav } from "../ui/bottom-nav";
 import { TypingIndicator } from "../ui/typing-indicator";
+import { getQuickActions } from "../ui/quick-actions";
 
 describe("ChatBubble", () => {
   it("renders system message with glassmorphic style", () => {
@@ -86,5 +87,42 @@ describe("TypingIndicator", () => {
     const { container } = render(<TypingIndicator />);
     const dots = container.querySelectorAll(".typing-dot");
     expect(dots.length).toBe(3);
+  });
+});
+
+describe("getQuickActions", () => {
+  it("returns consent actions for welcome state", () => {
+    const actions = getQuickActions("welcome", () => {}, () => {});
+    expect(actions.map(a => a.label)).toEqual(["ยอมรับเงื่อนไข", "สอบถาม"]);
+  });
+
+  it("returns consent actions for phone state", () => {
+    const actions = getQuickActions("phone", () => {}, () => {});
+    expect(actions.map(a => a.label)).toEqual(["ยอมรับเงื่อนไข", "สอบถาม"]);
+  });
+
+  it("returns navigation actions for chat state", () => {
+    const actions = getQuickActions("chat", () => {}, () => {});
+    expect(actions.map(a => a.label)).toEqual(["บันทึกข้อมูล", "ถ่ายรูป", "สอบถาม"]);
+  });
+
+  it("returns navigation actions for confirm_draft state", () => {
+    const actions = getQuickActions("confirm_draft", () => {}, () => {});
+    expect(actions.map(a => a.label)).toEqual(["บันทึกข้อมูล", "ถ่ายรูป", "สอบถาม"]);
+  });
+
+  it("consent action sends ยอมรับ text", () => {
+    let sent = "";
+    const actions = getQuickActions("welcome", (t) => { sent = t; }, () => {});
+    actions[0].onClick();
+    expect(sent).toBe("ยอมรับ");
+  });
+
+  it("navigation actions call navigate callback", () => {
+    const navigated: string[] = [];
+    const actions = getQuickActions("chat", () => {}, (href) => { navigated.push(href); });
+    actions[0].onClick(); // บันทึกข้อมูล → /summary
+    actions[1].onClick(); // ถ่ายรูป → /upload
+    expect(navigated).toEqual(["/summary", "/upload"]);
   });
 });

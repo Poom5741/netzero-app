@@ -169,7 +169,7 @@ liffRoutes.post("/api/chat", async (c) => {
       .bind(result.newState, result.selectedPlotId ?? null, link.id)
       .run();
 
-    return c.json({ reply: result.reply });
+    return c.json({ reply: result.reply, state: result.newState });
   } catch (err) {
     console.error("Chat API error:", err);
     return c.json({ error: "Internal server error" }, 500);
