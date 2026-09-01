@@ -12,8 +12,9 @@ interface ReviewDetailPanelProps {
 }
 
 /**
- * Side panel (384px) for reviewing a selected photo.
- * Shows farmer profile, AI analysis, GPS, and approve/reject buttons.
+ * Detail panel for reviewing a selected photo.
+ * Desktop (≥lg): side panel (384px) in flex row.
+ * Mobile (<lg): full-screen modal overlay.
  */
 export function ReviewDetailPanel({
   review,
@@ -40,30 +41,68 @@ export function ReviewDetailPanel({
     setShowRejectModal(false);
   };
 
+  const formatDate = (iso: string) => {
+    try {
+      return new Date(iso).toISOString().slice(0, 10);
+    } catch {
+      return iso;
+    }
+  };
+
   return (
     <>
       <aside
-        className="w-96 flex flex-col h-full bg-surface-container-lowest rounded-xl shadow-lg overflow-hidden shrink-0"
+        className="review-detail-panel flex flex-col h-full bg-surface-container-lowest rounded-xl shadow-lg overflow-hidden shrink-0"
         aria-label="รายละเอียดการตรวจสอบ"
       >
         {/* Header */}
         <div className="p-6 bg-surface-container-low border-b border-surface-container-highest/50">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-headline-md text-headline-md text-on-surface">{review.plot_id}</h3>
-            {review.ai_status === "flag" && (
-              <div className="bg-error-container text-on-error-container px-2 py-1 rounded text-[12px] font-label-md">
-                Flagged
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {review.ai_status === "flag" && (
+                <div className="bg-error-container text-on-error-container px-2 py-1 rounded text-[12px] font-label-md">
+                  Flagged
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
+              </button>
+            </div>
           </div>
-          <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-            Submitted 2 hours ago
-          </p>
+          {review.taken_at && (
+            <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+              {formatDate(review.taken_at)}
+            </p>
+          )}
         </div>
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Photo */}
+          <div className="rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: "16/9" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={review.photo_url}
+              alt={`ภาพพื้นที่ ${review.plot_id}`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Photo type */}
+          {review.photo_type && (
+            <div className="bg-surface rounded-xl p-4 shadow-sm">
+              <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Photo Type</p>
+              <p className="font-body-md text-body-md text-on-surface">{review.photo_type}</p>
+            </div>
+          )}
+
           {/* Farmer Info */}
           <div className="bg-surface rounded-xl p-4 shadow-sm">
             <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Farmer Profile</p>
@@ -72,7 +111,7 @@ export function ReviewDetailPanel({
                 {review.plot_id.charAt(0)}
               </div>
               <div>
-                <p className="font-label-md text-label-md text-on-surface text-[16px]">{review.farmer_name}</p>
+                <p className="font-label-md text-label-md text-on-surface text-[16px]">{review.farmer_name || "—"}</p>
                 <p className="font-body-md text-body-md text-on-surface-variant text-[12px]">ID: {review.plot_id}</p>
               </div>
             </div>
@@ -83,7 +122,7 @@ export function ReviewDetailPanel({
             <p className="font-label-md text-label-md text-on-surface-variant mb-2 uppercase tracking-wider text-[11px]">AI Analysis Results</p>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-body-md text-body-md text-on-surface text-[14px]">Crop Type Match</span>
+                <span className="font-body-md text-body-md text-on-surface text-[14px]">Confidence</span>
                 <span className="font-label-md text-label-md text-primary">{confidencePercent}%</span>
               </div>
               <div className="w-full bg-surface-container-highest rounded-full h-1.5">
@@ -123,34 +162,30 @@ export function ReviewDetailPanel({
             )}
           </div>
 
-          {/* Location Map */}
-          <div>
-            <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Geolocation Evidence</p>
-            <div className="w-full h-40 bg-cover bg-center rounded-xl shadow-sm border border-surface-container-highest/30 relative overflow-hidden" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBRUuf3vpHPkk2Ft7Wu0YDo4PymlZSv9q5JmR9_BZS5hjsyaZ-ZSg-TzcPMF5eRipSuspPOiH7OClBYF1MTPnWKH6URsOS25xPaSAoe-1qC6bd7NlWnLkOP-hx503-_llRwtGZx6zR1T272ryBc5KVUJYBTiVDLufHvvdQjMxuz2nFPy1Lhuoo0N6Y1L135g8OvYqLwl5hckxBBtch_CGQKox5EVdhtU5Xlz5YokKPA8dPFgbgDtY66ZQ')" }}>
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
-              <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
-                <div className="bg-surface/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-body-md text-on-surface">
-                  GPS Coords
-                </div>
-                <div className="bg-surface/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-body-md text-on-surface flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">verified</span> GPS Match
-                </div>
-              </div>
+          {/* GPS Coordinates */}
+          {(review.gps_lat != null && review.gps_lng != null) && (
+            <div className="bg-surface rounded-xl p-4 shadow-sm">
+              <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Geolocation</p>
+              <p className="font-body-md text-body-md text-on-surface text-[14px]">
+                Lat: {review.gps_lat}, Lng: {review.gps_lng}
+              </p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Action Area */}
         <div className="p-6 bg-surface-container-lowest border-t border-surface-container-highest/20 mt-auto">
           <div className="flex gap-4">
             <button
+              type="button"
               onClick={() => setShowRejectModal(true)}
               className="flex-1 h-11 flex items-center justify-center gap-2 bg-error text-on-error rounded-xl font-label-md text-label-md shadow-[0_4px_10px_rgba(186,26,26,0.3),inset_0_2px_4px_rgba(255,255,255,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
             >
-              <span className="material-symbols-outlined text-[18px]">close</span>
+              <span className="material-symbols-outlined text-[18px]">cancel</span>
               Reject
             </button>
             <button
+              type="button"
               onClick={() => onApprove(review.id)}
               className="flex-1 h-11 flex items-center justify-center gap-2 bg-gradient-to-b from-[#06C755] to-[#00A854] text-white rounded-xl font-label-md text-label-md shadow-[0_4px_10px_rgba(6,199,85,0.3),inset_0_2px_4px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
             >

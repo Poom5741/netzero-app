@@ -214,6 +214,24 @@ body {
   min-width: 44px;
 }
 
+/* === Review Detail Panel: responsive side-panel / modal === */
+.review-detail-panel {
+  /* Mobile-first: fixed overlay */
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  width: 100%;
+  border-radius: 0;
+}
+@media (min-width: 1024px) {
+  .review-detail-panel {
+    position: static;
+    width: 384px;
+    z-index: auto;
+    border-radius: 0.75rem;
+  }
+}
+
 /* === Dashboard Layout === */
 @media (min-width: 1024px) {
   .dashboard-main {

@@ -43,9 +43,9 @@ export default function AdminReviewPage() {
   const [gateStatus, setGateStatus] = useState<GateStatus>("idle");
   const [gateResult, setGateResult] = useState<GateResult>(null);
 
-  const fetchQueue = useCallback(async (filter: string) => {
-    // Prevent duplicate calls for same filter
-    if (fetchedRef.current.has(filter)) {
+  const fetchQueue = useCallback(async (filter: string, force = false) => {
+    // Prevent duplicate calls for same filter (unless forced refresh)
+    if (!force && fetchedRef.current.has(filter)) {
       return;
     }
     fetchedRef.current.add(filter);
@@ -74,7 +74,7 @@ export default function AdminReviewPage() {
     try {
       await reviewPhoto(id, "verified");
       setSelectedId(null);
-      fetchQueue(activeFilter);
+      fetchQueue(activeFilter, true);
     } catch {
       setError("ไม่สามารถอนุมัติได้ กรุณาลองใหม่");
     }
@@ -84,7 +84,7 @@ export default function AdminReviewPage() {
     try {
       await reviewPhoto(id, "rejected", reason);
       setSelectedId(null);
-      fetchQueue(activeFilter);
+      fetchQueue(activeFilter, true);
     } catch {
       setError("ไม่สามารถปฏิเสธได้ กรุณาลองใหม่");
     }
@@ -118,7 +118,7 @@ export default function AdminReviewPage() {
         <div className="flex flex-col w-full h-[calc(100vh-80px)]">
           <div className="flex h-full w-full gap-6">
             {/* Main Grid Area */}
-            <div className="flex-1 flex flex-col h-full bg-surface-container-low rounded-xl overflow-hidden shadow-sm p-6">
+            <div className="flex-1 min-w-0 flex flex-col h-full bg-surface-container-low rounded-xl overflow-hidden shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="font-headline-lg text-headline-lg text-on-surface">Review Queue</h2>
