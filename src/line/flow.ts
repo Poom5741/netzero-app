@@ -14,6 +14,7 @@ import { confirmDraft, rejectDraft } from "../chat/state";
 export type ConversationState =
   | "welcome"
   | "phone"
+  | "identified"
   | "pending"
   | "select_plot"
   | "chat"
@@ -65,6 +66,9 @@ export async function handleFlow(ctx: FlowContext): Promise<void> {
       break;
     case "phone":
       result = await handlePhone(ctx);
+      break;
+    case "identified":
+      result = await handleIdentified(ctx);
       break;
     case "pending":
       result = await handlePending(ctx);
@@ -154,14 +158,55 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
 
   // Update link with farmer info
   await ctx.db
-    .prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'pending' WHERE id = ?")
+    .prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'identified' WHERE id = ?")
     .bind(farmer.id, ctx.linkId)
     .run();
 
   await safePush(ctx, [
-    { type: "text", text: `พบข้อมูลของคุณ ${farmer.full_name}\n\n⏳ กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ\nเมื่อยืนยันแล้วจะสามารถใช้งานได้ทันที` },
+    { type: "text", text: `🌾 สวัสดีค่ะ คุณ${farmer.full_name}\n\n✅ พบข้อมูลของคุณแล้วค่ะ\n⏳ บัญชีอยู่ระหว่างรอการยืนยันจากเจ้าหน้าที่ แต่สามารถเริ่มใช้งานได้เลยค่ะ\n\nต้องการทำอะไรคะ?\n• พิมพ์ "บันทึก" — บันทึกข้อมูลแปลงนา\n• พิมพ์ "ถ่ายรูป" — ถ่ายรูปหลักฐาน\n• พิมพ์ "ดูสถานะ" — ดูสถานะฤดูกาลปัจจุบัน` },
   ], ctx.db, ctx.farmerId);
-  return { newState: "pending" };
+  return { newState: "identified" };
+}
+
+/**
+ * IDENTIFIED STATE — Farmer identified by phone, offered actions.
+ * POC scope: allow data entry even while verification is pending.
+ */
+async function handleIdentified(ctx: FlowContext): Promise<FlowResult> {
+  const lower = ctx.text.toLowerCase().trim();
+
+  if (lower.includes("บันทึก") || lower.includes("ข้อมูลแปลง")) {
+    await safePush(ctx, [
+      { type: "text", text: "📝 บันทึกข้อมูลแปลงนา\n\nไปที่หน้าสรุปข้อมูลเพื่อเริ่มบันทึก:\n/summary" },
+    ], ctx.db, ctx.farmerId);
+    return { newState: "identified" };
+  }
+
+  if (lower.includes("ถ่ายรูป") || lower.includes("ถ่าย")) {
+    await safePush(ctx, [
+      { type: "text", text: "📸 ถ่ายรูปหลักฐาน\n\nไปที่หน้าถ่ายรูปเพื่อเปิดกล้อง:\n/upload" },
+    ], ctx.db, ctx.farmerId);
+    return { newState: "identified" };
+  }
+
+  if (lower.includes("ดูสถานะ") || lower.includes("สถานะ")) {
+    const seasonInput = await ctx.db
+      .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
+      .bind(ctx.farmerId)
+      .first<{ season_id: string }>();
+
+    const seasonInfo = seasonInput?.season_id
+      ? `ฤดูปัจจุบัน: ${seasonInput.season_id}`
+      : "ยังไม่มีข้อมูลฤดูปัจจุบัน";
+
+    await safePush(ctx, [
+      { type: "text", text: `📊 สถานะบัญชี\n\n${seasonInfo}\nสถานะการยืนยัน: รอดำเนินการ\n\nท่านสามารถเริ่มบันทึกข้อมูลหรือถ่ายรูปได้เลยค่ะ` },
+    ], ctx.db, ctx.farmerId);
+    return { newState: "identified" };
+  }
+
+  // Free-text → transition to active (chat) state
+  return handleChat(ctx);
 }
 
 /**
@@ -462,6 +507,7 @@ export async function handleFlowApi(ctx: FlowContext): Promise<FlowApiResult> {
   switch (state) {
     case "welcome": return handleWelcomeApi(ctx);
     case "phone": return handlePhoneApi(ctx);
+    case "identified": return handleIdentifiedApi(ctx);
     case "pending": return handlePendingApi(ctx);
     case "select_plot": return handleSelectPlotApi(ctx);
     case "confirm_draft": return handleConfirmDraftApi(ctx);
@@ -490,8 +536,40 @@ async function handlePhoneApi(ctx: FlowContext): Promise<FlowApiResult> {
     return { reply: "ไม่พบข้อมูลเกษตรกรในระบบ\nกรุณาติดต่อเจ้าหน้าที่โครงการค่ะ", newState: "phone" };
   }
 
-  await ctx.db.prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'pending' WHERE id = ?").bind(farmer.id, ctx.linkId).run();
-  return { reply: `พบข้อมูลของคุณ ${farmer.full_name}\n\n⏳ กรุณารอการยืนยันจากเจ้าหน้าที่ค่ะ`, newState: "pending" };
+  await ctx.db.prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'identified' WHERE id = ?").bind(farmer.id, ctx.linkId).run();
+  return {
+    reply: `🌾 สวัสดีค่ะ คุณ${farmer.full_name}\n\n✅ พบข้อมูลของคุณแล้วค่ะ\n⏳ บัญชีอยู่ระหว่างรอการยืนยันจากเจ้าหน้าที่ แต่สามารถเริ่มใช้งานได้เลยค่ะ\n\nต้องการทำอะไรคะ?\n• พิมพ์ "บันทึก" — บันทึกข้อมูลแปลงนา\n• พิมพ์ "ถ่ายรูป" — ถ่ายรูปหลักฐาน\n• พิมพ์ "ดูสถานะ" — ดูสถานะฤดูกาลปัจจุบัน`,
+    newState: "identified",
+  };
+}
+
+async function handleIdentifiedApi(ctx: FlowContext): Promise<FlowApiResult> {
+  const lower = ctx.text.toLowerCase().trim();
+
+  if (lower.includes("บันทึก") || lower.includes("ข้อมูลแปลง")) {
+    return { reply: "📝 บันทึกข้อมูลแปลงนา\n\nไปที่หน้าสรุปข้อมูลเพื่อเริ่มบันทึก:\n/summary\n\nหรือพิมพ์คำถามอื่น ๆ ได้เลยค่ะ", newState: "identified" };
+  }
+
+  if (lower.includes("ถ่ายรูป") || lower.includes("ถ่าย")) {
+    return { reply: "📸 ถ่ายรูปหลักฐาน\n\nไปที่หน้าถ่ายรูปเพื่อเปิดกล้อง:\n/upload\n\nรูปที่ถ่ายจะมีพิกัด GPS และเวลาอัตโนมัติค่ะ", newState: "identified" };
+  }
+
+  if (lower.includes("ดูสถานะ") || lower.includes("สถานะ")) {
+    const seasonInput = await ctx.db
+      .prepare("SELECT season_id FROM season_inputs WHERE plot_id = (SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1) ORDER BY created_at DESC LIMIT 1")
+      .bind(ctx.farmerId)
+      .first<{ season_id: string }>();
+
+    const seasonInfo = seasonInput?.season_id
+      ? `ฤดูปัจจุบัน: ${seasonInput.season_id}`
+      : "ยังไม่มีข้อมูลฤดูปัจจุบัน";
+
+    return { reply: `📊 สถานะบัญชี\n\n${seasonInfo}\nสถานะการยืนยัน: รอดำเนินการ\n\nท่านสามารถเริ่มบันทึกข้อมูลหรือถ่ายรูปได้เลยค่ะ`, newState: "identified" };
+  }
+
+  // Free-text → transition to active (chat) state
+  ctx.state = "chat";
+  return handleChatApi({ ...ctx, state: "chat" });
 }
 
 async function handlePendingApi(ctx: FlowContext): Promise<FlowApiResult> {
