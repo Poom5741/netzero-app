@@ -11,6 +11,44 @@ type Bindings = {
 
 export const seasonRoutes = new Hono<{ Bindings: Bindings }>();
 
+// GET /api/plots?farmer_id=X — Return farmer's plots
+seasonRoutes.get("/api/plots", async (c) => {
+  try {
+    const db = c.env.DB;
+    const farmerId = c.req.query("farmer_id");
+    if (!farmerId) return c.json({ error: "farmer_id required" }, 400);
+
+    const { results } = await db
+      .prepare("SELECT id, plot_code, area_rai, deed_no FROM plots WHERE farmer_id = ?")
+      .bind(farmerId)
+      .all<{ id: string; plot_code: string; area_rai: number; deed_no: string }>();
+
+    return c.json({ plots: results });
+  } catch (err) {
+    console.error("Plots fetch error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+// GET /api/seasons?plot_id=X — Return seasons for a plot
+seasonRoutes.get("/api/seasons", async (c) => {
+  try {
+    const db = c.env.DB;
+    const plotId = c.req.query("plot_id");
+    if (!plotId) return c.json({ error: "plot_id required" }, 400);
+
+    const { results } = await db
+      .prepare("SELECT id, name, status FROM seasons WHERE plot_id = ?")
+      .bind(plotId)
+      .all<{ id: string; name: string; status: string }>();
+
+    return c.json({ seasons: results });
+  } catch (err) {
+    console.error("Seasons fetch error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
 // POST /api/season — Save season input data
 seasonRoutes.post("/api/season", async (c) => {
   try {

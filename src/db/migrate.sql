@@ -195,3 +195,16 @@ CREATE TABLE IF NOT EXISTS automation_audit_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_automation_audit_log_photo ON automation_audit_log(photo_evidence_id);
+
+-- Seasons table (per-plot season definitions)
+CREATE TABLE IF NOT EXISTS seasons (
+  id TEXT PRIMARY KEY,
+  plot_id TEXT NOT NULL REFERENCES plots(id),
+  name TEXT NOT NULL,
+  status TEXT CHECK(status IN ('active', 'closed', 'planned')) DEFAULT 'planned',
+  start_date TEXT,
+  end_date TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_seasons_plot ON seasons(plot_id);
