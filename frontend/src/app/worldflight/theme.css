@@ -1,0 +1,53 @@
+/*
+ * Bangpho Coffee-Beer — Worldflight Dark Theme
+ * Overrides scrollcraft CSS tokens with espresso palette.
+ * Import AFTER scrollcraft.css so these take precedence.
+ *
+ * WCAG 2.1 AA verified (computed):
+ *   Ink on Canvas      → 16.0:1 ✓
+ *   Ink-soft on Canvas  → 9.4:1 ✓
+ *   Accent on Canvas    → 6.9:1 ✓
+ *   Accent-ink on Accent → 6.9:1 ✓
+ *   Ink-soft on Surface → 7.9:1 ✓
+ */
+
+:root {
+  /* Scrollcraft token overrides */
+  --sc-canvas: #1a1410;
+  --sc-surface: #2d231c;
+  --sc-ink: #f5efe6;
+  --sc-ink-soft: #c4b9a8;
+  --sc-accent: #d4920b;
+  --sc-accent-ink: #1a1410;
+}
+
+body {
+  background-color: var(--sc-canvas);
+  color: var(--sc-ink);
+}
+
+/* === Selection === */
+::selection {
+  background-color: #d4920b;
+  color: #1a1410;
+}
+
+::-moz-selection {
+  background-color: #d4920b;
+  color: #1a1410;
+}
+
+/* === Focus Ring === */
+:focus-visible {
+  outline: 2px solid #d4920b;
+  outline-offset: 2px;
+}
+
+/* === Scrollbar (Webkit) === */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1a1410; }
+::-webkit-scrollbar-thumb { background: #2d231c; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #d4920b; }
+
+/* === Scrollbar (Firefox) === */
+* { scrollbar-color: #2d231c #1a1410; scrollbar-width: thin; }
