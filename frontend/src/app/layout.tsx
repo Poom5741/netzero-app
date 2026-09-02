@@ -1,26 +1,27 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
+import { Montserrat, Open_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "NetZeroCarbon",
-  description: "ผู้ช่วยเกษตรกรโครงการคาร์บอนเครดิตนาข้าว AWD",
-};
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-heading" });
+const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-body" });
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 5,
+export const metadata: Metadata = {
+  title: "Bangpho Coffee & Beer — First Specialty Coffee Workspace",
+  description:
+    "Bangpho's first specialty coffee workspace. 40 THB americano, 100+ Mbps WiFi, craft beer on tap.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="th" className="h-full antialiased">
+    <html lang="en" className={`${montserrat.variable} ${openSans.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="/scrollcraft.css" />
       </head>
-      <body className="min-h-full flex flex-col font-sans" style={{ fontFamily: 'Inter, Sarabun, system-ui, sans-serif' }}>{children}</body>
+      <body>
+        {children}
+        <Script src="/scrollcraft.js" strategy="afterInteractive" />
+      </body>
     </html>
   );
 }

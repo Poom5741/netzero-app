@@ -1,0 +1,9 @@
+/**
+ * Scrollcraft engine styles — stub for project setup.
+ * Replace with the real scrollcraft.css engine file.
+ * NEVER edit this file once the real engine is in place; theme via CSS tokens in globals.css.
+ */
+
+/* ponytail: real engine provides scroll timeline, pin/section styles,
+   crossfade transitions, and data-sc-* driven animations.
+   Add when engine file is available. */
