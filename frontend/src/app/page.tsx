@@ -1,69 +1,174 @@
-import Image from "next/image";
+import './worldflight.css';
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main>
+      {/* Pre-scroll hero — visible before user scrolls */}
+      <section className="pre-hero">
+        <div className="pre-hero__inner">
+          <p className="pre-hero__tag">Bangpho, Bangkok</p>
+          <h1 className="pre-hero__h">Your new workspace<br />between coffee &amp; craft beer.</h1>
+          <p className="pre-hero__sub">First specialty coffee workspace in Bangpho. Scroll to explore ↓</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </section>
+
+      {/* Worldflight: one continuous stage, 5 legs crossfade */}
+      <div data-sc-mode="worldflight" data-sc-seam="0.12">
+        <div data-sc-world>
+          {/* Leg 1 — Hero workspace */}
+          <div
+            data-sc-segment
+            data-sc-w="1.5"
+            data-sc-linger="0.2"
+            data-sc-waypoint="The Space"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+            <img
+              className="sc-world__poster"
+              src="/assets/poster-leg1.webp"
+              alt="Warm workspace with coffee, laptop, and power outlets"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          {/* Leg 2 — Problem: cafe-hopping pain */}
+          <div
+            data-sc-segment
+            data-sc-w="1.4"
+            data-sc-linger="0.3"
+            data-sc-waypoint="The Problem"
           >
-            Documentation
-          </a>
+            <img
+              className="sc-world__poster"
+              src="/assets/poster-leg2.webp"
+              alt="Crowded cafe, frustrating wifi search"
+            />
+          </div>
+
+          {/* Leg 3 — Solution reveal */}
+          <div
+            data-sc-segment
+            data-sc-w="1.4"
+            data-sc-linger="0.2"
+            data-sc-waypoint="The Answer"
+          >
+            <img
+              className="sc-world__poster"
+              src="/assets/poster-leg3.webp"
+              alt="Bright clean workspace with fast internet"
+            />
+          </div>
+
+          {/* Leg 4 — Features: evening craft beer */}
+          <div
+            data-sc-segment
+            data-sc-w="1.4"
+            data-sc-linger="0.3"
+            data-sc-waypoint="After Hours"
+          >
+            <img
+              className="sc-world__poster"
+              src="/assets/poster-leg4.webp"
+              alt="Craft beer evening with community vibe"
+            />
+          </div>
+
+          {/* Leg 5 — CTA: community gathering */}
+          <div
+            data-sc-segment
+            data-sc-w="1.3"
+            data-sc-linger="0.2"
+            data-sc-waypoint="Join Us"
+          >
+            <img
+              className="sc-world__poster"
+              src="/assets/poster-leg5.webp"
+              alt="Community gathering of remote workers"
+            />
+          </div>
         </div>
-      </main>
-    </div>
+
+        {/* Copy layer — overlays on the fixed stage */}
+        <div data-sc-world-copy>
+          {/* Scrim for text contrast */}
+          <div className="sc-world__scrim sc-scrim sc-scrim--band" />
+
+          {/* Leg 1 copy — Hero */}
+          <div data-sc-copy data-sc-window="hero" className="sc-copy--center">
+            <h2 className="wf-h">Bangpho&apos;s First<br />Coffee Workspace</h2>
+            <p className="wf-p">
+              Specialty coffee by day. Craft beer by night.<br />
+              100+ Mbps WiFi. Every seat has a power outlet.
+            </p>
+            <a href="#waitlist" className="wf-cta">Join the Waitlist</a>
+          </div>
+
+          {/* Leg 2 copy — Problem */}
+          <div data-sc-copy data-sc-window="0.20 0.38" className="sc-copy--lead">
+            <p className="wf-label">The problem</p>
+            <h2 className="wf-h2">Tired of cafe-hopping?</h2>
+            <ul className="wf-list">
+              <li>WiFi that dies mid-call</li>
+              <li>No outlets within arm&apos;s reach</li>
+              <li>No meeting rooms, ever</li>
+            </ul>
+          </div>
+
+          {/* Leg 3 copy — Solution */}
+          <div data-sc-copy data-sc-window="0.40 0.58" className="sc-copy--trail">
+            <p className="wf-label">The answer</p>
+            <h2 className="wf-h2">Everything you need. One price.</h2>
+            <div className="wf-stats">
+              <div className="wf-stat">
+                <span className="wf-stat__num">฿40</span>
+                <span className="wf-stat__lbl">Americano</span>
+              </div>
+              <div className="wf-stat">
+                <span className="wf-stat__num">100+</span>
+                <span className="wf-stat__lbl">Mbps WiFi</span>
+              </div>
+              <div className="wf-stat">
+                <span className="wf-stat__num">∞</span>
+                <span className="wf-stat__lbl">Outlets</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Leg 4 copy — Features */}
+          <div data-sc-copy data-sc-window="0.60 0.78" className="sc-copy--lead">
+            <p className="wf-label">More than coffee</p>
+            <h2 className="wf-h2">Work hard. Unwind harder.</h2>
+            <ul className="wf-features">
+              <li>🎥 Conference rooms for client calls</li>
+              <li>🍺 Craft beer on tap after 5pm</li>
+              <li>🤝 Community of builders &amp; creators</li>
+            </ul>
+          </div>
+
+          {/* Leg 5 copy — CTA */}
+          <div data-sc-copy data-sc-window="finale" className="sc-copy--center">
+            <h2 className="wf-h">Be first in.</h2>
+            <p className="wf-p">
+              Join the waitlist. Early members get<br />
+              <strong>one month free</strong> + founding member pricing.
+            </p>
+            <form id="waitlist" className="wf-signup" onSubmit={(e) => e.preventDefault()}>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                aria-label="Email address"
+                required
+                className="wf-input"
+              />
+              <button type="submit" className="wf-cta">
+                Join Waitlist
+              </button>
+            </form>
+            <p className="wf-fine">Opening Q1 2027 · Bangpho, MRT Blue Line</p>
+          </div>
+        </div>
+
+        {/* Spacer — engine sets height to sum of segment weights + 1vh */}
+        <div data-sc-spacer aria-hidden="true" />
+      </div>
+    </main>
   );
 }
