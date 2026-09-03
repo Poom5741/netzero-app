@@ -1,45 +1,4 @@
-# ---- Sensitive source data (DO NOT commit) ----
-# Real farmer documents, personal data, carbon-calculation sheets, CSV exports.
-# These stay local and are excluded from the public repo.
-/New Line NZC/
-
-# ---- Node ----
-node_modules/
-dist/
-coverage/
-*.tsbuildinfo
-.pnpm-store/
-
-# ---- Cloudflare / Wrangler ----
-.wrangler/
-.dev.vars
-wrangler.toml.bak
-*secret*
-
-# ---- Env / secrets ----
-.env
-.env.*
-!.env.example
-
-# ---- Tests / tooling ----
-.mt-cache/
-.turbo/
-
-# ---- Agent / automation loop state (not project code) ----
-.pi-glla/
-.until-done/
-
-# ---- OS ----
-.DS_Store
-Thumbs.db
-
-# ---- Editor / IDE ----
-.vscode/
-.idea/
-*.swp
-
-# ---- Logs ----
-*.log
-npm-debug.log*
-*.pth
-.mimosa/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
