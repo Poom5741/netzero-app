@@ -43,3 +43,4 @@ Thumbs.db
 npm-debug.log*
 *.pth
 .mimosa/
+__pycache__/
