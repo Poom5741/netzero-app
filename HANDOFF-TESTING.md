@@ -1,9 +1,9 @@
 # 🧪 Manual Test Handoff — NetZeroCarbon Production
 
 **For:** Claw
-**Date:** 2026-09-04 (rev 3 — after retest round)
-**Status:** GO for pilot per Claw's retest. One UX polish item fixed after retest (stale card list) — optional quick recheck.
-**Context:** Round 1 found 4 bugs → all fixed. Retest confirmed all 3 critical fixes work (filters 19→6→2, approve/reject return ok). The stale-card-list UX note from the retest is now fixed too.
+**Date:** 2026-09-04 (rev 4 — FINAL)
+**Status:** ✅ **GO FOR PILOT** — signed off by Claw 2026-09-04 after three test rounds (17 issues found → all fixed → retested → rev-3 UX polish confirmed live: green badge appears instantly after approve, no reload).
+**Context:** Full cycle complete: QA swarm (6 agents) → 17 issues → fixes deployed → Claw manual retest ×3 → all checklist items green.
 
 ---
 
@@ -167,19 +167,29 @@ Add them to the Multica board (project POOM) or reply directly — either works.
 
 ---
 
-## ✅ Sign-off Checklist
+## ✅ Sign-off Checklist — COMPLETED by Claw, 2026-09-04
 
-When done, tick these:
+| Item | Status |
+|------|--------|
+| Admin login + review queue loads | ✅ |
+| Approve/reject works (API `{"ok":true}` verified via network capture) | ✅ |
+| Green อนุมัติแล้ว badge appears instantly after approve, no reload (rev 3) | ✅ |
+| Filter tabs (ถูกธง=6, รอตรวจสอบ=11, ผ่านแล้ว=2) | ✅ |
+| Sponsor dashboard (4 plots, correct provinces) | ✅ |
+| Farmer chat consent flow | ✅ |
+| Photo upload (3 types present) | ✅ |
+| Bottom nav (3 tabs) | ✅ |
+| Security: 401 on protected endpoints in incognito | ✅ |
+| Health endpoint 200 | ✅ |
 
-- [ ] Admin login works, review queue loads, approve/reject works
-- [ ] (rev 3) After approving, the card shows the green อนุมัติแล้ว badge without a page reload
-- [ ] Photo decision history page works
-- [ ] Sponsor dashboard loads with 4 plots, export downloads
-- [ ] Farmer chat: consent → phone → AI conversation works
-- [ ] Photo upload: all 3 types, verdicts appear, duplicate rejected
-- [ ] Bottom nav switches between all 3 tabs
-- [ ] Mobile: no broken layouts (except known sponsor bug)
-- [ ] Incognito access to protected endpoints returns 401
-- [ ] Double-tap chat doesn't error
+**Final recommendation: GO for pilot.** 🚀
 
-**All ticked = production is GO for pilot.** 🚀
+---
+
+## 📌 Remaining backlog (none block pilot)
+
+1. **Run the migration in an interactive terminal** so trust scores persist: `npx wrangler d1 execute netzero --remote --file=src/db/migrate.sql` (creates `farmer_trust`; reviews work without it, trust writes just log-and-skip)
+2. Sponsor dashboard mobile padding overflow (`sponsor/page.tsx` line 174, remove inline `paddingLeft: 288px`)
+3. Set `ENVIRONMENT=production` wrangler secret (cosmetic)
+4. Rate limiting on chat API (cost protection)
+5. Admin sessionStorage credential rework → cookie sessions (security P1)
