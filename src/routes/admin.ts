@@ -57,7 +57,7 @@ adminRoutes.get("/admin/review", async (c) => {
   const session = await requireAdmin(c, c.env.SECRET, db);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
   const filter = c.req.query("status") || undefined;
-  const queue = await getReviewQueue(db, filter);
+  const queue = await getReviewQueue(db, filter ? { ai_status: filter } : {});
 
   const html = `<!DOCTYPE html>
 <html lang="th">
@@ -174,7 +174,7 @@ adminRoutes.get("/api/admin/review", async (c) => {
   const session = await requireAdmin(c, c.env.SECRET, db);
   if (!session) return c.json({ error: "Unauthorized" }, 401);
   const filter = c.req.query("status") || undefined;
-  const queue = await getReviewQueue(db, filter);
+  const queue = await getReviewQueue(db, filter ? { ai_status: filter } : {});
 
   return c.json(queue);
 });

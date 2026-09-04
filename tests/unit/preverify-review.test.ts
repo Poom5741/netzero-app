@@ -17,6 +17,9 @@ function mockD1ForPreVerify(photo: Record<string, unknown>) {
           if (sql.includes("SELECT") && sql.includes("photo_evidence")) {
             return { first: async () => photo };
           }
+          if (sql.includes("SELECT") && sql.includes("plots")) {
+            return { first: async () => ({ farmer_id: "farmer-1" }) };
+          }
           if (sql.includes("SELECT") && sql.includes("farmer_trust")) {
             return { first: async () => ({ trust_score: 0.5, total_photos: 0, verified_count: 0, rejected_count: 0 }) };
           }

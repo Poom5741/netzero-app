@@ -208,3 +208,13 @@ CREATE TABLE IF NOT EXISTS seasons (
 );
 
 CREATE INDEX IF NOT EXISTS idx_seasons_plot ON seasons(plot_id);
+
+-- Farmer trust scores (issue #120) — table was referenced in code but never
+-- created, causing every admin review action to 500 in production.
+CREATE TABLE IF NOT EXISTS farmer_trust (
+  farmer_id TEXT PRIMARY KEY,
+  trust_score REAL NOT NULL DEFAULT 0.5,
+  total_photos INTEGER NOT NULL DEFAULT 0,
+  verified_count INTEGER NOT NULL DEFAULT 0,
+  rejected_count INTEGER NOT NULL DEFAULT 0
+);

@@ -24,12 +24,13 @@ const filterTabs: FilterTab[] = [
   { key: "rejected", label: "ปฏิเสธแล้ว" },
 ];
 
+// Backend ai_status vocabulary is flag/pass/reject/pending — not the tab keys
 const filterToApiStatus: Record<string, string | undefined> = {
   all: undefined,
   pending: "pending",
-  flagged: "flagged",
-  verified: "verified",
-  rejected: "rejected",
+  flagged: "flag",
+  verified: "pass",
+  rejected: "reject",
 };
 
 export default function AdminReviewPage() {
@@ -42,6 +43,18 @@ export default function AdminReviewPage() {
   const fetchedRef = useRef<Set<string>>(new Set());
   const [gateStatus, setGateStatus] = useState<GateStatus>("idle");
   const [gateResult, setGateResult] = useState<GateResult>(null);
+  const [authed, setAuthed] = useState<boolean | null>(null);
+
+  // Check auth on mount
+  useEffect(() => {
+    const email = sessionStorage.getItem("nzc_admin_email");
+    const pass = sessionStorage.getItem("nzc_admin_pass");
+    if (!email || !pass) {
+      window.location.href = "/admin/login";
+      return;
+    }
+    setAuthed(true);
+  }, []);
 
   const fetchQueue = useCallback(async (filter: string, force = false) => {
     // Prevent duplicate calls for same filter (unless forced refresh)
@@ -131,7 +144,7 @@ export default function AdminReviewPage() {
               </div>
 
               {/* Precision stat */}
-              <div className="mb-6" style={{ maxWidth: 384 }}>
+              <div className="mb-6 max-w-[512px]">
                 <PrecisionCard
                   auditReviewed={precision.auditReviewed}
                   overrides={precision.overrides}
@@ -140,7 +153,7 @@ export default function AdminReviewPage() {
               </div>
 
               {/* Season gate */}
-              <div className="mb-6" style={{ maxWidth: 384 }}>
+              <div className="mb-6 max-w-[512px]">
                 <div className="neumorphic p-4 rounded-xl">
                   <h3 className="text-label-md font-semibold text-on-surface mb-2">สถานะฤดูกาล</h3>
                   {gateStatus === "approved" && (

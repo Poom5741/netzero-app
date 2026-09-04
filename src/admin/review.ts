@@ -29,6 +29,12 @@ export async function reviewPhoto(
     return { success: false, error: "Photo not found" };
   }
 
+  // Resolve the plot's actual owner for trust scoring
+  const plot = await db
+    .prepare("SELECT farmer_id FROM plots WHERE id = ?")
+    .bind(photo.plot_id)
+    .first<{ farmer_id: string }>();
+
   // Supersede: admin rejects a pre-verified photo
   if (adminStatus === "rejected" && photo.pre_verified === 1) {
     await db
@@ -81,9 +87,15 @@ export async function reviewPhoto(
     .bind(adminStatus, reason, photoId)
     .run();
 
-  // Update farmer trust score based on admin decision
-  const farmerId = `farmer_${photo.plot_id}`;
-  await updateFarmerTrust(db, farmerId, adminStatus === "verified");
+  // Update farmer trust score based on admin decision.
+  // Trust is auxiliary — a trust-write failure must never fail the review action.
+  if (plot?.farmer_id) {
+    try {
+      await updateFarmerTrust(db, plot.farmer_id, adminStatus === "verified");
+    } catch (err) {
+      console.error("Trust score update failed (non-fatal):", err);
+    }
+  }
 
   return { success: true, promoted };
 }
