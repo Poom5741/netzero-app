@@ -65,10 +65,24 @@ export function ReviewCard({ review, selected, onSelect }: ReviewCardProps) {
           <span className="text-[12px] font-medium text-on-surface">{badgeLabel}</span>
         </div>
 
-        {/* Audit badge — visually distinct */}
-        {review.audit_sample === 1 && (
-          <div className="absolute top-2 right-2 bg-amber-500 text-white px-2 py-1 rounded-full text-[12px] font-semibold shadow-sm">
-            ตรวจตัวอย่าง
+        {/* Top-right badges — audit sample and admin decision stack vertically */}
+        {(review.audit_sample === 1 || review.admin_status === "verified" || review.admin_status === "rejected") && (
+          <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+            {review.audit_sample === 1 && (
+              <div className="bg-amber-500 text-white px-2 py-1 rounded-full text-[12px] font-semibold shadow-sm">
+                ตรวจตัวอย่าง
+              </div>
+            )}
+            {review.admin_status === "verified" && (
+              <div className="bg-primary text-white px-2 py-1 rounded-full text-[12px] font-semibold shadow-sm flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">check_circle</span> อนุมัติแล้ว
+              </div>
+            )}
+            {review.admin_status === "rejected" && (
+              <div className="bg-error text-white px-2 py-1 rounded-full text-[12px] font-semibold shadow-sm flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">cancel</span> ปฏิเสธแล้ว
+              </div>
+            )}
           </div>
         )}
 

@@ -87,6 +87,8 @@ export default function AdminReviewPage() {
     try {
       await reviewPhoto(id, "verified");
       setSelectedId(null);
+      // Invalidate cached tabs so every filter refetches fresh after a decision
+      fetchedRef.current.clear();
       fetchQueue(activeFilter, true);
     } catch {
       setError("ไม่สามารถอนุมัติได้ กรุณาลองใหม่");
@@ -97,6 +99,7 @@ export default function AdminReviewPage() {
     try {
       await reviewPhoto(id, "rejected", reason);
       setSelectedId(null);
+      fetchedRef.current.clear();
       fetchQueue(activeFilter, true);
     } catch {
       setError("ไม่สามารถปฏิเสธได้ กรุณาลองใหม่");
