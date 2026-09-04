@@ -1,9 +1,9 @@
 # 🧪 Manual Test Handoff — NetZeroCarbon Production
 
 **For:** Claw
-**Date:** 2026-09-04
-**Status:** Ready for manual testing
-**Context:** QA swarm found 17 issues (5 critical). All critical bugs were fixed and deployed. This guide walks you through testing every flow by hand to confirm.
+**Date:** 2026-09-04 (rev 2 — after first test round)
+**Status:** Ready for retest
+**Context:** First round found 4 bugs (approve/reject failing, filters not filtering). All were root-caused, fixed, deployed, and verified via API on 2026-09-04 ~13:15 UTC. Please retest.
 
 ---
 
@@ -34,32 +34,34 @@
 
 ## 🛠️ What Was Just Fixed (Sept 4)
 
-These were broken this morning and are now fixed. Verify they work:
-
-1. **Admin login form** — was rendered 64px wide (unusable). Now full-width and working.
-2. **Admin review queue** — all admin pages crashed with 500 errors. Now load correctly.
+**Round 1 (morning):**
+1. **Admin login form** — was rendered 64px wide (unusable). Now full-width and working. ✅ confirmed by Claw
+2. **Admin review queue** — all admin pages crashed with 500 errors. Now load correctly. ✅ confirmed by Claw
 3. **Chat under double-tap** — sending messages rapidly crashed 95% of requests. Now safe.
-4. **Unprotected endpoints** — export and season-approve worked without login. Now require admin/sponsor session.
+4. **Unprotected endpoints** — export API and season-approve worked without login. Now require admin/sponsor session.
 5. **LINE webhook** — accepted forged requests. Now rejects bad signatures (webhook still disabled, returns 503 — that's correct).
+
+**Round 2 (afternoon — fixes for bugs Claw found):**
+6. **Approve/reject now work** — root cause: every review action wrote to a `farmer_trust` table that was never created in the database. Table added to the migration; review actions no longer depend on trust scoring succeeding. Verified via API: approve → `{"ok":true}`, reject → `{"ok":true}`.
+7. **Filter tabs now actually filter** — root cause: backend called its own queue function with the wrong argument shape, so the WHERE clause silently never applied, AND the frontend sent `flagged/verified/rejected` while the DB stores `flag/pass/reject`. Verified: flag → 6 rows, pass → 2, pending → 11 (previously every tab returned all 19).
+8. **Trust scores now attach to the right farmer** — review actions previously created trust rows for fake IDs like `farmer_plot-004`. Now resolved via the plot's real owner.
 
 ---
 
 ## 📋 Test Flows
 
-### Flow 1: Admin Login & Review Queue (~10 min)
+### Flow 1: Admin Login & Review Queue (~10 min) — RETEST
 
 1. Open https://netzero-frontend.poom-a1d.workers.dev/admin/login
-2. **Check:** Login card looks normal (centered, ~450px wide, not a thin strip)
-3. Enter `admin@netzero.com` / `ClawTest2026!` → click เข้าสู่ระบบ
-4. **Check:** You land on the admin dashboard (no error)
-5. Go to the review queue: https://netzero-carbon-poc.poom-a1d.workers.dev/admin/review
-6. **Check:** Queue loads with ~19 photos. Flagged photos show first with 🚩 badges
-7. **Check:** Filter tabs work (ทั้งหมด / Flag / Pending / Pass / Reject)
-8. Click "✓ ผ่าน" (verify) on a pending photo → **Check:** page reloads, photo moves to verified
-9. Click "✗ ตีกลับ" (reject) on another photo → enter a reason in the prompt → **Check:** photo marked rejected
-10. Click "📜 History" on any photo → **Check:** decision timeline page opens showing who did what and when
+2. Enter `admin@netzero.com` / `ClawTest2026!` → click เข้าสู่ระบบ
+3. **Check:** Admin dashboard loads with ~19 photos, flagged first
+4. **RETEST (was broken):** Click each filter tab — ทั้งหมด / รอตรวจสอบ / ถูกธง / ผ่านแล้ว / ปฏิเสธแล้ว. **Expect different card sets per tab** (approx: 19 / 11 / 6 / 2 / 1), not the same list every time.
+5. **RETEST (was broken):** Open any card → click **approve** in the detail modal → **Expect success**, no "ไม่สามารถอนุมัติได้" error. Card status updates.
+6. **RETEST (was broken):** Open another card → click **reject** → type a reason → confirm. **Expect success**, no error.
+7. **📜 History note (Low, clarified):** the History link lives on the backend's own review page — https://netzero-carbon-poc.poom-a1d.workers.dev/admin/review (login there with the same credentials; it's a separate legacy UI). The frontend detail modal intentionally has no History button yet — tracked as a feature gap, not a regression.
+8. **Export note (clarified):** the sponsor export button generates its CSV **client-side from the data already on screen** — it never calls the backend export API. Browser automation may not capture blob downloads; in a real browser the file saves to Downloads.
 
-**⚠️ Known quirk:** Old seed photos (IDs like `photo-001`) show a "No Image" placeholder because they point to a fake URL. Real uploaded photos (IDs starting with `photo_1788...`) may also show placeholder if R2 serving isn't wired — note it if you see it, it's a known gap.
+**⚠️ Known quirk:** Old seed photos (IDs like `photo-001`) show a "No Image" placeholder because they point to a fake URL. Real uploads may also show placeholder if R2 serving isn't wired — known gap.
 
 ### Flow 2: Sponsor Dashboard (~5 min)
 
@@ -139,10 +141,12 @@ These are already tracked (see `.gstack/qa-reports/qa-report-netzero-2026-09-04.
 | Sponsor investment shows $0 | Tracked — pricing data not seeded |
 | ENVIRONMENT says "development" in health check | Tracked — cosmetic config |
 | Old seed photos show "No Image" placeholder | Expected — fake URLs in seed data |
-| Export returns empty estimates | Expected — no approved seasons yet |
+| Backend `/export/estimates` returns empty list | Expected — no approved seasons yet; the button uses on-screen data instead |
+| History button missing in frontend review modal | Tracked — feature gap; History lives on backend legacy page for now |
 | Admin filter tabs cramped at 375px width | Tracked — minor |
 | Chat input box slightly short on mobile (26px) | Tracked — minor a11y |
 | No rate limiting on chat API | Tracked — P1 backlog |
+| Admin credentials in browser sessionStorage | Tracked — security P1, needs cookie-session rework |
 
 ---
 
