@@ -60,6 +60,30 @@ app.route("/", liffRoutes);
 // Photo upload
 app.route("/", photoRoutes);
 
+// Require admin auth for season write endpoints
+app.use("/api/season", async (c, next) => {
+  if (c.req.method === "POST") {
+    const cookie = c.req.header("Cookie") ?? "";
+    const match = cookie.match(/nzc_session=([^;]+)/);
+    if (!match) return c.json({ error: "Unauthorized" }, 401);
+    const { parseSessionCookie } = await import("./auth/session");
+    const session = parseSessionCookie(match[1], c.env.SECRET);
+    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+  }
+  await next();
+});
+app.use("/api/season/approve", async (c, next) => {
+  if (c.req.method === "POST") {
+    const cookie = c.req.header("Cookie") ?? "";
+    const match = cookie.match(/nzc_session=([^;]+)/);
+    if (!match) return c.json({ error: "Unauthorized" }, 401);
+    const { parseSessionCookie } = await import("./auth/session");
+    const session = parseSessionCookie(match[1], c.env.SECRET);
+    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+  }
+  await next();
+});
+
 // Season inputs
 app.route("/", seasonRoutes);
 
@@ -232,48 +256,11 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
   }
 }
 
-// Require admin auth for season write endpoints
-app.use("/api/season", async (c, next) => {
-  if (c.req.method === "POST") {
-    const cookie = c.req.header("Cookie") ?? "";
-    const match = cookie.match(/nzc_session=([^;]+)/);
-    if (!match) return c.json({ error: "Unauthorized" }, 401);
-    const { parseSessionCookie } = await import("./auth/session");
-    const session = parseSessionCookie(match[1], c.env.SECRET);
-    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
-  }
-  await next();
-});
-app.use("/api/season/approve", async (c, next) => {
-  if (c.req.method === "POST") {
-    const cookie = c.req.header("Cookie") ?? "";
-    const match = cookie.match(/nzc_session=([^;]+)/);
-    if (!match) return c.json({ error: "Unauthorized" }, 401);
-    const { parseSessionCookie } = await import("./auth/session");
-    const session = parseSessionCookie(match[1], c.env.SECRET);
-    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
-  }
-  await next();
-});
-
 // Admin review dashboard
 app.route("/", adminRoutes);
 
 // Sponsor dashboard + detail
 app.route("/sponsor", sponsorRoutes);
-
-// Require admin auth for export
-app.use("/export", async (c, next) => {
-  const cookie = c.req.header("Cookie") ?? "";
-  const match = cookie.match(/nzc_session=([^;]+)/);
-  if (!match) return c.json({ error: "Unauthorized" }, 401);
-  const { parseSessionCookie } = await import("./auth/session");
-  const session = parseSessionCookie(match[1], c.env.SECRET);
-  if (!session || (session.role !== "admin" && session.role !== "sponsor")) {
-    return c.json({ error: "Forbidden" }, 403);
-  }
-  await next();
-});
 
 // Export estimates (JSON/CSV)
 app.route("/export", exportRoutes);
