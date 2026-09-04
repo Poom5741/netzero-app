@@ -189,7 +189,7 @@ Add them to the Multica board (project POOM) or reply directly — either works.
 ## 📌 Remaining backlog (none block pilot)
 
 1. **Run the migration in an interactive terminal** so trust scores persist: `npx wrangler d1 execute netzero --remote --file=src/db/migrate.sql` (creates `farmer_trust`; reviews work without it, trust writes just log-and-skip)
-2. Sponsor dashboard mobile padding overflow (`sponsor/page.tsx` line 174, remove inline `paddingLeft: 288px`)
+2. ~~Sponsor dashboard mobile padding overflow~~ — **FIXED** (`a7a4d78`, deploy `94447d8f`): removed inline `paddingLeft: 288px` from the page AND `left: 288px` from the shared dashboard header; both now use the ≥1024px media query. Verified: 390px viewport has zero horizontal overflow, desktop keeps the sidebar offset.
 3. Set `ENVIRONMENT=production` wrangler secret (cosmetic)
 4. Rate limiting on chat API (cost protection)
 5. Admin sessionStorage credential rework → cookie sessions (security P1)
