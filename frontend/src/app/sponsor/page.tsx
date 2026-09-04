@@ -171,7 +171,7 @@ export default function SponsorDashboardPage() {
       />
       <DashboardHeader userLabel="ผู้ดูแลระบบ" searchPlaceholder="ค้นหาทั่วโลก..." />
 
-      <div className="dashboard-main" style={{ paddingLeft: '288px' }}>
+      <div className="dashboard-main">
         <main className="relative pt-20 min-h-screen bg-surface px-6 lg:px-10 py-6">
           <div className="flex flex-col w-full relative">
             {/* Header Section */}
