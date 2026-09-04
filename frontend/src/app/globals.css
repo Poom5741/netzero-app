@@ -56,7 +56,7 @@
   /* === Spacing === */
   --spacing-unit: 8px;
   --spacing-xs: 4px;
-  --spacing-sm: 8px;
+  --custom-spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 40px;

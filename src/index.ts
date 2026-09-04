@@ -42,7 +42,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use("*", cors({
   origin: ["https://netzero-frontend.poom-a1d.workers.dev", "http://localhost:3000"],
   allowMethods: ["GET", "POST", "OPTIONS"],
-  allowHeaders: ["Content-Type"],
+  allowHeaders: ["Content-Type", "Authorization"],
 }));
 
 // LIFF chat app
@@ -94,7 +94,8 @@ app.post("/webhook/line", async (c) => {
       .join("");
 
     if (!sig || sig !== expected) {
-      console.log(`SIG_MISMATCH: got=${sig || "none"} exp=${expected.substring(0, 16)}`);
+      console.log(`SIG_MISMATCH: got=${sig || "none"}`);
+      return c.json({ error: "Invalid signature" }, 401);
     }
 
     const data = JSON.parse(rawBody) as { events?: WebhookEvent[] };
@@ -231,11 +232,48 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
   }
 }
 
+// Require admin auth for season write endpoints
+app.use("/api/season", async (c, next) => {
+  if (c.req.method === "POST") {
+    const cookie = c.req.header("Cookie") ?? "";
+    const match = cookie.match(/nzc_session=([^;]+)/);
+    if (!match) return c.json({ error: "Unauthorized" }, 401);
+    const { parseSessionCookie } = await import("./auth/session");
+    const session = parseSessionCookie(match[1], c.env.SECRET);
+    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+  }
+  await next();
+});
+app.use("/api/season/approve", async (c, next) => {
+  if (c.req.method === "POST") {
+    const cookie = c.req.header("Cookie") ?? "";
+    const match = cookie.match(/nzc_session=([^;]+)/);
+    if (!match) return c.json({ error: "Unauthorized" }, 401);
+    const { parseSessionCookie } = await import("./auth/session");
+    const session = parseSessionCookie(match[1], c.env.SECRET);
+    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+  }
+  await next();
+});
+
 // Admin review dashboard
 app.route("/", adminRoutes);
 
 // Sponsor dashboard + detail
 app.route("/sponsor", sponsorRoutes);
+
+// Require admin auth for export
+app.use("/export", async (c, next) => {
+  const cookie = c.req.header("Cookie") ?? "";
+  const match = cookie.match(/nzc_session=([^;]+)/);
+  if (!match) return c.json({ error: "Unauthorized" }, 401);
+  const { parseSessionCookie } = await import("./auth/session");
+  const session = parseSessionCookie(match[1], c.env.SECRET);
+  if (!session || (session.role !== "admin" && session.role !== "sponsor")) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+  await next();
+});
 
 // Export estimates (JSON/CSV)
 app.route("/export", exportRoutes);

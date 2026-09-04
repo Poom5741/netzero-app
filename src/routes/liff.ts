@@ -126,28 +126,22 @@ liffRoutes.post("/api/chat", async (c) => {
       return c.json({ error: "text and userId required" }, 400);
     }
 
-    // Get or create link
-    let link = await db
+    // Get or create link — INSERT OR IGNORE prevents race condition on concurrent requests
+    const linkId = `link_${crypto.randomUUID()}`;
+    await db
+      .prepare(
+        "INSERT OR IGNORE INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
+      )
+      .bind(linkId, "farmer-001", userId)
+      .run();
+
+    const link = await db
       .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
       .bind(userId)
       .first<{ id: string; farmer_id: string; status: string; conversation_state: string; selected_plot_id: string | null }>();
 
     if (!link) {
-      const linkId = `link_${crypto.randomUUID()}`;
-      await db
-        .prepare(
-          "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
-        )
-        .bind(linkId, "farmer-001", userId)
-        .run();
-
-      link = {
-        id: linkId,
-        farmer_id: "farmer-001",
-        status: "pending",
-        conversation_state: "welcome",
-        selected_plot_id: null,
-      };
+      return c.json({ error: "Failed to create link" }, 500);
     }
 
     // Handle via state machine (API mode — returns reply text)

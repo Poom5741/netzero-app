@@ -17,25 +17,45 @@ type Bindings = {
 
 export const adminRoutes = new Hono<{ Bindings: Bindings }>();
 
-// Auth helper
-function requireAdmin(
+// Auth helper — supports session cookie OR Basic Auth (for cross-domain frontend)
+async function requireAdmin(
   c: { req: { header: (name: string) => string | undefined } },
   secret: string,
+  db?: D1Database,
 ) {
+  // Try session cookie first
   const cookieHeader = c.req.header("Cookie") ?? "";
   const match = cookieHeader.match(/nzc_session=([^;]+)/);
-  if (!match?.[1]) return null;
-  const session = parseSessionCookie(match[1], secret);
-  if (session?.role !== "admin") return null;
-  return session;
+  if (match?.[1]) {
+    const session = parseSessionCookie(match[1], secret);
+    if (session?.role === "admin") return session;
+  }
+
+  // Fallback: Basic Auth header (for cross-domain frontend)
+  const authHeader = c.req.header("Authorization") ?? "";
+  if (authHeader.startsWith("Basic ")) {
+    const decoded = atob(authHeader.slice(6));
+    const [email, password] = decoded.split(":");
+    if (email && password && db) {
+      const user = await db.prepare("SELECT id, email, role FROM users WHERE email = ?").bind(email).first<{ id: string; email: string; role: string }>();
+      if (user && user.role === "admin") {
+        const { verifyPassword } = await import("../auth/password");
+        const fullUser = await db.prepare("SELECT password_hash FROM users WHERE email = ?").bind(email).first<{ password_hash: string }>();
+        if (fullUser && await verifyPassword(password, fullUser.password_hash)) {
+          return { userId: user.id, role: user.role as "admin", email: user.email };
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 // GET /admin/review — Photo review queue
 adminRoutes.get("/admin/review", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
-
   const db = c.env.DB;
+  const session = await requireAdmin(c, c.env.SECRET, db);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const filter = c.req.query("status") || undefined;
   const queue = await getReviewQueue(db, filter);
 
@@ -150,10 +170,9 @@ adminRoutes.get("/admin/review", async (c) => {
 
 // GET /api/admin/review — Photo review queue (JSON API)
 adminRoutes.get("/api/admin/review", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
-
   const db = c.env.DB;
+  const session = await requireAdmin(c, c.env.SECRET, db);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const filter = c.req.query("status") || undefined;
   const queue = await getReviewQueue(db, filter);
 
@@ -162,10 +181,9 @@ adminRoutes.get("/api/admin/review", async (c) => {
 
 // GET /api/admin/precision — Pre-verify precision stat
 adminRoutes.get("/api/admin/precision", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
-
   const db = c.env.DB;
+  const session = await requireAdmin(c, c.env.SECRET, db);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const stat = await getPrecisionStat(db);
 
   return c.json(stat);
@@ -173,10 +191,9 @@ adminRoutes.get("/api/admin/precision", async (c) => {
 
 // GET /api/admin/audit/:photoId — Decision history for a photo (JSON)
 adminRoutes.get("/api/admin/audit/:photoId", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
-
   const db = c.env.DB;
+  const session = await requireAdmin(c, c.env.SECRET, db);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const photoId = c.req.param("photoId");
   const history = await getDecisionHistory(db, photoId);
   return c.json(history);
@@ -184,10 +201,9 @@ adminRoutes.get("/api/admin/audit/:photoId", async (c) => {
 
 // GET /admin/audit/:photoId — Decision history HTML view
 adminRoutes.get("/admin/audit/:photoId", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
-  if (!session) return c.html("<!DOCTYPE html><html><body>Unauthorized</body></html>", 401);
-
   const db = c.env.DB;
+  const session = await requireAdmin(c, c.env.SECRET, db);
+  if (!session) return c.html("<!DOCTYPE html><html><body>Unauthorized</body></html>", 401);
   const photoId = c.req.param("photoId");
   const history = await getDecisionHistory(db, photoId);
 
@@ -272,10 +288,9 @@ adminRoutes.get("/admin/audit/:photoId", async (c) => {
 
 // POST /api/admin/review/:photoId — Review a photo
 adminRoutes.post("/api/admin/review/:photoId", async (c) => {
-  const session = requireAdmin(c, c.env.SECRET);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
-
   const db = c.env.DB;
+  const session = await requireAdmin(c, c.env.SECRET, db);
+  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const photoId = c.req.param("photoId");
   const body = await c.req.json<{ status: string; reason?: string }>();
 

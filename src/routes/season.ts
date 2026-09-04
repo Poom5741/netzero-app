@@ -3,6 +3,7 @@
  */
 
 import { Hono } from "hono";
+import { requireRole } from "../auth/middleware";
 import { approveSeason } from "../season/approve";
 
 type Bindings = {

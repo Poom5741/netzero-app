@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export type SessionData = {
   userId: string;
@@ -12,7 +12,7 @@ function sign(data: string, secret: string): string {
   return createHmac("sha256", secret).update(data).digest("hex");
 }
 
-export function createSessionCookie(data: SessionData, secret: string, secure = false): string {
+export function createSessionCookie(data: SessionData, secret: string, secure = true): string {
   const payload = btoa(JSON.stringify(data));
   const sig = sign(payload, secret);
   const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax`;
@@ -27,7 +27,9 @@ export function parseSessionCookie(raw: string, secret: string): SessionData | n
   const sig = raw.slice(dotIdx + 1);
   if (!payload || !sig) return null;
   const expected = sign(payload, secret);
-  if (sig !== expected) return null;
+  const sigBuf = Buffer.from(sig, "hex");
+  const expectedBuf = Buffer.from(expected, "hex");
+  if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null;
   try {
     return JSON.parse(atob(payload)) as SessionData;
   } catch {
