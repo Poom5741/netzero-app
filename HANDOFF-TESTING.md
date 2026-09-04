@@ -1,9 +1,9 @@
 # 🧪 Manual Test Handoff — NetZeroCarbon Production
 
 **For:** Claw
-**Date:** 2026-09-04 (rev 2 — after first test round)
-**Status:** Ready for retest
-**Context:** First round found 4 bugs (approve/reject failing, filters not filtering). All were root-caused, fixed, deployed, and verified via API on 2026-09-04 ~13:15 UTC. Please retest.
+**Date:** 2026-09-04 (rev 3 — after retest round)
+**Status:** GO for pilot per Claw's retest. One UX polish item fixed after retest (stale card list) — optional quick recheck.
+**Context:** Round 1 found 4 bugs → all fixed. Retest confirmed all 3 critical fixes work (filters 19→6→2, approve/reject return ok). The stale-card-list UX note from the retest is now fixed too.
 
 ---
 
@@ -42,9 +42,12 @@
 5. **LINE webhook** — accepted forged requests. Now rejects bad signatures (webhook still disabled, returns 503 — that's correct).
 
 **Round 2 (afternoon — fixes for bugs Claw found):**
-6. **Approve/reject now work** — root cause: every review action wrote to a `farmer_trust` table that was never created in the database. Table added to the migration; review actions no longer depend on trust scoring succeeding. Verified via API: approve → `{"ok":true}`, reject → `{"ok":true}`.
-7. **Filter tabs now actually filter** — root cause: backend called its own queue function with the wrong argument shape, so the WHERE clause silently never applied, AND the frontend sent `flagged/verified/rejected` while the DB stores `flag/pass/reject`. Verified: flag → 6 rows, pass → 2, pending → 11 (previously every tab returned all 19).
+6. **Approve/reject now work** — root cause: every review action wrote to a `farmer_trust` table that was never created in the database. Table added to the migration; review actions no longer depend on trust scoring succeeding. Verified via API: approve → `{"ok":true}`, reject → `{"ok":true}`. ✅ confirmed by Claw retest
+7. **Filter tabs now actually filter** — root cause: backend called its own queue function with the wrong argument shape, so the WHERE clause silently never applied, AND the frontend sent `flagged/verified/rejected` while the DB stores `flag/pass/reject`. Verified: flag → 6 rows, pass → 2, pending → 11 (previously every tab returned all 19). ✅ confirmed by Claw retest
 8. **Trust scores now attach to the right farmer** — review actions previously created trust rows for fake IDs like `farmer_plot-004`. Now resolved via the plot's real owner.
+
+**Round 3 (evening — the UX note from Claw's retest):**
+9. **Card list no longer goes stale after approve/reject** — the tab cache kept old results and cards only showed the AI badge (which never changes on approve, by design). Now: the cache clears after each decision, and decided cards show **อนุมัติแล้ว** (green) or **ปฏิเสธแล้ว** (red) badges next to the AI badge. The AI badge intentionally stays — it records what the machine said.
 
 ---
 
@@ -169,6 +172,7 @@ Add them to the Multica board (project POOM) or reply directly — either works.
 When done, tick these:
 
 - [ ] Admin login works, review queue loads, approve/reject works
+- [ ] (rev 3) After approving, the card shows the green อนุมัติแล้ว badge without a page reload
 - [ ] Photo decision history page works
 - [ ] Sponsor dashboard loads with 4 plots, export downloads
 - [ ] Farmer chat: consent → phone → AI conversation works
