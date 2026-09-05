@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 
 /** Validate URL to prevent SSRF: only allow http/https absolute URLs. */
 function validateApiUrl(url: string): string {
@@ -29,6 +29,14 @@ export function apiRequest<T = unknown>(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(init?.method || "GET", url);
+
+    // Add Basic Auth for admin endpoints if credentials exist
+    const email = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("nzc_admin_email") : null;
+    const pass = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("nzc_admin_pass") : null;
+    if (email && pass && (path.includes("/admin") || path.includes("/review"))) {
+      xhr.setRequestHeader("Authorization", "Basic " + btoa(`${email}:${pass}`));
+    }
+
     if (init?.json !== undefined) {
       xhr.setRequestHeader("Content-Type", "application/json");
     }

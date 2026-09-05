@@ -1,6 +1,7 @@
 "use client";
 
 import type { PhotoReview } from "@/lib/api";
+import { API_BASE } from "@/lib/api";
 
 interface ReviewCardProps {
   review: PhotoReview;
@@ -44,7 +45,7 @@ export function ReviewCard({ review, selected, onSelect }: ReviewCardProps) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="w-full h-full object-cover"
-          src={review.photo_url}
+          src={`${API_BASE}/api/photo/${review.id}`}
           alt={`ภาพพื้นที่ ${review.plot_id}`}
           onError={(e) => {
             const img = e.target as HTMLImageElement;

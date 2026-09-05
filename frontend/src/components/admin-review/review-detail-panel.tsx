@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { PhotoReview } from "@/lib/api";
+import { API_BASE } from "@/lib/api";
 
 interface ReviewDetailPanelProps {
   review: PhotoReview | null;
@@ -89,7 +90,7 @@ export function ReviewDetailPanel({
           <div className="rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: "16/9" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={review.photo_url}
+              src={`${API_BASE}/api/photo/${review.id}`}
               alt={`ภาพพื้นที่ ${review.plot_id}`}
               className="w-full h-full object-cover"
             />
