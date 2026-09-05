@@ -44,7 +44,7 @@ function makeUploadRequest(overrides?: Record<string, string | File>) {
       fd.set(k, v);
     }
   }
-  return new Request("http://localhost/photo/upload", { method: "POST", body: fd });
+  return new Request("http://localhost/api/photo/upload", { method: "POST", body: fd });
 }
 
 describe("POST /photo/upload", () => {
@@ -52,7 +52,7 @@ describe("POST /photo/upload", () => {
     const db = mockDB();
     const r2 = mockR2();
 
-    const res = await photoRoutes.request("/photo/upload", makeUploadRequest(), {
+    const res = await photoRoutes.request("/api/photo/upload", makeUploadRequest(), {
       DB: db as any,
       R2: r2 as any,
       ENVIRONMENT: "test",
@@ -70,9 +70,9 @@ describe("POST /photo/upload", () => {
     const fd = new FormData();
     fd.append("plot_id", "plot-1");
     fd.append("season_id", "season-1");
-    const req = new Request("http://localhost/photo/upload", { method: "POST", body: fd });
+    const req = new Request("http://localhost/api/photo/upload", { method: "POST", body: fd });
 
-    const res = await photoRoutes.request("/photo/upload", req, {
+    const res = await photoRoutes.request("/api/photo/upload", req, {
       DB: db as any,
       R2: r2 as any,
       ENVIRONMENT: "test",
@@ -87,7 +87,7 @@ describe("POST /photo/upload", () => {
     const db = mockDB();
     const r2 = mockR2();
 
-    const res = await photoRoutes.request("/photo/upload", makeUploadRequest(), {
+    const res = await photoRoutes.request("/api/photo/upload", makeUploadRequest(), {
       DB: db as any,
       R2: r2 as any,
       ENVIRONMENT: "test",

@@ -519,8 +519,11 @@ export async function handleFlowApi(ctx: FlowContext): Promise<FlowApiResult> {
 async function handleWelcomeApi(ctx: FlowContext): Promise<FlowApiResult> {
   const lower = ctx.text.toLowerCase().trim();
   if (["ยอมรับ", "accept", "ตกลง", "同意", "ok"].includes(lower)) {
-    // POC: skip phone/pending, go directly to plot selection
-    return handlePlotSelectionAfterConsentApi(ctx);
+    // After consent → ask for phone number (phone = identity)
+    return {
+      reply: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
+      newState: "phone",
+    };
   }
   return { reply: "กรุณายอมรับเงื่อนไขก่อนใช้งาน\nพิมพ์ 'ยอมรับ' เพื่อยอมรับเงื่อนไขทั้งหมด", newState: "welcome" };
 }
@@ -571,9 +574,12 @@ async function handlePhoneApi(ctx: FlowContext): Promise<FlowApiResult> {
     return { reply: "ไม่พบข้อมูลเกษตรกรในระบบ\nกรุณาติดต่อเจ้าหน้าที่โครงการค่ะ", newState: "phone" };
   }
 
-  await ctx.db.prepare("UPDATE line_links SET farmer_id = ?, status = 'pending', conversation_state = 'identified' WHERE id = ?").bind(farmer.id, ctx.linkId).run();
+  // Phone number IS the identity — if it matches a farmer, trust it immediately.
+  // Real case: farmer's nephew enters info on their behalf.
+  await ctx.db.prepare("UPDATE line_links SET farmer_id = ?, status = 'verified', conversation_state = 'identified' WHERE id = ?").bind(farmer.id, ctx.linkId).run();
+
   return {
-    reply: `🌾 สวัสดีค่ะ คุณ${farmer.full_name}\n\n✅ พบข้อมูลของคุณแล้วค่ะ\n⏳ บัญชีอยู่ระหว่างรอการยืนยันจากเจ้าหน้าที่ แต่สามารถเริ่มใช้งานได้เลยค่ะ\n\nต้องการทำอะไรคะ?\n• พิมพ์ "บันทึก" — บันทึกข้อมูลแปลงนา\n• พิมพ์ "ถ่ายรูป" — ถ่ายรูปหลักฐาน\n• พิมพ์ "ดูสถานะ" — ดูสถานะฤดูกาลปัจจุบัน`,
+    reply: `🌾 สวัสดีค่ะ คุณ${farmer.full_name}\n\n✅ พบข้อมูลของคุณแล้วค่ะ\n\nต้องการทำอะไรคะ?\n• พิมพ์ "บันทึก" — บันทึกข้อมูลแปลงนา\n• พิมพ์ "ถ่ายรูป" — ถ่ายรูปหลักฐาน\n• พิมพ์ "ดูสถานะ" — ดูสถานะฤดูกาลปัจจุบัน`,
     newState: "identified",
   };
 }

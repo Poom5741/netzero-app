@@ -74,7 +74,24 @@ function UploadContent() {
   }
 
   async function handleUpload() {
-    if (!photo.preview || !userId || !photoType) return;
+    if (!photo.preview) {
+      setPhoto((p) => ({ ...p, error: "กรุณาเลือกรูปก่อนอัปโหลด" }));
+      return;
+    }
+    if (!photoType) {
+      setPhoto((p) => ({ ...p, error: "กรุณาเลือกประเภทรูปก่อนอัปโหลด" }));
+      return;
+    }
+    if (!userId) {
+      setPhoto((p) => ({ ...p, error: "ไม่สามารถระบุผู้ใช้ได้ กรุณาลองใหม่" }));
+      return;
+    }
+
+    // Warn if no GPS but still allow upload
+    if (!photo.gps) {
+      const ok = window.confirm("ไม่มีข้อมูล GPS — รูปจะไม่มีพิกัด ต้องการอัปโหลดต่อหรือไม่?");
+      if (!ok) return;
+    }
 
     setPhoto((p) => ({ ...p, uploading: true, error: null, verdict: null }));
 
@@ -143,7 +160,7 @@ function UploadContent() {
           </div>
         </header>
         <main className="flex-1 pt-16 pb-24 px-5 flex items-center justify-center overflow-y-auto">
-          <div className="w-full max-w-sm neumorphic rounded-2xl">
+          <div className="w-full neumorphic rounded-2xl">
             <VerdictResult
               verdict={photo.verdict}
               reason={photo.verdictReason || undefined}
@@ -291,7 +308,6 @@ function UploadContent() {
               <Button
                 onClick={handleUpload}
                 loading={photo.uploading}
-                disabled={!photo.gps}
                 className="flex-1 claymorphic"
               >
                 อัปโหลด

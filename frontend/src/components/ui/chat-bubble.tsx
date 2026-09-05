@@ -12,7 +12,7 @@ interface ChatBubbleProps {
 export function ChatBubble({ type, avatar, timestamp, children }: ChatBubbleProps) {
   if (type === "user") {
     return (
-      <div className="flex items-end gap-3 self-end max-w-[85%]">
+      <div className="flex items-end gap-3 self-end max-w-[90%]">
         <div className="claymorphic rounded-2xl rounded-br-sm p-4 text-white relative">
           {children}
           {timestamp && (
@@ -27,7 +27,7 @@ export function ChatBubble({ type, avatar, timestamp, children }: ChatBubbleProp
   }
 
   return (
-    <div className="flex items-end gap-3 self-start max-w-[85%]">
+    <div className="flex items-end gap-3 self-start max-w-[90%]">
       {avatar || (
         <div className="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0 border border-primary/10">
           <span className="material-symbols-outlined text-primary text-sm">eco</span>

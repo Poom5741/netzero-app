@@ -19,20 +19,45 @@ function formatTime(date: Date) {
   return date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 }
 
+const STORAGE_KEY = "nzc_chat_history";
+
+function loadMessages(): Message[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+
+function saveMessages(msgs: Message[]) {
+  try {
+    // Keep last 100 messages to avoid storage bloat
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs.slice(-100)));
+  } catch {}
+}
+
 function ChatContent() {
   const { userId, profile, isLoading } = useLiff();
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = loadMessages();
+    if (saved.length > 0) return saved;
+    return [{
       id: "welcome",
       type: "bot",
       text: "สวัสดีครับ! 🌿 ยินดีต้อนรับสู่ NetZeroCarbon\nวันนี้คุณต้องการให้ผมช่วยบันทึกข้อมูลแปลงนา หรือตรวจสอบยอดคาร์บอนเครดิตครับ?",
       timestamp: formatTime(new Date()),
-    },
-  ]);
+    }];
+  });
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationState, setConversationState] = useState("welcome");
+  const [conversationState, setConversationState] = useState(() => {
+    try { return localStorage.getItem("nzc_chat_state") || "welcome"; } catch { return "welcome"; }
+  });
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Persist messages and state on every change
+  useEffect(() => { saveMessages(messages); }, [messages]);
+  useEffect(() => { try { localStorage.setItem("nzc_chat_state", conversationState); } catch {} }, [conversationState]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -111,6 +136,23 @@ function ChatContent() {
             <button className="w-10 h-10 flex items-center justify-center" aria-label="การแจ้งเตือน">
               <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
             </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem("nzc_chat_state");
+                setMessages([{
+                  id: "welcome",
+                  type: "bot",
+                  text: "สวัสดีครับ! 🌿 ยินดีต้อนรับสู่ NetZeroCarbon\nวันนี้คุณต้องการให้ผมช่วยบันทึกข้อมูลแปลงนา หรือตรวจสอบยอดคาร์บอนเครดิตครับ?",
+                  timestamp: formatTime(new Date()),
+                }]);
+                setConversationState("welcome");
+              }}
+              className="w-10 h-10 flex items-center justify-center"
+              aria-label="เริ่มแชทใหม่"
+            >
+              <span className="material-symbols-outlined text-on-surface-variant">refresh</span>
+            </button>
             {profile?.pictureUrl ? (
               <img alt="Profile" className="w-8 h-8 rounded-full object-cover border border-white" src={profile.pictureUrl} />
             ) : (
@@ -125,8 +167,8 @@ function ChatContent() {
       </header>
 
       {/* Chat Area */}
-      <main className="flex-1 pt-16 pb-24 px-5 bg-surface-container-low">
-        <div className="flex flex-col w-full min-h-[calc(100vh-140px)] overflow-y-auto px-4 py-4 space-y-6">
+      <main className="flex-1 pt-16 pb-24 px-4 bg-surface-container-low">
+        <div className="flex flex-col w-full min-h-[calc(100vh-140px)] overflow-y-auto py-4 space-y-6">
           {messages.map((msg) => (
             <ChatBubble
               key={msg.id}

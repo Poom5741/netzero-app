@@ -4,8 +4,7 @@ import type { ClassifyResult } from "../vision/classifier";
 import { type PreVerifyConfig, shouldAuditSample } from "../vision/preverify";
 import { CLIPClassifier } from "../vision/clip-classifier";
 import { clipInference } from "../vision/clip-inference";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
+import { resolve } from "path";
 import { getFarmerTrust } from "../trust/farmer-trust";
 import { evaluateAutoVerify } from "../vision/auto-verify";
 import { composeRetakeMessage } from "../vision/retake-message";
@@ -35,10 +34,13 @@ async function getCLIPClassifier(): Promise<CLIPClassifier | null> {
   if (clipLoadAttempted) return clipClassifier;
   clipLoadAttempted = true;
   try {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    const bakeoffDir = resolve(__dirname, "../vision/bakeoff");
+    // import.meta.dirname works in Node.js 21+ and wrangler dev bundler
+    const dir = (import.meta as any).dirname || ".";
+    const bakeoffDir = resolve(dir, "../vision/bakeoff");
     clipClassifier = await CLIPClassifier.load(bakeoffDir);
+    if (clipClassifier) {
+      console.log("CLIP classifier loaded successfully from", bakeoffDir);
+    }
   } catch (err) {
     console.error("Failed to load CLIP classifier:", err);
     clipClassifier = null;
@@ -81,7 +83,7 @@ photoRoutes.get("/evidence/:key", async (c) => {
   });
 });
 
-photoRoutes.post("/photo/upload", async (c) => {
+photoRoutes.post("/api/photo/upload", async (c) => {
   const formData = await c.req.formData();
   const file = formData.get("photo");
   const plotId = formData.get("plot_id");

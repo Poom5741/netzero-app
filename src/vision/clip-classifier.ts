@@ -2,9 +2,11 @@
  * CLIP ViT-L/14 Model Loader and Embedding Cache
  * Issue #117 — Loads model weights and reference embeddings, caches them,
  * and provides a classify method for image classification.
+ *
+ * Uses dynamic imports for model files — lazy-loaded on first classify call.
+ * This keeps the worker bundle small (~240KB) and loads the ~4.5MB model
+ * only when needed.
  */
-import { readFile } from "fs/promises";
-import { join } from "path";
 import type { ClassifyResult } from "./classifier.js";
 
 interface ModelWeights {
@@ -46,21 +48,29 @@ export class CLIPClassifier {
   }
 
   /**
-   * Load CLIP model weights and reference embeddings from disk.
-   * Returns null if files are missing or loading fails.
+   * Load CLIP model via dynamic import.
+   * Lazy-loaded on first classify call to keep worker bundle small.
    */
-  static async load(bakeoffDir: string): Promise<CLIPClassifier | null> {
+  static async load(_bakeoffDir?: string): Promise<CLIPClassifier | null> {
     try {
-      const modelPath = join(bakeoffDir, "clip-model-weights.json");
-      const embeddingsPath = join(bakeoffDir, "clip-reference-embeddings.json");
-
-      const [modelRaw, refsRaw] = await Promise.all([
-        readFile(modelPath, "utf-8"),
-        readFile(embeddingsPath, "utf-8"),
+      const [modelMod, refsMod] = await Promise.all([
+        import("./bakeoff/clip-model-weights.json"),
+        import("./bakeoff/clip-reference-embeddings.json"),
       ]);
+      const model = modelMod.default as unknown as ModelWeights;
+      const refs = refsMod.default as unknown as ReferenceEmbeddings;
 
-      const model: ModelWeights = JSON.parse(modelRaw);
-      const refs: ReferenceEmbeddings = JSON.parse(refsRaw);
+      if (!model?.projection || !refs?.embeddings) {
+        console.error("CLIP model data missing projection or embeddings");
+        return null;
+      }
+
+      console.log(
+        `CLIP classifier loaded: ${model.model}, ` +
+        `${model.input_dim}→${model.embedding_dim} projection, ` +
+        `${refs.examples_per_class} examples/class, ` +
+        `${refs.classes.length} classes`
+      );
 
       return new CLIPClassifier(model, refs);
     } catch (err) {
@@ -107,7 +117,7 @@ export class CLIPClassifier {
 
     // 5. kNN majority vote (k=5)
     similarities.sort((a, b) => b.sim - a.sim);
-    const k = 5;
+    const k = Math.min(5, similarities.length);
     const topK = similarities.slice(0, k);
     const votes: Record<string, number> = {};
     for (const { cls } of topK) {
