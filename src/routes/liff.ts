@@ -119,11 +119,25 @@ liffRoutes.post("/api/chat", async (c) => {
     const token = c.env.LINE_CHANNEL_ACCESS_TOKEN;
     const apiKey = c.env.OPENROUTER_API_KEY;
 
-    const body = await c.req.json<{ text: string; userId: string }>();
+    const body = await c.req.json<{ text: string; userId: string; farmer_id?: string }>();
     const { text, userId } = body;
 
     if (!text || !userId) {
       return c.json({ error: "text and userId required" }, 400);
+    }
+
+    // Resolve farmer: explicit farmer_id wins, else first registered farmer.
+    // No hardcoded farmer-001 — chat must work with whatever real farmers exist.
+    const requestedFarmerId = typeof body.farmer_id === "string" ? body.farmer_id : undefined;
+    let farmerId = requestedFarmerId;
+    if (!farmerId) {
+      const fallback = await db
+        .prepare("SELECT id FROM farmers ORDER BY id LIMIT 1")
+        .first<{ id: string }>();
+      farmerId = fallback?.id;
+    }
+    if (!farmerId) {
+      return c.json({ error: "No registered farmer found" }, 400);
     }
 
     // Get or create link — INSERT OR IGNORE prevents race condition on concurrent requests
@@ -132,7 +146,7 @@ liffRoutes.post("/api/chat", async (c) => {
       .prepare(
         "INSERT OR IGNORE INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
       )
-      .bind(linkId, "farmer-001", userId)
+      .bind(linkId, farmerId, userId)
       .run();
 
     const link = await db
