@@ -1,4 +1,4 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
 
 /** Validate URL to prevent SSRF: only allow http/https absolute URLs. */
 function validateApiUrl(url: string): string {

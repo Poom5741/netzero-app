@@ -102,7 +102,7 @@ export function ReviewCard({ review, selected, onSelect, batchMode, batchSelecte
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
           <div className="flex items-center justify-between mb-1">
             <p className="text-label-md font-medium text-white">{review.plot_id}</p>
-            <span className="text-[12px] text-white/90 font-mono">{Math.round(review.ai_confidence * 100)}%</span>
+            <span className="text-[12px] text-white/90 font-mono">{Math.round((review.ai_confidence ?? 0) * 100)}%</span>
           </div>
           {review.water_state && (
             <p className="text-[12px] text-white/90 mb-0.5">
