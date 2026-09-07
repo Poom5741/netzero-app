@@ -51,7 +51,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    expect(screen.getByText("AI Analysis Results")).toBeInTheDocument();
+    expect(screen.getByText("ผลวิเคราะห์ AI")).toBeInTheDocument();
   });
 
   it("shows flag note when ai_status is flag", () => {
@@ -70,16 +70,26 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    expect(screen.getByRole("button", { name: /Approve/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Reject/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /อนุมัติ/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ปฏิเสธ/ })).toBeInTheDocument();
   });
 
-  it("calls onApprove with photo id when approve clicked", () => {
+  it("opens approve confirmation modal when approve clicked", () => {
     const onApprove = vi.fn();
     render(
       <ReviewDetailPanel review={mockReview} onApprove={onApprove} onReject={() => {}} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /Approve/ }));
+    fireEvent.click(screen.getByRole("button", { name: /อนุมัติ/ }));
+    expect(screen.getByText("ยืนยันการอนุมัติ")).toBeInTheDocument();
+  });
+
+  it("calls onApprove with photo id when approve confirmed", () => {
+    const onApprove = vi.fn();
+    render(
+      <ReviewDetailPanel review={mockReview} onApprove={onApprove} onReject={() => {}} onClose={() => {}} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /อนุมัติ/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^อนุมัติ$/ }));
     expect(onApprove).toHaveBeenCalledWith("photo-001");
   });
 
@@ -87,7 +97,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ปฏิเสธ/ }));
     expect(screen.getByText("เหตุผลในการปฏิเสธ")).toBeInTheDocument();
   });
 
@@ -96,7 +106,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={onReject} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ปฏิเสธ/ }));
     const textarea = screen.getByPlaceholderText("กรุณาระบุเหตุผล...");
     fireEvent.change(textarea, { target: { value: "ไม่ตรงกับพื้นที่" } });
     fireEvent.click(screen.getByRole("button", { name: /ยืนยันการปฏิเสธ/ }));
@@ -108,7 +118,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={onReject} onClose={() => {}} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /Reject/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ปฏิเสธ/ }));
     const confirmBtn = screen.getByRole("button", { name: /ยืนยันการปฏิเสธ/ });
     fireEvent.click(confirmBtn);
     expect(onReject).not.toHaveBeenCalled();
@@ -118,7 +128,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={() => {}} />,
     );
-    expect(screen.getByText("Farmer Profile")).toBeInTheDocument();
+    expect(screen.getByText("ข้อมูลเกษตรกร")).toBeInTheDocument();
   });
 
   it("displays the photo image from photo_url", () => {
@@ -135,7 +145,7 @@ describe("ReviewDetailPanel", () => {
     render(
       <ReviewDetailPanel review={mockReview} onApprove={() => {}} onReject={() => {}} onClose={onClose} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+    fireEvent.click(screen.getByRole("button", { name: /ปิด/i }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

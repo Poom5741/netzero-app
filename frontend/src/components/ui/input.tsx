@@ -25,7 +25,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           className={`
             w-full px-4 py-3 rounded-xl
             neumorphic-inset
-            text-on-surface placeholder:text-outline
+            text-on-surface placeholder:text-on-surface-variant
             focus:outline-none focus:ring-2 focus:ring-primary-container
             transition-all duration-200
             touch-target

@@ -7,13 +7,15 @@ interface ReviewCardProps {
   review: PhotoReview;
   selected: boolean;
   onSelect: (id: string) => void;
+  batchMode?: boolean;
+  batchSelected?: boolean;
 }
 
 /**
  * Photo card with AI badge overlay and farm/plot labels.
  * Renders inside the grid; selected card gets a highlight outline.
  */
-export function ReviewCard({ review, selected, onSelect }: ReviewCardProps) {
+export function ReviewCard({ review, selected, onSelect, batchMode, batchSelected }: ReviewCardProps) {
   const badgeVariant =
     review.ai_status === "flag"
       ? "bg-error-container text-on-error-container"
@@ -28,15 +30,17 @@ export function ReviewCard({ review, selected, onSelect }: ReviewCardProps) {
         ? "AI: ผ่าน"
         : "AI: รอตรวจ";
 
+  const isSelected = batchMode ? batchSelected : selected;
+
   return (
     <button
       type="button"
       onClick={() => onSelect(review.id)}
-      aria-pressed={selected}
+      aria-pressed={isSelected}
       aria-label={`ภาพหลักฐาน ${review.plot_id}`}
       className={[
         "relative group cursor-pointer text-left",
-        selected
+        isSelected
           ? "outline-2 outline-offset-4 outline outline-primary rounded-xl ring-4 ring-primary/20"
           : "rounded-xl",
       ].join(" ")}
@@ -59,6 +63,13 @@ export function ReviewCard({ review, selected, onSelect }: ReviewCardProps) {
             }
           }}
         />
+
+        {/* Batch mode checkbox */}
+        {batchMode && (
+          <div className={`absolute top-2 right-2 z-10 w-6 h-6 rounded-full flex items-center justify-center shadow-sm transition-colors ${batchSelected ? "bg-primary text-white" : "bg-white/80 backdrop-blur-sm text-on-surface-variant"}`}>
+            {batchSelected && <span className="material-symbols-outlined text-[16px]">check</span>}
+          </div>
+        )}
 
         {/* AI Badge */}
         <div className={`absolute top-2 left-2 ${badgeVariant} px-2 py-1 rounded-full flex items-center gap-1 shadow-sm`}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import type { PhotoReview } from "@/lib/api";
 import { API_BASE } from "@/lib/api";
@@ -25,6 +25,69 @@ export function ReviewDetailPanel({
 }: ReviewDetailPanelProps) {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [showApproveModal, setShowApproveModal] = useState(false);
+
+  // Escape key closes modals + focus trap
+  const rejectModalRef = useRef<HTMLDivElement>(null);
+  const approveModalRef = useRef<HTMLDivElement>(null);
+
+  const trapFocus = useCallback((modalRef: React.RefObject<HTMLDivElement | null>) => {
+    const modal = modalRef.current;
+    if (!modal) return;
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    modal.addEventListener("keydown", handleTab);
+    return () => modal.removeEventListener("keydown", handleTab);
+  }, []);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showRejectModal) {
+          setRejectReason("");
+          setShowRejectModal(false);
+        } else if (showApproveModal) {
+          setShowApproveModal(false);
+        }
+      }
+    };
+    if (showRejectModal || showApproveModal) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [showRejectModal, showApproveModal]);
+
+  useEffect(() => {
+    if (showRejectModal) return trapFocus(rejectModalRef)?.();
+  }, [showRejectModal, trapFocus]);
+  useEffect(() => {
+    if (showApproveModal) return trapFocus(approveModalRef)?.();
+  }, [showApproveModal, trapFocus]);
+
+  // Listen for keyboard shortcuts from admin page
+  useEffect(() => {
+    const rejectHandler = () => setShowRejectModal(true);
+    const approveHandler = () => setShowApproveModal(true);
+    document.addEventListener("admin-reject-shortcut", rejectHandler);
+    document.addEventListener("admin-approve-shortcut", approveHandler);
+    return () => {
+      document.removeEventListener("admin-reject-shortcut", rejectHandler);
+      document.removeEventListener("admin-approve-shortcut", approveHandler);
+    };
+  }, []);
 
   if (!review) return null;
 
@@ -63,13 +126,13 @@ export function ReviewDetailPanel({
             <div className="flex items-center gap-2">
               {review.ai_status === "flag" && (
                 <div className="bg-error-container text-on-error-container px-2 py-1 rounded text-[12px] font-label-md">
-                  Flagged
+                  ถูกธง
                 </div>
               )}
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label="ปิด"
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
@@ -99,14 +162,14 @@ export function ReviewDetailPanel({
           {/* Photo type */}
           {review.photo_type && (
             <div className="bg-surface rounded-xl p-4 shadow-sm">
-              <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Photo Type</p>
+              <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">ประเภทภาพ</p>
               <p className="font-body-md text-body-md text-on-surface">{review.photo_type}</p>
             </div>
           )}
 
           {/* Farmer Info */}
           <div className="bg-surface rounded-xl p-4 shadow-sm">
-            <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Farmer Profile</p>
+            <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">ข้อมูลเกษตรกร</p>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md">
                 {review.plot_id.charAt(0)}
@@ -120,10 +183,10 @@ export function ReviewDetailPanel({
 
           {/* AI Analysis */}
           <div className="bg-surface rounded-xl p-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] border border-surface-container-highest/20">
-            <p className="font-label-md text-label-md text-on-surface-variant mb-2 uppercase tracking-wider text-[11px]">AI Analysis Results</p>
+            <p className="font-label-md text-label-md text-on-surface-variant mb-2 uppercase tracking-wider text-[11px]">ผลวิเคราะห์ AI</p>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-body-md text-body-md text-on-surface text-[14px]">Confidence</span>
+                <span className="font-body-md text-body-md text-on-surface text-[14px]">ความเชื่อมั่น</span>
                 <span className="font-label-md text-label-md text-primary">{confidencePercent}%</span>
               </div>
               <div className="w-full bg-surface-container-highest rounded-full h-1.5">
@@ -137,9 +200,9 @@ export function ReviewDetailPanel({
               {review.water_state && (
                 <>
                   <div className="flex justify-between items-center mt-4">
-                    <span className="font-body-md text-body-md text-on-surface text-[14px]">Water Level</span>
+                    <span className="font-body-md text-body-md text-on-surface text-[14px]">ระดับน้ำ</span>
                     <span className={`font-label-md text-label-md ${review.water_state === "flooded" ? "text-error" : "text-primary"}`}>
-                      {review.water_state === "flooded" ? "High" : "Normal"}
+                      {review.water_state === "flooded" ? "สูง" : "ปกติ"}
                     </span>
                   </div>
                   <div className="w-full bg-surface-container-highest rounded-full h-1.5">
@@ -156,7 +219,7 @@ export function ReviewDetailPanel({
             {review.ai_status === "flag" && review.ai_reason && (
               <div className="mt-4 p-3 bg-error-container/30 rounded-lg">
                 <p className="font-body-md text-body-md text-on-error-container text-[12px]">
-                  <span className="font-label-md block mb-1">AI Flag Note:</span>
+                  <span className="font-label-md block mb-1">หมายเหตุ AI:</span>
                   {review.ai_reason}
                 </p>
               </div>
@@ -166,9 +229,9 @@ export function ReviewDetailPanel({
           {/* GPS Coordinates */}
           {(review.gps_lat != null && review.gps_lng != null) && (
             <div className="bg-surface rounded-xl p-4 shadow-sm">
-              <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Geolocation</p>
+              <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">พิกัด GPS</p>
               <p className="font-body-md text-body-md text-on-surface text-[14px]">
-                Lat: {review.gps_lat}, Lng: {review.gps_lng}
+                ละติจูด: {review.gps_lat}, ลองจิจูด: {review.gps_lng}
               </p>
             </div>
           )}
@@ -177,29 +240,33 @@ export function ReviewDetailPanel({
         {/* Action Area */}
         <div className="p-6 bg-surface-container-lowest border-t border-surface-container-highest/20 mt-auto">
           <div className="flex gap-4">
-            <button
-              type="button"
+            <Button
+              variant="danger"
               onClick={() => setShowRejectModal(true)}
-              className="flex-1 h-11 flex items-center justify-center gap-2 bg-error text-on-error rounded-xl font-label-md text-label-md shadow-[0_4px_10px_rgba(186,26,26,0.3),inset_0_2px_4px_rgba(255,255,255,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+              className="flex-1"
             >
               <span className="material-symbols-outlined text-[18px]">cancel</span>
-              Reject
-            </button>
-            <button
-              type="button"
-              onClick={() => onApprove(review.id)}
-              className="flex-1 h-11 flex items-center justify-center gap-2 bg-gradient-to-b from-[#06C755] to-[#00A854] text-white rounded-xl font-label-md text-label-md shadow-[0_4px_10px_rgba(6,199,85,0.3),inset_0_2px_4px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+              ปฏิเสธ
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setShowApproveModal(true)}
+              className="flex-1"
             >
               <span className="material-symbols-outlined text-[18px]">check</span>
-              Approve
-            </button>
+              อนุมัติ
+            </Button>
           </div>
+          <p className="text-[11px] text-outline mt-2 text-center">
+            กด <kbd className="px-1 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono text-[10px]">A</kbd> อนุมัติ · <kbd className="px-1 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono text-[10px]">R</kbd> ปฏิเสธ
+          </p>
         </div>
       </aside>
 
       {/* Reject Reason Modal */}
       {showRejectModal && (
         <div
+          ref={rejectModalRef}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
           role="dialog"
           aria-modal="true"
@@ -226,6 +293,40 @@ export function ReviewDetailPanel({
                 disabled={!rejectReason.trim()}
               >
                 ยืนยันการปฏิเสธ
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Confirmation Modal */}
+      {showApproveModal && (
+        <div
+          ref={approveModalRef}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="approve-modal-title"
+        >
+          <div className="neumorphic bg-surface-container-low p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
+            <h3 id="approve-modal-title" className="text-headline-md font-bold text-on-surface mb-4">
+              ยืนยันการอนุมัติ
+            </h3>
+            <p className="text-body-md text-on-surface-variant mb-6">
+              ตรวจสอบภาพหลักฐานแล้วอนุมัติเป็นผ่าน?
+            </p>
+            <div className="flex gap-3 mt-4 justify-end">
+              <Button variant="ghost" onClick={() => setShowApproveModal(false)}>
+                ยกเลิก
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  onApprove(review.id);
+                  setShowApproveModal(false);
+                }}
+              >
+                อนุมัติ
               </Button>
             </div>
           </div>

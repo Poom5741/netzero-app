@@ -54,6 +54,9 @@ function ChatContent() {
     try { return localStorage.getItem("nzc_chat_state") || "welcome"; } catch { return "welcome"; }
   });
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [showHint, setShowHint] = useState(() => {
+    try { return !localStorage.getItem("nzc_chat_hint_seen"); } catch { return true; }
+  });
 
   // Persist messages and state on every change
   useEffect(() => { saveMessages(messages); }, [messages]);
@@ -130,7 +133,7 @@ function ChatContent() {
         <div className="h-16 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img alt="NetZeroCarbon Logo" className="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBczoX7NrPcRVpSCyIRt8QCTQ4tQTNdiw3X3JqXh_YDY30hP8yC8iAP1jlNbEM6OTCf9MdvcG4TpBZAOkkwonGSQl10ndDAgImtKnfhG7XhDlJA0ARhNqzWf24YrTl9V9yfQE-lnKGeNAFh1vwAflUw2ZMU8I7k8aKo2tu6zARyM_V7bz7KbhcueZA9o1DpQ3QrJnN7k_G5zSBao3cDGj5tNqLtSG5ZpX15l11xUdxhnZWlQQeTj6CvIA" />
-            <span className="font-headline-md text-headline-md text-on-surface truncate">Chat Hub</span>
+            <span className="font-headline-md text-headline-md text-on-surface truncate">แชท</span>
           </div>
           <div className="flex items-center gap-2">
             <button className="w-10 h-10 flex items-center justify-center" aria-label="การแจ้งเตือน">
@@ -186,6 +189,29 @@ function ChatContent() {
 
           {isTyping && <TypingIndicator />}
 
+          {/* Onboarding Hint (first visit only) */}
+          {showHint && messages.length <= 1 && (
+            <div className="mx-11 mb-3 p-3 rounded-xl bg-primary-container/10 border border-primary/20 flex items-start gap-2">
+              <span className="material-symbols-outlined text-primary text-[18px] mt-0.5">lightbulb</span>
+              <div className="flex-1">
+                <p className="text-label-md text-on-surface font-medium">เริ่มต้นใช้งาน</p>
+                <p className="text-[12px] text-on-surface-variant mt-0.5">
+                  พิมพ์ข้อความเพื่อบันทึกข้อมูลแปลงนา หรือใช้ปุ่มด้านล่างเพื่อเข้าถึงฟีเจอร์หลัก
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowHint(false);
+                  try { localStorage.setItem("nzc_chat_hint_seen", "1"); } catch {}
+                }}
+                className="text-on-surface-variant hover:text-on-surface transition-colors"
+                aria-label="ปิดคำแนะนำ"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            </div>
+          )}
+
           {/* Quick Actions */}
           <QuickActions actions={quickActions} />
 
@@ -196,9 +222,6 @@ function ChatContent() {
       {/* Floating Input Bar (Neumorphic) */}
       <div className="p-4 bg-transparent pb-safe relative z-10">
         <div className="bg-surface-container-lowest rounded-[24px] p-2 flex items-center gap-2 shadow-[5px_5px_15px_#D1D9E6,-5px_-5px_15px_#FFFFFF] relative z-20">
-          <button className="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-primary/10 transition-colors shrink-0" aria-label="เพิ่มไฟล์">
-            <span className="material-symbols-outlined">add_circle</span>
-          </button>
           <div className="flex-1 bg-surface-container-low rounded-xl px-4 py-3 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),inset_-2px_-2px_5px_rgba(255,255,255,0.5)]">
             <input
               type="text"
@@ -207,7 +230,7 @@ function ChatContent() {
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="พิมพ์ข้อความที่นี่..."
               aria-label="พิมพ์ข้อความ"
-              className="w-full bg-transparent border-none outline-none text-body-md text-on-surface placeholder:text-on-surface-variant/50"
+              className="w-full bg-transparent border-none outline-none text-body-md text-on-surface placeholder:text-on-surface-variant"
             />
           </div>
           <button

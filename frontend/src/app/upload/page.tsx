@@ -1,12 +1,28 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { LiffProvider, useLiff } from "@/lib/liff-context";
+import { apiRequest } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { PhotoTypePicker } from "@/components/upload/photo-type-picker";
 import { VerdictResult } from "@/components/upload/verdict-result";
 import { uploadPhoto, type UploadVerdict } from "@/lib/photo";
+
+interface Plot {
+  id: string;
+  plot_code: string;
+  area_rai: number;
+  deed_no: string;
+}
+
+interface Season {
+  id: string;
+  name: string;
+  status: string;
+}
+
+const DEMO_FARMER_ID = "farmer-001";
 
 interface PhotoState {
   preview: string | null;
@@ -21,6 +37,10 @@ interface PhotoState {
 function UploadContent() {
   const { userId, isLoading } = useLiff();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [plots, setPlots] = useState<Plot[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedPlot, setSelectedPlot] = useState<string>("");
+  const [selectedSeason, setSelectedSeason] = useState<string>("");
   const [photoType, setPhotoType] = useState<string | null>(null);
   const [photo, setPhoto] = useState<PhotoState>({
     preview: null,
@@ -32,6 +52,45 @@ function UploadContent() {
     error: null,
   });
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [showGpsWarning, setShowGpsWarning] = useState(false);
+  const gpsModalRef = useRef<HTMLDivElement>(null);
+
+  const trapFocus = useCallback((modalRef: React.RefObject<HTMLDivElement | null>) => {
+    const modal = modalRef.current;
+    if (!modal) return;
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    modal.addEventListener("keydown", handleTab);
+    return () => modal.removeEventListener("keydown", handleTab);
+  }, []);
+
+  // Escape key + focus trap for GPS warning modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showGpsWarning) {
+        setShowGpsWarning(false);
+      }
+    };
+    if (showGpsWarning) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [showGpsWarning]);
+  useEffect(() => {
+    if (showGpsWarning) return trapFocus(gpsModalRef)?.();
+  }, [showGpsWarning, trapFocus]);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -51,6 +110,38 @@ function UploadContent() {
       );
     }
   }, []);
+
+  // Derive farmer_id from userId
+  const farmerId = userId === "demo-user" ? DEMO_FARMER_ID : userId;
+
+  // Fetch plots on mount
+  useEffect(() => {
+    if (!farmerId) return;
+    apiRequest<{ plots: Plot[] }>(`/api/plots?farmer_id=${farmerId}`)
+      .then((res) => {
+        if (res.ok) {
+          setPlots(res.data.plots);
+          if (res.data.plots.length > 0) {
+            setSelectedPlot(res.data.plots[0].id);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [farmerId]);
+
+  // Fetch seasons when plot changes
+  useEffect(() => {
+    if (!selectedPlot) return;
+    apiRequest<{ seasons: Season[] }>(`/api/seasons?plot_id=${selectedPlot}`)
+      .then((res) => {
+        if (res.ok) {
+          setSeasons(res.data.seasons);
+          const active = res.data.seasons.find((s) => s.status === "active");
+          setSelectedSeason(active?.id || res.data.seasons[0]?.id || "");
+        }
+      })
+      .catch(() => {});
+  }, [selectedPlot]);
 
   function handleCapture() {
     fileInputRef.current?.click();
@@ -86,11 +177,15 @@ function UploadContent() {
       setPhoto((p) => ({ ...p, error: "ไม่สามารถระบุผู้ใช้ได้ กรุณาลองใหม่" }));
       return;
     }
+    if (!selectedPlot || !selectedSeason) {
+      setPhoto((p) => ({ ...p, error: "กรุณาเลือกแปลงและฤดูกาล" }));
+      return;
+    }
 
     // Warn if no GPS but still allow upload
     if (!photo.gps) {
-      const ok = window.confirm("ไม่มีข้อมูล GPS — รูปจะไม่มีพิกัด ต้องการอัปโหลดต่อหรือไม่?");
-      if (!ok) return;
+      setShowGpsWarning(true);
+      return;
     }
 
     setPhoto((p) => ({ ...p, uploading: true, error: null, verdict: null }));
@@ -101,8 +196,8 @@ function UploadContent() {
 
       const formData = new FormData();
       formData.append("photo", blob, "photo.jpg");
-      formData.append("plot_id", "plot-004");
-      formData.append("season_id", "2568-napi");
+      formData.append("plot_id", selectedPlot);
+      formData.append("season_id", selectedSeason);
       formData.append("gps_lat", String(photo.gps?.lat || 0));
       formData.append("gps_lng", String(photo.gps?.lng || 0));
       formData.append("gps_accuracy", String(photo.gps?.accuracy || 0));
@@ -202,6 +297,38 @@ function UploadContent() {
       <main className="flex-1 pt-16 pb-24 px-5 overflow-y-auto">
         {!photo.preview ? (
           <div className="flex flex-col gap-5">
+            {/* Plot & Season Selector */}
+            {plots.length > 0 && (
+              <div className="neumorphic rounded-xl p-4 space-y-3">
+                <div>
+                  <label className="text-label-md font-medium text-on-surface-variant block mb-1">แปลงนา</label>
+                  <select
+                    value={selectedPlot}
+                    onChange={(e) => setSelectedPlot(e.target.value)}
+                    className="w-full px-3 py-2 pr-8 rounded-xl bg-surface-container-low text-body-md text-on-surface border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary-container appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c7b6b%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_8px_center] bg-no-repeat"
+                  >
+                    {plots.map((p) => (
+                      <option key={p.id} value={p.id}>{p.plot_code} — {p.area_rai} ไร่</option>
+                    ))}
+                  </select>
+                </div>
+                {seasons.length > 0 && (
+                  <div>
+                    <label className="text-label-md font-medium text-on-surface-variant block mb-1">ฤดูกาล</label>
+                    <select
+                      value={selectedSeason}
+                      onChange={(e) => setSelectedSeason(e.target.value)}
+                      className="w-full px-3 py-2 pr-8 rounded-xl bg-surface-container-low text-body-md text-on-surface border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary-container appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c7b6b%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_8px_center] bg-no-repeat"
+                    >
+                      {seasons.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}{s.status === "active" ? " (ปัจจุบัน)" : ""}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Photo Type Picker */}
             <PhotoTypePicker value={photoType} onChange={setPhotoType} />
 
@@ -228,7 +355,7 @@ function UploadContent() {
               <div className="flex flex-col items-center gap-3 text-on-surface-variant px-8">
                 <span className="material-symbols-outlined text-5xl text-primary/40">photo_camera</span>
                 <p className="text-body-md text-center leading-relaxed">แตะเพื่อถ่ายรูปแปลงนา</p>
-                <p className="text-label-md text-center text-on-surface-variant/60 leading-relaxed">
+                <p className="text-label-md text-center text-on-surface-variant leading-relaxed">
                   จัดให้ต้นข้าวอยู่กลางกรอบ
                 </p>
               </div>
@@ -318,6 +445,40 @@ function UploadContent() {
       </main>
 
       <BottomNav items={navItems} />
+
+      {/* GPS Warning Modal */}
+      {showGpsWarning && (
+        <div
+          ref={gpsModalRef}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="gps-warning-title"
+        >
+          <div className="neumorphic bg-surface-container-low p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
+            <h3 id="gps-warning-title" className="text-headline-md font-bold text-on-surface mb-4">
+              ไม่มีข้อมูล GPS
+            </h3>
+            <p className="text-body-md text-on-surface-variant mb-6">
+              รูปจะไม่มีพิกัด ต้องการอัปโหลดต่อหรือไม่?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="ghost" onClick={() => setShowGpsWarning(false)}>
+                ยกเลิก
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setShowGpsWarning(false);
+                  setPhoto((p) => ({ ...p, uploading: true, error: null, verdict: null }));
+                }}
+              >
+                อัปโหลดต่อ
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

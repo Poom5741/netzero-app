@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { Button } from "@/components/ui/button";
 import { KpiCard } from "@/components/sponsor/kpi-card";
 import { ProvinceGroup } from "@/components/sponsor/province-group";
 import { LiveCalc } from "@/components/sponsor/live-calc";
@@ -187,22 +188,23 @@ export default function SponsorDashboardPage() {
                 </p>
               </div>
               <div className="mt-4 md:mt-0 flex gap-4">
-                <button
-                  type="button"
-                  className="touch-target px-6 rounded-full bg-surface-container-high text-on-surface hover:bg-surface-variant transition-colors flex items-center gap-2 text-sm font-medium shadow-sm"
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-full"
                 >
                   <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                  Q3 2024
-                </button>
-                <button
-                  type="button"
+                  {`ไตรมาส ${Math.ceil((new Date().getMonth() + 1) / 3)}/${new Date().getFullYear() + 543}`}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="rounded-full"
                   onClick={handleExport}
-                  className="touch-target px-6 rounded-full bg-tertiary text-on-tertiary shadow-[inset_0_2px_4px_rgba(255,255,255,0.3),0_4px_12px_rgba(171,53,0,0.4)] hover:scale-105 transition-transform flex items-center gap-2 text-sm font-medium relative overflow-hidden group"
                 >
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-full" />
-                  <span className="material-symbols-outlined text-[18px] relative z-10">download</span>
-                  <span className="relative z-10">ส่งออกรายงาน</span>
-                </button>
+                  <span className="material-symbols-outlined text-[18px]">download</span>
+                  ส่งออกรายงาน
+                </Button>
               </div>
             </div>
 
@@ -232,7 +234,7 @@ export default function SponsorDashboardPage() {
                     suffix="แปลง"
                     icon="landscape"
                     color="secondary"
-                    trend={loading ? "กำลังโหลด..." : `Across ${groups.length} จังหวัด • ${summary.totalFarmers} เกษตรกร`}
+                    trend={loading ? "กำลังโหลด..." : `ครอบคลุม ${groups.length} จังหวัด • ${summary.totalFarmers} เกษตรกร`}
                   />
                   <KpiCard
                     title="การลงทุนทั้งหมด"
@@ -240,7 +242,7 @@ export default function SponsorDashboardPage() {
                     suffix=""
                     icon="payments"
                     color="tertiary"
-                    trend="ปี 2024"
+                    trend={`ปี ${new Date().getFullYear() + 543}`}
                     formatValue={formatUSD}
                   />
                 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const API_BASE = "https://netzero-carbon-poc.poom-a1d.workers.dev";
 
@@ -93,13 +94,13 @@ export default function AdminLoginPage() {
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-primary text-white font-semibold text-body-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+              loading={loading}
+              className="w-full"
             >
-              {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
-            </button>
+              เข้าสู่ระบบ
+            </Button>
           </form>
         </div>
       </div>
