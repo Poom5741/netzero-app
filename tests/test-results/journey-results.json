@@ -1,0 +1,1778 @@
+{
+  "config": {
+    "argv": [
+      "/Users/poom-work/.local/share/pi-node/node-v22.23.2-darwin-arm64/bin/node",
+      "/Users/poom-work/netzero-app/node_modules/.bin/playwright",
+      "test",
+      "--config=tests/e2e/remote.config.ts",
+      "--",
+      "tests/e2e/journey-all.spec.ts",
+      "-g",
+      "1.2"
+    ],
+    "configFile": "/Users/poom-work/netzero-app/tests/e2e/remote.config.ts",
+    "rootDir": "/Users/poom-work/netzero-app/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "frontendURL": "https://netzero-frontend.poom-a1d.workers.dev",
+      "backendURL": "https://netzero-carbon-poc.poom-a1d.workers.dev",
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/poom-work/netzero-app/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "frontendURL": "https://netzero-frontend.poom-a1d.workers.dev",
+          "backendURL": "https://netzero-carbon-poc.poom-a1d.workers.dev",
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/poom-work/netzero-app/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "journey-*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../test-results/journey-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "journey-all.spec.ts",
+      "file": "journey-all.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Journey 1: Admin Login & Review Flow",
+          "file": "journey-all.spec.ts",
+          "line": 55,
+          "column": 6,
+          "specs": [
+            {
+              "title": "1.1 — Navigate to /admin/login and verify form renders",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1147,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.1] Admin login page loaded in 275ms (CSS layout bug: form compressed)\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:41.797Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-604e9ed6f2bd81a088eb",
+              "file": "journey-all.spec.ts",
+              "line": 56,
+              "column": 3
+            },
+            {
+              "title": "1.2 — Login with valid credentials redirects to /admin",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1113,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.2] Login succeeded, admin dashboard accessible\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:43.158Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-46f8cfe313897960d674",
+              "file": "journey-all.spec.ts",
+              "line": 83,
+              "column": 3
+            },
+            {
+              "title": "1.3 — Invalid credentials shows error message",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 961,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.3] Invalid credentials correctly shows error\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:44.276Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-9a8ced0eedab5641e819",
+              "file": "journey-all.spec.ts",
+              "line": 126,
+              "column": 3
+            },
+            {
+              "title": "1.4 — Admin dashboard loads with review queue and filter tabs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 448,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.4] Admin dashboard loaded in 99ms with 5 filter tabs\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:45.240Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-efb1c54ba9ac5b5dcbc1",
+              "file": "journey-all.spec.ts",
+              "line": 148,
+              "column": 3
+            },
+            {
+              "title": "1.5 — Filter tabs are clickable and switch active state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 497,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.5] Filter tabs switch correctly\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:45.691Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-380092a73c343e0263f4",
+              "file": "journey-all.spec.ts",
+              "line": 175,
+              "column": 3
+            },
+            {
+              "title": "1.6 — Review queue renders cards or empty state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2483,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.6] Review queue: 0 cards, empty: false, error: true\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:46.192Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-1042014fbe20fc9f2802",
+              "file": "journey-all.spec.ts",
+              "line": 200,
+              "column": 3
+            },
+            {
+              "title": "1.7 — Clicking a review card opens detail panel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Users/poom-work/netzero-app/tests/e2e/journey-all.spec.ts",
+                        "line": 259,
+                        "column": 12
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 3506,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.7] SKIP — no review cards in queue to click\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:48.679Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/poom-work/netzero-app/tests/e2e/journey-all.spec.ts",
+                            "line": 259,
+                            "column": 12
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c817af85ac7fca744422-973415b8290c8a34b19f",
+              "file": "journey-all.spec.ts",
+              "line": 229,
+              "column": 3
+            },
+            {
+              "title": "1.8 — Precision stat card renders on admin page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2448,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[1.8] Precision stat and season gate visible\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:52.191Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-a3e41cbd85f2ab8f88ad",
+              "file": "journey-all.spec.ts",
+              "line": 263,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Journey 2: Sponsor Dashboard Flow",
+          "file": "journey-all.spec.ts",
+          "line": 287,
+          "column": 6,
+          "specs": [
+            {
+              "title": "2.1 — Navigate to /sponsor and verify page loads",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 436,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[2.1] Sponsor dashboard loaded in 283ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:54.644Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-0dfad421f6267bd3c9d8",
+              "file": "journey-all.spec.ts",
+              "line": 288,
+              "column": 3
+            },
+            {
+              "title": "2.2 — KPI cards render with data or empty state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3395,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[2.2] Sponsor KPI: cards=true, empty=false\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:55.085Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-e2f9b6322fc4ff8f754d",
+              "file": "journey-all.spec.ts",
+              "line": 298,
+              "column": 3
+            },
+            {
+              "title": "2.3 — Province groups render or empty state shown",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4363,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[2.3] Province groups: visible=true, empty=false\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:53:58.484Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-90adc56fc28414435cb4",
+              "file": "journey-all.spec.ts",
+              "line": 319,
+              "column": 3
+            },
+            {
+              "title": "2.4 — Export button is present and clickable",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3449,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[2.4] Export triggered download: sponsor-report-2026-09-04.csv\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:02.849Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-a7f632dce1a2e0258701",
+              "file": "journey-all.spec.ts",
+              "line": 334,
+              "column": 3
+            },
+            {
+              "title": "2.5 — LiveCalc section renders with technique breakdown",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3396,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[2.5] LiveCalc: visible=true, empty=false\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:06.302Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-16c83dba1126789bcb57",
+              "file": "journey-all.spec.ts",
+              "line": 358,
+              "column": 3
+            },
+            {
+              "title": "2.6 — Sidebar navigation links to admin and sponsor",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2377,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[2.6] Sidebar: admin=true, sponsor=true\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:09.702Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-0e1c8ca399c36568ee03",
+              "file": "journey-all.spec.ts",
+              "line": 372,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Journey 3: Chat Flow",
+          "file": "journey-all.spec.ts",
+          "line": 390,
+          "column": 6,
+          "specs": [
+            {
+              "title": "3.1 — Navigate to /chat and verify interface loads",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1313,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[3.1] Chat page loaded in 188ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:12.083Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-f40fd97497aa80de5499",
+              "file": "journey-all.spec.ts",
+              "line": 391,
+              "column": 3
+            },
+            {
+              "title": "3.2 — Chat input field is present and functional",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1403,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[3.2] Chat input field works correctly\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:13.400Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-785923eb9de1004a647b",
+              "file": "journey-all.spec.ts",
+              "line": 408,
+              "column": 3
+            },
+            {
+              "title": "3.3 — Send a test message and verify response appears",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6503,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[3.3] Test message sent successfully\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:14.806Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-a44e0d5cddae010c3793",
+              "file": "journey-all.spec.ts",
+              "line": 431,
+              "column": 3
+            },
+            {
+              "title": "3.4 — Quick action buttons render",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1379,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[3.4] Quick actions: consent=true, ask=true\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:21.313Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-a652fe82f4592b8f23ca",
+              "file": "journey-all.spec.ts",
+              "line": 456,
+              "column": 3
+            },
+            {
+              "title": "3.5 — Bottom navigation renders with chat/upload/summary links",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1377,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[3.5] Bottom navigation renders correctly\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:22.696Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-a6a8ab14efad386e5fa9",
+              "file": "journey-all.spec.ts",
+              "line": 471,
+              "column": 3
+            },
+            {
+              "title": "3.6 — Reset chat button clears messages",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3063,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[3.6] Chat reset works correctly\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:24.077Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-faec69fc0b04afe43eb0",
+              "file": "journey-all.spec.ts",
+              "line": 490,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Journey 4: Upload Flow",
+          "file": "journey-all.spec.ts",
+          "line": 520,
+          "column": 6,
+          "specs": [
+            {
+              "title": "4.1 — Navigate to /upload and verify page loads",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1290,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[4.1] Upload page loaded in 177ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:27.145Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-10424a46b63468da92b9",
+              "file": "journey-all.spec.ts",
+              "line": 521,
+              "column": 3
+            },
+            {
+              "title": "4.2 — Camera frame renders",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1334,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[4.2] Camera frame renders correctly\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:28.439Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-d0a92899b393adff05db",
+              "file": "journey-all.spec.ts",
+              "line": 534,
+              "column": 3
+            },
+            {
+              "title": "4.3 — Photo type picker renders with 3 options",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1377,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[4.3] Photo type picker renders 3 options\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:29.778Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-bf16158e507d501f8712",
+              "file": "journey-all.spec.ts",
+              "line": 547,
+              "column": 3
+            },
+            {
+              "title": "4.4 — Capture button text changes based on type selection",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1362,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[4.4] Capture button text updates after type selection\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:31.159Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-66297a4a5cea9a958678",
+              "file": "journey-all.spec.ts",
+              "line": 570,
+              "column": 3
+            },
+            {
+              "title": "4.5 — GPS status indicator renders",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1298,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[4.5] GPS status indicator visible\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:32.525Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-5dff3885fb8894849121",
+              "file": "journey-all.spec.ts",
+              "line": 589,
+              "column": 3
+            },
+            {
+              "title": "4.6 — Bottom navigation renders on upload page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1320,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[4.6] Bottom navigation on upload page\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:33.828Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-1c16e6b4f5fed1848a6d",
+              "file": "journey-all.spec.ts",
+              "line": 600,
+              "column": 3
+            },
+            {
+              "title": "4.7 — File input exists for image capture",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1299,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[4.7] File input configured for camera capture\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:35.153Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-f56df9af691aa422b060",
+              "file": "journey-all.spec.ts",
+              "line": 614,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Journey 5: Error Recovery",
+          "file": "journey-all.spec.ts",
+          "line": 629,
+          "column": 6,
+          "specs": [
+            {
+              "title": "5.1 — /admin/login loads without network errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2344,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[5.1] Console errors on admin login: 0\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:36.456Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-e2a1e8f84ebb392a6bcc",
+              "file": "journey-all.spec.ts",
+              "line": 630,
+              "column": 3
+            },
+            {
+              "title": "5.2 — /chat loads gracefully (LIFF fallback to demo mode)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1364,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[5.2] Chat page errors: 0 total, 0 critical\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:38.804Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-59868c443e3d0d427938",
+              "file": "journey-all.spec.ts",
+              "line": 642,
+              "column": 3
+            },
+            {
+              "title": "5.3 — /sponsor loads gracefully with fallback data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4375,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[5.3] Sponsor page errors: 0 total, 0 critical\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:40.171Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-d2f346d1d2105b6ba36d",
+              "file": "journey-all.spec.ts",
+              "line": 657,
+              "column": 3
+            },
+            {
+              "title": "5.4 — Navigating to non-existent route shows 404",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 368,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[5.4] Non-existent route returned status 200\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:44.550Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-878273374d59563eb293",
+              "file": "journey-all.spec.ts",
+              "line": 672,
+              "column": 3
+            },
+            {
+              "title": "5.5 — Admin page without auth redirects to login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3416,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[5.5] Unauthenticated admin access: redirected=true, loginForm=true\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:44.921Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-3d9d02319278aaf624ff",
+              "file": "journey-all.spec.ts",
+              "line": 681,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Journey 6: API Health Monitor",
+          "file": "journey-all.spec.ts",
+          "line": 703,
+          "column": 6,
+          "specs": [
+            {
+              "title": "6.1 — Backend /health returns healthy status",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 69,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.1] Health: {\"status\":\"ok\",\"timestamp\":\"2026-09-04T06:54:48.491Z\",\"environment\":\"development\"}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.341Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-83aa02b473f3a4959372",
+              "file": "journey-all.spec.ts",
+              "line": 704,
+              "column": 3
+            },
+            {
+              "title": "6.2 — Health endpoint response time under 2s",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 16,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.2] Health response: 15ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.414Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-527b160c47d444123d96",
+              "file": "journey-all.spec.ts",
+              "line": 716,
+              "column": 3
+            },
+            {
+              "title": "6.3 — Login endpoint accepts POST",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 125,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.3] Login endpoint status: 200\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.434Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-9f1380e49fe3cec5719b",
+              "file": "journey-all.spec.ts",
+              "line": 727,
+              "column": 3
+            },
+            {
+              "title": "6.4 — Sponsor API returns data or empty",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 68,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.4] Sponsor API returned data: {\"provinces\":[{\"province\":\"Bangkok\",\"plots\":[{\"plot_id\":\"plot-004\",\"plot_code\":\"99999-1\",\"area_rai\":10,\"farmer_name\":\"Chirayu Charoenyost\",\"province\":\"Bangkok\",\"district\":\"Bangkok\",\"total_offset_tco2e\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.562Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-c73267fa6f8791ece149",
+              "file": "journey-all.spec.ts",
+              "line": 739,
+              "column": 3
+            },
+            {
+              "title": "6.5 — Sponsor summary endpoint returns data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 77,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.5] Sponsor summary: totalCO2=0, plots=4\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.635Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-e4f84a450226b92733b1",
+              "file": "journey-all.spec.ts",
+              "line": 749,
+              "column": 3
+            },
+            {
+              "title": "6.6 — Sponsor farmers endpoint returns data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 71,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.6] Sponsor farmers: 4 farmers\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.717Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-6663315228313f403d0c",
+              "file": "journey-all.spec.ts",
+              "line": 761,
+              "column": 3
+            },
+            {
+              "title": "6.7 — Chat API responds to POST",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 100,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.7] Chat API reply length: 71 chars\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.794Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-e3b5a59cac5873b6a236",
+              "file": "journey-all.spec.ts",
+              "line": 772,
+              "column": 3
+            },
+            {
+              "title": "6.8 — Photo upload endpoint accepts FormData",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 540,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.8] Photo upload status: 201\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:48.900Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-addc177184e2831d3ba5",
+              "file": "journey-all.spec.ts",
+              "line": 785,
+              "column": 3
+            },
+            {
+              "title": "6.9 — No 500 errors on key endpoints",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 205,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.9] Endpoint health:\n"
+                        },
+                        {
+                          "text": "  /health: 200 (14ms)\n"
+                        },
+                        {
+                          "text": "  /sponsor: 200 (64ms)\n"
+                        },
+                        {
+                          "text": "  /sponsor/summary: 200 (63ms)\n"
+                        },
+                        {
+                          "text": "  /sponsor/farmers: 200 (61ms)\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:49.445Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-c76994920120c0ce890f",
+              "file": "journey-all.spec.ts",
+              "line": 818,
+              "column": 3
+            },
+            {
+              "title": "6.10 — Frontend pages all return 200",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 120,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[6.10] /chat: 200\n"
+                        },
+                        {
+                          "text": "[6.10] /upload: 200\n"
+                        },
+                        {
+                          "text": "[6.10] /admin/login: 200\n"
+                        },
+                        {
+                          "text": "[6.10] /sponsor: 200\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-04T06:54:49.656Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c817af85ac7fca744422-c0c4fbcabfdb75965b0f",
+              "file": "journey-all.spec.ts",
+              "line": 846,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-04T06:53:41.525Z",
+    "duration": 68329.296,
+    "expected": 41,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

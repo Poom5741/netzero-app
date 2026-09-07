@@ -75,7 +75,7 @@ export default function AdminReviewPage() {
     setError(null);
     try {
       const data = await getReviewQueue(filterToApiStatus[filter]);
-      setQueue(data);
+      setQueue(Array.isArray(data) ? data : []);
     } catch {
       setError("ไม่สามารถโหลดข้อมูลได้");
     } finally {

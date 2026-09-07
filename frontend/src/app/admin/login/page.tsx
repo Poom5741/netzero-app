@@ -26,6 +26,7 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ email, password }),
         redirect: "manual",
+        credentials: "include",
       });
 
       // status 0 = opaqueredirect (302 success), 200 = login page with error, 401 = bad creds
@@ -102,6 +103,35 @@ export default function AdminLoginPage() {
               เข้าสู่ระบบ
             </Button>
           </form>
+
+          {/* Dev bypass — skip API auth entirely */}
+          <div className="mt-6 pt-4 border-t border-outline-variant/30">
+            <p className="text-[11px] text-outline text-center mb-2">Development Only</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
+                  sessionStorage.setItem("nzc_admin_pass", "bypass");
+                  window.location.href = "/admin";
+                }}
+                className="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface text-label-md hover:bg-surface-container-highest transition-colors"
+              >
+                Admin (Bypass)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem("nzc_admin_email", "sponsor@netzero.com");
+                  sessionStorage.setItem("nzc_admin_pass", "bypass");
+                  window.location.href = "/sponsor";
+                }}
+                className="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface text-label-md hover:bg-surface-container-highest transition-colors"
+              >
+                Sponsor (Bypass)
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
