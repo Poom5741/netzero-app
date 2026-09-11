@@ -93,6 +93,8 @@ photoRoutes.post("/api/photo/upload", async (c) => {
   const gpsAccuracy = formData.get("gps_accuracy");
   const takenAt = formData.get("taken_at") as string;
   const photoType = formData.get("photo_type") as string | null;
+  const waterDepthRaw = formData.get("water_depth_cm");
+  const waterDepthCm = waterDepthRaw !== null ? Number(waterDepthRaw) : null;
 
   if (!(file instanceof File) || !plotId || !seasonId) {
     return c.json({ error: "Missing required fields" }, 400);
@@ -131,9 +133,9 @@ photoRoutes.post("/api/photo/upload", async (c) => {
       await c.env.R2.put(key, file);
 
       await c.env.DB.prepare(
-        `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', 'pending', ?)`,
-      ).bind(photoId, plotId, seasonId, key, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt, photoType).run();
+        `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', 'pending', ?, ?)`,
+      ).bind(photoId, plotId, seasonId, key, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt, photoType, waterDepthCm).run();
 
       await writeAuditEntry(c.env.DB, {
         photoId,
@@ -214,8 +216,8 @@ photoRoutes.post("/api/photo/upload", async (c) => {
         await c.env.R2.put(key, file);
 
         await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0)`,
+          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0, ?)`,
         )
           .bind(
             photoId,
@@ -231,6 +233,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
             classification.confidence,
             photoType,
             classification.water_state,
+            waterDepthCm,
           )
           .run();
 
@@ -264,8 +267,8 @@ photoRoutes.post("/api/photo/upload", async (c) => {
         const isAudit = shouldAuditSample(photoId, config.auditSampleRate);
 
         await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'verified', ?, ?, 1, ?)`,
+          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'verified', ?, ?, 1, ?, ?)`,
         )
           .bind(
             photoId,
@@ -282,6 +285,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
             photoType,
             classification.water_state,
             isAudit ? 1 : 0,
+            waterDepthCm,
           )
           .run();
 
@@ -311,8 +315,8 @@ photoRoutes.post("/api/photo/upload", async (c) => {
         await c.env.R2.put(key, file);
 
         await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0)`,
+          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0, ?)`,
         )
           .bind(
             photoId,
@@ -328,6 +332,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
             classification.confidence,
             photoType,
             classification.water_state,
+            waterDepthCm,
           )
           .run();
 
@@ -360,10 +365,10 @@ photoRoutes.post("/api/photo/upload", async (c) => {
   await c.env.R2.put(key, file);
 
   await c.env.DB.prepare(
-    `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
+    `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?)`,
   )
-    .bind(photoId, plotId, seasonId, key, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt, photoType)
+    .bind(photoId, plotId, seasonId, key, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt, photoType, waterDepthCm)
     .run();
 
   return c.json(

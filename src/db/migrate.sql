@@ -209,6 +209,41 @@ CREATE TABLE IF NOT EXISTS seasons (
 
 CREATE INDEX IF NOT EXISTS idx_seasons_plot ON seasons(plot_id);
 
+-- Consent log (PDPA audit trail)
+CREATE TABLE IF NOT EXISTS consent_log (
+  id TEXT PRIMARY KEY,
+  farmer_id TEXT NOT NULL REFERENCES farmers(id),
+  consent_type TEXT NOT NULL CHECK(consent_type IN ('pdpa', 'data_collection', 'photo_sharing', 'carbon_project')),
+  accepted INTEGER NOT NULL DEFAULT 0,
+  ip_address TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_consent_log_farmer ON consent_log(farmer_id);
+
+-- Season steps (9-step calendar per crop)
+CREATE TABLE IF NOT EXISTS season_steps (
+  id TEXT PRIMARY KEY,
+  season_input_id TEXT NOT NULL REFERENCES season_inputs(id),
+  step_code TEXT NOT NULL,
+  step_name TEXT NOT NULL,
+  due_day INTEGER NOT NULL,
+  due_date TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'completed', 'overdue')),
+  photo_evidence_id TEXT REFERENCES photo_evidence(id),
+  completed_at TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_season_steps_input ON season_steps(season_input_id);
+
+-- Issue #LINE-OA: Water depth for DRY photo rounds
+ALTER TABLE photo_evidence ADD COLUMN water_depth_cm INTEGER;
+
+-- Issue #LINE-OA: Rice age and dynamic SF_w factor
+ALTER TABLE season_inputs ADD COLUMN rice_age_days INTEGER DEFAULT 120;
+ALTER TABLE season_inputs ADD COLUMN sf_w_factor REAL;
+
 -- Farmer trust scores (issue #120) — table was referenced in code but never
 -- created, causing every admin review action to 500 in production.
 CREATE TABLE IF NOT EXISTS farmer_trust (

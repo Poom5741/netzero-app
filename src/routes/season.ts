@@ -4,7 +4,8 @@
 
 import { Hono } from "hono";
 import { requireRole } from "../auth/middleware";
-import { approveSeason } from "../season/approve";
+import { approveSeason } from "../season/approve-estimate";
+import { handleSeasonCreate, handleStepComplete } from "../season/create";
 
 type Bindings = {
   DB: D1Database;
@@ -173,6 +174,77 @@ seasonRoutes.post("/api/season/approve", async (c) => {
     return c.json({ success: false, error: result.error, missing: result.missing }, 400);
   } catch (err) {
     console.error("Season approve error:", err);
+    return c.json({ success: false, error: "Internal server error" }, 500);
+  }
+});
+
+// POST /api/season/create — Create season with sow_date + 9-step calendar
+seasonRoutes.post("/api/season/create", async (c) => {
+  try {
+    const db = c.env.DB;
+    const body = await c.req.json<{
+      plot_id: string;
+      sow_date: string;
+      rice_variety?: string;
+      rice_age_days?: number;
+    }>();
+
+    const result = await handleSeasonCreate(db, body);
+
+    if (result.success) {
+      return c.json({
+        success: true,
+        season_input_id: result.season_input_id,
+        steps: result.steps,
+      });
+    }
+
+    return c.json({ success: false, error: result.error }, 400);
+  } catch (err) {
+    console.error("Season create error:", err);
+    return c.json({ success: false, error: "Internal server error" }, 500);
+  }
+});
+
+// GET /api/season-steps/:seasonInputId — Get calendar steps for a season
+seasonRoutes.get("/api/season-steps/:seasonInputId", async (c) => {
+  try {
+    const db = c.env.DB;
+    const seasonInputId = c.req.param("seasonInputId");
+
+    const { results } = await db
+      .prepare(
+        `SELECT id, step_code, step_name, due_day, due_date, status, photo_evidence_id, completed_at
+         FROM season_steps
+         WHERE season_input_id = ?
+         ORDER BY due_day ASC`
+      )
+      .bind(seasonInputId)
+      .all();
+
+    return c.json({ steps: results });
+  } catch (err) {
+    console.error("Season steps fetch error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+// POST /api/season-steps/:stepId/complete — Mark step as done
+seasonRoutes.post("/api/season-steps/:stepId/complete", async (c) => {
+  try {
+    const db = c.env.DB;
+    const stepId = c.req.param("stepId");
+    const body = await c.req.json<{ photo_evidence_id?: string }>();
+
+    const result = await handleStepComplete(db, stepId, body.photo_evidence_id);
+
+    if (result.success) {
+      return c.json({ success: true });
+    }
+
+    return c.json({ success: false, error: result.error }, 400);
+  } catch (err) {
+    console.error("Step complete error:", err);
     return c.json({ success: false, error: "Internal server error" }, 500);
   }
 });

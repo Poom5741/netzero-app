@@ -1,0 +1,14 @@
+{
+  "task": "0002-line-oa-chatbot",
+  "title": "LINE OA Chatbot — Full Farmer Flow (43 Steps)",
+  "role": "lead",
+  "mode": { "agents": "single", "loop": "step", "commits": "gate" },
+  "phases": {
+    "define":    { "status": "done",       "validated": true,  "approved": true,  "artifact": "spec.md" },
+    "blueprint": { "status": "done",       "validated": true,  "approved": true,  "artifact": "plan.md" },
+    "construct": { "status": "done",       "validated": true,  "approved": false, "artifact": "plan.md" },
+    "verify":    { "status": "done",       "validated": true,  "approved": false, "artifact": "tests/" },
+    "inspect":   { "status": "done",       "validated": true,  "approved": false, "artifact": "review.md" },
+    "release":   { "status": "done",       "validated": true,  "approved": false, "artifact": "go-nogo.md" }
+  }
+}

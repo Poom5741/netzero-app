@@ -9,6 +9,7 @@ import { sponsorRoutes } from "./routes/sponsor";
 import { adminRoutes } from "./routes/admin";
 import { liffRoutes } from "./routes/liff";
 import { seasonRoutes } from "./routes/season";
+import { farmerRoutes } from "./routes/farmer";
 import { replyMessage, pushMessage } from "./line/reply";
 import { buildWelcomeFlex } from "./line/welcome";
 import { buildConsentCard } from "./line/consent";
@@ -87,6 +88,9 @@ app.use("/api/season/approve", async (c, next) => {
 
 // Season inputs
 app.route("/", seasonRoutes);
+
+// Farmer & Plot onboarding
+app.route("/", farmerRoutes);
 
 // LINE webhook — disabled by default (2026-08 decision: CF↔LINE latency;
 // standalone chat in the LIFF frontend is the farmer-facing path until the
