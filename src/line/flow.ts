@@ -291,9 +291,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     return { newState: "phone" };
   }
 
-  // Look up farmer by phone
+  // Look up farmer by phone (prod schema: addr_province / addr_district)
   const farmer = await ctx.db
-    .prepare("SELECT id, full_name, province, district FROM farmers WHERE phone = ?")
+    .prepare("SELECT id, full_name, addr_province AS province, addr_district AS district FROM farmers WHERE phone = ?")
     .bind(phone)
     .first<{ id: string; full_name: string; province: string; district: string }>();
 
@@ -489,9 +489,9 @@ async function handlePendingReview(ctx: FlowContext): Promise<FlowResult> {
  */
 async function handleActivation(ctx: FlowContext): Promise<FlowResult> {
   const farmer = await ctx.db
-    .prepare("SELECT full_name, farmer_code FROM farmers WHERE id = ?")
+    .prepare("SELECT full_name FROM farmers WHERE id = ?")
     .bind(ctx.farmerId)
-    .first<{ full_name: string; farmer_code: string }>();
+    .first<{ full_name: string }>();
 
   const plot = await ctx.db
     .prepare("SELECT plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
@@ -499,7 +499,7 @@ async function handleActivation(ctx: FlowContext): Promise<FlowResult> {
     .first<{ plot_code: string; area_rai: number }>();
 
   const activationText = composeActivationSuccess({
-    farmerCode: farmer?.farmer_code || "—",
+    farmerCode: ctx.farmerId, // farmers table has no farmer_code column — use the id
     plotName: plot?.plot_code || "—",
     areaRai: plot?.area_rai ?? 0,
   });
@@ -545,10 +545,10 @@ async function handleSeasonSetup(ctx: FlowContext): Promise<FlowResult> {
       if (plot) {
         await ctx.db
           .prepare(
-            `INSERT INTO seasons (id, plot_id, sow_date, created_at)
-             VALUES (?, ?, ?, datetime('now'))`,
+            `INSERT INTO season_inputs (id, plot_id, season_id, sow_date, status)
+             VALUES (?, ?, ?, ?, 'draft')`,
           )
-          .bind(crypto.randomUUID(), plot.id, sowDate)
+          .bind(crypto.randomUUID(), plot.id, `line-${Date.now()}`, sowDate)
           .run();
       }
     } catch (seasonErr) {
@@ -1053,7 +1053,7 @@ async function handlePhoneApi(ctx: FlowContext): Promise<FlowApiResult> {
   }
 
   const farmer = await ctx.db
-    .prepare("SELECT id, full_name, province, district FROM farmers WHERE phone = ?")
+    .prepare("SELECT id, full_name, addr_province AS province, addr_district AS district FROM farmers WHERE phone = ?")
     .bind(phone)
     .first<{ id: string; full_name: string; province: string; district: string }>();
   if (!farmer) {
@@ -1178,18 +1178,13 @@ async function handlePendingReviewApi(ctx: FlowContext): Promise<FlowApiResult> 
 }
 
 async function handleActivationApi(ctx: FlowContext): Promise<FlowApiResult> {
-  const farmer = await ctx.db
-    .prepare("SELECT full_name, farmer_code FROM farmers WHERE id = ?")
-    .bind(ctx.farmerId)
-    .first<{ full_name: string; farmer_code: string }>();
-
   const plot = await ctx.db
     .prepare("SELECT plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
     .bind(ctx.farmerId)
     .first<{ plot_code: string; area_rai: number }>();
 
   const activationText = composeActivationSuccess({
-    farmerCode: farmer?.farmer_code || "—",
+    farmerCode: ctx.farmerId, // farmers table has no farmer_code column — use the id
     plotName: plot?.plot_code || "—",
     areaRai: plot?.area_rai ?? 0,
   });
@@ -1218,8 +1213,8 @@ async function handleSeasonSetupApi(ctx: FlowContext): Promise<FlowApiResult> {
         .first<{ id: string }>();
       if (plot) {
         await ctx.db
-          .prepare(`INSERT INTO seasons (id, plot_id, sow_date, created_at) VALUES (?, ?, ?, datetime('now'))`)
-          .bind(crypto.randomUUID(), plot.id, sowDate)
+          .prepare(`INSERT INTO season_inputs (id, plot_id, season_id, sow_date, status) VALUES (?, ?, ?, ?, 'draft')`)
+          .bind(crypto.randomUUID(), plot.id, `line-${Date.now()}`, sowDate)
           .run();
       }
     } catch (err) {
