@@ -10,7 +10,7 @@ import { handleFlowApi } from "../../src/line/flow";
  * Mock D1 — routes SQL to appropriate mock handlers.
  */
 function mockD1(opts: {
-  farmer?: { id: string; full_name: string } | null;
+  farmer?: { id: string; full_name: string; province?: string; district?: string } | null;
   linkStatus?: string;
   plots?: Array<{ id: string; plot_code: string; area_rai: number }>;
   seasonInput?: { season_id: string } | null;
@@ -30,6 +30,9 @@ function mockD1(opts: {
       }
       if (sql.includes("line_links") && sql.includes("SELECT") && sql.includes("status")) {
         return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue({ status: linkStatus }) }) };
+      }
+      if (sql.includes("line_links") && sql.includes("SELECT") && sql.includes("id")) {
+        return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(null) }) };
       }
       if (sql.includes("season_inputs") && sql.includes("SELECT")) {
         return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(seasonInput) }) };
@@ -64,19 +67,27 @@ const baseCtx = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe("Post-phone flow (POOM-190)", () => {
-  it("after phone lookup, returns greeting with name + action options (not dead end)", async () => {
-    const db = mockD1({ farmer: { id: "f-1", full_name: "สมชาย ใจดี" } });
+  it("after phone lookup, returns identity confirmation (not old identified state)", async () => {
+    const db = mockD1({ farmer: { id: "f-1", full_name: "สมชาย ใจดี", province: "กรุงเทพฯ", district: "จตุจักร" } });
     const result = await handleFlowApi(baseCtx({ db, state: "phone", text: "0812345678" }));
 
-    // Should NOT be the old dead-end message (only waiting, no actions)
-    expect(result.reply).not.toMatch(/^⏳.*รอการยืนยัน.*$/s);
     // Should greet by name
     expect(result.reply).toContain("สมชาย ใจดี");
-    // Should offer actions
-    expect(result.reply).toContain("บันทึก");
-    expect(result.reply).toContain("ถ่ายรูป");
-    // Should transition to "identified" state
-    expect(result.newState).toBe("identified");
+    // New expanded flow: phone lookup goes to identity_confirm
+    expect(result.newState).toBe("identity_confirm");
+  });
+
+  it("after identity_confirm 'ใช่', transitions to conditions", async () => {
+    const result = await handleFlowApi(baseCtx({ state: "identity_confirm", text: "ใช่" }));
+
+    expect(result.newState).toBe("conditions");
+    expect(result.reply).toContain("ยอมรับ");
+  });
+
+  it("after conditions_accept, transitions to registration", async () => {
+    const result = await handleFlowApi(baseCtx({ state: "conditions", text: "ยอมรับ" }));
+
+    expect(result.newState).toBe("registration");
   });
 
   it("in identified state, 'บันทึก' routes to /summary guidance", async () => {
@@ -87,12 +98,12 @@ describe("Post-phone flow (POOM-190)", () => {
     expect(result.newState).toBe("identified");
   });
 
-  it("in identified state, 'ถ่ายรูป' routes to /upload guidance", async () => {
+  it("in identified state, 'ถ่ายรูป' routes to photo_report state", async () => {
     const db = mockD1({ farmer: { id: "f-1", full_name: "สมชาย ใจดี" } });
     const result = await handleFlowApi(baseCtx({ db, state: "identified", text: "ถ่ายรูป" }));
 
-    expect(result.reply).toContain("/upload");
-    expect(result.newState).toBe("identified");
+    // New expanded flow: routes to photo_report
+    expect(result.newState).toBe("photo_report");
   });
 
   it("in identified state, 'ดูสถานะ' shows season status", async () => {

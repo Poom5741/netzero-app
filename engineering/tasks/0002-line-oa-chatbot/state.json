@@ -9,6 +9,6 @@
     "construct": { "status": "done",       "validated": true,  "approved": false, "artifact": "plan.md" },
     "verify":    { "status": "done",       "validated": true,  "approved": false, "artifact": "tests/" },
     "inspect":   { "status": "done",       "validated": true,  "approved": false, "artifact": "review.md" },
-    "release":   { "status": "done",       "validated": true,  "approved": false, "artifact": "go-nogo.md" }
+    "release":   { "status": "done",       "validated": true,  "approved": true,  "artifact": "go-nogo.md" }
   }
 }

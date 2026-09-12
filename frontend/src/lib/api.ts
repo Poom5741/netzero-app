@@ -1,4 +1,7 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
+// In development, use relative URLs so Next.js rewrites proxy to localhost:8787.
+// In production (static export), NEXT_PUBLIC_API_BASE must be set at build time.
+const isDev = typeof window !== "undefined" && window.location.hostname === "localhost";
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || (isDev ? "" : "https://netzero-carbon-poc.poom-a1d.workers.dev");
 
 /** Validate URL to prevent SSRF: only allow http/https absolute URLs. */
 function validateApiUrl(url: string): string {

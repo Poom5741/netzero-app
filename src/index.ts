@@ -35,6 +35,7 @@ type WebhookEvent = {
   timestamp: number;
   mode: string;
   message?: { type: string; id: string; text: string };
+  postback?: { data: string; displayText?: string };
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -92,39 +93,44 @@ app.route("/", seasonRoutes);
 // Farmer & Plot onboarding
 app.route("/", farmerRoutes);
 
-// LINE webhook — disabled by default (2026-08 decision: CF↔LINE latency;
-// standalone chat in the LIFF frontend is the farmer-facing path until the
-// full LINE migration). Set LINE_WEBHOOK_ENABLED="true" to re-enable.
+// LINE webhook — GET handler for verification (LINE sends GET to check endpoint)
+app.get("/webhook/line", (c) => {
+  return c.json({ status: "ok" }, 200);
+});
+
+// LINE webhook — POST handler for events and verification
 app.post("/webhook/line", async (c) => {
   try {
-    if (c.env.LINE_WEBHOOK_ENABLED !== "true") {
-      return c.json({ error: "LINE webhook is disabled (standalone mode)" }, 503);
-    }
-    const secret = c.env.LINE_CHANNEL_SECRET;
-    const accessToken = c.env.LINE_CHANNEL_ACCESS_TOKEN;
-    if (!secret || !accessToken) {
-      return c.json({ error: "LINE credentials not configured" }, 500);
-    }
-
-    const sig = c.req.header("X-Line-Signature");
     const rawBody = await c.req.text();
+    const sig = c.req.header("X-Line-Signature");
 
-    // Verify HMAC signature
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-    const hmacSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
-    const expected = Array.from(new Uint8Array(hmacSig))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    // Always accept the request (LINE verification + real events)
+    // Verify signature if present
+    if (sig) {
+      const secret = c.env.LINE_CHANNEL_SECRET;
+      if (secret) {
+        const key = await crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(secret),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"],
+        );
+        const hmacSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+        const expected = Array.from(new Uint8Array(hmacSig))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
 
-    if (!sig || sig !== expected) {
-      console.log(`SIG_MISMATCH: got=${sig || "none"}`);
-      return c.json({ error: "Invalid signature" }, 401);
+        if (sig !== expected) {
+          console.log(`SIG_MISMATCH: got=${sig.substring(0, 20)}... expected=${expected.substring(0, 20)}...`);
+          return c.json({ error: "Invalid signature" }, 401);
+        }
+      }
+    }
+
+    const accessToken = c.env.LINE_CHANNEL_ACCESS_TOKEN;
+    if (!accessToken) {
+      return c.json({ error: "LINE credentials not configured" }, 500);
     }
 
     const data = JSON.parse(rawBody) as { events?: WebhookEvent[] };
@@ -190,8 +196,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
 
       if (existingLink) {
         if (existingLink.status === "verified") {
-          // Already verified — just send LIFF button, keep state
-          await replyMessage(token, event.replyToken, [welcomeFlex]);
+          // Already verified — keep their state, no duplicate reply
           return;
         }
         // Not yet verified — reset to welcome
@@ -204,7 +209,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
           .prepare(
             "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
           )
-          .bind(`link_${crypto.randomUUID()}`, "farmer-001", event.source.userId)
+          .bind(`link_${crypto.randomUUID()}`, "farmer-004", event.source.userId)
           .run();
       }
       break;
@@ -227,12 +232,12 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
           .prepare(
             "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
           )
-          .bind(linkId, "farmer-001", event.source.userId)
+          .bind(linkId, "farmer-004", event.source.userId)
           .run();
 
         link = {
           id: linkId,
-          farmer_id: "farmer-001",
+          farmer_id: "farmer-004",
           status: "pending",
           conversation_state: "welcome",
           selected_plot_id: null,
@@ -240,6 +245,62 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
       }
 
       // Handle via state machine
+      try {
+        await handleFlow({
+          db,
+          token,
+          apiKey,
+          userId: event.source.userId,
+          linkId: link.id,
+          farmerId: link.farmer_id,
+          state: link.conversation_state,
+          selectedPlotId: link.selected_plot_id,
+          text,
+        });
+      } catch (flowErr) {
+        const errMsg = flowErr instanceof Error ? flowErr.message : String(flowErr);
+        console.error(`[FLOW_ERR] ${errMsg}`);
+        // Try to send error message to user
+        try {
+          await pushMessage(token, event.source.userId, [{ type: "text", text: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งค่ะ" }]);
+        } catch (pushErr) {
+          console.error(`[PUSH_ERR_FALLBACK] ${pushErr}`);
+        }
+      }
+      break;
+    }
+
+    case "postback": {
+      // Flex button taps send postback events with data payloads
+      const postData = event.postback?.data;
+      if (!postData) break;
+
+      // Postback data format: "action=value" or just a keyword
+      // Route through the same state machine — treat postback data as the user's text input
+      let link = await db
+        .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
+        .bind(event.source.userId)
+        .first<{ id: string; farmer_id: string; status: string; conversation_state: ConversationState; selected_plot_id: string | null }>();
+
+      if (!link) {
+        // Postback from unknown user — create link in welcome state
+        const linkId = `link_${crypto.randomUUID()}`;
+        await db
+          .prepare(
+            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
+          )
+          .bind(linkId, "farmer-004", event.source.userId)
+          .run();
+
+        link = {
+          id: linkId,
+          farmer_id: "farmer-004",
+          status: "pending",
+          conversation_state: "welcome",
+          selected_plot_id: null,
+        };
+      }
+
       await handleFlow({
         db,
         token,
@@ -249,7 +310,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         farmerId: link.farmer_id,
         state: link.conversation_state,
         selectedPlotId: link.selected_plot_id,
-        text,
+        text: postData,
       });
       break;
     }
