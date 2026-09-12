@@ -152,7 +152,7 @@ export function buildConsentBubble(): LineMessage {
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: "6px",
             flex: 1,
-            margin: "end",
+            margin: "md",
             action: {
               type: "postback",
               label: "✅ ยินยอม",
@@ -176,7 +176,7 @@ export function buildConsentBubble(): LineMessage {
             backgroundColor: COLOR_ERROR,
             cornerRadius: "6px",
             flex: 1,
-            margin: "start",
+            margin: "md",
             action: {
               type: "postback",
               label: "❌ ไม่ยินยอม",
@@ -266,7 +266,7 @@ export function buildIdentityConfirmBubble(
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: "6px",
             flex: 1,
-            margin: "end",
+            margin: "md",
             action: {
               type: "postback",
               label: "✅ ใช่",
@@ -290,7 +290,7 @@ export function buildIdentityConfirmBubble(
             backgroundColor: COLOR_ERROR,
             cornerRadius: "6px",
             flex: 1,
-            margin: "start",
+            margin: "md",
             action: {
               type: "postback",
               label: "❌ ไม่ใช่",
@@ -360,7 +360,7 @@ export function buildConditionsBubble(): LineMessage {
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: "6px",
             flex: 1,
-            margin: "end",
+            margin: "md",
             action: {
               type: "postback",
               label: "✅ ยอมรับ",
@@ -384,7 +384,7 @@ export function buildConditionsBubble(): LineMessage {
             backgroundColor: COLOR_ERROR,
             cornerRadius: "6px",
             flex: 1,
-            margin: "start",
+            margin: "md",
             action: {
               type: "postback",
               label: "❌ ไม่ยอมรับ",
@@ -549,7 +549,7 @@ export function buildCalendarBubble(
             paddingAll: "6px",
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: "4px",
-            margin: "start",
+            margin: "md",
             action: {
               type: "uri",
               label: `📸 ถ่ายรูป ${step.stepCode}`,
@@ -658,7 +658,7 @@ export function buildDashboardBubble(data: {
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: "6px",
             flex: 1,
-            margin: "end",
+            margin: "md",
             action: {
               type: "postback",
               label: "📊 ดูปฏิทิน",
@@ -682,7 +682,7 @@ export function buildDashboardBubble(data: {
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: "6px",
             flex: 1,
-            margin: "start",
+            margin: "md",
             action: {
               type: "uri",
               label: "📷 ส่งภาพ",
