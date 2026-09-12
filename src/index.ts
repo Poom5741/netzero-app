@@ -117,9 +117,11 @@ app.post("/webhook/line", async (c) => {
           ["sign"],
         );
         const hmacSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
-        const expected = Array.from(new Uint8Array(hmacSig))
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
+        // LINE's X-Line-Signature is Base64-encoded HMAC-SHA256 (not hex)
+        const macBytes = new Uint8Array(hmacSig);
+        let expected = "";
+        for (const b of macBytes) expected += String.fromCharCode(b);
+        expected = btoa(expected);
 
         if (sig !== expected) {
           console.log(`SIG_MISMATCH: got=${sig.substring(0, 20)}... expected=${expected.substring(0, 20)}...`);
