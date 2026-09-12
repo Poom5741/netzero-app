@@ -14,6 +14,7 @@
 import { replyMessage, pushMessage } from "./reply";
 import { chatWithAi } from "../chat/ai";
 import { confirmDraft, rejectDraft } from "../chat/state";
+import { handleSeasonCreate } from "../season/create";
 import {
   composeRegistrationWelcome,
   composePdpaConsent,
@@ -512,6 +513,43 @@ async function handleActivation(ctx: FlowContext): Promise<FlowResult> {
 }
 
 /**
+ * Parse the farmer's typed sow date and create the season with its
+ * 9-step calendar — shared by the LINE and chat API season_setup paths
+ * so both behave like POST /api/season/create.
+ *
+ * Accepts DD/MM/YYYY with Buddhist (2568) or CE (2025) years.
+ * Returns the date in the display form the farmer typed, or null if
+ * the text contains no date.
+ */
+async function createSeasonFromTypedDate(
+  ctx: FlowContext,
+): Promise<{ displayDate: string } | null> {
+  const dateMatch = ctx.text.match(/(\d{1,2})[/\\-](\d{1,2})[/\\-](\d{2,4})/);
+
+  if (!dateMatch) return null;
+
+  const [, day = "", month = "", year = ""] = dateMatch;
+  let ceYear = Number(year);
+  if (ceYear > 2400) ceYear -= 543; // Buddhist era → CE
+  const sowDateIso = `${ceYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+
+  try {
+    const plot = await ctx.db
+      .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+      .bind(ctx.farmerId)
+      .first<{ id: string }>();
+
+    if (plot) {
+      await handleSeasonCreate(ctx.db, { plot_id: plot.id, sow_date: sowDateIso });
+    }
+  } catch (seasonErr) {
+    console.error("Failed to create season:", seasonErr);
+  }
+
+  return { displayDate: `${day}/${month}/${year}` };
+}
+
+/**
  * OB-10: SEASON_SETUP STATE — Set sow date.
  *
  * - Date input -> create season, show calendar bubble, go to calendar
@@ -529,34 +567,10 @@ async function handleSeasonSetup(ctx: FlowContext): Promise<FlowResult> {
     return { newState: "calendar" };
   }
 
-  // Try to parse a date (DD/MM/YYYY or YYYY-MM-DD)
-  const dateMatch = ctx.text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-  if (dateMatch) {
-    const [, day, month, year] = dateMatch;
-    const sowDate = `${day}/${month}/${year}`;
-
-    // Create season record (best-effort)
-    try {
-      const plot = await ctx.db
-        .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
-        .bind(ctx.farmerId)
-        .first<{ id: string }>();
-
-      if (plot) {
-        await ctx.db
-          .prepare(
-            `INSERT INTO season_inputs (id, plot_id, season_id, sow_date, status)
-             VALUES (?, ?, ?, ?, 'draft')`,
-          )
-          .bind(crypto.randomUUID(), plot.id, `line-${Date.now()}`, sowDate)
-          .run();
-      }
-    } catch (seasonErr) {
-      console.error("Failed to create season:", seasonErr);
-    }
-
+  const created = await createSeasonFromTypedDate(ctx);
+  if (created) {
     await safePush(ctx, [
-      textMessage(`✅ บันทึกวันหว่าน: ${sowDate}`),
+      textMessage(`✅ บันทึกวันหว่าน: ${created.displayDate}`),
       buildCalendarBubble(calendarSteps(), ctx.liffId || "no-liff"),
     ]);
     return { newState: "calendar" };
@@ -1201,28 +1215,10 @@ async function handleSeasonSetupApi(ctx: FlowContext): Promise<FlowApiResult> {
     return { reply: "ข้ามการตั้งวันหว่านค่ะ\n\nเปิดปฏิทินแล้วค่ะ", newState: "calendar" };
   }
 
-  const dateMatch = ctx.text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-  if (dateMatch) {
-    const [, day, month, year] = dateMatch;
-    const sowDate = `${day}/${month}/${year}`;
-
-    try {
-      const plot = await ctx.db
-        .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
-        .bind(ctx.farmerId)
-        .first<{ id: string }>();
-      if (plot) {
-        await ctx.db
-          .prepare(`INSERT INTO season_inputs (id, plot_id, season_id, sow_date, status) VALUES (?, ?, ?, ?, 'draft')`)
-          .bind(crypto.randomUUID(), plot.id, `line-${Date.now()}`, sowDate)
-          .run();
-      }
-    } catch (err) {
-      console.error("Failed to create season:", err);
-    }
-
+  const created = await createSeasonFromTypedDate(ctx);
+  if (created) {
     return {
-      reply: `✅ บันทึกวันหว่าน: ${sowDate}\n\nเปิดปฏิทินแล้วค่ะ`,
+      reply: `✅ บันทึกวันหว่าน: ${created.displayDate}\n\nเปิดปฏิทินแล้วค่ะ`,
       newState: "calendar",
     };
   }

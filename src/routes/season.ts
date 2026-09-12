@@ -4,6 +4,7 @@
 
 import { Hono } from "hono";
 import { requireRole } from "../auth/middleware";
+import { handleLiffCalendar } from "../liff/calendar-api";
 import { approveSeason } from "../season/approve-estimate";
 import { handleSeasonCreate, handleStepComplete } from "../season/create";
 
@@ -91,14 +92,14 @@ seasonRoutes.post("/api/season", async (c) => {
             fuel_liters_per_rai = COALESCE(?, fuel_liters_per_rai),
             electricity_kwh_per_rai = COALESCE(?, electricity_kwh_per_rai),
             status = 'open'
-          WHERE id = ?`
+          WHERE id = ?`,
         )
         .bind(
           body.water_level_cm ?? null,
           body.straw_mgmt ?? null,
           body.fuel_liters ?? null,
           body.electricity_kwh ?? null,
-          existing.id
+          existing.id,
         )
         .run();
 
@@ -111,7 +112,7 @@ seasonRoutes.post("/api/season", async (c) => {
           `INSERT INTO season_inputs (
             id, plot_id, season_id, water_pre_plant, straw_management,
             fuel_liters_per_rai, electricity_kwh_per_rai, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'open')`
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'open')`,
         )
         .bind(
           id,
@@ -120,7 +121,7 @@ seasonRoutes.post("/api/season", async (c) => {
           body.water_level_cm ?? null,
           body.straw_mgmt ?? null,
           body.fuel_liters ?? null,
-          body.electricity_kwh ?? null
+          body.electricity_kwh ?? null,
         )
         .run();
 
@@ -212,17 +213,9 @@ seasonRoutes.get("/api/season-steps/:seasonInputId", async (c) => {
     const db = c.env.DB;
     const seasonInputId = c.req.param("seasonInputId");
 
-    const { results } = await db
-      .prepare(
-        `SELECT id, step_code, step_name, due_day, due_date, status, photo_evidence_id, completed_at
-         FROM season_steps
-         WHERE season_input_id = ?
-         ORDER BY due_day ASC`
-      )
-      .bind(seasonInputId)
-      .all();
+    const result = await handleLiffCalendar(db, seasonInputId);
 
-    return c.json({ steps: results });
+    return c.json(result);
   } catch (err) {
     console.error("Season steps fetch error:", err);
     return c.json({ error: "Internal server error" }, 500);
