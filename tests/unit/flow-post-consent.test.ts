@@ -43,51 +43,35 @@ const baseCtx = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe("POOM-187: post-consent flow", () => {
-  it("after 'ยอมรับ', transitions to select_plot (not phone)", async () => {
+  it("after 'ยอมรับ', stays in welcome (shows consent bubble on explicit registration trigger)", async () => {
     const ctx = baseCtx();
     const result = await handleFlowApi(ctx);
 
-    expect(result.newState).toBe("select_plot");
-    expect(result.reply).not.toContain("ติดต่อเจ้าหน้าที่");
+    // In the new expanded flow, "ยอมรับ" in welcome state is a generic word;
+    // the registration trigger is "ลงทะเบียน" or "ผูกบัญชี"
+    expect(result.newState).toBe("welcome");
   });
 
-  it("after consent, reply mentions plots or guides to next step", async () => {
-    const ctx = baseCtx({
-      db: mockDb({
-        plots: [
-          { id: "p1", plot_code: "NA-001", area_rai: 10 },
-          { id: "p2", plot_code: "NA-002", area_rai: 5 },
-        ],
-      }),
-    });
+  it("after 'ลงทะเบียน', transitions to consent (PDPA step)", async () => {
+    const ctx = baseCtx({ text: "ลงทะเบียน" });
     const result = await handleFlowApi(ctx);
 
-    // Should list plots
-    expect(result.reply).toContain("NA-001");
-    expect(result.reply).toContain("NA-002");
-    expect(result.newState).toBe("select_plot");
+    expect(result.newState).toBe("consent");
   });
 
-  it("after consent with single plot, auto-selects it and moves to chat", async () => {
-    const ctx = baseCtx({
-      db: mockDb({
-        plots: [{ id: "p1", plot_code: "NA-001", area_rai: 10 }],
-      }),
-    });
+  it("after consent_accept, transitions to phone for phone lookup", async () => {
+    const ctx = baseCtx({ state: "consent", text: "ยอมรับ" });
     const result = await handleFlowApi(ctx);
 
-    expect(result.newState).toBe("chat");
-    expect(result.selectedPlotId).toBe("p1");
-    expect(result.reply).toContain("NA-001");
+    expect(result.newState).toBe("phone");
+    expect(result.reply).toContain("เบอร์โทรศัพท์");
   });
 
-  it("after consent with no plots, gives helpful guidance (not dead end)", async () => {
-    const ctx = baseCtx({ db: mockDb({ plots: [] }) });
+  it("after consent_reject, stays in consent", async () => {
+    const ctx = baseCtx({ state: "consent", text: "ไม่ยินยอม" });
     const result = await handleFlowApi(ctx);
 
-    expect(result.reply).not.toContain("ติดต่อเจ้าหน้าที่");
-    // Should acknowledge and provide some path forward
-    expect(result.reply.length).toBeGreaterThan(10);
+    expect(result.newState).toBe("consent");
   });
 
   it("non-consent input in welcome stays in welcome", async () => {

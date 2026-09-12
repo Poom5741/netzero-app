@@ -46,6 +46,8 @@ function SummaryContent() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [plotsLoading, setPlotsLoading] = useState(true);
+  const [seasonsLoading, setSeasonsLoading] = useState(false);
 
   // Derive farmer_id from userId
   const farmerId = userId === "demo-user" ? DEMO_FARMER_ID : userId;
@@ -53,31 +55,45 @@ function SummaryContent() {
   // Fetch plots on mount
   useEffect(() => {
     if (!farmerId) return;
+    setPlotsLoading(true);
     apiRequest<{ plots: Plot[] }>(`/api/plots?farmer_id=${farmerId}`)
       .then((res) => {
+        setPlotsLoading(false);
         if (res.ok) {
           setPlots(res.data.plots);
           if (res.data.plots.length > 0) {
             setSelectedPlot(res.data.plots[0].id);
           }
+        } else {
+          setError("ไม่สามารถโหลดข้อมูลแปลงได้");
         }
       })
-      .catch(() => setError("โหลดข้อมูลแปลงล้มเหลว"));
+      .catch(() => {
+        setPlotsLoading(false);
+        setError("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่");
+      });
   }, [farmerId]);
 
   // Fetch seasons when plot changes
   useEffect(() => {
     if (!selectedPlot) return;
+    setSeasonsLoading(true);
     apiRequest<{ seasons: Season[] }>(`/api/seasons?plot_id=${selectedPlot}`)
       .then((res) => {
+        setSeasonsLoading(false);
         if (res.ok) {
           setSeasons(res.data.seasons);
           // Default to active season or first
           const active = res.data.seasons.find((s) => s.status === "active");
           setSelectedSeason(active?.id || res.data.seasons[0]?.id || "");
+        } else {
+          setError("ไม่สามารถโหลดข้อมูลฤดูกาลได้");
         }
       })
-      .catch(() => setError("โหลดข้อมูลฤดูกาลล้มเหลว"));
+      .catch(() => {
+        setSeasonsLoading(false);
+        setError("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่");
+      });
   }, [selectedPlot]);
 
   const progress = Math.round(
@@ -193,8 +209,11 @@ function SummaryContent() {
                 value={selectedPlot}
                 onChange={(e) => setSelectedPlot(e.target.value)}
                 className="w-full neumorphic-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+                disabled={plotsLoading}
               >
-                <option value="">เลือกแปลง...</option>
+                <option value="">
+                  {plotsLoading ? "กำลังโหลดข้อมูล..." : plots.length === 0 ? "ไม่มีข้อมูลแปลง" : "เลือกแปลง..."}
+                </option>
                 {plots.map((plot) => (
                   <option key={plot.id} value={plot.id}>
                     {plot.plot_code} ({plot.area_rai} ไร่)
@@ -213,9 +232,11 @@ function SummaryContent() {
                 value={selectedSeason}
                 onChange={(e) => setSelectedSeason(e.target.value)}
                 className="w-full neumorphic-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
-                disabled={!selectedPlot}
+                disabled={!selectedPlot || seasonsLoading}
               >
-                <option value="">เลือกฤดูกาล...</option>
+                <option value="">
+                  {!selectedPlot ? "เลือกแปลงก่อน" : seasonsLoading ? "กำลังโหลด..." : seasons.length === 0 ? "ไม่มีข้อมูลฤดูกาล" : "เลือกฤดูกาล..."}
+                </option>
                 {seasons.map((season) => (
                   <option key={season.id} value={season.id}>
                     {season.name} {season.status === "active" ? "●" : ""}

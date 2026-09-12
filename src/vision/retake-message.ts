@@ -47,3 +47,40 @@ export function composeRetakeMessage(reason: string, locale = "th"): RetakeMessa
     locale,
   };
 }
+
+/**
+ * Compose a full rejection message with reason, deadline, and plot name.
+ * Matches the design system's rejection flow (WET-2 ตีกลับ).
+ */
+export interface RejectionMessageInput {
+  photoType: string;
+  roundLabel: string;
+  reason: string;
+  deadline: string | null;
+  plotName: string;
+}
+
+export function composeRejectionMessage(input: RejectionMessageInput): string {
+  const lines: string[] = [];
+
+  lines.push(`${input.roundLabel} · ตีกลับ`);
+  lines.push("");
+  lines.push("ภาพยังใช้ไม่ได้ครับ");
+  lines.push(`"เหตุผล: ${input.reason}"`);
+
+  if (input.deadline) {
+    lines.push(`ช่วยเอาน้ำเข้าแปลงแล้วถ่ายใหม่ภายในวันที่ ${input.deadline} นะครับ`);
+  } else {
+    lines.push("ช่วยถ่ายใหม่ตามคำแนะนำนะครับ");
+  }
+
+  lines.push("");
+  lines.push("รอบที่แจ้ง");
+  lines.push(`รอบที่ ${input.roundLabel}`);
+  lines.push("สิ่งที่เห็นในภาพ");
+  lines.push(input.reason);
+  lines.push("");
+  lines.push(`${input.plotName}`);
+
+  return lines.join("\n");
+}
