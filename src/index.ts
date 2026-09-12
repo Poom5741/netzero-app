@@ -277,7 +277,10 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
       const postData = event.postback?.data;
       if (!postData) break;
 
-      // Postback data format: "action=value" or just a keyword
+      // Postback data format: "action=<keyword>" or a plain keyword.
+      // Extract the action so it matches the state machine's exact-match keywords.
+      const actionMatch = postData.match(/(?:^|&)action=([^&]+)/);
+      const postbackText = actionMatch ? actionMatch[1] : postData;
       // Route through the same state machine — treat postback data as the user's text input
       let link = await db
         .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
@@ -312,7 +315,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         farmerId: link.farmer_id,
         state: link.conversation_state,
         selectedPlotId: link.selected_plot_id,
-        text: postData,
+        text: postbackText === "show_calendar" ? "ดูปฏิทิน" : postbackText,
       });
       break;
     }
