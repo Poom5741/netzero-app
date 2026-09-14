@@ -120,39 +120,44 @@ function getRegionCode(province: string): string {
 function SeasonChart({ credits }: { credits: SeasonCreditRow[] }) {
   if (credits.length === 0) {
     return (
-      <div className="bg-surface-container-lowest p-6 rounded-2xl">
-        <p className="text-on-surface-variant text-body-md">ยังไม่มีข้อมูลเครดิตตามฤดูกาล</p>
+      <div className="mb-8">
+        <h3 className="font-headline-md text-headline-md text-on-surface mb-4">เครดิตตามฤดูกาล</h3>
+        <div className="rounded-2xl p-8 bg-surface-container-low/50 text-center">
+          <p className="text-on-surface-variant text-body-md">ยังไม่มีข้อมูลเครดิตตามฤดูกาล</p>
+        </div>
       </div>
     );
   }
   const maxVal = Math.max(...credits.map((c) => Math.max(c.estimated_tco2e, c.verified_tco2e)), 1);
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-2xl">
+    <div className="mb-8">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">เครดิตตามฤดูกาล</h3>
-      <div className="space-y-3">
-        {credits.map((c) => (
-          <div key={c.season_id} className="flex items-center gap-3">
-            <span className="text-label-md text-on-surface-variant w-24 truncate" title={c.season_name}>{c.season_name}</span>
-            <div className="flex-1 flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-surface-variant h-3 rounded-full overflow-hidden">
-                  <div className="bg-primary/60 h-full rounded-full" style={{ width: `${(c.estimated_tco2e / maxVal) * 100}%` }} />
+      <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/5 to-transparent border border-primary/10">
+        <div className="space-y-4">
+          {credits.map((c) => (
+            <div key={c.season_id} className="flex items-center gap-4">
+              <span className="text-label-md text-on-surface-variant w-28 truncate font-medium" title={c.season_name}>{c.season_name}</span>
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-surface-variant/50 h-3.5 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-primary/60 to-primary-container/60 h-full rounded-full transition-all" style={{ width: `${(c.estimated_tco2e / maxVal) * 100}%` }} />
+                  </div>
+                  <span className="text-label-sm text-on-surface-variant w-20 text-right tabular-nums">{formatTons(c.estimated_tco2e)}</span>
                 </div>
-                <span className="text-label-sm text-on-surface-variant w-16 text-right">{formatTons(c.estimated_tco2e)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-surface-variant h-3 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full rounded-full" style={{ width: `${(c.verified_tco2e / maxVal) * 100}%` }} />
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-surface-variant/50 h-3.5 rounded-full overflow-hidden">
+                    <div className="bg-gradient-to-r from-primary to-primary-container h-full rounded-full transition-all" style={{ width: `${(c.verified_tco2e / maxVal) * 100}%` }} />
+                  </div>
+                  <span className="text-label-sm text-primary w-20 text-right font-medium tabular-nums">{formatTons(c.verified_tco2e)}</span>
                 </div>
-                <span className="text-label-sm text-primary w-16 text-right">{formatTons(c.verified_tco2e)}</span>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-4 mt-3 text-label-sm text-on-surface-variant">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-primary/60 inline-block" /> ประมาณการ</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-primary inline-block" /> ตรวจสอบแล้ว</span>
+          ))}
+        </div>
+        <div className="flex gap-6 mt-5 pt-4 border-t border-primary/10 text-label-sm text-on-surface-variant">
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-gradient-to-r from-primary/60 to-primary-container/60 inline-block" /> ประมาณการ</span>
+          <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full bg-gradient-to-r from-primary to-primary-container inline-block" /> ตรวจสอบแล้ว</span>
+        </div>
       </div>
     </div>
   );
@@ -162,37 +167,39 @@ function SeasonChart({ credits }: { credits: SeasonCreditRow[] }) {
 function GhgSourceTable({ sources }: { sources: GhgSourceRow[] }) {
   if (sources.length === 0) return null;
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-2xl">
+    <div className="mb-8">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">แหล่งการปล่อยก๊าซเรือนกระจก</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full text-body-md">
-          <thead>
-            <tr className="border-b border-surface-variant">
-              <th className="text-left py-2 text-label-md text-on-surface-variant font-medium">แหล่ง</th>
-              <th className="text-right py-2 text-label-md text-on-surface-variant font-medium">พื้นฐาน (tCO2e)</th>
-              <th className="text-right py-2 text-label-md text-on-surface-variant font-medium">โครงการ (tCO2e)</th>
-              <th className="text-right py-2 text-label-md text-primary font-medium">การลด (tCO2e)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sources.map((s) => (
-              <tr key={s.source} className="border-b border-surface-variant/50 last:border-0">
-                <td className="py-2 text-on-surface">
-                  {s.source}
-                  {s.source.toLowerCase().includes("methane") || s.source.toLowerCase().includes("ch₄") || s.source.toLowerCase().includes("ch4") ? (
-                    <span className="block text-label-sm text-outline">แหล่งหลักของความแตกต่างคาร์บอนเครดิต</span>
-                  ) : null}
-                  {s.source.toLowerCase().includes("fertil") ? (
-                    <span className="block text-label-sm text-outline">ไม่มีการเปลี่ยนแปลงระหว่างพื้นฐานและโครงการ</span>
-                  ) : null}
-                </td>
-                <td className="py-2 text-right text-on-surface-variant">{formatTons(s.baseline)}</td>
-                <td className="py-2 text-right text-on-surface-variant">{formatTons(s.project)}</td>
-                <td className="py-2 text-right text-primary font-medium">{formatTons(s.reduction)}</td>
+      <div className="rounded-2xl overflow-hidden bg-surface-container-low/50">
+        <div className="overflow-x-auto">
+          <table className="w-full text-body-md">
+            <thead>
+              <tr className="border-b border-surface-variant/30">
+                <th className="text-left px-5 py-3.5 text-label-md text-on-surface-variant font-semibold">แหล่ง</th>
+                <th className="text-right px-5 py-3.5 text-label-md text-on-surface-variant font-semibold">พื้นฐาน (tCO2e)</th>
+                <th className="text-right px-5 py-3.5 text-label-md text-on-surface-variant font-semibold">โครงการ (tCO2e)</th>
+                <th className="text-right px-5 py-3.5 text-label-md text-primary font-semibold">การลด (tCO2e)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sources.map((s) => (
+                <tr key={s.source} className="border-b border-surface-variant/20 last:border-0 hover:bg-surface-container-low/30 transition-colors">
+                  <td className="px-5 py-3.5 text-on-surface">
+                    {s.source}
+                    {s.source.toLowerCase().includes("methane") || s.source.toLowerCase().includes("ch") || s.source.toLowerCase().includes("ch4") ? (
+                      <span className="block text-label-sm text-outline mt-0.5">แหล่งหลักของความแตกต่างคาร์บอนเครดิต</span>
+                    ) : null}
+                    {s.source.toLowerCase().includes("fertil") ? (
+                      <span className="block text-label-sm text-outline mt-0.5">ไม่มีการเปลี่ยนแปลงระหว่างพื้นฐานและโครงการ</span>
+                    ) : null}
+                  </td>
+                  <td className="px-5 py-3.5 text-right text-on-surface-variant tabular-nums">{formatTons(s.baseline)}</td>
+                  <td className="px-5 py-3.5 text-right text-on-surface-variant tabular-nums">{formatTons(s.project)}</td>
+                  <td className="px-5 py-3.5 text-right text-primary font-medium tabular-nums">{formatTons(s.reduction)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -207,20 +214,22 @@ function ProgressBars({ summary }: { summary: SponsorSummary }) {
     { label: "ข้อมูล Inputs", pct: summary.totalPlots > 0 ? 70 : 0 },
   ];
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-2xl">
+    <div className="mb-8">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">ความคืบหน้าฤดูกาล</h3>
-      <div className="space-y-4">
-        {milestones.map((m) => (
-          <div key={m.label}>
-            <div className="flex justify-between mb-1">
-              <span className="text-body-md text-on-surface-variant">{m.label}</span>
-              <span className="text-label-md text-primary font-medium">{m.pct}%</span>
+      <div className="rounded-2xl p-6 bg-surface-container-low/50">
+        <div className="space-y-5">
+          {milestones.map((m) => (
+            <div key={m.label}>
+              <div className="flex justify-between mb-2">
+                <span className="text-body-md text-on-surface-variant font-medium">{m.label}</span>
+                <span className="text-label-md text-primary font-semibold tabular-nums">{m.pct}%</span>
+              </div>
+              <div className="w-full bg-surface-variant/50 h-3 rounded-full overflow-hidden">
+                <div className="bg-gradient-to-r from-primary to-primary-container h-full rounded-full transition-all" style={{ width: `${m.pct}%` }} />
+              </div>
             </div>
-            <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
-              <div className="bg-primary h-full rounded-full transition-all" style={{ width: `${m.pct}%` }} />
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -229,25 +238,25 @@ function ProgressBars({ summary }: { summary: SponsorSummary }) {
 /** Impact metrics cards */
 function ImpactMetrics({ summary }: { summary: SponsorSummary }) {
   const metrics = [
-    { label: "การลดมีเทน", value: summary.totalCO2Tons > 0 ? "~35%" : "0%", icon: "water_drop", desc: "เทียบกับวิธีการดั้งเดิม" },
-    { label: "การประหยัดน้ำ", value: summary.totalCO2Tons > 0 ? "~25%" : "0%", icon: "local_drink", desc: "จากการจัดการน้ำสลับ" },
-    { label: "เชื้อเพลิง", value: summary.totalCO2Tons > 0 ? "+5%" : "0%", icon: "local_gas_station", desc: "เพิ่มขึ้นเล็กน้อย" },
-    { label: "ปุ๋ย", value: "เท่าเดิม", icon: "science", desc: "ไม่เปลี่ยนแปลง" },
+    { label: "การลดมีเทน", value: summary.totalCO2Tons > 0 ? "~35%" : "0%", icon: "water_drop", desc: "เทียบกับวิธีการดั้งเดิม", accent: true },
+    { label: "การประหยัดน้ำ", value: summary.totalCO2Tons > 0 ? "~25%" : "0%", icon: "local_drink", desc: "จากการจัดการน้ำสลับ", accent: true },
+    { label: "เชื้อเพลิง", value: summary.totalCO2Tons > 0 ? "+5%" : "0%", icon: "local_gas_station", desc: "เพิ่มขึ้นเล็กน้อย", accent: false },
+    { label: "ปุ๋ย", value: "เท่าเดิม", icon: "science", desc: "ไม่เปลี่ยนแปลง", accent: false },
   ];
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-2xl">
+    <div className="mb-8">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">ผลกระทบด้านสิ่งแวดล้อม</h3>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-3">
         {metrics.map((m) => (
-          <div key={m.label} className="flex items-start gap-3 p-3 bg-surface-container rounded-lg">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-primary text-[18px]">{m.icon}</span>
+          <div key={m.label} className={`flex items-center gap-4 p-4 rounded-xl ${m.accent ? "bg-primary/5 border border-primary/10" : "bg-surface-container-low/50"}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${m.accent ? "bg-primary text-white" : "bg-surface-container text-primary"}`}>
+              <span className="material-symbols-outlined text-[20px]">{m.icon}</span>
             </div>
-            <div>
-              <p className="text-label-md text-on-surface-variant">{m.label}</p>
-              <p className="text-headline-sm text-on-surface font-bold">{m.value}</p>
+            <div className="flex-1">
+              <p className="text-label-md text-on-surface-variant font-medium">{m.label}</p>
               <p className="text-label-sm text-outline">{m.desc}</p>
             </div>
+            <p className={`text-headline-sm font-bold tabular-nums ${m.accent ? "text-primary" : "text-on-surface"}`}>{m.value}</p>
           </div>
         ))}
       </div>
@@ -425,7 +434,7 @@ export default function SponsorDashboardPage() {
                   * จำนวนครัวเรือนนับจากจำนวน CPA code ที่ไม่ซ้ำในพื้นที่รับผิดชอบ
                 </p>
 
-                {/* KPI Cards Row */}
+                {/* KPI Cards Row — varied variants */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10 relative z-10">
                   <KpiCard
                     title="CO₂ ที่ลดทั้งหมด"
@@ -433,6 +442,7 @@ export default function SponsorDashboardPage() {
                     suffix="ตัน"
                     icon="eco"
                     color="primary"
+                    variant="accent"
                     trend={loading ? "กำลังโหลด..." : undefined}
                   />
                   <KpiCard
@@ -441,6 +451,7 @@ export default function SponsorDashboardPage() {
                     suffix="แปลง"
                     icon="landscape"
                     color="secondary"
+                    variant="elevated"
                     trend={loading ? "กำลังโหลด..." : `ครอบคลุม ${groups.length} จังหวัด`}
                   />
                   <KpiCard
@@ -449,6 +460,7 @@ export default function SponsorDashboardPage() {
                     suffix="ไร่"
                     icon="square_foot"
                     color="secondary"
+                    variant="flat"
                     trend={`${(summary.totalAreaRai * 0.16).toFixed(1)} เฮกตาร์ · ${summary.totalHouseholds} ครัวเรือน`}
                   />
                   <KpiCard
@@ -457,6 +469,7 @@ export default function SponsorDashboardPage() {
                     suffix=""
                     icon="payments"
                     color="tertiary"
+                    variant="flat"
                     trend={`ปี ${new Date().getFullYear() + 543}`}
                     formatValue={formatUSD}
                   />

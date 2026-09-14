@@ -97,14 +97,15 @@ export default function AdminOverviewPage() {
 
         {!loading && !error && (
           <>
-            {/* KPI Tiles */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" aria-label="ตัวชี้วัดหลัก">
+            {/* KPI Tiles — varied styles */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" aria-label="ตัวชี้วัดหลัก">
               <KpiTile
                 icon="group"
                 label="เกษตรกรทั้งหมด"
                 value={kpis?.totalFarmers ?? 0}
                 unit="ราย"
                 color="primary"
+                variant="elevated"
               />
               <KpiTile
                 icon="landscape"
@@ -112,6 +113,7 @@ export default function AdminOverviewPage() {
                 value={kpis?.totalPlots ?? 0}
                 unit="แปลง"
                 color="tertiary"
+                variant="flat"
               />
               <KpiTile
                 icon="pending_actions"
@@ -119,6 +121,7 @@ export default function AdminOverviewPage() {
                 value={kpis?.pendingReviews ?? 0}
                 unit="รายการ"
                 color="secondary"
+                variant="flat"
               />
               <KpiTile
                 icon="co2"
@@ -127,6 +130,7 @@ export default function AdminOverviewPage() {
                 unit="tCO2e"
                 color="primary"
                 decimals={2}
+                variant="accent"
               />
             </section>
 
@@ -169,21 +173,21 @@ export default function AdminOverviewPage() {
 
             {/* Credit Chart (simple bar representation) */}
             {creditChart.length > 0 && (
-              <section className="mb-6" aria-label="กราฟเครดิต">
-                <h2 className="text-headline-sm text-on-surface mb-3">เครดิตคาร์บอนตามฤดู</h2>
-                <div className="neumorphic rounded-2xl p-6">
+              <section className="mb-8" aria-label="กราฟเครดิต">
+                <h2 className="text-headline-sm text-on-surface mb-4">เครดิตคาร์บอนตามฤดู</h2>
+                <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/5 to-transparent border border-primary/10">
                   <div className="flex items-end gap-3 h-48">
                     {creditChart.map((item, i) => {
                       const maxVal = Math.max(...creditChart.map((c) => c.estimated), 1);
                       const estHeight = (item.verified / maxVal) * 100;
                       return (
                         <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                          <span className="text-[11px] text-on-surface-variant font-medium">
+                          <span className="text-[11px] text-on-surface-variant font-medium tabular-nums">
                             {item.verified.toFixed(0)}
                           </span>
                           <div className="w-full flex flex-col gap-1 items-center" style={{ height: "140px", justifyContent: "flex-end" }}>
                             <div
-                              className="w-full max-w-[40px] rounded-t-lg bg-primary"
+                              className="w-full max-w-[40px] rounded-t-lg bg-gradient-to-t from-primary to-primary-container"
                               style={{ height: `${estHeight}%`, minHeight: "4px" }}
                             />
                           </div>
@@ -205,21 +209,21 @@ export default function AdminOverviewPage() {
 
             {/* GHG Source Table */}
             {ghgSources.length > 0 && (
-              <section className="mb-6" aria-label="แหล่งก๊าซเรือนกระจก">
-                <h2 className="text-headline-sm text-on-surface mb-3">แหล่งก๊าซเรือนกระจก (GHG)</h2>
-                <div className="neumorphic rounded-2xl overflow-hidden">
+              <section className="mb-8" aria-label="แหล่งก๊าซเรือนกระจก">
+                <h2 className="text-headline-sm text-on-surface mb-4">แหล่งก๊าซเรือนกระจก (GHG)</h2>
+                <div className="rounded-2xl overflow-hidden bg-surface-container-low/50">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-outline-variant/20">
-                        <th className="px-4 py-3 text-label-md font-semibold text-on-surface">แหล่งที่มา</th>
-                        <th className="px-4 py-3 text-label-md font-semibold text-on-surface text-right">ปริมาณ (tCO2e)</th>
+                        <th className="px-5 py-3.5 text-label-md font-semibold text-on-surface">แหล่งที่มา</th>
+                        <th className="px-5 py-3.5 text-label-md font-semibold text-on-surface text-right">ปริมาณ (tCO2e)</th>
                       </tr>
                     </thead>
                     <tbody>
                       {ghgSources.map((src, i) => (
-                        <tr key={i} className="border-b border-outline-variant/10 last:border-0">
-                          <td className="px-4 py-3 text-body-md text-on-surface">{src.source}</td>
-                          <td className="px-4 py-3 text-body-md text-on-surface text-right font-mono">
+                        <tr key={i} className="border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-low/30 transition-colors">
+                          <td className="px-5 py-3.5 text-body-md text-on-surface">{src.source}</td>
+                          <td className="px-5 py-3.5 text-body-md text-on-surface text-right font-mono tabular-nums">
                             {src.value.toFixed(2)}
                           </td>
                         </tr>
@@ -232,25 +236,25 @@ export default function AdminOverviewPage() {
 
             {/* Province / Sponsor Table */}
             {provinces.length > 0 && (
-              <section className="mb-6" aria-label="ตารางจังหวัด">
-                <h2 className="text-headline-sm text-on-surface mb-3">สรุปตามจังหวัด</h2>
-                <div className="neumorphic rounded-2xl overflow-hidden">
+              <section className="mb-8" aria-label="ตารางจังหวัด">
+                <h2 className="text-headline-sm text-on-surface mb-4">สรุปตามจังหวัด</h2>
+                <div className="rounded-2xl overflow-hidden bg-surface-container-low/50">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-outline-variant/20">
-                        <th className="px-4 py-3 text-label-md font-semibold text-on-surface">จังหวัด</th>
-                        <th className="px-4 py-3 text-label-md font-semibold text-on-surface">ผู้สนับสนุน</th>
-                        <th className="px-4 py-3 text-label-md font-semibold text-on-surface text-right">แปลง</th>
-                        <th className="px-4 py-3 text-label-md font-semibold text-on-surface text-right">เครดิต (tCO2e)</th>
+                        <th className="px-5 py-3.5 text-label-md font-semibold text-on-surface">จังหวัด</th>
+                        <th className="px-5 py-3.5 text-label-md font-semibold text-on-surface">ผู้สนับสนุน</th>
+                        <th className="px-5 py-3.5 text-label-md font-semibold text-on-surface text-right">แปลง</th>
+                        <th className="px-5 py-3.5 text-label-md font-semibold text-on-surface text-right">เครดิต (tCO2e)</th>
                       </tr>
                     </thead>
                     <tbody>
                       {provinces.map((prov, i) => (
-                        <tr key={i} className="border-b border-outline-variant/10 last:border-0">
-                          <td className="px-4 py-3 text-body-md text-on-surface font-medium">{prov.province}</td>
-                          <td className="px-4 py-3 text-body-md text-on-surface-variant">{prov.sponsor}</td>
-                          <td className="px-4 py-3 text-body-md text-on-surface text-right">{prov.plots}</td>
-                          <td className="px-4 py-3 text-body-md text-on-surface text-right font-mono">
+                        <tr key={i} className="border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-low/30 transition-colors">
+                          <td className="px-5 py-3.5 text-body-md text-on-surface font-medium">{prov.province}</td>
+                          <td className="px-5 py-3.5 text-body-md text-on-surface-variant">{prov.sponsor}</td>
+                          <td className="px-5 py-3.5 text-body-md text-on-surface text-right">{prov.plots}</td>
+                          <td className="px-5 py-3.5 text-body-md text-on-surface text-right font-mono tabular-nums">
                             {prov.credits.toFixed(2)}
                           </td>
                         </tr>
@@ -267,7 +271,7 @@ export default function AdminOverviewPage() {
   );
 }
 
-// ── KPI Tile Component ──────────────────────────────────────────────
+// ── KPI Tile Component ─────────────────────────────────────────────
 
 function KpiTile({
   icon,
@@ -276,6 +280,7 @@ function KpiTile({
   unit,
   color,
   decimals = 0,
+  variant = "flat",
 }: {
   icon: string;
   label: string;
@@ -283,6 +288,7 @@ function KpiTile({
   unit: string;
   color: "primary" | "secondary" | "tertiary";
   decimals?: number;
+  variant?: "elevated" | "flat" | "accent";
 }) {
   const colorMap = {
     primary: "bg-primary/10 text-primary",
@@ -290,15 +296,23 @@ function KpiTile({
     tertiary: "bg-tertiary/10 text-tertiary",
   };
 
+  const variantStyles = {
+    elevated: "neumorphic rounded-2xl",
+    flat: "rounded-2xl bg-surface-container-low/50",
+    accent: "rounded-2xl bg-primary text-on-primary",
+  };
+
+  const iconBg = variant === "accent" ? "bg-white/20 text-white" : colorMap[color];
+
   return (
-    <div className="neumorphic rounded-2xl p-5 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorMap[color]}`}>
+    <div className={`${variantStyles[variant]} p-5 flex items-center gap-4`}>
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconBg}`}>
         <span className="material-symbols-outlined text-[24px]">{icon}</span>
       </div>
       <div>
-        <p className="text-label-md text-on-surface-variant">{label}</p>
-        <p className="text-headline-md text-on-surface font-bold">
-          {value.toFixed(decimals)} <span className="text-label-sm font-normal text-on-surface-variant">{unit}</span>
+        <p className={`text-label-md ${variant === "accent" ? "text-white/80" : "text-on-surface-variant"}`}>{label}</p>
+        <p className={`text-headline-md font-bold ${variant === "accent" ? "text-white" : "text-on-surface"}`}>
+          {value.toFixed(decimals)} <span className={`text-label-sm font-normal ${variant === "accent" ? "text-white/70" : "text-on-surface-variant"}`}>{unit}</span>
         </p>
       </div>
     </div>
@@ -329,7 +343,7 @@ function WorkQueueCard({
   return (
     <a
       href={href}
-      className={`neumorphic rounded-lg p-4 block border-l-4 transition-all hover:shadow-md ${urgencyStyles[urgency]}`}
+      className={`rounded-2xl p-4 block border-l-4 bg-surface-container-low/50 transition-all hover:bg-surface-container-low ${urgencyStyles[urgency]}`}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="material-symbols-outlined text-on-surface-variant text-[20px]">{icon}</span>
