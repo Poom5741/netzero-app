@@ -480,9 +480,11 @@ function stepStatusIcon(status: string): string {
  * Renders each step as a compact row with code, name, due day, and status.
  * Pending photo-requiring steps include a camera URI button.
  *
- * @param steps  - Array of calendar step data.
- * @param liffId - LIFF app ID for constructing camera page URIs.
- * @returns A `LineMessage` with type "flex".
+ * @param steps     - Array of calendar step data.
+ * @param liffId    - LIFF app ID for constructing camera page URIs.
+ * @param plotId    - Current plot ID for photo submission context.
+ * @param seasonId  - Current season ID for photo submission context.
+ * @returns A `LineMessage` with type "flex" or "text" (error).
  */
 export function buildCalendarBubble(
   steps: Array<{
@@ -493,7 +495,17 @@ export function buildCalendarBubble(
     requiresPhoto: boolean;
   }>,
   liffId: string,
+  plotId?: string,
+  seasonId?: string,
 ): LineMessage {
+  // Error handling for missing LIFF_ID (US3)
+  if (!liffId || liffId.trim() === "" || liffId === "no-liff") {
+    return {
+      type: "text",
+      text: " กล้องถ่ายรูปยังไม่พร้อมใช้งาน กรุณาติดต่อเจ้าหน้าที่",
+    };
+  }
+
   const stepRows: Array<Record<string, unknown>> = [];
 
   for (const step of steps) {
@@ -528,6 +540,12 @@ export function buildCalendarBubble(
 
     // Photo button row for pending steps that require a photo
     if (step.requiresPhoto && step.status === "pending") {
+      // Construct LIFF camera URL with step, plot_id, and season_id (US1, US2)
+      const cameraUrl = new URL(`https://liff.line.me/${liffId}/camera`);
+      cameraUrl.searchParams.set("step", step.stepCode);
+      if (plotId) cameraUrl.searchParams.set("plot_id", plotId);
+      if (seasonId) cameraUrl.searchParams.set("season_id", seasonId);
+
       stepRows.push({
         type: "box",
         layout: "horizontal",
@@ -553,7 +571,7 @@ export function buildCalendarBubble(
             action: {
               type: "uri",
               label: `📸 ถ่ายรูป ${step.stepCode}`,
-              uri: `https://liff.line.me/${liffId}/camera?step=${step.stepCode}`,
+              uri: cameraUrl.toString(),
             },
           },
         ],

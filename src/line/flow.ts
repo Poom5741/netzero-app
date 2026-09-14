@@ -81,6 +81,7 @@ type FlowContext = {
   selectedPlotId: string | null;
   text: string;
   liffId?: string; // LIFF app ID for deep-links
+  seasonId?: string; // Active season context for deep-links
 };
 
 type FlowResult = {
@@ -608,7 +609,7 @@ async function handleSeasonSetup(ctx: FlowContext): Promise<FlowResult> {
   if (lower === "ข้าม" || lower === "skip") {
     await safePush(ctx, [
       textMessage("ข้ามการตั้งวันหว่านค่ะ"),
-      buildCalendarBubble(calendarSteps(), ctx.liffId || "no-liff"),
+      buildCalendarBubble(calendarSteps(), ctx.liffId || "no-liff", ctx.selectedPlotId ?? undefined, ctx.seasonId ?? undefined),
     ]);
     return { newState: "calendar" };
   }
@@ -617,7 +618,7 @@ async function handleSeasonSetup(ctx: FlowContext): Promise<FlowResult> {
   if (created) {
     await safePush(ctx, [
       textMessage(`✅ บันทึกวันหว่าน: ${created.displayDate}`),
-      buildCalendarBubble(calendarSteps(), ctx.liffId || "no-liff"),
+      buildCalendarBubble(calendarSteps(), ctx.liffId || "no-liff", ctx.selectedPlotId ?? undefined, ctx.seasonId ?? undefined),
     ]);
     return { newState: "calendar" };
   }
@@ -680,7 +681,7 @@ async function handleCalendar(ctx: FlowContext): Promise<FlowResult> {
   }
 
   await safePush(ctx, [
-    buildCalendarBubble(steps, ctx.liffId || "no-liff"),
+    buildCalendarBubble(steps, ctx.liffId || "no-liff", ctx.selectedPlotId ?? undefined, ctx.seasonId ?? undefined),
   ]);
   return { newState: "calendar" };
 }
