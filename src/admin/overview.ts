@@ -176,7 +176,7 @@ export async function getCreditChart(db: D1Database): Promise<CreditChartItem[]>
        LEFT JOIN season_inputs si ON si.season_id = s.id
        LEFT JOIN carbon_estimates ce ON ce.season_id = s.id
        GROUP BY s.id
-       ORDER BY s.start_date ASC`,
+       ORDER BY s.created_at ASC`,
     )
     .bind()
     .all<{ season: string; estimated: number; verified: number }>();
