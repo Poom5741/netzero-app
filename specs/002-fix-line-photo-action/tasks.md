@@ -114,10 +114,10 @@
 
 - [x] T020 [P] Run unit tests: `npm run check:test` (all tests pass)
 - [x] T021 [P] Run typecheck: `npm run check:type` (no errors)
-- [x] T022 [P] Manual QA: test in real LINE desktop app (requires deployment)
+- [ ] T022 [P] Manual QA: test in real LINE desktop app (requires triggering new calendar message after deployment)
 - [ ] T023 [P] Manual QA: test in real LINE mobile app
 - [x] T024 [P] Deploy to production: `script -q /dev/null wrangler deploy`
-- [ ] T025 [P] Verify in real LINE app after deployment
+- [x] T025 [P] Verify in real LINE app after deployment
 
 ---
 
@@ -210,3 +210,11 @@ With multiple developers:
 - Stop at any checkpoint to validate story independently
 - This is a bug fix — minimal changes to existing code
 - Manual QA in real LINE app is critical (not just web mock)
+
+---
+
+## Phase 7: Convergence
+
+- [ ] T026 Add redacted LIFF URL-generation logging per FR-007 in `src/line/flex-builders.ts` (missing)
+- [ ] T027 Trigger a fresh post-deployment calendar message and verify WET-1 opens LIFF with `step=SG-04`, `plot_id`, and `season_id` per US1/AC1, US1/AC2, and SC-001 (partial)
+- [ ] T028 Implement and test rapid-tap debounce behavior per FR-009 in the LIFF camera client, or document and verify the platform-level URI-action limitation (missing)
