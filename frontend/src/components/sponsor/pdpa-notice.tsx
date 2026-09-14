@@ -6,7 +6,7 @@
  */
 export function PdpaNotice() {
   return (
-    <div className="bg-tertiary-container/30 border border-tertiary/20 rounded-xl p-4 mb-6 flex items-start gap-3 relative z-10">
+    <div className="bg-tertiary-container/30 border border-tertiary/20 rounded-2xl p-4 mb-6 flex items-start gap-3 relative z-10">
       <span className="material-symbols-outlined text-tertiary text-[20px] mt-0.5 flex-shrink-0">info</span>
       <div className="text-body-sm text-on-surface-variant">
         <p className="font-medium text-on-surface mb-1">ประกาศคุ้มครองข้อมูลส่วนบุคคล (PDPA CS-02)</p>

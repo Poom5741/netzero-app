@@ -7,10 +7,10 @@
   --color-on-primary: #ffffff;
   --color-on-primary-container: #004c1b;
 
-  --color-secondary: #5d5c74;
-  --color-secondary-container: #e2e0fc;
+  --color-secondary: #4a6b5e;
+  --color-secondary-container: #d4eddf;
   --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #63627a;
+  --color-on-secondary-container: #2e4a3c;
 
   --color-tertiary: #ab3500;
   --color-tertiary-container: #ff8e67;
@@ -43,7 +43,7 @@
   --color-line-green-dark: #00a854;
 
   /* === Typography === */
-  --font-sans: var(--font-inter), var(--font-sarabun), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "Plus Jakarta Sans", Sarabun, -apple-system, BlinkMacSystemFont, sans-serif;
 
   --text-display-lg: 48px;
   --text-headline-lg: 32px;

@@ -18,9 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
       </head>
-      <body className="min-h-full flex flex-col font-sans" style={{ fontFamily: 'Inter, Sarabun, system-ui, sans-serif' }}>{children}</body>
+      <body className="min-h-full flex flex-col font-sans" style={{ fontFamily: '"Plus Jakarta Sans", Sarabun, system-ui, sans-serif' }}>{children}</body>
     </html>
   );
 }

@@ -68,7 +68,7 @@ export default function AdminOverviewPage() {
 
   return (
     <main className="pt-20 lg:pt-24 px-4 lg:px-10 pb-10">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px]">
         {/* Page header */}
         <div className="mb-6">
           <h1 className="font-headline-lg text-headline-lg text-on-surface">ภาพรวมระบบ</h1>
@@ -171,7 +171,7 @@ export default function AdminOverviewPage() {
             {creditChart.length > 0 && (
               <section className="mb-6" aria-label="กราฟเครดิต">
                 <h2 className="text-headline-sm text-on-surface mb-3">เครดิตคาร์บอนตามฤดู</h2>
-                <div className="neumorphic rounded-xl p-6">
+                <div className="neumorphic rounded-2xl p-6">
                   <div className="flex items-end gap-3 h-48">
                     {creditChart.map((item, i) => {
                       const maxVal = Math.max(...creditChart.map((c) => c.estimated), 1);
@@ -207,7 +207,7 @@ export default function AdminOverviewPage() {
             {ghgSources.length > 0 && (
               <section className="mb-6" aria-label="แหล่งก๊าซเรือนกระจก">
                 <h2 className="text-headline-sm text-on-surface mb-3">แหล่งก๊าซเรือนกระจก (GHG)</h2>
-                <div className="neumorphic rounded-xl overflow-hidden">
+                <div className="neumorphic rounded-2xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-outline-variant/20">
@@ -234,7 +234,7 @@ export default function AdminOverviewPage() {
             {provinces.length > 0 && (
               <section className="mb-6" aria-label="ตารางจังหวัด">
                 <h2 className="text-headline-sm text-on-surface mb-3">สรุปตามจังหวัด</h2>
-                <div className="neumorphic rounded-xl overflow-hidden">
+                <div className="neumorphic rounded-2xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-outline-variant/20">
@@ -291,7 +291,7 @@ function KpiTile({
   };
 
   return (
-    <div className="neumorphic rounded-xl p-5 flex items-center gap-4">
+    <div className="neumorphic rounded-2xl p-5 flex items-center gap-4">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorMap[color]}`}>
         <span className="material-symbols-outlined text-[24px]">{icon}</span>
       </div>
@@ -329,7 +329,7 @@ function WorkQueueCard({
   return (
     <a
       href={href}
-      className={`neumorphic rounded-xl p-4 block border-l-4 transition-all hover:shadow-md ${urgencyStyles[urgency]}`}
+      className={`neumorphic rounded-lg p-4 block border-l-4 transition-all hover:shadow-md ${urgencyStyles[urgency]}`}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="material-symbols-outlined text-on-surface-variant text-[20px]">{icon}</span>

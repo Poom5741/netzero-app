@@ -15,7 +15,7 @@ export function ProvinceGroup({ province, plots, regionCode }: ProvinceGroupProp
   const totalCO2 = plots.reduce((sum, p) => sum + (p.total_offset_tco2e ?? 0), 0);
 
   return (
-    <div className="bg-surface-container p-4 rounded-xl shadow-inner relative">
+    <div className="bg-surface-container p-4 rounded-2xl shadow-inner relative">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-surface-container-lowest shadow-sm flex items-center justify-center text-primary font-bold text-[20px]">

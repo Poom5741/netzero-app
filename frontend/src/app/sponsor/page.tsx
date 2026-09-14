@@ -120,14 +120,14 @@ function getRegionCode(province: string): string {
 function SeasonChart({ credits }: { credits: SeasonCreditRow[] }) {
   if (credits.length === 0) {
     return (
-      <div className="bg-surface-container-lowest p-6 rounded-xl">
+      <div className="bg-surface-container-lowest p-6 rounded-2xl">
         <p className="text-on-surface-variant text-body-md">ยังไม่มีข้อมูลเครดิตตามฤดูกาล</p>
       </div>
     );
   }
   const maxVal = Math.max(...credits.map((c) => Math.max(c.estimated_tco2e, c.verified_tco2e)), 1);
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-xl">
+    <div className="bg-surface-container-lowest p-6 rounded-2xl">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">เครดิตตามฤดูกาล</h3>
       <div className="space-y-3">
         {credits.map((c) => (
@@ -162,7 +162,7 @@ function SeasonChart({ credits }: { credits: SeasonCreditRow[] }) {
 function GhgSourceTable({ sources }: { sources: GhgSourceRow[] }) {
   if (sources.length === 0) return null;
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-xl">
+    <div className="bg-surface-container-lowest p-6 rounded-2xl">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">แหล่งการปล่อยก๊าซเรือนกระจก</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-body-md">
@@ -207,7 +207,7 @@ function ProgressBars({ summary }: { summary: SponsorSummary }) {
     { label: "ข้อมูล Inputs", pct: summary.totalPlots > 0 ? 70 : 0 },
   ];
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-xl">
+    <div className="bg-surface-container-lowest p-6 rounded-2xl">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">ความคืบหน้าฤดูกาล</h3>
       <div className="space-y-4">
         {milestones.map((m) => (
@@ -235,7 +235,7 @@ function ImpactMetrics({ summary }: { summary: SponsorSummary }) {
     { label: "ปุ๋ย", value: "เท่าเดิม", icon: "science", desc: "ไม่เปลี่ยนแปลง" },
   ];
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-xl">
+    <div className="bg-surface-container-lowest p-6 rounded-2xl">
       <h3 className="font-headline-md text-headline-md text-on-surface mb-4">ผลกระทบด้านสิ่งแวดล้อม</h3>
       <div className="grid grid-cols-2 gap-4">
         {metrics.map((m) => (
@@ -403,7 +403,7 @@ export default function SponsorDashboardPage() {
             ) : (
               <>
                 {/* Hero KPI: Verified Credits */}
-                <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 p-6 rounded-xl mb-6 relative z-10">
+                <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 p-6 rounded-2xl mb-6 relative z-10">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="material-symbols-outlined text-primary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                     <h2 className="text-headline-lg text-on-surface">คาร์บอนเครดิตที่ยืนยันแล้ว</h2>

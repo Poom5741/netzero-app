@@ -12,23 +12,20 @@ interface KpiCardProps {
   formatValue?: (n: number) => string;
 }
 
-const colorMap: Record<string, { bg: string; text: string; glow: string; valueText: string }> = {
+const colorMap: Record<string, { bg: string; text: string; valueText: string }> = {
   primary: {
     bg: "bg-primary/10",
     text: "text-primary",
-    glow: "bg-primary/10 group-hover:bg-primary/20",
     valueText: "text-primary",
   },
   secondary: {
     bg: "bg-secondary-container",
     text: "text-on-secondary-container",
-    glow: "bg-secondary/10 group-hover:bg-secondary/20",
     valueText: "text-on-surface",
   },
   tertiary: {
     bg: "bg-tertiary-container",
     text: "text-on-tertiary-container",
-    glow: "bg-tertiary/10 group-hover:bg-tertiary/20",
     valueText: "text-on-surface",
   },
 };
@@ -38,8 +35,7 @@ export function KpiCard({ title, value, suffix, icon, trend, color = "primary", 
   const displayValue = formatValue ? formatValue(value) : formatWithCommas(value);
 
   return (
-    <div className="bg-surface-container-lowest p-6 rounded-xl shadow-[5px_5px_15px_#D1D9E6,-5px_-5px_15px_#FFFFFF] flex flex-col justify-between h-48 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-      <div className={`absolute -right-8 -top-8 w-32 h-32 ${palette.glow} rounded-full blur-2xl transition-colors`} />
+    <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-[5px_5px_15px_#D1D9E6,-5px_-5px_15px_#FFFFFF] flex flex-col justify-between h-48 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
       <div className="flex justify-between items-start">
         <h3 className="font-headline-md text-headline-md text-on-surface">{title}</h3>
         <div className={`w-10 h-10 rounded-full ${palette.bg} flex items-center justify-center ${palette.text}`}>

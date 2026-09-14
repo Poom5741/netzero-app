@@ -13,7 +13,7 @@ export function LiveCalc({ liveValue, techniques }: LiveCalcProps) {
       <h3 className="text-headline-md text-on-surface mb-4">การคำนวณแบบเรียลไทม์</h3>
 
       {/* Real-time counter display */}
-      <div className="bg-surface-container p-4 rounded-lg shadow-inner mb-4 flex flex-col items-center justify-center h-32 relative overflow-hidden">
+      <div className="bg-surface-container p-4 rounded-2xl shadow-inner mb-4 flex flex-col items-center justify-center h-32 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent animate-pulse" style={{ animationDuration: "3s" }} />
         <span className="text-label-md text-on-surface-variant mb-1 relative z-10">
           การสะสมเครือข่ายแบบเรียลไทม์

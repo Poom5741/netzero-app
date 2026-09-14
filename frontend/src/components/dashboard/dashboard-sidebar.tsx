@@ -28,7 +28,7 @@ export function DashboardSidebar({
   brand = "NetZero",
 }: DashboardSidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 h-full w-72 bg-[#1A1A2E] z-50 flex flex-col pt-6 shadow-xl hidden lg:flex">
+    <aside className="fixed left-0 top-0 h-full w-72 bg-[#0d1f17] z-50 flex flex-col pt-6 shadow-xl hidden lg:flex">
       <div className="px-6 mb-10 flex items-center gap-2">
         <span className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-sm">
           <span className="material-symbols-outlined text-[18px]">eco</span>
