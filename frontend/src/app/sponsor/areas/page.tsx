@@ -120,7 +120,7 @@ function ProvinceTable({ group }: { group: ProvinceGroup }) {
           <thead>
             <tr className="bg-surface-container">
               <th className="text-left px-4 py-2 text-label-md text-on-surface-variant font-medium">รหัสแปลง</th>
-              <th className="text-left px-4 py-2 text-label-md text-on-surface-variant font-medium">เกษตรกร</th>
+              <th className="text-left px-4 py-2 text-label-md text-on-surface-variant font-medium">รหัส CPA</th>
               <th className="text-left px-4 py-2 text-label-md text-on-surface-variant font-medium">อำเภอ</th>
               <th className="text-right px-4 py-2 text-label-md text-on-surface-variant font-medium">พื้นที่ (ไร่)</th>
               <th className="text-right px-4 py-2 text-label-md text-on-surface-variant font-medium">CO₂ (tCO2e)</th>
@@ -132,7 +132,7 @@ function ProvinceTable({ group }: { group: ProvinceGroup }) {
             {group.plots.map((plot) => (
               <tr key={plot.plot_id} className="border-t border-surface-variant/50 hover:bg-surface-container/50 transition-colors">
                 <td className="px-4 py-3 font-medium text-on-surface">{plot.plot_code}</td>
-                <td className="px-4 py-3 text-on-surface-variant">{plot.farmer_name}</td>
+                <td className="px-4 py-3 text-on-surface-variant">{plot.cpa_code}</td>
                 <td className="px-4 py-3 text-on-surface-variant">{plot.district}</td>
                 <td className="px-4 py-3 text-right text-on-surface-variant">{plot.area_rai}</td>
                 <td className="px-4 py-3 text-right text-primary font-medium">{formatTons(plot.total_offset_tco2e ?? 0)}</td>

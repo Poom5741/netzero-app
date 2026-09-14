@@ -43,7 +43,7 @@ export function ProvinceGroup({ province, plots, regionCode }: ProvinceGroupProp
               <div className="w-16 h-16 rounded-md bg-cover bg-center overflow-hidden flex-shrink-0" style={{ backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQtEsrGDswNxRMbWYjsesx2SSfo8KmJprKsijxmTGfUTqUtWXoAsrPSJGcYJqIm2wt_I57gb3_KCqBOUyJrHY3Eac6hnR__f5OnPqcfQguOv3fsGEqYcZJwgjGu2ykuYw6_R0_SJB9ZwjcKKYw-B4Zvf-uZYblVAFR70sbPXylCUgkOYXl206CkW-nzxfRYxVs5k_uw2mE7Zd-kWSE6SWqB8n08mOyp1ho2LfT7zCbNM6U32nj5iyCxA')` }} />
               <div className="min-w-0 flex-1">
                 <h4 className="font-label-md text-label-md text-on-surface truncate">
-                  {plot.plot_code} ({plot.farmer_name})
+                  {plot.plot_code} ({plot.cpa_code})
                 </h4>
                 <div
                   className="w-full bg-surface-variant h-2 rounded-full mt-2 mb-1 overflow-hidden"

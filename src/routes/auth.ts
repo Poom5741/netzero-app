@@ -52,6 +52,7 @@ function renderLoginPage(error?: string): string {
       <span class="brand-text">NetZeroCarbon</span>
     </div>
     <p class="subtitle">เข้าสู่ระบบจัดการคาร์บอนเครดิต</p>
+    <p style="text-align:center;color:#64748b;font-size:12px;margin:-12px 0 20px">มาตรฐาน T-VER-P-METH-13-08</p>
     ${errorHtml}
     <form method="POST" action="/login">
       <div class="field">
@@ -66,6 +67,8 @@ function renderLoginPage(error?: string): string {
         <label>รหัส OTP (ถ้ามี)</label>
         <input name="otp" type="text" pattern="[0-9]{6}" maxlength="6" placeholder="123456" autocomplete="one-time-code" inputmode="numeric">
       </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#444;margin:4px 0 16px"><input name="remember" type="checkbox"> จดจำอุปกรณ์นี้</label>
+      <a href="mailto:support@netzero.local?subject=Reset%20password" style="display:block;text-align:right;color:#006e2b;font-size:13px;margin:-6px 0 16px">ลืมรหัสผ่าน?</a>
       <button type="submit" class="btn">
         <span class="material-symbols-outlined" style="font-size:20px">login</span>
         เข้าสู่ระบบ
@@ -121,10 +124,26 @@ authRoutes.post("/login", async (c) => {
   }
 
   const { createSessionCookie } = await import("../auth/session");
+  const remember = form.get("remember") === "on";
+  // T090 — extend session to 30 days when "remember device" is checked (AD-AUTH-02)
+  const maxAge = remember ? 86400 * 30 : 86400;
   const cookie = await createSessionCookie(
     { userId: user.id, role: user.role as "admin" | "sponsor", email: user.email },
     c.env.SECRET,
+    true,
+    maxAge,
   );
+
+  // T063 — audit log entry for successful sign-in (AD-AUTH-03)
+  try {
+    const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    await c.env.DB.prepare(
+      `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
+       VALUES (?, NULL, 'admin', 'sign_in', ?, 'user', ?, datetime('now'))`,
+    ).bind(auditId, `sign-in ${user.role}`, user.id).run();
+  } catch (err) {
+    console.error("sign-in audit log failed:", err);
+  }
 
   const redirectPath = user.role === "admin" ? "/admin" : "/sponsor";
   return new Response(null, {

@@ -53,7 +53,7 @@ const PLOT_ROW = {
   plot_id: "plot-1",
   plot_code: "P-001",
   area_rai: 10,
-  farmer_name: "Somchai",
+  cpa_code: "CPA-001",
   province: "Chiang Mai",
   district: "Mueang",
   total_offset_tco2e: 5.2,

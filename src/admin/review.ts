@@ -3,7 +3,7 @@ import { updateFarmerTrust } from "../trust/farmer-trust";
 
 type ReviewResult = { success: boolean; error?: string; promoted?: boolean };
 
-const VALID_STATUSES = ["verified", "rejected"] as const;
+const VALID_STATUSES = ["verified", "rejected", "retake"] as const;
 type AdminStatus = (typeof VALID_STATUSES)[number];
 
 function isValidStatus(status: string): status is AdminStatus {

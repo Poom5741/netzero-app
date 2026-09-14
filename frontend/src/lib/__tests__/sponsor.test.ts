@@ -72,7 +72,7 @@ describe("generateExportCSV", () => {
           plot_id: "1",
           plot_code: "AY-001",
           area_rai: 15,
-          farmer_name: "สมชาย วงศ์สุข",
+          cpa_code: "CPA-AY-001",
           province: "พระนครศรีอยุธยา",
           district: "พระนครศรีอยุธยา",
           total_offset_tco2e: 12.5,
@@ -83,7 +83,7 @@ describe("generateExportCSV", () => {
           plot_id: "2",
           plot_code: "AY-042",
           area_rai: 20,
-          farmer_name: "พิชัย ชาญดี",
+          cpa_code: "CPA-AY-042",
           province: "พระนครศรีอยุธยา",
           district: "บางปะอิน",
           total_offset_tco2e: 8.3,
@@ -99,7 +99,7 @@ describe("generateExportCSV", () => {
           plot_id: "3",
           plot_code: "SP-112",
           area_rai: 25,
-          farmer_name: "มนตรี บุญศรี",
+          cpa_code: "CPA-SP-112",
           province: "สุพรรณบุรี",
           district: "สุพรรณบุรี",
           total_offset_tco2e: 14.5,
@@ -153,7 +153,7 @@ describe("getFallbackData", () => {
       group.plots.forEach((plot) => {
         expect(plot.plot_id).toBeDefined();
         expect(plot.plot_code).toBeDefined();
-        expect(plot.farmer_name).toBeDefined();
+        expect(plot.cpa_code).toBeDefined();
         expect(plot.province).toBe(group.province);
         expect(typeof plot.total_offset_tco2e).toBe("number");
       });

@@ -67,7 +67,7 @@ const PLOT_DETAIL_ROW = {
   plot_id: "plot-1",
   plot_code: "P-001",
   area_rai: 10,
-  farmer_name: "Somchai",
+  cpa_code: "CPA-001",
   province: "Chiang Mai",
   district: "Mueang",
   season_id: "s2024",
@@ -94,7 +94,7 @@ type DetailBody = {
   plot_id: string;
   plot_code: string;
   area_rai: number;
-  farmer_name: string;
+  cpa_code: string;
   province: string;
   verification_label: string;
   water_management: string;
@@ -134,7 +134,7 @@ describe("GET /sponsor/:plotId", () => {
     expect(body.verification_label).toBe("estimate — not yet verified");
   });
 
-  it("returns plot metadata: code, area, farmer, province", async () => {
+  it("returns plot metadata: code, area, CPA code, province", async () => {
     const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, ["Chiang Mai"]) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/plot-1", { headers: await sponsorCookie() });
@@ -142,7 +142,7 @@ describe("GET /sponsor/:plotId", () => {
 
     expect(body.plot_code).toBe("P-001");
     expect(body.area_rai).toBe(10);
-    expect(body.farmer_name).toBe("Somchai");
+    expect(body.cpa_code).toBe("CPA-001");
     expect(body.province).toBe("Chiang Mai");
   });
 

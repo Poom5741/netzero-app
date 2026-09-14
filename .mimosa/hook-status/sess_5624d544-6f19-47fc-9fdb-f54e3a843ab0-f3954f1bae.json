@@ -1,14 +1,14 @@
 {
   "schemaVersion": "mimosa-hook-status/v1",
-  "recordedAt": "2026-08-27T19:24:26.049Z",
+  "recordedAt": "2026-08-27T19:58:25.419Z",
   "sessionId": "sess_5624d544-6f19-47fc-9fdb-f54e3a843ab0",
   "event": "PostToolUse",
-  "toolName": "Edit",
-  "file": "src/routes/photo.ts",
+  "toolName": "Write",
+  "file": "docs/handoff/claw-test-commands.sh",
   "outcome": "clear",
   "coverage": "complete",
   "findingCount": 0,
-  "durationMs": 6,
+  "durationMs": 3,
   "hostState": "hook_complete",
   "reportHint": ".mimosa/reports/"
 }

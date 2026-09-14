@@ -23,12 +23,25 @@ export type SettingsData = {
 };
 
 // Default role-permission matrix
+// T073 — 15 permission categories per AD-PERM-01
 const DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  admin: ["review", "applications", "farmers", "sponsors", "settings", "reports", "overview"],
-  verifier: ["review", "farmers"],
-  field: ["applications"],
-  sponsor: ["overview", "reports"],
-  auditor: ["review", "audit"],
+  admin: [
+    "dashboard_scope", "identity_fields", "evidence_review", "application_review",
+    "data_entry", "bot_replies", "batch_import", "recalculation", "parameter_edit",
+    "exports", "audit_access", "permission_admin", "user_management", "settings", "reports"
+  ],
+  verifier: [
+    "dashboard_scope", "evidence_review", "identity_fields", "exports"
+  ],
+  field: [
+    "dashboard_scope", "application_review", "data_entry"
+  ],
+  sponsor: [
+    "dashboard_scope", "exports", "reports"
+  ],
+  auditor: [
+    "dashboard_scope", "audit_access", "evidence_review"
+  ],
 };
 
 // Default calculation constants

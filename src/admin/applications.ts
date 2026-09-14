@@ -30,9 +30,67 @@ type ApplicationItem = {
   docs_needed: number;
   consent_count: number;
   created_at: string;
+  /** T070 — days since application was submitted (AD-APP-02) */
+  age_days: number;
+  /** T077 — placeholder label when OCR/automation data is unavailable */
+  placeholder_label?: string;
 };
 
 const DOCS_NEEDED = 3; // DOC-01, DOC-03, DOC-06
+
+// T091 — Holding-type-specific document rules per AD-APP-02
+const HOLDING_DOC_RULES: Record<string, { code: string; label: string }[]> = {
+  owner: [
+    { code: "DOC-01", label: "โฉนด/หนังสือรับรองที่ดิน" },
+    { code: "DOC-03", label: "บัตรประชาชน" },
+    { code: "DOC-06", label: "หนังสือยินยอมเข้าร่วมโครงการ" },
+  ],
+  "co-owner": [
+    { code: "DOC-01", label: "โฉนด/หนังสือรับรองที่ดิน" },
+    { code: "DOC-02", label: "เอกสารรับรองสิทธิร่วม" },
+    { code: "DOC-03", label: "บัตรประชาชน" },
+    { code: "DOC-06", label: "หนังสือยินยอมเข้าร่วมโครงการ" },
+  ],
+  tenant: [
+    { code: "DOC-01", label: "โฉนด/หนังสือรับรองที่ดิน (เจ้าของ)" },
+    { code: "DOC-04", label: "สัญญาเช่า" },
+    { code: "DOC-03", label: "บัตรประชาชน" },
+    { code: "DOC-06", label: "หนังสือยินยอมเข้าร่วมโครงการ" },
+  ],
+  representative: [
+    { code: "DOC-01", label: "โฉนด/หนังสือรับรองที่ดิน" },
+    { code: "DOC-03", label: "บัตรประชาชนเกษตรกร" },
+    { code: "DOC-05", label: "หนังสือมอบอำนาจ" },
+    { code: "DOC-03R", label: "บัตรประชาชนผู้รับมอบอำนาจ" },
+    { code: "DOC-06", label: "หนังสือยินยอมเข้าร่วมโครงการ" },
+  ],
+};
+
+export function getRequiredDocs(holdingType: string): { code: string; label: string }[] {
+  return HOLDING_DOC_RULES[holdingType] ?? HOLDING_DOC_RULES["owner"];
+}
+
+// T092 — Document checklist categorization per AD-APP-03
+export type DocChecklistItem = {
+  code: string;
+  label: string;
+  status: "required" | "received" | "missing" | "invalid";
+};
+
+export function buildDocChecklist(
+  holdingType: string,
+  receivedDocs: { doc_type: string; review_status: string }[],
+): DocChecklistItem[] {
+  const required = getRequiredDocs(holdingType);
+  const receivedMap = new Map(receivedDocs.map((d) => [d.doc_type, d.review_status]));
+
+  return required.map((doc) => {
+    const received = receivedMap.get(doc.code);
+    if (!received) return { ...doc, status: "missing" as const };
+    if (received === "rejected") return { ...doc, status: "invalid" as const };
+    return { ...doc, status: "received" as const };
+  });
+}
 
 export async function getApplications(
   db: D1Database,
@@ -72,20 +130,28 @@ export async function getApplications(
 
   if (!appRows || appRows.length === 0) return [];
 
-  return appRows.map((row) => ({
-    id: row.id,
-    farmer_id: row.farmer_id,
-    line_user_id: row.line_user_id,
-    farmer_name: row.full_name,
-    phone: row.phone,
-    province: row.addr_province ?? "-",
-    district: row.addr_district ?? "-",
-    status: row.status,
-    doc_count: row.doc_count,
-    docs_needed: DOCS_NEEDED,
-    consent_count: row.consent_count,
-    created_at: row.created_at,
-  }));
+  return appRows.map((row) => {
+    const createdAtMs = Date.parse(row.created_at);
+    const ageDays = Number.isFinite(createdAtMs)
+      ? Math.floor((Date.now() - createdAtMs) / (1000 * 60 * 60 * 24))
+      : 0;
+    return {
+      id: row.id,
+      farmer_id: row.farmer_id,
+      line_user_id: row.line_user_id,
+      farmer_name: row.full_name,
+      phone: row.phone,
+      province: row.addr_province ?? "-",
+      district: row.addr_district ?? "-",
+      status: row.status,
+      doc_count: row.doc_count,
+      docs_needed: DOCS_NEEDED,
+      consent_count: row.consent_count,
+      created_at: row.created_at,
+      age_days: ageDays,
+      placeholder_label: "OCR unavailable — sample data",
+    };
+  });
 }
 
 type ApproveResult = {
@@ -149,6 +215,26 @@ type RejectResult = {
   error?: string;
 };
 
+export async function holdApplication(
+  db: D1Database,
+  linkId: string,
+  reason: string,
+): Promise<RejectResult> {
+  if (!reason || reason.trim().length === 0) {
+    return { success: false, error: "Hold reason is required" };
+  }
+  const link = await db.prepare("SELECT id FROM line_links WHERE id = ?").bind(linkId).first<{ id: string }>();
+  if (!link) return { success: false, error: "Application not found" };
+  await db.prepare("UPDATE line_links SET status = 'hold', review_reason = ?, updated_at = datetime('now') WHERE id = ?")
+    .bind(reason.trim(), linkId).run();
+  const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  await db.prepare(
+    `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, old_value, new_value, created_at)
+     VALUES (?, NULL, 'admin', 'hold_application', ?, 'line_link', ?, 'pending', 'hold', datetime('now'))`,
+  ).bind(auditId, reason.trim(), linkId).run();
+  return { success: true };
+}
+
 export async function rejectApplication(
   db: D1Database,
   linkId: string,
@@ -178,11 +264,32 @@ export async function rejectApplication(
   const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   await db
     .prepare(
-      `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
-       VALUES (?, NULL, 'admin', 'reject_application', ?, 'line_link', ?, datetime('now'))`,
+      `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, old_value, new_value, created_at)
+       VALUES (?, NULL, 'admin', 'reject_application', ?, 'line_link', ?, 'pending', 'rejected', datetime('now'))`,
     )
     .bind(auditId, reason, linkId)
     .run();
 
+  return { success: true };
+}
+
+// T093 — Request additional documents from farmer per AD-APP-04
+export async function requestDocuments(
+  db: D1Database,
+  linkId: string,
+  reason: string,
+): Promise<RejectResult> {
+  if (!reason || reason.trim().length === 0) {
+    return { success: false, error: "Request reason is required" };
+  }
+  const link = await db.prepare("SELECT id FROM line_links WHERE id = ?").bind(linkId).first<{ id: string }>();
+  if (!link) return { success: false, error: "Application not found" };
+  await db.prepare("UPDATE line_links SET status = 'documents_requested', review_reason = ?, updated_at = datetime('now') WHERE id = ?")
+    .bind(reason.trim(), linkId).run();
+  const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  await db.prepare(
+    `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
+     VALUES (?, NULL, 'admin', 'request_documents', ?, 'line_link', ?, datetime('now'))`,
+  ).bind(auditId, reason.trim(), linkId).run();
   return { success: true };
 }

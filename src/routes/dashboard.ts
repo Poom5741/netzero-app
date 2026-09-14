@@ -32,25 +32,45 @@ function renderAdminDashboard(): string {
     <a href="/logout">ออกจากระบบ</a>
   </div>
   <div class="cards">
+    <a href="/admin/overview" class="card">
+      <h3>📊</h3>
+      <h3>ภาพรวม</h3>
+      <p>KPI, คิวงาน, กราฟเครดิต</p>
+    </a>
+    <a href="/admin/applications" class="card">
+      <h3>📝</h3>
+      <h3>คำขอจดทะเบียน</h3>
+      <p>ตรวจสอบและอนุมัติคำขอ</p>
+    </a>
     <a href="/admin/review" class="card">
       <h3>📋</h3>
       <h3>คิวตรวจภาพ</h3>
       <p>ตรวจสอบและอนุมัติภาพหลักฐาน</p>
     </a>
-    <a href="/admin/season" class="card">
+    <a href="/admin/farmers" class="card">
       <h3>🌾</h3>
-      <h3>อนุมัติฤดู</h3>
-      <p>อนุมัติข้อมูลฤดูและคำนวณคาร์บอน</p>
+      <h3>เกษตรกร</h3>
+      <p>ทะเบียนและรายละเอียดเกษตรกร</p>
+    </a>
+    <a href="/admin/sponsors" class="card">
+      <h3>🏢</h3>
+      <h3>ผู้สนับสนุน</h3>
+      <p>จัดการผู้สนับสนุนและพื้นที่</p>
+    </a>
+    <a href="/admin/reports" class="card">
+      <h3>📥</h3>
+      <h3>รายงาน</h3>
+      <p>ดาวน์โหลดรายงานและส่งออกข้อมูล</p>
+    </a>
+    <a href="/admin/settings" class="card">
+      <h3>⚙️</h3>
+      <h3>ตั้งค่า</h3>
+      <p>สิทธิ์ บทบาท ค่าคงที่</p>
     </a>
     <a href="/sponsor" class="card">
       <h3>📊</h3>
       <h3>Sponsor Dashboard</h3>
       <p>ดูข้อมูลเครดิตคาร์บอน</p>
-    </a>
-    <a href="/export/estimates" class="card">
-      <h3>📥</h3>
-      <h3>Export</h3>
-      <p>ดาวน์โหลดข้อมูล CSV/JSON</p>
     </a>
   </div>
 </body>

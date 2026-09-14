@@ -8,7 +8,7 @@ const samplePlots: PlotSummary[] = [
     plot_id: "1",
     plot_code: "AY-001",
     area_rai: 15,
-    farmer_name: "สมชาย วงศ์สุข",
+    cpa_code: "CPA-AY-001",
     province: "พระนครศรีอยุธยา",
     district: "พระนครศรีอยุธยา",
     total_offset_tco2e: 12.5,
@@ -19,7 +19,7 @@ const samplePlots: PlotSummary[] = [
     plot_id: "2",
     plot_code: "AY-042",
     area_rai: 20,
-    farmer_name: "พิชัย ชาญดี",
+    cpa_code: "CPA-AY-042",
     province: "พระนครศรีอยุธยา",
     district: "บางปะอิน",
     total_offset_tco2e: 8.3,
@@ -50,10 +50,10 @@ describe("ProvinceGroup", () => {
     expect(screen.getByText(/AY-042/)).toBeInTheDocument();
   });
 
-  it("renders farmer names", () => {
+  it("renders CPA codes", () => {
     render(<ProvinceGroup province="พระนครศรีอยุธยา" plots={samplePlots} regionCode="AY" />);
-    expect(screen.getByText(/สมชาย/)).toBeInTheDocument();
-    expect(screen.getByText(/พิชัย/)).toBeInTheDocument();
+    expect(screen.getByText(/CPA-AY-001/)).toBeInTheDocument();
+    expect(screen.getByText(/CPA-AY-042/)).toBeInTheDocument();
   });
 
   it("renders total CO2 for the province", () => {

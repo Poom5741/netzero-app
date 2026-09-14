@@ -18,6 +18,7 @@ type PlotRow = {
   plot_code: string;
   deed_no: string;
   area_rai: number;
+  rice_variety: string | null;
   doc_type: string | null;
   season_name: string | null;
   carbon_total: number | null;
@@ -84,6 +85,7 @@ export type FarmerDetail = {
     plot_code: string;
     deed_no: string;
     area_rai: number;
+    rice_variety: string | null;
     doc_type: string | null;
     season_name: string | null;
     carbon_total: number | null;
@@ -172,7 +174,7 @@ export async function getFarmerDetail(
   // 2) Plots with latest season info
   const { results: plotRows } = await db
     .prepare(
-      `SELECT p.id, p.plot_code, p.deed_no, p.area_rai, p.doc_type,
+      `SELECT p.id, p.plot_code, p.deed_no, p.area_rai, p.rice_variety, p.doc_type,
               s.name as season_name,
               (SELECT ce.total_offset_tco2e FROM carbon_estimates ce
                WHERE ce.plot_id = p.id ORDER BY ce.created_at DESC LIMIT 1) as carbon_total
@@ -254,6 +256,7 @@ export async function getFarmerDetail(
       plot_code: r.plot_code,
       deed_no: r.deed_no,
       area_rai: r.area_rai,
+      rice_variety: r.rice_variety,
       doc_type: r.doc_type,
       season_name: r.season_name,
       carbon_total: r.carbon_total,

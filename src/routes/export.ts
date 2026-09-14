@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { parseSessionCookie } from "../auth/session";
 import { estimatesToCSV, getAllEstimates } from "../export/estimates";
+import { getSponsorAreas } from "../sponsor/dashboard";
 
 type Bindings = {
   DB: D1Database;
@@ -21,7 +22,23 @@ exportRoutes.get("/estimates", async (c) => {
 
   const db = c.env.DB;
   const format = c.req.query("format") ?? "json";
-  const estimates = await getAllEstimates(db);
+
+  // T072 — role-based field filtering per AD-FAR-03, AD-ROLE-02:
+  // - Admins: full data (all provinces, all fields)
+  // - Sponsors: CPA-only data (no PII like farmer_name/phone), scoped to their areas
+  // The EstimateExportRow type already excludes PII fields; sponsor scoping is enforced below.
+  let areas: string[] | null = null;
+  if (session.role === "sponsor") {
+    areas = await getSponsorAreas(db, session.userId);
+    if (!areas || areas.length === 0) {
+      return c.json({ error: "Forbidden — no supported areas configured" }, 403);
+    }
+  }
+
+  const estimates = await getAllEstimates(db, areas, {
+    province: c.req.query("province") || undefined,
+    season: c.req.query("season") || undefined,
+  });
 
   if (format === "csv") {
     const csv = estimatesToCSV(estimates);

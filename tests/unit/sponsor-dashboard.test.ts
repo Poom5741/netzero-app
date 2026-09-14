@@ -17,7 +17,7 @@ const PLOT_ROW = {
   plot_id: "plot-1",
   plot_code: "P-001",
   area_rai: 10,
-  farmer_name: "Somchai",
+  cpa_code: "CPA-001",
   province: "Chiang Mai",
   district: "Mueang",
   total_offset_tco2e: 5.2,
@@ -29,7 +29,7 @@ const PLOT_ROW_2 = {
   plot_id: "plot-2",
   plot_code: "P-002",
   area_rai: 8,
-  farmer_name: "Somchai",
+  cpa_code: "CPA-001",
   province: "Chiang Mai",
   district: "Mueang",
   total_offset_tco2e: 3.1,
@@ -41,7 +41,7 @@ const PLOT_ROW_DIFF_PROVINCE = {
   plot_id: "plot-3",
   plot_code: "P-003",
   area_rai: 15,
-  farmer_name: "Wichai",
+  cpa_code: "CPA-003",
   province: "Nakhon Pathom",
   district: "Bang Len",
   total_offset_tco2e: 7.8,
@@ -76,14 +76,14 @@ describe("getPlotsByProvince", () => {
     expect(result).toEqual([]);
   });
 
-  it("includes plot metadata: code, area, farmer, district", async () => {
+  it("includes plot metadata: code, area, cpa_code, district", async () => {
     const db = mockD1([PLOT_ROW]) as unknown as D1Database;
     const result = await getPlotsByProvince(db);
 
     const plot = result[0]?.plots[0];
     expect(plot?.plot_code).toBe("P-001");
     expect(plot?.area_rai).toBe(10);
-    expect(plot?.farmer_name).toBe("Somchai");
+    expect(plot?.cpa_code).toBe("CPA-001");
     expect(plot?.district).toBe("Mueang");
   });
 });

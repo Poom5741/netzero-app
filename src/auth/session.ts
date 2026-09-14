@@ -22,10 +22,10 @@ async function sign(data: string, secret: string): Promise<string> {
     .join("");
 }
 
-export async function createSessionCookie(data: SessionData, secret: string, secure = true): Promise<string> {
+export async function createSessionCookie(data: SessionData, secret: string, secure = true, maxAge = 86400): Promise<string> {
   const payload = btoa(JSON.stringify(data));
   const sig = await sign(payload, secret);
-  const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
+  const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
   return secure ? `${cookie}; Secure` : cookie;
 }
 

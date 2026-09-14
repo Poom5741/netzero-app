@@ -641,11 +641,11 @@ async function handleCalendar(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
   if (lower.includes("ถ่ายรูป") || lower.includes("ถ่าย")) {
-    return { newState: "photo_report" };
+    return await handlePhotoReport(ctx);
   }
 
   if (lower.includes("ดูผล") || lower.includes("ผลลัพธ์")) {
-    return { newState: "results" };
+    return await handleResults(ctx);
   }
 
   // Rich menu postback routing
@@ -653,13 +653,13 @@ async function handleCalendar(ctx: FlowContext): Promise<FlowResult> {
     return { newState: "calendar" };
   }
   if (lower.includes("todo") || lower.includes("งานค้าง")) {
-    return { newState: "results" };
+    return await handleResults(ctx);
   }
   if (lower.includes("field_list") || lower.includes("แปลงนา")) {
     return { newState: "select_plot" };
   }
   if (lower.includes("summary") || lower.includes("สรุปผล")) {
-    return { newState: "results" };
+    return await handleResults(ctx);
   }
   if (lower.includes("contact") || lower.includes("ติดต่อ")) {
     await safePush(ctx, [
@@ -833,8 +833,14 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
   if (lower.includes("ถ่ายรูป") || lower.includes("ถ่าย")) {
+    const plot = ctx.selectedPlotId
+      ? { id: ctx.selectedPlotId }
+      : await ctx.db.prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1").bind(ctx.farmerId).first<{ id: string }>();
+    const season = plot?.id
+      ? await ctx.db.prepare("SELECT season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1").bind(plot.id).first<{ season_id: string }>()
+      : null;
     const cameraUrl = ctx.liffId
-      ? `https://liff.line.me/${ctx.liffId}/camera`
+      ? `https://liff.line.me/${ctx.liffId}/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}`
       : "https://liff.line.me/";
 
     const reminderText = composePhotoReminder({
@@ -857,16 +863,16 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
   }
 
   if (lower.includes("ดูปฏิทิน") || lower.includes("ปฏิทิน")) {
-    return { newState: "calendar" };
+    return await handleCalendar(ctx);
   }
 
   if (lower.includes("ดูผล") || lower.includes("ผลลัพธ์")) {
-    return { newState: "results" };
+    return await handleResults(ctx);
   }
 
   // Show photo status
   await safePush(ctx, [
-    textMessage('📸 สถานะการถ่ายรูป\n\nถ่ายภาพหลักฐานตามรอบที่กำหนด\nพิมพ์ "ถ่ายรูป" เพื่อเปิดกล้อง'),
+    textMessage(' สถานะการถ่ายรูป\n\nถ่ายภาพหลักฐานตามรอบที่กำหนด\nพิมพ์ "ถ่ายรูป" เพื่อเปิดกล้อง'),
   ]);
   return { newState: "photo_report" };
 }
@@ -882,8 +888,12 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
 async function handleResults(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
+  if (lower.includes("ถ่ายรูป") || lower.includes("ถ่าย")) {
+    return await handlePhotoReport(ctx);
+  }
+
   if (lower.includes("ดูปฏิทิน") || lower.includes("ปฏิทิน")) {
-    return { newState: "calendar" };
+    return await handleCalendar(ctx);
   }
 
   if (lower.includes("งานค้าง") || lower.includes("todo")) {

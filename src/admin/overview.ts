@@ -2,11 +2,12 @@
  * Admin overview dashboard — KPI queries, work queue alerts, charts, and tables.
  */
 
-type KpiFilters = { season?: string };
+type KpiFilters = { season?: string; province?: string };
 
 type OverviewKpis = {
   totalFarmers: number;
   totalPlots: number;
+  totalAreaRai: number;
   pendingReviews: number;
   totalCredits: number;
 };
@@ -16,6 +17,9 @@ type WorkQueueAlerts = {
   photoQueue: number;
   missingPhotos: number;
   sfwFallback: number;
+  /** T075 — urgency levels for work queue items (AD-OV-03) */
+  urgentApplications: number;
+  urgentPhotos: number;
 };
 
 type CreditChartItem = {
@@ -41,22 +45,37 @@ export async function getOverviewKpis(
   filters: KpiFilters = {},
 ): Promise<OverviewKpis> {
   let whereClause = "";
+  const conditions: string[] = [];
   const bindValues: unknown[] = [];
 
   if (filters.season) {
-    whereClause = " WHERE ce.season_id = ?";
+    conditions.push("ce.season_id = ?");
     bindValues.push(filters.season);
   }
+  if (filters.province) {
+    conditions.push("f.addr_province = ?");
+    bindValues.push(filters.province);
+  }
+  if (conditions.length > 0) {
+    whereClause = " WHERE " + conditions.join(" AND ");
+  }
+
+  const provinceFilter = filters.province ? ` WHERE addr_province = '${filters.province}'` : "";
 
   const farmerCountRow = await db
-    .prepare("SELECT COUNT(*) as cnt FROM farmers")
+    .prepare(`SELECT COUNT(*) as cnt FROM farmers${provinceFilter}`)
     .bind()
     .first<{ cnt: number }>();
 
   const plotCountRow = await db
-    .prepare("SELECT COUNT(*) as cnt FROM plots")
-    .bind()
+    .prepare(`SELECT COUNT(*) as cnt FROM plots p JOIN farmers f ON p.farmer_id = f.id${provinceFilter ? " WHERE f.addr_province = ?" : ""}`)
+    .bind(...(filters.province ? [filters.province] : []))
     .first<{ cnt: number }>();
+
+  const areaRow = await db
+    .prepare(`SELECT COALESCE(SUM(p.area_rai), 0) as total FROM plots p JOIN farmers f ON p.farmer_id = f.id${provinceFilter ? " WHERE f.addr_province = ?" : ""}`)
+    .bind(...(filters.province ? [filters.province] : []))
+    .first<{ total: number }>();
 
   const pendingReviewRow = await db
     .prepare("SELECT COUNT(*) as cnt FROM photo_evidence WHERE admin_status = 'pending'")
@@ -74,6 +93,7 @@ export async function getOverviewKpis(
   return {
     totalFarmers: farmerCountRow?.cnt ?? 0,
     totalPlots: plotCountRow?.cnt ?? 0,
+    totalAreaRai: areaRow?.total ?? 0,
     pendingReviews: pendingReviewRow?.cnt ?? 0,
     totalCredits: creditRow?.total ?? 0,
   };
@@ -114,11 +134,34 @@ export async function getWorkQueueAlerts(db: D1Database): Promise<WorkQueueAlert
     .bind()
     .first<{ cnt: number }>();
 
+  // T075 — urgent items: applications pending > 3 days, photos pending > 2 days (AD-OV-03)
+  const urgentAppsRow = await db
+    .prepare(
+      `SELECT COUNT(DISTINCT ll.id) as cnt
+       FROM line_links ll
+       LEFT JOIN farmers f ON f.cpa_code IS NOT NULL AND f.id = ll.farmer_id
+       WHERE ll.status = 'pending' AND f.id IS NULL
+         AND datetime(ll.created_at, '+3 days') < datetime('now')`,
+    )
+    .bind()
+    .first<{ cnt: number }>();
+
+  const urgentPhotosRow = await db
+    .prepare(
+      `SELECT COUNT(*) as cnt FROM photo_evidence
+       WHERE admin_status = 'pending'
+         AND datetime(created_at, '+2 days') < datetime('now')`,
+    )
+    .bind()
+    .first<{ cnt: number }>();
+
   return {
     pendingApplications: pendingAppsRow?.cnt ?? 0,
     photoQueue: photoQueueRow?.cnt ?? 0,
     missingPhotos: missingPhotosRow?.cnt ?? 0,
     sfwFallback: sfwFallbackRow?.cnt ?? 0,
+    urgentApplications: urgentAppsRow?.cnt ?? 0,
+    urgentPhotos: urgentPhotosRow?.cnt ?? 0,
   };
 }
 

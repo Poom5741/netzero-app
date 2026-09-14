@@ -177,7 +177,15 @@ function GhgSourceTable({ sources }: { sources: GhgSourceRow[] }) {
           <tbody>
             {sources.map((s) => (
               <tr key={s.source} className="border-b border-surface-variant/50 last:border-0">
-                <td className="py-2 text-on-surface">{s.source}</td>
+                <td className="py-2 text-on-surface">
+                  {s.source}
+                  {s.source.toLowerCase().includes("methane") || s.source.toLowerCase().includes("ch₄") || s.source.toLowerCase().includes("ch4") ? (
+                    <span className="block text-label-sm text-outline">แหล่งหลักของความแตกต่างคาร์บอนเครดิต</span>
+                  ) : null}
+                  {s.source.toLowerCase().includes("fertil") ? (
+                    <span className="block text-label-sm text-outline">ไม่มีการเปลี่ยนแปลงระหว่างพื้นฐานและโครงการ</span>
+                  ) : null}
+                </td>
                 <td className="py-2 text-right text-on-surface-variant">{formatTons(s.baseline)}</td>
                 <td className="py-2 text-right text-on-surface-variant">{formatTons(s.project)}</td>
                 <td className="py-2 text-right text-primary font-medium">{formatTons(s.reduction)}</td>
@@ -255,6 +263,8 @@ export default function SponsorDashboardPage() {
   const [seasonCredits, setSeasonCredits] = useState<SeasonCreditRow[]>([]);
   const [profile, setProfile] = useState<SponsorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filterProvince, setFilterProvince] = useState("");
+  const [filterSeason, setFilterSeason] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -306,6 +316,14 @@ export default function SponsorDashboardPage() {
     setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
+  const filteredGroups = filterProvince
+    ? groups.filter((g) => g.province === filterProvince)
+    : groups;
+
+  const filteredSeasonCredits = filterSeason
+    ? seasonCredits.filter((c) => c.season_id === filterSeason)
+    : seasonCredits;
+
   const isEmpty = !loading && totalPlots === 0 && farmers.length === 0;
 
   const userName = profile?.user?.name ?? profile?.user?.email ?? "ผู้สนับสนุน";
@@ -339,17 +357,29 @@ export default function SponsorDashboardPage() {
                 <p className="text-body-lg text-on-surface-variant max-w-2xl mt-2">
                   ตรวจสอบผลกระทบของคุณแบบเรียลไทม์ ติดตามการลดการปล่อยก๊าซเรือนกระจกจากแปลงเกษตรที่ได้รับการสนับสนุน
                 </p>
-                <p className="text-label-md text-outline mt-1">พื้นที่รับผิดชอบ: {areaLabel}</p>
+                <p className="text-label-md text-outline mt-1">พื้นที่รับผิดชอบ: {areaLabel} · มาตรฐาน T-VER-P-METH-13-08</p>
               </div>
-              <div className="mt-4 md:mt-0 flex gap-4">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-full"
+              <div className="mt-4 md:mt-0 flex gap-4 flex-wrap">
+                <select
+                  value={filterProvince}
+                  onChange={(e) => setFilterProvince(e.target.value)}
+                  className="rounded-full border border-surface-variant bg-surface-container px-4 py-2 text-label-md text-on-surface"
                 >
-                  <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                  {`ไตรมาส ${Math.ceil((new Date().getMonth() + 1) / 3)}/${new Date().getFullYear() + 543}`}
-                </Button>
+                  <option value="">ทุกจังหวัด</option>
+                  {groups.map((g) => (
+                    <option key={g.province} value={g.province}>{g.province}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterSeason}
+                  onChange={(e) => setFilterSeason(e.target.value)}
+                  className="rounded-full border border-surface-variant bg-surface-container px-4 py-2 text-label-md text-on-surface"
+                >
+                  <option value="">ทุกฤดู</option>
+                  {seasonCredits.map((c) => (
+                    <option key={c.season_id} value={c.season_id}>{c.season_name}</option>
+                  ))}
+                </select>
                 <Button
                   variant="primary"
                   size="sm"
@@ -383,9 +413,17 @@ export default function SponsorDashboardPage() {
                     <span className="text-body-lg text-on-surface-variant">ตัน CO₂eq</span>
                   </div>
                   <p className="text-label-md text-outline mt-1">
-                    ครอบคลุม {summary.totalAreaRai} ไร่ / {summary.totalHouseholds} ครัวเรือน / {totalPlots} แปลง
+                    ครอบคลุม {summary.totalAreaRai} ไร่ ({(summary.totalAreaRai * 0.16).toFixed(1)} เฮกตาร์) / {summary.totalHouseholds} ครัวเรือน / {totalPlots} แปลง
+                  </p>
+                  <p className="text-label-sm text-outline mt-1">
+                    ฤดูปลูก: นาปี (พ.ย. – เม.ย.) · ช่วงรับรอง: ปีรายงานปัจจุบัน · การประมาณการอาจเปลี่ยนแปลงเมื่อหลักฐานไม่ครบถ้วน
                   </p>
                 </div>
+
+                {/* Household methodology note */}
+                <p className="text-label-sm text-outline mb-4 -mt-4 relative z-10">
+                  * จำนวนครัวเรือนนับจากจำนวน CPA code ที่ไม่ซ้ำในพื้นที่รับผิดชอบ
+                </p>
 
                 {/* KPI Cards Row */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10 relative z-10">
@@ -411,7 +449,7 @@ export default function SponsorDashboardPage() {
                     suffix="ไร่"
                     icon="square_foot"
                     color="secondary"
-                    trend={`${summary.totalHouseholds} ครัวเรือน`}
+                    trend={`${(summary.totalAreaRai * 0.16).toFixed(1)} เฮกตาร์ · ${summary.totalHouseholds} ครัวเรือน`}
                   />
                   <KpiCard
                     title="การลงทุนทั้งหมด"
@@ -434,7 +472,7 @@ export default function SponsorDashboardPage() {
                         <p className="text-on-surface-variant">กำลังโหลดข้อมูล...</p>
                       </div>
                     ) : (
-                      groups.map((group) => (
+                      filteredGroups.map((group) => (
                         <ProvinceGroup
                           key={group.province}
                           province={group.province}
@@ -445,7 +483,21 @@ export default function SponsorDashboardPage() {
                     )}
 
                     <GhgSourceTable sources={ghgSources} />
-                    <SeasonChart credits={seasonCredits} />
+
+                    {/* Estimate transparency note */}
+                    <div className="bg-surface-container-lowest p-4 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <span className="material-symbols-outlined text-outline text-[20px] mt-0.5">info</span>
+                        <div>
+                          <p className="text-label-md text-on-surface font-medium">ความโปร่งใสของการประมาณการ</p>
+                          <p className="text-body-sm text-on-surface-variant mt-1">
+                            การประมาณการอาจเปลี่ยนแปลงได้เมื่อหลักฐานยังไม่ครบถ้วน โดยใช้ปัจจัยการจัดการน้ำแบบอนุรักษ์นิยม (SF_w = 0.71)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <SeasonChart credits={filteredSeasonCredits} />
                   </div>
 
                   {/* Right Column: Live Calc + Progress + Impact */}

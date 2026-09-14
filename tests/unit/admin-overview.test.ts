@@ -48,10 +48,11 @@ function mockD1Sequence(rows: Record<string, unknown>[]) {
 
 describe("getOverviewKpis", () => {
   it("returns total farmers, total plots, pending reviews, and total credits", async () => {
-    // getOverviewKpis runs 4 sequential queries; mock returns per-query row
+    // getOverviewKpis runs 5 sequential queries; mock returns per-query row
     const db = mockD1Sequence([
       { cnt: 42 },         // farmers count
       { cnt: 87 },         // plots count
+      { total: 100 },      // total area
       { cnt: 15 },         // pending reviews count
       { total: 1234.56 },  // credits sum
     ]) as unknown as D1Database;
@@ -66,7 +67,9 @@ describe("getOverviewKpis", () => {
     const db = mockD1Sequence([
       { cnt: 0 },
       { cnt: 0 },
+      { total: 0 },
       { cnt: 0 },
+      { total: 0 },
       { total: 0 },
     ]) as unknown as D1Database;
     const result = await getOverviewKpis(db);

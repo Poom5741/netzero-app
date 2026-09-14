@@ -120,6 +120,147 @@ liffRoutes.get("/", (c) => {
   return c.html(html);
 });
 
+// Camera page — opens device camera for photo evidence
+liffRoutes.get("/camera", (c) => {
+  const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ถ่ายรูป — NetZeroCarbon</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;height:100vh;display:flex;flex-direction:column}
+    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .header-icon{font-size:24px}
+    .header-title{font-size:16px;font-weight:600}
+    .header-sub{font-size:11px;opacity:.85}
+    .camera-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px}
+    video{width:100%;max-width:400px;border-radius:16px;background:#000;object-fit:cover}
+    canvas{display:none}
+    .btn-row{display:flex;gap:12px}
+    .btn{padding:14px 28px;border:none;border-radius:24px;font-size:16px;font-weight:600;cursor:pointer}
+    .btn-primary{background:#06c755;color:#fff}
+    .btn-secondary{background:#fff;color:#333;border:1px solid #ddd}
+    .preview{width:100%;max-width:400px;border-radius:16px;margin-top:8px}
+    .status{font-size:14px;color:#666;text-align:center}
+    #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
+    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    @keyframes sp{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div id="loading"><div class="spin"></div><div>กำลังเชื่อมต่อ...</div></div>
+  <div id="app" style="display:none;flex-direction:column;height:100vh;">
+    <div class="header">
+      <div class="header-icon">📸</div>
+      <div><div class="header-title">ถ่ายรูปหลักฐาน</div><div class="header-sub">NetZeroCarbon</div></div>
+    </div>
+    <div class="camera-wrap">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas"></canvas>
+      <img id="preview" class="preview" style="display:none">
+      <div class="btn-row">
+        <button class="btn btn-primary" id="captureBtn">📷 ถ่ายรูป</button>
+        <button class="btn btn-secondary" id="retakeBtn" style="display:none">🔄 ถ่ายใหม่</button>
+        <button class="btn btn-primary" id="sendBtn" style="display:none">✅ ส่งรูป</button>
+      </div>
+      <div class="status" id="status">กำลังเปิดกล้อง...</div>
+    </div>
+  </div>
+  <script>
+    let stream=null, capturedBlob=null;
+    const video=document.getElementById('video');
+    const canvas=document.getElementById('canvas');
+    const preview=document.getElementById('preview');
+    const captureBtn=document.getElementById('captureBtn');
+    const retakeBtn=document.getElementById('retakeBtn');
+    const sendBtn=document.getElementById('sendBtn');
+    const status=document.getElementById('status');
+
+    async function init(){
+      try{
+        const liffId="${c.env.LIFF_ID || ''}";
+        if(liffId){await liff.init({liffId})}
+      }catch(e){}
+      document.getElementById('loading').style.display='none';
+      document.getElementById('app').style.display='flex';
+      try{
+        stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+        video.srcObject=stream;
+        status.textContent='พร้อมถ่ายรูป — ชี้กล้องไปที่ท่อ PVC แล้วกดถ่ายรูป';
+      }catch(e){
+        status.textContent='ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการเข้าถึงกล้อง';
+      }
+    }
+
+    captureBtn.onclick=()=>{
+      if(!stream) return;
+      canvas.width=video.videoWidth;
+      canvas.height=video.videoHeight;
+      canvas.getContext('2d').drawImage(video,0,0);
+      canvas.toBlob(blob=>{
+        capturedBlob=blob;
+        preview.src=URL.createObjectURL(blob);
+        preview.style.display='block';
+        video.style.display='none';
+        captureBtn.style.display='none';
+        retakeBtn.style.display='inline-block';
+        sendBtn.style.display='inline-block';
+        status.textContent='ถ่ายรูปแล้ว — กดส่งรูปเพื่อบันทึก';
+      },'image/jpeg',0.9);
+    };
+
+    retakeBtn.onclick=()=>{
+      preview.style.display='none';
+      video.style.display='block';
+      captureBtn.style.display='inline-block';
+      retakeBtn.style.display='none';
+      sendBtn.style.display='none';
+      capturedBlob=null;
+      status.textContent='พร้อมถ่ายรูป — ชี้กล้องไปที่ท่อ PVC แล้วกดถ่ายรูป';
+    };
+
+    sendBtn.onclick=async()=>{
+      if(!capturedBlob) return;
+      status.textContent='กำลังส่งรูป...';
+      sendBtn.disabled=true;
+      try{
+        const plotId="${c.req.query('plot_id') || 'plot-001'}";
+        const seasonId="${c.req.query('season_id') || '2568-napi'}";
+
+        const fd=new FormData();
+        fd.append('photo',capturedBlob,'photo.jpg');
+        fd.append('plot_id',plotId);
+        fd.append('season_id',seasonId);
+        fd.append('gps_lat','0');
+        fd.append('gps_lng','0');
+        fd.append('photo_type','wetdry');
+        fd.append('taken_at',new Date().toISOString());
+        const r=await fetch('/api/photo/upload',{method:'POST',body:fd});
+        const d=await r.json();
+        if(d.id||d.ok){
+          status.textContent='✅ ส่งรูปเรียบร้อยแล้ว!';
+          sendBtn.style.display='none';
+          retakeBtn.style.display='none';
+        }else{
+          status.textContent='❌ '+ (d.error||'ส่งรูปไม่สำเร็จ');
+          sendBtn.disabled=false;
+        }
+      }catch(e){
+        status.textContent=' เกิดข้อผิดพลาด';
+        sendBtn.disabled=false;
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded',init);
+  </script>
+</body>
+</html>`;
+  return c.html(html);
+});
+
 // Chat API endpoint
 liffRoutes.post("/api/chat", async (c) => {
   try {
@@ -164,6 +305,23 @@ liffRoutes.post("/api/chat", async (c) => {
 
     if (!link) {
       return c.json({ error: "Failed to create link" }, 500);
+    }
+
+    // Special case: return context for camera upload
+    if (text === "__context__") {
+      const plot = await db
+        .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+        .bind(link.farmer_id)
+        .first<{ id: string }>();
+      const season = await db
+        .prepare("SELECT season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1")
+        .bind(plot?.id)
+        .first<{ season_id: string }>();
+      return c.json({
+        plot_id: plot?.id || "plot-001",
+        season_id: season?.season_id || "2568-napi",
+        farmer_id: link.farmer_id,
+      });
     }
 
     // Handle via state machine (API mode — returns reply text)

@@ -101,7 +101,7 @@ describe("getSponsorFarmers", () => {
       "f.id AS farmer_id": [
         {
           farmer_id: "f1",
-          farmer_name: "สมชาย",
+          cpa_code: "CPA001",
           province: "เชียงใหม่",
           plot_count: 2,
           total_tco2e: 15.5,
@@ -110,7 +110,7 @@ describe("getSponsorFarmers", () => {
         },
         {
           farmer_id: "f2",
-          farmer_name: "สมหญิง",
+          cpa_code: "CPA002",
           province: "เชียงราย",
           plot_count: 1,
           total_tco2e: 7.2,
@@ -123,7 +123,7 @@ describe("getSponsorFarmers", () => {
     const result = await getSponsorFarmers(db);
     expect(result).toHaveLength(2);
     expect(result[0]!.farmer_id).toBe("f1");
-    expect(result[0]!.farmer_name).toBe("สมชาย");
+    expect(result[0]!.cpa_code).toBe("CPA001");
     expect(result[0]!.plotCount).toBe(2);
     expect(result[0]!.totalTCO2e).toBe(15.5);
     expect(result[0]!.progressPercent).toBe(80); // 8/10 * 100
@@ -143,10 +143,10 @@ describe("getSponsorFarmers", () => {
       "f.id AS farmer_id": [
         {
           farmer_id: "f1",
-          farmer_name: "ทดสอบ",
-          province: "กรุงเทพ",
+          cpa_code: "CPA-TEST",
+          province: "เชียงใหม่",
           plot_count: 1,
-          total_tco2e: 0,
+          total_tco2e: 5.0,
           verified_photos: 0,
           total_photos: 0,
         },

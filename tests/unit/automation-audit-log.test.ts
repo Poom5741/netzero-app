@@ -20,7 +20,7 @@ function mockD1() {
       return {
         bind(...args: unknown[]) {
           if (sql.includes("INSERT INTO automation_audit_log")) {
-            const cols = ["id", "photo_evidence_id", "actor_type", "action", "confidence", "reason", "created_at"];
+            const cols = ["id", "photo_evidence_id", "actor_type", "actor_id", "action", "confidence", "reason", "field_name", "old_value", "new_value", "created_at"];
             const row: Record<string, unknown> = {};
             cols.forEach((col, i) => { row[col] = args[i] ?? null; });
             store.push(row);

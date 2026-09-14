@@ -34,6 +34,10 @@ export interface EstimationInput {
   a_burn_baseline: number; // area burned (rai) — baseline
   a_burn_project: number; // area burned (rai) — project
   ef_burn_kg_per_rai: number; // EF for straw burning (kg CO2e / rai)
+
+  // ── Uncertainty ────────────────────────────────────────────────
+  /** T065 — optional uncertainty deduction percentage (U_d). Default 15. */
+  u_d_pct?: number;
 }
 
 /**
@@ -54,6 +58,9 @@ export interface EstimationResult {
   sf_p: number;
   sf_o: number;
   nitrogen_total_kg_per_rai: number;
+  /** T065 — uncertainty deduction (U_d %) applied to gross offset (AD-CALC-04) */
+  uncertainty_deduction_pct: number;
+  net_offset_tco2e: number;
 }
 
 /**
@@ -109,6 +116,12 @@ export function runEstimation(input: EstimationInput): EstimationResult {
   const blTotal = baseline_ch4 + baseline_n2o + baseline_co2 + baseline_burning;
   const pjTotal = project_ch4 + project_n2o + project_co2 + project_burning;
 
+  const grossOffset = blTotal - pjTotal;
+  // T065 — apply uncertainty deduction (U_d %) per AD-CALC-04.
+  // Default 15% matches settings.DEFAULT_CONSTANTS.u_d.
+  const u_d = input.u_d_pct ?? 15;
+  const netOffset = grossOffset * (1 - u_d / 100);
+
   return {
     baseline_ch4,
     project_ch4,
@@ -118,11 +131,13 @@ export function runEstimation(input: EstimationInput): EstimationResult {
     project_co2,
     baseline_burning,
     project_burning,
-    total_offset_tco2e: blTotal - pjTotal,
+    total_offset_tco2e: grossOffset,
     sf_w_baseline: input.sf_w_baseline,
     sf_w_project: input.sf_w_project,
     sf_p: input.sf_p,
     sf_o: input.sf_o,
     nitrogen_total_kg_per_rai: input.nitrogen_baseline,
+    uncertainty_deduction_pct: u_d,
+    net_offset_tco2e: netOffset,
   };
 }

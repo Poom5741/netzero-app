@@ -13,6 +13,10 @@ type PhotoDetail = {
   ai_confidence: number | null;
   admin_status: string | null;
   admin_reason: string | null;
+  /** T071 — photo_type (prepare/wetdry/harvest) for evidence crop/round (AD-EVID-01) */
+  photo_type: string | null;
+  /** T071 — water_state (flooded/dry) for wetdry round classification */
+  water_state: string | null;
 };
 
 export async function getPhotoDetail(db: D1Database, photoId: string): Promise<PhotoDetail | null> {
@@ -21,7 +25,8 @@ export async function getPhotoDetail(db: D1Database, photoId: string): Promise<P
       `SELECT id, plot_id, season_id, photo_url,
               gps_lat, gps_lng, gps_accuracy, taken_at,
               ai_status, ai_label, ai_reason, ai_confidence,
-              admin_status, admin_reason
+              admin_status, admin_reason,
+              photo_type, water_state
        FROM photo_evidence WHERE id = ?`,
     )
     .bind(photoId)
