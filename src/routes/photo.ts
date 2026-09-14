@@ -51,7 +51,9 @@ async function getCLIPClassifier(): Promise<CLIPClassifier | null> {
 function toClassifyResult(clipResult: { label: string; confidence: number; reason: string }): ClassifyResult {
   return {
     valid: clipResult.label !== "invalid",
-    water_state: clipResult.label === "invalid" ? "not-applicable" : clipResult.label,
+    water_state: clipResult.label === "flooded" || clipResult.label === "dry"
+      ? clipResult.label
+      : "not-applicable",
     confidence: clipResult.confidence,
     reason: clipResult.reason,
   };
@@ -84,6 +86,7 @@ photoRoutes.get("/evidence/:key", async (c) => {
 });
 
 photoRoutes.post("/api/photo/upload", async (c) => {
+
   const formData = await c.req.formData();
   const file = formData.get("photo");
   const plotId = formData.get("plot_id");
@@ -128,7 +131,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
 
     if (temporalResult.status === "unknown") {
       // Missing EXIF → flag for admin review
-      const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const photoId = `photo_${crypto.randomUUID()}`;
       const key = `evidence/${photoId}.jpg`;
       await c.env.R2.put(key, file);
 
@@ -199,6 +202,14 @@ photoRoutes.post("/api/photo/upload", async (c) => {
 
       // Handle auto_reject (invalid photos) - refuse with 200
       if (autoVerifyResult.decision === "auto_reject") {
+        const photoId = `photo_${crypto.randomUUID()}`;
+        await writeAuditEntry(c.env.DB, {
+          photoId,
+          actorType: "machine",
+          action: "refused",
+          confidence: classification.confidence,
+          reason: autoVerifyResult.reason,
+        });
         return c.json(
           {
             verdict: "refused" as Verdict,
@@ -211,7 +222,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
 
       // Check threshold - if below threshold, flag for admin review
       if (classification.confidence < config.confidenceThreshold) {
-        const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        const photoId = `photo_${crypto.randomUUID()}`;
         const key = `evidence/${photoId}.jpg`;
         await c.env.R2.put(key, file);
 
@@ -258,7 +269,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
         );
       }
 
-      const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const photoId = `photo_${crypto.randomUUID()}`;
       const key = `evidence/${photoId}.jpg`;
 
       if (autoVerifyResult.decision === "auto_verify") {
@@ -360,7 +371,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
   }
 
   // Default: queue for human review (prepare, harvest, or kill-switch wetdry)
-  const photoId = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const photoId = `photo_${crypto.randomUUID()}`;
   const key = `evidence/${photoId}.jpg`;
   await c.env.R2.put(key, file);
 
@@ -380,4 +391,8 @@ photoRoutes.post("/api/photo/upload", async (c) => {
     },
     201,
   );
+});
+
+photoRoutes.post("/photo/upload", async (c) => {
+  return photoRoutes.fetch(new Request(new URL("/api/photo/upload", c.req.url), c.req.raw), c.env);
 });

@@ -155,12 +155,17 @@ CREATE TABLE IF NOT EXISTS ai_events (
 );
 
 -- Users table (admin/sponsor)
+-- H4 note: CHECK constraint only allows ('admin', 'sponsor').
+-- D1/SQLite cannot ALTER CHECK constraints. Additional roles (field_agent,
+-- auditor, researcher) must be added by recreating the table in a future
+-- migration. The middleware already supports multi-role via string[].
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   role TEXT CHECK(role IN ('admin', 'sponsor')),
   name TEXT,
+  otp_secret TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -168,6 +173,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_plots_farmer ON plots(farmer_id);
 CREATE INDEX IF NOT EXISTS idx_line_links_farmer ON line_links(farmer_id);
+CREATE INDEX IF NOT EXISTS idx_line_links_status ON line_links(status);
 CREATE INDEX IF NOT EXISTS idx_photo_evidence_plot ON photo_evidence(plot_id);
 CREATE INDEX IF NOT EXISTS idx_fertilizer_entries_plot ON fertilizer_entries(plot_id);
 CREATE INDEX IF NOT EXISTS idx_season_inputs_plot ON season_inputs(plot_id);
@@ -184,9 +190,11 @@ ALTER TABLE photo_evidence ADD COLUMN audit_sample INTEGER DEFAULT 0;
 ALTER TABLE photo_evidence ADD COLUMN superseded INTEGER DEFAULT 0;
 
 -- Automation audit log (ADR-0001 traceability)
+-- C2 fix: photo_evidence_id is nullable — non-photo audit entries (admin actions)
+-- insert NULL here rather than a bogus FK value.
 CREATE TABLE IF NOT EXISTS automation_audit_log (
   id TEXT PRIMARY KEY,
-  photo_evidence_id TEXT NOT NULL REFERENCES photo_evidence(id),
+  photo_evidence_id TEXT REFERENCES photo_evidence(id),
   actor_type TEXT CHECK(actor_type IN ('machine', 'admin')) NOT NULL,
   action TEXT NOT NULL,
   confidence REAL,
@@ -253,3 +261,61 @@ CREATE TABLE IF NOT EXISTS farmer_trust (
   verified_count INTEGER NOT NULL DEFAULT 0,
   rejected_count INTEGER NOT NULL DEFAULT 0
 );
+
+-- Issue #0003: Application documents (OB-13 document upload)
+CREATE TABLE IF NOT EXISTS application_documents (
+  id TEXT PRIMARY KEY,
+  farmer_id TEXT NOT NULL REFERENCES farmers(id),
+  doc_type TEXT NOT NULL CHECK(doc_type IN ('DOC-01', 'DOC-03', 'DOC-06', 'DOC-07')),
+  r2_key TEXT NOT NULL,
+  submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+  reviewed_at TEXT,
+  review_status TEXT DEFAULT 'pending' CHECK(review_status IN ('pending', 'approved', 'rejected')),
+  UNIQUE(farmer_id, doc_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_application_documents_farmer ON application_documents(farmer_id);
+
+-- Issue #0003: Sponsor area scoping on users table
+ALTER TABLE users ADD COLUMN sponsor_id TEXT;
+ALTER TABLE users ADD COLUMN areas TEXT; -- JSON array of province names, e.g. '["สุพรรณบุรี"]'
+
+-- Issue #0003: Generalize audit log (was photo-only, now covers all admin actions)
+-- Add new columns; existing photo_evidence_id column stays for backward compatibility
+ALTER TABLE automation_audit_log ADD COLUMN entity_type TEXT; -- 'photo_evidence', 'farmer', 'plot', 'season', 'user', 'setting'
+ALTER TABLE automation_audit_log ADD COLUMN entity_id TEXT;
+ALTER TABLE automation_audit_log ADD COLUMN field_name TEXT;
+ALTER TABLE automation_audit_log ADD COLUMN old_value TEXT;
+ALTER TABLE automation_audit_log ADD COLUMN new_value TEXT;
+
+-- Issue #0003: CPA code on farmers table (auto-generated on application approval)
+ALTER TABLE farmers ADD COLUMN cpa_code TEXT UNIQUE;
+
+-- Task 02: OTP TOTP secret for admin/sponsor MFA
+ALTER TABLE users ADD COLUMN otp_secret TEXT;
+
+-- C2 fix: Recreate automation_audit_log with nullable photo_evidence_id
+-- D1/SQLite does not support ALTER COLUMN, so recreate the table.
+-- On fresh databases this is redundant but harmless; on existing databases
+-- it migrates the NOT NULL column to nullable.
+DROP TABLE IF EXISTS automation_audit_log_new;
+CREATE TABLE automation_audit_log_new (
+  id TEXT PRIMARY KEY,
+  photo_evidence_id TEXT REFERENCES photo_evidence(id),
+  actor_type TEXT CHECK(actor_type IN ('machine', 'admin')) NOT NULL,
+  action TEXT NOT NULL,
+  confidence REAL,
+  reason TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  entity_type TEXT,
+  entity_id TEXT,
+  field_name TEXT,
+  old_value TEXT,
+  new_value TEXT
+);
+INSERT OR IGNORE INTO automation_audit_log_new
+  (id, photo_evidence_id, actor_type, action, confidence, reason, created_at, entity_type, entity_id, field_name, old_value, new_value)
+SELECT id, photo_evidence_id, actor_type, action, confidence, reason, created_at, entity_type, entity_id, field_name, old_value, new_value
+FROM automation_audit_log;
+DROP TABLE IF EXISTS automation_audit_log;
+ALTER TABLE automation_audit_log_new RENAME TO automation_audit_log;

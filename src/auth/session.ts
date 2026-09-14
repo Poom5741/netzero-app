@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-
 export type SessionData = {
   userId: string;
   role: string;
@@ -8,28 +6,39 @@ export type SessionData = {
 
 const COOKIE_NAME = "nzc_session";
 
-function sign(data: string, secret: string): string {
-  return createHmac("sha256", secret).update(data).digest("hex");
+async function sign(data: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
-export function createSessionCookie(data: SessionData, secret: string, secure = true): string {
+export async function createSessionCookie(data: SessionData, secret: string, secure = true): Promise<string> {
   const payload = btoa(JSON.stringify(data));
-  const sig = sign(payload, secret);
-  const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax`;
+  const sig = await sign(payload, secret);
+  const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
   return secure ? `${cookie}; Secure` : cookie;
 }
 
-export function parseSessionCookie(raw: string, secret: string): SessionData | null {
+export async function parseSessionCookie(raw: string, secret: string): Promise<SessionData | null> {
   if (!raw) return null;
   const dotIdx = raw.lastIndexOf(".");
   if (dotIdx === -1) return null;
   const payload = raw.slice(0, dotIdx);
   const sig = raw.slice(dotIdx + 1);
   if (!payload || !sig) return null;
-  const expected = sign(payload, secret);
-  const sigBuf = Buffer.from(sig, "hex");
-  const expectedBuf = Buffer.from(expected, "hex");
-  if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null;
+  const expected = await sign(payload, secret);
+  // Simple string comparison for hex signatures
+  if (sig !== expected) return null;
   try {
     return JSON.parse(atob(payload)) as SessionData;
   } catch {

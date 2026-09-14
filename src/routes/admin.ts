@@ -4,10 +4,16 @@
 
 import { Hono } from "hono";
 import { getDecisionHistory } from "../admin/audit-log";
+import { approveApplication, getApplications, rejectApplication } from "../admin/applications";
+import { getFarmerDetail, getFarmerAuditLog } from "../admin/farmer-detail";
+import { getOverviewKpis, getWorkQueueAlerts, getCreditChart, getGhgSourceTable, getProvinceTable } from "../admin/overview";
+import { getReports, logReportDownload } from "../admin/reports";
+import { getSponsors } from "../admin/sponsors";
+import { getSettings, updateSettings } from "../admin/settings";
 import { getPrecisionStat } from "../admin/precision";
 import { getReviewQueue } from "../admin/queue";
 import { reviewPhoto } from "../admin/review";
-import { parseSessionCookie } from "../auth/session";
+import { requireRole } from "../auth/middleware";
 
 type Bindings = {
   DB: D1Database;
@@ -17,52 +23,17 @@ type Bindings = {
 
 export const adminRoutes = new Hono<{ Bindings: Bindings }>();
 
-// Auth helper — supports session cookie OR Basic Auth (for cross-domain frontend)
-async function requireAdmin(
-  c: { req: { header: (name: string) => string | undefined } },
-  secret: string,
-  db?: D1Database,
-) {
-  // Try session cookie first
-  const cookieHeader = c.req.header("Cookie") ?? "";
-  const match = cookieHeader.match(/nzc_session=([^;]+)/);
-  if (match?.[1]) {
-    const session = parseSessionCookie(match[1], secret);
-    if (session?.role === "admin") return session;
-  }
-
-  // Fallback: Basic Auth header (for cross-domain frontend)
-  const authHeader = c.req.header("Authorization") ?? "";
-  if (authHeader.startsWith("Basic ")) {
-    const decoded = atob(authHeader.slice(6));
-    const [email, password] = decoded.split(":");
-    if (email && password && db) {
-      // Dev bypass — skip password verification
-      if (password === "bypass") {
-        const user = await db.prepare("SELECT id, email, role FROM users WHERE email = ?").bind(email).first<{ id: string; email: string; role: string }>();
-        if (user) {
-          return { userId: user.id, role: user.role as "admin" | "sponsor", email: user.email };
-        }
-      }
-      const user = await db.prepare("SELECT id, email, role FROM users WHERE email = ?").bind(email).first<{ id: string; email: string; role: string }>();
-      if (user && user.role === "admin") {
-        const { verifyPassword } = await import("../auth/password");
-        const fullUser = await db.prepare("SELECT password_hash FROM users WHERE email = ?").bind(email).first<{ password_hash: string }>();
-        if (fullUser && await verifyPassword(password, fullUser.password_hash)) {
-          return { userId: user.id, role: user.role as "admin", email: user.email };
-        }
-      }
-    }
-  }
-
-  return null;
-}
+// Require admin role for all /admin/* and /api/admin/* routes
+adminRoutes.use("/admin/*", async (c, next) => {
+  return requireRole("admin", c.env.SECRET)(c, next);
+});
+adminRoutes.use("/api/admin/*", async (c, next) => {
+  return requireRole("admin", c.env.SECRET)(c, next);
+});
 
 // GET /admin/review — Photo review queue
 adminRoutes.get("/admin/review", async (c) => {
   const db = c.env.DB;
-  const session = await requireAdmin(c, c.env.SECRET, db);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const filter = c.req.query("status") || undefined;
   const queue = await getReviewQueue(db, filter ? { ai_status: filter } : {});
 
@@ -178,8 +149,6 @@ adminRoutes.get("/admin/review", async (c) => {
 // GET /api/admin/review — Photo review queue (JSON API)
 adminRoutes.get("/api/admin/review", async (c) => {
   const db = c.env.DB;
-  const session = await requireAdmin(c, c.env.SECRET, db);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const filter = c.req.query("status") || undefined;
   const queue = await getReviewQueue(db, filter ? { ai_status: filter } : {});
 
@@ -189,8 +158,6 @@ adminRoutes.get("/api/admin/review", async (c) => {
 // GET /api/admin/precision — Pre-verify precision stat
 adminRoutes.get("/api/admin/precision", async (c) => {
   const db = c.env.DB;
-  const session = await requireAdmin(c, c.env.SECRET, db);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const stat = await getPrecisionStat(db);
 
   return c.json(stat);
@@ -199,8 +166,6 @@ adminRoutes.get("/api/admin/precision", async (c) => {
 // GET /api/admin/audit/:photoId — Decision history for a photo (JSON)
 adminRoutes.get("/api/admin/audit/:photoId", async (c) => {
   const db = c.env.DB;
-  const session = await requireAdmin(c, c.env.SECRET, db);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const photoId = c.req.param("photoId");
   const history = await getDecisionHistory(db, photoId);
   return c.json(history);
@@ -209,8 +174,6 @@ adminRoutes.get("/api/admin/audit/:photoId", async (c) => {
 // GET /admin/audit/:photoId — Decision history HTML view
 adminRoutes.get("/admin/audit/:photoId", async (c) => {
   const db = c.env.DB;
-  const session = await requireAdmin(c, c.env.SECRET, db);
-  if (!session) return c.html("<!DOCTYPE html><html><body>Unauthorized</body></html>", 401);
   const photoId = c.req.param("photoId");
   const history = await getDecisionHistory(db, photoId);
 
@@ -296,8 +259,6 @@ adminRoutes.get("/admin/audit/:photoId", async (c) => {
 // POST /api/admin/review/:photoId — Review a photo
 adminRoutes.post("/api/admin/review/:photoId", async (c) => {
   const db = c.env.DB;
-  const session = await requireAdmin(c, c.env.SECRET, db);
-  if (!session) return c.json({ error: "Unauthorized" }, 401);
   const photoId = c.req.param("photoId");
   const body = await c.req.json<{ status: string; reason?: string }>();
 
@@ -330,4 +291,187 @@ adminRoutes.get("/api/photo/:photoId", async (c) => {
   return new Response(obj.body, {
     headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" },
   });
+});
+
+// ── Application Review API ─────────────────────────────────────────────
+
+// POST /api/admin/applications — List applications (pending/verified/rejected)
+adminRoutes.post("/api/admin/applications", async (c) => {
+  const db = c.env.DB;
+  const body = await c.req.json<{ status?: string }>().catch(() => ({ status: undefined as string | undefined }));
+  const apps = await getApplications(db, body.status);
+  return c.json(apps);
+});
+
+// GET /api/admin/applications — List applications (query param variant)
+adminRoutes.get("/api/admin/applications", async (c) => {
+  const db = c.env.DB;
+  const status = c.req.query("status") || undefined;
+  const apps = await getApplications(db, status);
+  return c.json(apps);
+});
+
+// POST /api/admin/applications/:id/approve — Approve application + CPA code
+adminRoutes.post("/api/admin/applications/:id/approve", async (c) => {
+  const db = c.env.DB;
+  const linkId = c.req.param("id");
+  const result = await approveApplication(db, linkId);
+  if (result.success) {
+    return c.json({ ok: true, cpa_code: result.cpa_code });
+  }
+  return c.json({ error: result.error }, 400);
+});
+
+// POST /api/admin/applications/:id/reject — Reject application
+adminRoutes.post("/api/admin/applications/:id/reject", async (c) => {
+  const db = c.env.DB;
+  const linkId = c.req.param("id");
+  const body = await c.req.json<{ reason: string }>();
+  const result = await rejectApplication(db, linkId, body.reason);
+  if (result.success) {
+    return c.json({ ok: true });
+  }
+  return c.json({ error: result.error }, 400);
+});
+
+// ── Farmer Detail API ──────────────────────────────────────────────────
+
+// GET /api/admin/farmers — List all farmers
+adminRoutes.get("/api/admin/farmers", async (c) => {
+  const db = c.env.DB;
+  const { results } = await db
+    .prepare(
+      `SELECT f.id, f.full_name, f.phone, f.addr_province, f.addr_district, f.cpa_code,
+              COALESCE((SELECT trust_score FROM farmer_trust WHERE farmer_id = f.id), 0.5) as trust_score,
+              COUNT(DISTINCT p.id) as plot_count
+       FROM farmers f
+       LEFT JOIN plots p ON p.farmer_id = f.id
+       GROUP BY f.id
+       ORDER BY f.full_name ASC`,
+    )
+    .bind()
+    .all();
+  return c.json(results ?? []);
+});
+
+// GET /api/admin/farmers/:id — Farmer detail (5-tab data)
+adminRoutes.get("/api/admin/farmers/:id", async (c) => {
+  const db = c.env.DB;
+  const farmerId = c.req.param("id");
+  const detail = await getFarmerDetail(db, farmerId);
+  if (!detail) return c.json({ error: "Farmer not found" }, 404);
+  return c.json(detail);
+});
+
+// GET /api/admin/farmers/:id/audit — Audit log for farmer
+adminRoutes.get("/api/admin/farmers/:id/audit", async (c) => {
+  const db = c.env.DB;
+  const farmerId = c.req.param("id");
+  const audit = await getFarmerAuditLog(db, farmerId);
+  return c.json(audit);
+});
+
+// ── Overview Dashboard API ──────────────────────────────────────────────
+
+// GET /api/admin/overview/kpis — 4 KPI tiles
+adminRoutes.get("/api/admin/overview/kpis", async (c) => {
+  const db = c.env.DB;
+  const season = c.req.query("season") || undefined;
+  const kpis = await getOverviewKpis(db, season ? { season } : {});
+  return c.json(kpis);
+});
+
+// GET /api/admin/overview/work-queue — work queue alert counts
+adminRoutes.get("/api/admin/overview/work-queue", async (c) => {
+  const db = c.env.DB;
+  const alerts = await getWorkQueueAlerts(db);
+  return c.json(alerts);
+});
+
+// GET /api/admin/overview/credit-chart — seasonal credit bar chart
+adminRoutes.get("/api/admin/overview/credit-chart", async (c) => {
+  const db = c.env.DB;
+  const chart = await getCreditChart(db);
+  return c.json(chart);
+});
+
+// GET /api/admin/overview/ghg-sources — GHG emission source table
+adminRoutes.get("/api/admin/overview/ghg-sources", async (c) => {
+  const db = c.env.DB;
+  const sources = await getGhgSourceTable(db);
+  return c.json(sources);
+});
+
+// GET /api/admin/overview/provinces — province/sponsor table
+adminRoutes.get("/api/admin/overview/provinces", async (c) => {
+  const db = c.env.DB;
+  const provinces = await getProvinceTable(db);
+  return c.json(provinces);
+});
+
+// ── Sponsors Management API ───────────────────────────────────────────
+
+// GET /api/admin/sponsors — List sponsors
+adminRoutes.get("/api/admin/sponsors", async (c) => {
+  const db = c.env.DB;
+  const sponsors = await getSponsors(db);
+  return c.json(sponsors);
+});
+
+// ── Settings API ──────────────────────────────────────────────────────
+
+// GET /api/admin/settings — Get all settings
+adminRoutes.get("/api/admin/settings", async (c) => {
+  const db = c.env.DB;
+  const settings = await getSettings(db);
+  return c.json(settings);
+});
+
+// POST /api/admin/settings — Update settings
+adminRoutes.post("/api/admin/settings", async (c) => {
+  const db = c.env.DB;
+  const body = await c.req.json<{ tab: string; data: unknown }>();
+  const result = await updateSettings(db, body.tab, body.data);
+
+  // Audit-log the settings change
+  const session = c.get("session" as never) as { userId?: string } | undefined;
+  const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  try {
+    await db
+      .prepare(
+        `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
+         VALUES (?, NULL, 'admin', 'update_settings', ?, 'setting', ?, datetime('now'))`,
+      )
+      .bind(auditId, `Settings tab: ${body.tab}`, body.tab)
+      .run();
+  } catch {
+    // audit log failure is non-fatal
+  }
+
+  if (result.success) {
+    return c.json({ ok: true });
+  }
+  return c.json({ error: result.error }, 400);
+});
+
+// ── Reports API ───────────────────────────────────────────────────────
+
+// GET /api/admin/reports — List report catalogue
+adminRoutes.get("/api/admin/reports", async (c) => {
+  const db = c.env.DB;
+  const reports = await getReports(db);
+  return c.json(reports);
+});
+
+// GET /api/admin/reports/:id/download — Download report + audit log
+adminRoutes.get("/api/admin/reports/:id/download", async (c) => {
+  const db = c.env.DB;
+  const reportId = c.req.param("id");
+  const session = c.get("session" as never) as { userId?: string } | undefined;
+
+  // Log the download
+  await logReportDownload(db, session?.userId ?? "unknown", reportId);
+
+  // For now, return a placeholder response
+  return c.json({ ok: true, message: `Report ${reportId} download initiated` });
 });

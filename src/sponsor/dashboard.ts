@@ -74,20 +74,10 @@ export async function getPlotsByProvince(db: D1Database): Promise<ProvinceGroup[
       ORDER BY f.addr_province, p.plot_code`,
     )
     .bind()
-    .all<Omit<PlotSummary, "water_state_tallies" | "provenance_counts">>();
+    .all<PlotBase>();
 
   const rows = results ?? [];
-
-  // Enrich each plot with water-state tallies and provenance counts
-  const enriched: PlotSummary[] = await Promise.all(
-    rows.map(async (row) => {
-      const [tallies, provenance] = await Promise.all([
-        getWaterStateTallies(db, row.plot_id, row.latest_season_id),
-        getProvenanceCounts(db, row.plot_id, row.latest_season_id),
-      ]);
-      return { ...row, water_state_tallies: tallies, provenance_counts: provenance };
-    }),
-  );
+  const enriched = await batchEnrichPlots(db, rows);
 
   return groupByProvince(enriched);
 }
@@ -105,6 +95,98 @@ function groupByProvince(rows: PlotSummary[]): ProvinceGroup[] {
   return Array.from(map.entries()).map(([province, plots]) => ({
     province,
     plots,
+  }));
+}
+
+type PlotBase = Omit<PlotSummary, "water_state_tallies" | "provenance_counts">;
+
+/**
+ * H2 fix: Batch-enrich plots with water-state tallies and provenance counts.
+ * Replaces N+1 per-plot queries with 2 batch queries using WHERE plot_id IN (...).
+ */
+async function batchEnrichPlots(
+  db: D1Database,
+  rows: PlotBase[],
+): Promise<PlotSummary[]> {
+  if (rows.length === 0) return [];
+
+  // Collect unique (plot_id, season_id) pairs that have a season
+  const plotSeasons = rows
+    .filter((r) => r.latest_season_id)
+    .map((r) => ({ plot_id: r.plot_id, season_id: r.latest_season_id! }));
+
+  if (plotSeasons.length === 0) {
+    return rows.map((r) => ({
+      ...r,
+      water_state_tallies: { flooded: 0, dry: 0 },
+      provenance_counts: { machine: 0, human: 0 },
+    }));
+  }
+
+  const plotIds = [...new Set(plotSeasons.map((ps) => ps.plot_id))];
+  const placeholders = plotIds.map(() => "?").join(", ");
+
+  // Batch query 1: water-state tallies grouped by plot_id
+  const { results: talliesRows } = await db
+    .prepare(
+      `SELECT plot_id, water_state, COUNT(*) as count
+       FROM photo_evidence
+       WHERE plot_id IN (${placeholders})
+         AND photo_type = 'wetdry' AND water_state IS NOT NULL
+       GROUP BY plot_id, water_state`,
+    )
+    .bind(...plotIds)
+    .all<{ plot_id: string; water_state: string; count: number }>();
+
+  // Build lookup: plot_id -> { flooded, dry }
+  const talliesMap = new Map<string, { flooded: number; dry: number }>();
+  for (const row of talliesRows ?? []) {
+    let entry = talliesMap.get(row.plot_id);
+    if (!entry) {
+      entry = { flooded: 0, dry: 0 };
+      talliesMap.set(row.plot_id, entry);
+    }
+    if (row.water_state === "flooded") entry.flooded = row.count;
+    else if (row.water_state === "dry") entry.dry = row.count;
+  }
+
+  // Batch query 2: provenance counts grouped by plot_id
+  const { results: provRows } = await db
+    .prepare(
+      `SELECT plot_id,
+        CASE
+          WHEN pre_verified = 1 AND superseded = 0 THEN 'machine'
+          WHEN admin_status = 'verified' THEN 'human'
+        END as provenance_type,
+        COUNT(*) as count
+       FROM photo_evidence
+       WHERE plot_id IN (${placeholders})
+         AND (
+           (pre_verified = 1 AND superseded = 0)
+           OR admin_status = 'verified'
+         )
+       GROUP BY plot_id, provenance_type`,
+    )
+    .bind(...plotIds)
+    .all<{ plot_id: string; provenance_type: string; count: number }>();
+
+  // Build lookup: plot_id -> { machine, human }
+  const provMap = new Map<string, { machine: number; human: number }>();
+  for (const row of provRows ?? []) {
+    let entry = provMap.get(row.plot_id);
+    if (!entry) {
+      entry = { machine: 0, human: 0 };
+      provMap.set(row.plot_id, entry);
+    }
+    if (row.provenance_type === "machine") entry.machine = row.count;
+    else if (row.provenance_type === "human") entry.human = row.count;
+  }
+
+  // Merge enrichments into plot rows
+  return rows.map((r) => ({
+    ...r,
+    water_state_tallies: talliesMap.get(r.plot_id) ?? { flooded: 0, dry: 0 },
+    provenance_counts: provMap.get(r.plot_id) ?? { machine: 0, human: 0 },
   }));
 }
 
@@ -248,6 +330,10 @@ export type SponsorSummary = {
   totalFarmers: number;
   paymentEstimateUSD: number;
   methodologyBreakdown: { awd: number; biochar: number; fertilization: number };
+  /** Sponsor-scoped: total rai under management */
+  totalAreaRai: number;
+  /** Sponsor-scoped: unique CPA households */
+  totalHouseholds: number;
 };
 
 export type SponsorFarmerRow = {
@@ -259,21 +345,73 @@ export type SponsorFarmerRow = {
   progressPercent: number;
 };
 
-export async function getSponsorSummary(db: D1Database): Promise<SponsorSummary> {
-  const [co2Row, plotsRow, farmersRow, methodRows] = await Promise.all([
-    db.prepare(`SELECT SUM(coalesce(ce.total_offset_tco2e, 0)) as total_co2 FROM carbon_estimates ce`).bind().all<{ total_co2: number | null }>(),
-    db.prepare(`SELECT COUNT(DISTINCT p.id) as total_plots FROM plots p`).bind().all<{ total_plots: number }>(),
-    db.prepare(`SELECT COUNT(DISTINCT f.id) as total_farmers FROM farmers f`).bind().all<{ total_farmers: number }>(),
+/**
+ * Build a WHERE clause + bind values for area-scoping.
+ * When areas is null/empty, returns no filter (backward-compat for admin callers).
+ */
+function areaFilter(areas: string[] | null): { clause: string; values: string[] } {
+  if (!areas || areas.length === 0) return { clause: "", values: [] };
+  const placeholders = areas.map(() => "?").join(", ");
+  return { clause: `AND f.addr_province IN (${placeholders})`, values: areas };
+}
+
+/** Fetch the `areas` JSON column for a sponsor user. Returns parsed array or null. */
+export async function getSponsorAreas(db: D1Database, userId: string): Promise<string[] | null> {
+  const row = await db
+    .prepare("SELECT areas FROM users WHERE id = ?")
+    .bind(userId)
+    .first<{ areas: string | null }>();
+  if (!row?.areas) return null;
+  try {
+    const parsed = JSON.parse(row.areas);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getSponsorSummary(
+  db: D1Database,
+  areas?: string[] | null,
+): Promise<SponsorSummary> {
+  const af = areaFilter(areas ?? null);
+  const joinClause = af.values.length > 0
+    ? `JOIN plots p ON ce.plot_id = p.id JOIN farmers f ON f.id = p.farmer_id`
+    : "";
+  const whereClause = af.clause;
+
+  const [co2Row, plotsRow, farmersRow, methodRows, areaRow, hhRow] = await Promise.all([
     db.prepare(
-      `SELECT si.water_management, COUNT(*) as cnt FROM season_inputs si GROUP BY si.water_management`,
-    ).bind().all<{ water_management: string | null; cnt: number }>(),
+      `SELECT SUM(coalesce(ce.total_offset_tco2e, 0)) as total_co2 FROM carbon_estimates ce ${joinClause} WHERE 1=1 ${whereClause}`,
+    ).bind(...af.values).all<{ total_co2: number | null }>(),
+    db.prepare(
+      `SELECT COUNT(DISTINCT p.id) as total_plots FROM plots p JOIN farmers f ON f.id = p.farmer_id WHERE 1=1 ${whereClause}`,
+    ).bind(...af.values).all<{ total_plots: number }>(),
+    db.prepare(
+      `SELECT COUNT(DISTINCT f.id) as total_farmers FROM farmers f WHERE 1=1 ${whereClause}`,
+    ).bind(...af.values).all<{ total_farmers: number }>(),
+    db.prepare(
+      `SELECT si.water_management, COUNT(*) as cnt
+       FROM season_inputs si
+       JOIN plots p ON p.id = si.plot_id
+       JOIN farmers f ON f.id = p.farmer_id
+       WHERE 1=1 ${whereClause}
+       GROUP BY si.water_management`,
+    ).bind(...af.values).all<{ water_management: string | null; cnt: number }>(),
+    db.prepare(
+      `SELECT COALESCE(SUM(p.area_rai), 0) as total_rai FROM plots p JOIN farmers f ON f.id = p.farmer_id WHERE 1=1 ${whereClause}`,
+    ).bind(...af.values).all<{ total_rai: number }>(),
+    db.prepare(
+      `SELECT COUNT(DISTINCT f.id) as total_hh FROM farmers f JOIN plots p ON p.farmer_id = f.id WHERE 1=1 ${whereClause}`,
+    ).bind(...af.values).all<{ total_hh: number }>(),
   ]);
 
   const totalCO2Tons = (co2Row.results?.[0]?.total_co2) ?? 0;
   const totalPlots = plotsRow.results?.[0]?.total_plots ?? 0;
   const totalFarmers = farmersRow.results?.[0]?.total_farmers ?? 0;
+  const totalAreaRai = areaRow.results?.[0]?.total_rai ?? 0;
+  const totalHouseholds = hhRow.results?.[0]?.total_hh ?? 0;
 
-  // Methodology breakdown: compute percentages from season_inputs water_management values
   const methodCounts = methodRows.results ?? [];
   const total = methodCounts.reduce((s, r) => s + r.cnt, 0);
   const pct = (key: string) => {
@@ -286,6 +424,8 @@ export async function getSponsorSummary(db: D1Database): Promise<SponsorSummary>
     totalCO2Tons,
     totalPlots,
     totalFarmers,
+    totalAreaRai,
+    totalHouseholds,
     paymentEstimateUSD: totalCO2Tons * CARBON_PRICE_USD_PER_TON,
     methodologyBreakdown: {
       awd: pct("AWD"),
@@ -295,7 +435,13 @@ export async function getSponsorSummary(db: D1Database): Promise<SponsorSummary>
   };
 }
 
-export async function getSponsorFarmers(db: D1Database): Promise<SponsorFarmerRow[]> {
+export async function getSponsorFarmers(
+  db: D1Database,
+  areas?: string[] | null,
+): Promise<SponsorFarmerRow[]> {
+  const af = areaFilter(areas ?? null);
+  const whereClause = af.clause;
+
   const { results } = await db
     .prepare(
       `SELECT
@@ -310,10 +456,11 @@ export async function getSponsorFarmers(db: D1Database): Promise<SponsorFarmerRo
       JOIN plots p ON p.farmer_id = f.id
       LEFT JOIN carbon_estimates ce ON ce.plot_id = p.id
       LEFT JOIN photo_evidence pe ON pe.plot_id = p.id
+      WHERE 1=1 ${whereClause}
       GROUP BY f.id, f.full_name, f.addr_province
       ORDER BY total_tco2e DESC`,
     )
-    .bind()
+    .bind(...af.values)
     .all<{
       farmer_id: string;
       farmer_name: string;
@@ -331,5 +478,200 @@ export async function getSponsorFarmers(db: D1Database): Promise<SponsorFarmerRo
     plotCount: r.plot_count,
     totalTCO2e: r.total_tco2e,
     progressPercent: r.total_photos > 0 ? Math.round((r.verified_photos / r.total_photos) * 100) : 0,
+  }));
+}
+
+// ─── Area-scoped plots by province ───
+
+export async function getPlotsByProvinceScoped(
+  db: D1Database,
+  areas?: string[] | null,
+): Promise<ProvinceGroup[]> {
+  const af = areaFilter(areas ?? null);
+  const whereClause = af.clause;
+
+  const { results } = await db
+    .prepare(
+      `SELECT
+        p.id AS plot_id,
+        p.plot_code,
+        p.area_rai,
+        f.full_name AS farmer_name,
+        f.addr_province AS province,
+        f.addr_district AS district,
+        ce.total_offset_tco2e,
+        ce.season_id AS latest_season_id,
+        ce.status AS estimate_status
+      FROM plots p
+      JOIN farmers f ON f.id = p.farmer_id
+      LEFT JOIN carbon_estimates ce
+        ON ce.plot_id = p.id
+        AND ce.version = (
+          SELECT MAX(c2.version)
+          FROM carbon_estimates c2
+          WHERE c2.plot_id = p.id
+        )
+      WHERE 1=1 ${whereClause}
+      ORDER BY f.addr_province, p.plot_code`,
+    )
+    .bind(...af.values)
+    .all<PlotBase>();
+
+  const rows = results ?? [];
+  const enriched = await batchEnrichPlots(db, rows);
+
+  return groupByProvince(enriched);
+}
+
+// ─── GHG emission source table ───
+
+export type GhgSourceRow = {
+  source: string;
+  baseline: number;
+  project: number;
+  reduction: number;
+};
+
+export async function getGhgSourceBreakdown(
+  db: D1Database,
+  areas?: string[] | null,
+): Promise<GhgSourceRow[]> {
+  const af = areaFilter(areas ?? null);
+  const joinClause = af.values.length > 0
+    ? `JOIN plots p ON ce.plot_id = p.id JOIN farmers f ON f.id = p.farmer_id`
+    : "";
+  const whereClause = af.clause;
+
+  const { results } = await db
+    .prepare(
+      `SELECT
+        COALESCE(SUM(ce.baseline_ch4), 0) as baseline_ch4,
+        COALESCE(SUM(ce.project_ch4), 0) as project_ch4,
+        COALESCE(SUM(ce.baseline_n2o), 0) as baseline_n2o,
+        COALESCE(SUM(ce.project_n2o), 0) as project_n2o,
+        COALESCE(SUM(ce.baseline_co2), 0) as baseline_co2,
+        COALESCE(SUM(ce.project_co2), 0) as project_co2
+      FROM carbon_estimates ce
+      ${joinClause}
+      WHERE 1=1 ${whereClause}`,
+    )
+    .bind(...af.values)
+    .all<{
+      baseline_ch4: number;
+      project_ch4: number;
+      baseline_n2o: number;
+      project_n2o: number;
+      baseline_co2: number;
+      project_co2: number;
+    }>();
+
+  const row = (results ?? [])[0];
+  if (!row) return [];
+
+  return [
+    { source: "CH\u2084 (มีเทน)", baseline: row.baseline_ch4, project: row.project_ch4, reduction: row.baseline_ch4 - row.project_ch4 },
+    { source: "N\u2082O (ไนตรัสออกไซด์)", baseline: row.baseline_n2o, project: row.project_n2o, reduction: row.baseline_n2o - row.project_n2o },
+    { source: "CO\u2082 (คาร์บอนไดออกไซด์)", baseline: row.baseline_co2, project: row.project_co2, reduction: row.baseline_co2 - row.project_co2 },
+  ];
+}
+
+// ─── TVER Certificates ───
+
+export type Certificate = {
+  id: string;
+  certificate_number: string;
+  season_id: string;
+  volume_tco2e: number;
+  status: string;
+  issued_at: string;
+};
+
+/**
+ * List TVER certificates scoped to sponsor's areas.
+ * If the carbon_credits table does not exist, returns an empty array gracefully.
+ */
+export async function getCertificates(
+  db: D1Database,
+  areas?: string[] | null,
+): Promise<Certificate[]> {
+  const af = areaFilter(areas ?? null);
+  const joinClause = af.values.length > 0
+    ? `JOIN plots pl ON cc.plot_id = pl.id JOIN farmers f ON f.id = pl.farmer_id`
+    : "";
+  const whereClause = af.clause;
+
+  try {
+    const { results } = await db
+      .prepare(
+        `SELECT
+          cc.id,
+          cc.certificate_number,
+          cc.season_id,
+          cc.volume_tco2e,
+          cc.status,
+          cc.issued_at
+        FROM carbon_credits cc
+        ${joinClause}
+        WHERE 1=1 ${whereClause}
+        ORDER BY cc.issued_at DESC`,
+      )
+      .bind(...af.values)
+      .all<Certificate>();
+
+    return (results ?? []).map((r) => ({
+      id: r.id,
+      certificate_number: r.certificate_number,
+      season_id: r.season_id,
+      volume_tco2e: r.volume_tco2e,
+      status: r.status,
+      issued_at: r.issued_at,
+    }));
+  } catch {
+    // Table does not exist yet — return empty
+    return [];
+  }
+}
+
+// ─── Season credit data for chart ───
+
+export type SeasonCreditRow = {
+  season_id: string;
+  season_name: string;
+  estimated_tco2e: number;
+  verified_tco2e: number;
+};
+
+export async function getSeasonCredits(
+  db: D1Database,
+  areas?: string[] | null,
+): Promise<SeasonCreditRow[]> {
+  const af = areaFilter(areas ?? null);
+  const joinClause = af.values.length > 0
+    ? `JOIN plots p ON ce.plot_id = p.id JOIN farmers f ON f.id = p.farmer_id`
+    : "";
+  const whereClause = af.clause;
+
+  const { results } = await db
+    .prepare(
+      `SELECT
+        ce.season_id,
+        s.name as season_name,
+        SUM(CASE WHEN ce.status IN ('draft', 'final') THEN ce.total_offset_tco2e ELSE 0 END) as estimated_tco2e,
+        SUM(CASE WHEN ce.status = 'final' THEN ce.total_offset_tco2e ELSE 0 END) as verified_tco2e
+      FROM carbon_estimates ce
+      JOIN seasons s ON s.id = ce.season_id
+      ${joinClause}
+      WHERE 1=1 ${whereClause}
+      GROUP BY ce.season_id, s.name
+      ORDER BY s.start_date DESC`,
+    )
+    .bind(...af.values)
+    .all<SeasonCreditRow>();
+
+  return (results ?? []).map((r) => ({
+    season_id: r.season_id,
+    season_name: r.season_name,
+    estimated_tco2e: r.estimated_tco2e,
+    verified_tco2e: r.verified_tco2e,
   }));
 }

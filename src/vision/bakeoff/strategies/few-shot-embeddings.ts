@@ -3,8 +3,8 @@
  * No API calls, completely free
  */
 import { Jimp } from "jimp";
-import type { ClassifyResult } from "../classifier.js";
-import type { ClassifierBinding, LabeledImage } from "./runner.js";
+import type { ClassifyResult } from "../../classifier.js";
+import type { ClassifierBinding, LabeledImage } from "../runner.js";
 
 // Reference embeddings (computed from sample images)
 interface ReferenceSample {

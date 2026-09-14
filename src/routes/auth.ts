@@ -62,6 +62,10 @@ function renderLoginPage(error?: string): string {
         <label>รหัสผ่าน</label>
         <input name="password" type="password" required placeholder="••••••••" autocomplete="current-password">
       </div>
+      <div class="field">
+        <label>รหัส OTP (ถ้ามี)</label>
+        <input name="otp" type="text" pattern="[0-9]{6}" maxlength="6" placeholder="123456" autocomplete="one-time-code" inputmode="numeric">
+      </div>
       <button type="submit" class="btn">
         <span class="material-symbols-outlined" style="font-size:20px">login</span>
         เข้าสู่ระบบ
@@ -78,33 +82,46 @@ authRoutes.get("/login", (c) => {
 });
 
 authRoutes.post("/login", async (c) => {
-  const form = await c.req.formData();
-  const email = form.get("email") as string | null;
-  const password = form.get("password") as string | null;
+  try {
+    const form = await c.req.formData();
+    const email = form.get("email") as string | null;
+    const password = form.get("password") as string | null;
+    const otp = form.get("otp") as string | null;
 
-  if (!email || !password) {
-    return c.html(renderLoginPage("Email and password are required"), 400);
-  }
+    if (!email || !password) {
+      return c.html(renderLoginPage("Email and password are required"), 400);
+    }
 
-  const user = await c.env.DB.prepare(
-    "SELECT id, email, password_hash, role FROM users WHERE email = ?",
-  )
-    .bind(email)
-    .first<{ id: string; email: string; password_hash: string; role: string }>();
+    const user = await c.env.DB.prepare(
+      "SELECT id, email, password_hash, role, otp_secret FROM users WHERE email = ?",
+    )
+      .bind(email)
+      .first<{ id: string; email: string; password_hash: string; role: string; otp_secret: string | null }>();
 
-  if (!user) {
-    return c.html(renderLoginPage("Invalid credentials"), 401);
-  }
+    if (!user) {
+      return c.html(renderLoginPage("Invalid credentials"), 401);
+    }
 
-  // Import verifyPassword dynamically to avoid circular issues
-  const { verifyPassword } = await import("../auth/password");
-  const valid = await verifyPassword(password, user.password_hash);
-  if (!valid) {
-    return c.html(renderLoginPage("Invalid credentials"), 401);
+    // Import verifyPassword dynamically to avoid circular issues
+    const { verifyPassword } = await import("../auth/password");
+    const valid = await verifyPassword(password, user.password_hash);
+    if (!valid) {
+      return c.html(renderLoginPage("Invalid credentials"), 401);
+    }
+
+    // OTP verification — required only when user has otp_secret set
+    if (user.otp_secret) {
+      if (!otp) {
+        return c.html(renderLoginPage("OTP code is required"), 401);
+      }
+      const { verifyOtp } = await import("../auth/otp");
+      if (!verifyOtp(user.otp_secret, otp)) {
+        return c.html(renderLoginPage("Invalid OTP code"), 401);
+      }
   }
 
   const { createSessionCookie } = await import("../auth/session");
-  const cookie = createSessionCookie(
+  const cookie = await createSessionCookie(
     { userId: user.id, role: user.role as "admin" | "sponsor", email: user.email },
     c.env.SECRET,
   );
@@ -114,6 +131,10 @@ authRoutes.post("/login", async (c) => {
     status: 302,
     headers: { Location: redirectPath, "Set-Cookie": cookie },
   });
+  } catch (error) {
+    console.error("Login error:", error);
+    return c.json({ error: "Login failed", details: error instanceof Error ? error.message : String(error) }, 500);
+  }
 });
 
 authRoutes.post("/logout", (c) => {
@@ -122,14 +143,14 @@ authRoutes.post("/logout", (c) => {
   });
 });
 
-authRoutes.get("/redirect", (c) => {
+authRoutes.get("/redirect", async (c) => {
   const cookieHeader = c.req.header("Cookie") ?? "";
   const match = cookieHeader.match(/nzc_session=([^;]+)/);
   if (!match?.[1]) {
     return new Response(null, { status: 302, headers: { Location: "/login" } });
   }
 
-  const session = parseSessionCookie(match[1], c.env.SECRET);
+  const session = await parseSessionCookie(match[1], c.env.SECRET);
   if (!session) {
     return new Response(null, { status: 302, headers: { Location: "/login" } });
   }

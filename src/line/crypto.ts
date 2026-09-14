@@ -1,11 +1,22 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-
-export function createSignature(body: string, secret: string): string {
-  return createHmac("sha256", secret).update(body).digest("hex");
+export async function createSignature(body: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
-export function verifySignature(body: string, signature: string, secret: string): boolean {
-  const expected = createSignature(body, secret);
+export async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
+  const expected = await createSignature(body, secret);
   if (signature.length !== expected.length) return false;
-  return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  // Simple string comparison for hex signatures
+  return signature === expected;
 }

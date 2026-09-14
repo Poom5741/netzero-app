@@ -80,7 +80,7 @@ describe("Full 3-phase chain", () => {
     await reviewPhoto(db as never, photo.id as string, "verified", "Approved");
 
     // Phase 3: sponsor accesses dashboard
-    const sponsorCookie = makeSessionCookie("sponsor");
+    const sponsorCookie = await makeSessionCookie("sponsor");
     const sponsorRes = await app.request(
       "/sponsor",
       new Request("http://localhost/sponsor", {
@@ -96,7 +96,7 @@ describe("Full 3-phase chain", () => {
     const { app, db } = await createTestApp();
     await seedUser(db, { id: "admin-1", email: "admin@test.com", role: "admin" });
 
-    const adminCookie = makeSessionCookie("admin");
+    const adminCookie = await makeSessionCookie("admin");
     const adminRes = await app.request(
       "/admin",
       new Request("http://localhost/admin", {

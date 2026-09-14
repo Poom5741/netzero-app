@@ -125,3 +125,237 @@ export async function getPrecisionStat(): Promise<PrecisionStat> {
   if (!res.ok) throw new Error(`Precision error: ${res.status}`);
   return res.data;
 }
+
+// ── Overview Dashboard ──────────────────────────────────────────────
+
+export interface OverviewKpis {
+  totalFarmers: number;
+  totalPlots: number;
+  pendingReviews: number;
+  totalCredits: number;
+}
+
+export interface WorkQueueAlerts {
+  pendingApplications: number;
+  photoQueue: number;
+  missingPhotos: number;
+  sfwFallback: number;
+}
+
+export interface CreditChartItem {
+  season: string;
+  estimated: number;
+  verified: number;
+}
+
+export interface GhgSourceItem {
+  source: string;
+  value: number;
+}
+
+export interface ProvinceTableItem {
+  province: string;
+  sponsor: string;
+  plots: number;
+  credits: number;
+}
+
+export async function getOverviewKpis(season?: string): Promise<OverviewKpis> {
+  const qs = season ? `?season=${encodeURIComponent(season)}` : "";
+  const res = await apiRequest<OverviewKpis>(`/api/admin/overview/kpis${qs}`);
+  if (!res.ok) throw new Error(`KPI error: ${res.status}`);
+  return res.data;
+}
+
+export async function getWorkQueueAlerts(): Promise<WorkQueueAlerts> {
+  const res = await apiRequest<WorkQueueAlerts>("/api/admin/overview/work-queue");
+  if (!res.ok) throw new Error(`Work queue error: ${res.status}`);
+  return res.data;
+}
+
+export async function getCreditChart(): Promise<CreditChartItem[]> {
+  const res = await apiRequest<CreditChartItem[]>("/api/admin/overview/credit-chart");
+  if (!res.ok) throw new Error(`Credit chart error: ${res.status}`);
+  return res.data;
+}
+
+export async function getGhgSources(): Promise<GhgSourceItem[]> {
+  const res = await apiRequest<GhgSourceItem[]>("/api/admin/overview/ghg-sources");
+  if (!res.ok) throw new Error(`GHG source error: ${res.status}`);
+  return res.data;
+}
+
+export async function getProvinceTable(): Promise<ProvinceTableItem[]> {
+  const res = await apiRequest<ProvinceTableItem[]>("/api/admin/overview/provinces");
+  if (!res.ok) throw new Error(`Province table error: ${res.status}`);
+  return res.data;
+}
+
+// ── Application Review ──────────────────────────────────────────────
+
+export interface ApplicationItem {
+  id: string;
+  farmer_id: string;
+  line_user_id: string;
+  farmer_name: string;
+  phone: string;
+  province: string;
+  district: string;
+  status: string;
+  doc_count: number;
+  docs_needed: number;
+  consent_count: number;
+  created_at: string;
+}
+
+export async function getApplications(status?: string): Promise<ApplicationItem[]> {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await apiRequest<ApplicationItem[]>(`/api/admin/applications${qs}`);
+  if (!res.ok) throw new Error(`Applications error: ${res.status}`);
+  return res.data;
+}
+
+export async function approveApplication(id: string): Promise<{ ok: boolean; cpa_code?: string }> {
+  const res = await apiRequest<{ ok: boolean; cpa_code?: string }>(`/api/admin/applications/${id}/approve`, { method: "POST" });
+  if (!res.ok) throw new Error(`Approve error: ${res.status}`);
+  return res.data;
+}
+
+export async function rejectApplication(id: string, reason: string): Promise<{ ok: boolean }> {
+  const res = await apiRequest<{ ok: boolean }>(`/api/admin/applications/${id}/reject`, {
+    method: "POST",
+    json: { reason },
+  });
+  if (!res.ok) throw new Error(`Reject error: ${res.status}`);
+  return res.data;
+}
+
+// ── Farmer Detail ───────────────────────────────────────────────────
+
+export interface FarmerDetail {
+  id: string;
+  full_name: string;
+  phone: string;
+  province: string;
+  district: string;
+  cpa_code: string | null;
+  trust_score: number;
+  plots: Array<{
+    id: string;
+    plot_code: string;
+    deed_no: string;
+    area_rai: number;
+    doc_type: string | null;
+    season_name: string | null;
+    carbon_total: number | null;
+  }>;
+  documents: Array<{
+    id: string;
+    doc_type: string;
+    review_status: string;
+    submitted_at: string;
+  }>;
+  carbonTrace: Array<{
+    step: number;
+    label: string;
+    value: string;
+  }>;
+  nitrogenEntries: Array<{
+    step: string;
+    formula: string;
+    rate_kg_per_rai: number;
+    nitrogen_kg_per_rai: number;
+  }>;
+  photos: Array<{
+    id: string;
+    photo_type: string | null;
+    water_state: string | null;
+    ai_status: string;
+    admin_status: string;
+    taken_at: string;
+  }>;
+  auditLog: Array<{
+    id: string;
+    action: string;
+    actor_type: string;
+    field_name: string | null;
+    old_value: string | null;
+    new_value: string | null;
+    created_at: string;
+  }>;
+}
+
+export async function getFarmerDetail(id: string): Promise<FarmerDetail> {
+  const res = await apiRequest<FarmerDetail>(`/api/admin/farmers/${id}`);
+  if (!res.ok) throw new Error(`Farmer detail error: ${res.status}`);
+  return res.data;
+}
+
+export async function getFarmerAudit(id: string): Promise<FarmerDetail["auditLog"]> {
+  const res = await apiRequest<FarmerDetail["auditLog"]>(`/api/admin/farmers/${id}/audit`);
+  if (!res.ok) throw new Error(`Farmer audit error: ${res.status}`);
+  return res.data;
+}
+
+// ── Sponsors ────────────────────────────────────────────────────────
+
+export interface SponsorItem {
+  id: string;
+  name: string;
+  email: string;
+  areas: string[];
+  plot_count: number;
+  credit_total: number;
+}
+
+export async function getSponsors(): Promise<SponsorItem[]> {
+  const res = await apiRequest<SponsorItem[]>("/api/admin/sponsors");
+  if (!res.ok) throw new Error(`Sponsors error: ${res.status}`);
+  return res.data;
+}
+
+// ── Settings ────────────────────────────────────────────────────────
+
+export interface SettingsData {
+  permissions: Record<string, string[]>;
+  users: Array<{ id: string; email: string; role: string; name: string | null }>;
+  constants: Record<string, number>;
+  notifications: Array<{ id: string; name: string; enabled: boolean }>;
+  general: Record<string, string>;
+}
+
+export async function getSettings(): Promise<SettingsData> {
+  const res = await apiRequest<SettingsData>("/api/admin/settings");
+  if (!res.ok) throw new Error(`Settings error: ${res.status}`);
+  return res.data;
+}
+
+export async function updateSettings(tab: string, data: unknown): Promise<{ ok: boolean }> {
+  const res = await apiRequest<{ ok: boolean }>("/api/admin/settings", {
+    method: "POST",
+    json: { tab, data },
+  });
+  if (!res.ok) throw new Error(`Settings update error: ${res.status}`);
+  return res.data;
+}
+
+// ── Reports ─────────────────────────────────────────────────────────
+
+export interface ReportItem {
+  id: string;
+  name: string;
+  description: string;
+  format: string;
+  ready: boolean;
+}
+
+export async function getReports(): Promise<ReportItem[]> {
+  const res = await apiRequest<ReportItem[]>("/api/admin/reports");
+  if (!res.ok) throw new Error(`Reports error: ${res.status}`);
+  return res.data;
+}
+
+export async function downloadReport(id: string): Promise<void> {
+  const res = await apiRequest(`/api/admin/reports/${id}/download`);
+  if (!res.ok) throw new Error(`Report download error: ${res.status}`);
+}

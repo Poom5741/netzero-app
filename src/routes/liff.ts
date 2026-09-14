@@ -3,8 +3,15 @@
  */
 
 import { Hono } from "hono";
-import { getStaticAssets } from "hono/static";
 import { handleFlowApi, type FlowApiResult } from "../line/flow";
+import {
+  validateRegistrationForm,
+  type RegistrationFormData,
+} from "../liff/registration-api";
+import {
+  validateDocumentSubmission,
+  REQUIRED_DOCUMENTS,
+} from "../liff/documents-api";
 
 type Bindings = {
   DB: D1Database;
@@ -15,6 +22,7 @@ type Bindings = {
   LINE_CHANNEL_ACCESS_TOKEN: string;
   LINE_CHANNEL_SECRET: string;
   OPENROUTER_API_KEY: string;
+  LIFF_ID?: string;
 };
 
 export const liffRoutes = new Hono<{ Bindings: Bindings }>();
@@ -180,6 +188,214 @@ liffRoutes.post("/api/chat", async (c) => {
     return c.json({ reply: result.reply, state: result.newState });
   } catch (err) {
     console.error("Chat API error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Registration form API (LF-01)
+// ---------------------------------------------------------------------------
+
+liffRoutes.post("/api/register", async (c) => {
+  try {
+    const db = c.env.DB;
+    const body = await c.req.json<RegistrationFormData & { farmer_id?: string }>();
+    const { farmer_id, ...formData } = body;
+
+    // Validate required fields
+    const validation = validateRegistrationForm(formData);
+    if (!validation.valid) {
+      return c.json({ error: validation.error }, 400);
+    }
+
+    // Resolve farmer_id: explicit wins, else from link
+    let resolvedFarmerId = farmer_id;
+    if (!resolvedFarmerId) {
+      // Try to find farmer by phone
+      const farmer = await db
+        .prepare("SELECT id FROM farmers WHERE phone = ?")
+        .bind(formData.phone)
+        .first<{ id: string }>();
+      resolvedFarmerId = farmer?.id;
+    }
+
+    if (!resolvedFarmerId) {
+      return c.json({ error: "No farmer found for this phone number" }, 404);
+    }
+
+    // Update farmer record with registration data
+    await db
+      .prepare(
+        `UPDATE farmers SET
+          full_name = COALESCE(NULLIF(?, ''), full_name),
+          gender = COALESCE(NULLIF(?, ''), gender),
+          addr_province = COALESCE(NULLIF(?, ''), addr_province),
+          addr_district = COALESCE(NULLIF(?, ''), addr_district),
+          addr_subdistrict = COALESCE(NULLIF(?, ''), addr_subdistrict),
+          addr_village = COALESCE(NULLIF(?, ''), addr_village),
+          national_id_enc = COALESCE(NULLIF(?, ''), national_id_enc),
+          updated_at = datetime('now')
+        WHERE id = ?`
+      )
+      .bind(
+        formData.full_name,
+        formData.gender,
+        formData.addr_province,
+        formData.addr_district,
+        formData.addr_subdistrict,
+        formData.addr_village,
+        formData.national_id,
+        resolvedFarmerId,
+      )
+      .run();
+
+    // Create or update plot with deed info
+    const existingPlot = await db
+      .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+      .bind(resolvedFarmerId)
+      .first<{ id: string }>();
+
+    if (existingPlot) {
+      await db
+        .prepare(
+          `UPDATE plots SET
+            deed_no = COALESCE(NULLIF(?, ''), deed_no),
+            doc_type = COALESCE(NULLIF(?, ''), doc_type),
+            tenure = COALESCE(NULLIF(?, ''), tenure),
+            area_rai = COALESCE(NULLIF(?, 0), area_rai),
+            centroid_lat = COALESCE(NULLIF(?, 0), centroid_lat),
+            centroid_lng = COALESCE(NULLIF(?, 0), centroid_lng),
+            updated_at = datetime('now')
+          WHERE id = ?`
+        )
+        .bind(
+          formData.deed_no,
+          formData.deed_type,
+          formData.holding_status,
+          formData.area_rai,
+          formData.centroid_lat,
+          formData.centroid_lng,
+          existingPlot.id,
+        )
+        .run();
+    } else {
+      // Create new plot
+      const plotId = `plot_${crypto.randomUUID()}`;
+      await db
+        .prepare(
+          `INSERT INTO plots (id, farmer_id, plot_code, deed_no, doc_type, tenure, area_rai, centroid_lat, centroid_lng)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          plotId,
+          resolvedFarmerId,
+          `SPB-${String(Date.now()).slice(-4)}`,
+          formData.deed_no,
+          formData.deed_type,
+          formData.holding_status,
+          formData.area_rai,
+          formData.centroid_lat,
+          formData.centroid_lng,
+        )
+        .run();
+    }
+
+    return c.json({ ok: true, farmer_id: resolvedFarmerId });
+  } catch (err) {
+    console.error("Registration API error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Document upload API (OB-13)
+// ---------------------------------------------------------------------------
+
+liffRoutes.get("/api/documents/:farmerId", async (c) => {
+  try {
+    const db = c.env.DB;
+    const farmerId = c.req.param("farmerId");
+
+    const docs = await db
+      .prepare("SELECT id, doc_type, submitted_at, review_status FROM application_documents WHERE farmer_id = ?")
+      .bind(farmerId)
+      .all<{ id: string; doc_type: string; submitted_at: string; review_status: string }>();
+
+    const required = REQUIRED_DOCUMENTS.filter((d) => d.required);
+    const submittedTypes = docs.results.map((d) => d.doc_type);
+    const allRequiredAttached = required.every((d) =>
+      submittedTypes.includes(d.code),
+    );
+
+    return c.json({
+      documents: docs.results,
+      required: REQUIRED_DOCUMENTS,
+      allRequiredAttached,
+    });
+  } catch (err) {
+    console.error("Documents API error:", err);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+liffRoutes.post("/api/documents/submit", async (c) => {
+  try {
+    const db = c.env.DB;
+    const body = await c.req.json<{
+      farmer_id: string;
+      doc_type: string;
+      r2_key: string;
+    }>();
+
+    const validation = validateDocumentSubmission({
+      plot_id: body.farmer_id, // farmer_id used as context
+      doc_type: body.doc_type,
+    });
+
+    if (!validation.valid) {
+      return c.json({ error: validation.error }, 400);
+    }
+
+    // Map doc_type string to DOC code
+    const docCodeMap: Record<string, string> = {
+      chanote: "DOC-01",
+      id_copy: "DOC-03",
+      power_of_attorney: "DOC-06",
+    };
+
+    const docCode = docCodeMap[body.doc_type] || body.doc_type;
+
+    // Upsert document record
+    const docId = `doc_${crypto.randomUUID()}`;
+    await db
+      .prepare(
+        `INSERT INTO application_documents (id, farmer_id, doc_type, r2_key, submitted_at)
+         VALUES (?, ?, ?, ?, datetime('now'))
+         ON CONFLICT(farmer_id, doc_type)
+         DO UPDATE SET r2_key = excluded.r2_key, submitted_at = datetime('now'), review_status = 'pending'`
+      )
+      .bind(docId, body.farmer_id, docCode, body.r2_key)
+      .run();
+
+    // Check if all required docs are now attached
+    const docs = await db
+      .prepare("SELECT doc_type FROM application_documents WHERE farmer_id = ?")
+      .bind(body.farmer_id)
+      .all<{ doc_type: string }>();
+
+    const submittedTypes = docs.results.map((d) => d.doc_type);
+    const required = REQUIRED_DOCUMENTS.filter((d) => d.required);
+    const allRequiredAttached = required.every((d) =>
+      submittedTypes.includes(d.code),
+    );
+
+    return c.json({
+      ok: true,
+      doc_type: docCode,
+      allRequiredAttached,
+    });
+  } catch (err) {
+    console.error("Document submit API error:", err);
     return c.json({ error: "Internal server error" }, 500);
   }
 });

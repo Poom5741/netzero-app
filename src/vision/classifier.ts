@@ -13,6 +13,22 @@ export interface ClassifyResult {
   reason: string;
 }
 
+export type ClassifyPipePhoto = (image: ArrayBuffer) => Promise<{
+  validity: "valid" | "invalid";
+  water_state: "flooded" | "dry" | "invalid";
+  confidence: number;
+  reason_th: string;
+}>;
+
+export const FAIL_SAFE = {
+  validity: "invalid" as const,
+  water_state: "invalid" as const,
+  confidence: 0,
+  reason_th: "ไม่สามารถตรวจสอบภาพได้ — ส่งให้เจ้าหน้าที่ตรวจสอบ",
+};
+
+export type PipeClassification = Awaited<ReturnType<ClassifyPipePhoto>>;
+
 const VALID_WATER_STATES = new Set<WaterState>(["flooded", "dry", "not-applicable"]);
 
 /**

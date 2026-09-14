@@ -42,7 +42,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 // Allow the deployed LIFF frontend (and local dev on :3000) to call the API
 app.use("*", cors({
-  origin: ["https://netzero-frontend.poom-a1d.workers.dev", "http://localhost:3000"],
+  origin: ["https://netzero-frontend.poom-a1d.workers.dev", "https://netzero-frontend.pages.dev", "http://localhost:3000"],
   allowMethods: ["GET", "POST", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -70,7 +70,7 @@ app.use("/api/season", async (c, next) => {
     const match = cookie.match(/nzc_session=([^;]+)/);
     if (!match) return c.json({ error: "Unauthorized" }, 401);
     const { parseSessionCookie } = await import("./auth/session");
-    const session = parseSessionCookie(match[1], c.env.SECRET);
+    const session = await parseSessionCookie(match[1], c.env.SECRET);
     if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
   }
   await next();
@@ -81,7 +81,7 @@ app.use("/api/season/approve", async (c, next) => {
     const match = cookie.match(/nzc_session=([^;]+)/);
     if (!match) return c.json({ error: "Unauthorized" }, 401);
     const { parseSessionCookie } = await import("./auth/session");
-    const session = parseSessionCookie(match[1], c.env.SECRET);
+    const session = await parseSessionCookie(match[1], c.env.SECRET);
     if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
   }
   await next();

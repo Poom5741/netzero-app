@@ -29,14 +29,21 @@ import {
 import { composeResultsMessage, composeTodoMessage } from "./flow-results";
 import {
   buildWelcomeBubble,
-  buildConsentBubble,
+  buildConsent4Checkbox,
   buildIdentityConfirmBubble,
-  buildConditionsBubble,
+  buildConditions3Checkbox,
   buildRegistrationLinkBubble,
   buildCalendarBubble,
   buildDashboardBubble,
   textMessage,
 } from "./flex-builders";
+import {
+  recordConsent,
+  hasAllConsents,
+} from "../trust/consent-persist";
+import { fetchCalendarSteps } from "./calendar-api";
+import { fetchResultsData } from "./results-api";
+import { getRichMenuItems } from "./rich-menu";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -231,27 +238,66 @@ async function handleWelcome(ctx: FlowContext): Promise<FlowResult> {
 }
 
 /**
- * OB-02: CONSENT STATE — PDPA consent acceptance.
+ * OB-02 / OB-15: CONSENT STATE — PDPA 4-type consent acceptance.
  *
- * - "consent_accept" / "ยอมรับ" -> confirmation text + ask for phone, go to phone
+ * - "consent_accept_all" / "ยอมรับ" / "accept" / "ตกลง" -> record all 4 consents,
+ *   check hasAllConsents(), then go to phone
+ * - "consent_pdpa" / "consent_data_collection" / "consent_photo_sharing" /
+ *   "consent_carbon_project" -> record individual consent, re-check all
  * - "consent_reject" / "ไม่ยินยอม" -> ask to accept, stay in consent
- * - Otherwise -> re-show consent bubble, stay in consent
+ * - Otherwise -> re-show 4-checkbox consent card, stay in consent
  */
 async function handleConsent(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
+  // Accept all 4 consents at once
   if (
+    lower === "consent_accept_all" ||
     lower === "consent_accept" ||
     lower === "ยอมรับ" ||
     lower === "accept" ||
     lower === "ตกลง" ||
     lower === "同意"
   ) {
+    const consentTypes = ["pdpa", "data_collection", "photo_sharing", "carbon_project"];
+    for (const ct of consentTypes) {
+      await recordConsent(ctx.db, ctx.farmerId, ct, true);
+    }
+
+    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    if (allConsented) {
+      await safePush(ctx, [
+        textMessage("✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ"),
+        textMessage("กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)"),
+      ]);
+      return { newState: "phone" };
+    }
     await safePush(ctx, [
-      textMessage("✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ"),
-      textMessage("กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)"),
+      textMessage("กรุณายอมรับเงื่อนไขครบทั้ง 4 ข้อค่ะ"),
+      buildConsent4Checkbox(),
     ]);
-    return { newState: "phone" };
+    return { newState: "consent" };
+  }
+
+  // Individual consent accept
+  const individualMatch = lower.match(/^consent_(pdpa|data_collection|photo_sharing|carbon_project)$/);
+  if (individualMatch) {
+    const consentType = individualMatch[1]!;
+    await recordConsent(ctx.db, ctx.farmerId, consentType, true);
+
+    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    if (allConsented) {
+      await safePush(ctx, [
+        textMessage("✅ ยอมรับเงื่อนไขครบทั้ง 4 ข้อแล้วค่ะ"),
+        textMessage("กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)"),
+      ]);
+      return { newState: "phone" };
+    }
+    await safePush(ctx, [
+      textMessage("✅ บันทึกข้อตกลงแล้วค่ะ กรุณาตอบรับข้อที่เหลือ"),
+      buildConsent4Checkbox(),
+    ]);
+    return { newState: "consent" };
   }
 
   if (
@@ -265,10 +311,10 @@ async function handleConsent(ctx: FlowContext): Promise<FlowResult> {
     return { newState: "consent" };
   }
 
-  // Re-show consent
+  // Re-show 4-checkbox consent card
   await safePush(ctx, [
     { type: "text", text: composePdpaConsent() },
-    buildConsentBubble(),
+    buildConsent4Checkbox(),
   ]);
   return { newState: "consent" };
 }
@@ -351,7 +397,7 @@ async function handleIdentityConfirm(ctx: FlowContext): Promise<FlowResult> {
     lower === "ค่ะ" ||
     lower === "yes"
   ) {
-    await safePush(ctx, [buildConditionsBubble()]);
+    await safePush(ctx, [buildConditions3Checkbox()]);
     return { newState: "conditions" };
   }
 
@@ -401,7 +447,7 @@ async function handleConditions(ctx: FlowContext): Promise<FlowResult> {
   }
 
   // Re-show conditions
-  await safePush(ctx, [buildConditionsBubble()]);
+  await safePush(ctx, [buildConditions3Checkbox()]);
   return { newState: "conditions" };
 }
 
@@ -601,9 +647,40 @@ async function handleCalendar(ctx: FlowContext): Promise<FlowResult> {
     return { newState: "results" };
   }
 
-  // Show calendar
+  // Rich menu postback routing
+  if (lower.includes("bl_home") || lower.includes("หน้าหลัก")) {
+    return { newState: "calendar" };
+  }
+  if (lower.includes("todo") || lower.includes("งานค้าง")) {
+    return { newState: "results" };
+  }
+  if (lower.includes("field_list") || lower.includes("แปลงนา")) {
+    return { newState: "select_plot" };
+  }
+  if (lower.includes("summary") || lower.includes("สรุปผล")) {
+    return { newState: "results" };
+  }
+  if (lower.includes("contact") || lower.includes("ติดต่อ")) {
+    await safePush(ctx, [
+      textMessage("📞 ติดต่อเจ้าหน้าที่โครงการ\n\nผู้ประสานงาน: โครงการ NetZeroCarbon\nโทรศัพท์: ติดต่อผ่าน LINE Official\nอีเมล: โครงการ NetZeroCarbon\n\nเวลาทำการ: จันทร์-ศุกร์ 8:00-17:00 น."),
+    ]);
+    return { newState: "calendar" };
+  }
+
+  // Show calendar with real data from season_steps
+  let steps;
+  const plotId = ctx.selectedPlotId;
+  if (plotId) {
+    steps = await fetchCalendarSteps(ctx.db, plotId);
+  }
+
+  // Fallback to hardcoded steps if no real data
+  if (!steps || steps.length === 0) {
+    steps = calendarSteps();
+  }
+
   await safePush(ctx, [
-    buildCalendarBubble(calendarSteps(), ctx.liffId || "no-liff"),
+    buildCalendarBubble(steps, ctx.liffId || "no-liff"),
   ]);
   return { newState: "calendar" };
 }
@@ -809,25 +886,68 @@ async function handleResults(ctx: FlowContext): Promise<FlowResult> {
   }
 
   if (lower.includes("งานค้าง") || lower.includes("todo")) {
+    // Query real pending tasks
+    const plotId = ctx.selectedPlotId;
+    let pendingPhotos = 0;
+    let backfillSeasons = 0;
+
+    if (plotId) {
+      const photoPending = await ctx.db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM photo_evidence WHERE plot_id = ? AND admin_status = 'pending'`
+        )
+        .bind(plotId)
+        .first<{ cnt: number }>();
+      pendingPhotos = photoPending?.cnt ?? 0;
+
+      const backfill = await ctx.db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM season_inputs si
+           JOIN seasons s ON s.id = si.season_id
+           WHERE si.plot_id = ? AND si.status = 'draft' AND s.status = 'closed'`
+        )
+        .bind(plotId)
+        .first<{ cnt: number }>();
+      backfillSeasons = backfill?.cnt ?? 0;
+    }
+
     const todoText = composeTodoMessage({
-      pendingPhotos: 2,
+      pendingPhotos,
       retakePhotos: 0,
-      backfillSeasons: 0,
+      backfillSeasons,
     });
     await safePush(ctx, [textMessage(todoText)]);
     return { newState: "results" };
   }
 
-  // Default: show dashboard
+  // Default: show dashboard with real data
+  const plotId = ctx.selectedPlotId;
+  const results = plotId
+    ? await fetchResultsData(ctx.db, ctx.farmerId, plotId)
+    : { totalOffset: 0, sfW: 0, approvedPhotos: 0, totalPhotos: 4, pendingPhotos: 4, pendingTasks: 4, backfillCount: 0 };
+
+  // Get farmer name and plot code for display
+  const farmer = await ctx.db
+    .prepare("SELECT full_name FROM farmers WHERE id = ?")
+    .bind(ctx.farmerId)
+    .first<{ full_name: string }>();
+
+  const plot = plotId
+    ? await ctx.db
+        .prepare("SELECT plot_code FROM plots WHERE id = ?")
+        .bind(plotId)
+        .first<{ plot_code: string }>()
+    : null;
+
   await safePush(ctx, [
     buildDashboardBubble({
-      farmerName: "—",
-      plotName: "แปลงของท่าน",
-      totalOffset: 0,
-      sfW: 0,
-      approvedPhotos: 0,
-      totalPhotos: 4,
-      pendingTasks: 4,
+      farmerName: farmer?.full_name || "—",
+      plotName: plot?.plot_code || "แปลงของท่าน",
+      totalOffset: results.totalOffset,
+      sfW: results.sfW,
+      approvedPhotos: results.approvedPhotos,
+      totalPhotos: results.totalPhotos,
+      pendingTasks: results.pendingTasks,
     }),
   ]);
   return { newState: "results" };
@@ -876,7 +996,7 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
 
   // Keyword routing to new states
   if (lower.includes("ลงทะเบียน") || lower.includes("ผูกบัญชี")) {
-    await safePush(ctx, [buildConsentBubble()]);
+    await safePush(ctx, [buildConsent4Checkbox()]);
     return { newState: "consent" };
   }
 
@@ -1040,17 +1160,53 @@ async function handleWelcomeApi(ctx: FlowContext): Promise<FlowApiResult> {
 
 async function handleConsentApi(ctx: FlowContext): Promise<FlowApiResult> {
   const lower = ctx.text.toLowerCase().trim();
+
+  // Accept all 4 consents at once
   if (
+    lower === "consent_accept_all" ||
     lower === "consent_accept" ||
     lower === "ยอมรับ" ||
     lower === "accept" ||
-    lower === "ตกลง"
+    lower === "ตกลง" ||
+    lower === "同意"
   ) {
+    const consentTypes = ["pdpa", "data_collection", "photo_sharing", "carbon_project"];
+    for (const ct of consentTypes) {
+      await recordConsent(ctx.db, ctx.farmerId, ct, true);
+    }
+
+    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    if (allConsented) {
+      return {
+        reply: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
+        newState: "phone",
+      };
+    }
     return {
-      reply: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
-      newState: "phone",
+      reply: "กรุณายอมรับเงื่อนไขครบทั้ง 4 ข้อค่ะ",
+      newState: "consent",
     };
   }
+
+  // Individual consent accept
+  const individualMatch = lower.match(/^consent_(pdpa|data_collection|photo_sharing|carbon_project)$/);
+  if (individualMatch) {
+    const consentType = individualMatch[1]!;
+    await recordConsent(ctx.db, ctx.farmerId, consentType, true);
+
+    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    if (allConsented) {
+      return {
+        reply: "✅ ยอมรับเงื่อนไขครบทั้ง 4 ข้อแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
+        newState: "phone",
+      };
+    }
+    return {
+      reply: "✅ บันทึกข้อตกลงแล้วค่ะ กรุณาตอบรับข้อที่เหลือ",
+      newState: "consent",
+    };
+  }
+
   if (lower === "consent_reject" || lower === "ไม่ยินยอม" || lower === "ไม่") {
     return { reply: "กรุณายอมรับเพื่อใช้งานค่ะ", newState: "consent" };
   }
@@ -1240,8 +1396,47 @@ async function handleCalendarApi(ctx: FlowContext): Promise<FlowApiResult> {
       newState: "results",
     };
   }
+
+  // Rich menu postback routing
+  if (lower.includes("bl_home") || lower.includes("หน้าหลัก")) {
+    return { reply: "หน้าหลัก — NetZeroCarbon", newState: "calendar" };
+  }
+  if (lower.includes("todo") || lower.includes("งานค้าง")) {
+    return { reply: "รายการค้างของคุณ", newState: "results" };
+  }
+  if (lower.includes("field_list") || lower.includes("แปลงนา")) {
+    return { reply: "แปลงนาของคุณ", newState: "select_plot" };
+  }
+  if (lower.includes("summary") || lower.includes("สรุปผล")) {
+    return { reply: "แดชบอร์ดของฉัน", newState: "results" };
+  }
+  if (lower.includes("contact") || lower.includes("ติดต่อ")) {
+    return {
+      reply: "📞 ติดต่อเจ้าหน้าที่โครงการ\n\nผู้ประสานงาน: โครงการ NetZeroCarbon\nโทรศัพท์: ติดต่อผ่าน LINE Official\nอีเมล: โครงการ NetZeroCarbon\n\nเวลาทำการ: จันทร์-ศุกร์ 8:00-17:00 น.",
+      newState: "calendar",
+    };
+  }
+
+  // Show calendar with real data from season_steps
+  const plotId = ctx.selectedPlotId;
+  let calendarText = "ปฏิทินฤดูปัจจุบัน\n\n";
+  if (plotId) {
+    const steps = await fetchCalendarSteps(ctx.db, plotId);
+    if (steps.length > 0) {
+      for (const step of steps) {
+        const icon = step.status === "completed" ? "✅" : step.status === "overdue" ? "❌" : "⏳";
+        calendarText += `${icon} ${step.stepCode} ${step.stepName} — วันที่ ${step.dueDay}\n`;
+      }
+      calendarText += "\nพิมพ์ \"ถ่ายรูป\" หรือ \"ดูผล\"";
+    } else {
+      calendarText += "SG-01 เตรียมแปลง\nSG-02 หว่านข้าว\nSG-03 ใส่ปุ๋ยครั้งที่ 1\nSG-04 WET-1\nSG-05 DRY-1\nSG-06 ใส่ปุ๋ยครั้งที่ 2\nSG-07 WET-2\nSG-08 DRY-2\nSG-09 เก็บเกี่ยว\n\nพิมพ์ \"ถ่ายรูป\" หรือ \"ดูผล\"";
+    }
+  } else {
+    calendarText += "SG-01 เตรียมแปลง\nSG-02 หว่านข้าว\nSG-03 ใส่ปุ๋ยครั้งที่ 1\nSG-04 WET-1\nSG-05 DRY-1\nSG-06 ใส่ปุ๋ยครั้งที่ 2\nSG-07 WET-2\nSG-08 DRY-2\nSG-09 เก็บเกี่ยว\n\nพิมพ์ \"ถ่ายรูป\" หรือ \"ดูผล\"";
+  }
+
   return {
-    reply: "ปฏิทินฤดูปัจจุบัน\n\nSG-01 เตรียมแปลง\nSG-02 หว่านข้าว\nSG-03 ใส่ปุ๋ยครั้งที่ 1\nSG-04 WET-1\nSG-05 DRY-1\nSG-06 ใส่ปุ๋ยครั้งที่ 2\nSG-07 WET-2\nSG-08 DRY-2\nSG-09 เก็บเกี่ยว\n\nพิมพ์ \"ถ่ายรูป\" หรือ \"ดูผล\"",
+    reply: calendarText,
     newState: "calendar",
   };
 }
@@ -1273,17 +1468,68 @@ async function handleResultsApi(ctx: FlowContext): Promise<FlowApiResult> {
     return { reply: "ปฏิทินฤดูปัจจุบัน", newState: "calendar" };
   }
   if (lower.includes("งานค้าง") || lower.includes("todo")) {
-    const todoText = composeTodoMessage({ pendingPhotos: 2, retakePhotos: 0, backfillSeasons: 0 });
+    // Query real pending tasks
+    const plotId = ctx.selectedPlotId;
+    let pendingPhotos = 0;
+    let backfillSeasons = 0;
+
+    if (plotId) {
+      const photoPending = await ctx.db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM photo_evidence WHERE plot_id = ? AND admin_status = 'pending'`
+        )
+        .bind(plotId)
+        .first<{ cnt: number }>();
+      pendingPhotos = photoPending?.cnt ?? 0;
+
+      const backfill = await ctx.db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM season_inputs si
+           JOIN seasons s ON s.id = si.season_id
+           WHERE si.plot_id = ? AND si.status = 'draft' AND s.status = 'closed'`
+        )
+        .bind(plotId)
+        .first<{ cnt: number }>();
+      backfillSeasons = backfill?.cnt ?? 0;
+    }
+
+    const todoText = composeTodoMessage({ pendingPhotos, retakePhotos: 0, backfillSeasons });
     return { reply: todoText, newState: "results" };
   }
+
+  // Query real results data
+  const plotId = ctx.selectedPlotId;
+  let farmerName = "—";
+  let plotName = "แปลงของท่าน";
+
+  if (ctx.farmerId) {
+    const farmer = await ctx.db
+      .prepare("SELECT full_name FROM farmers WHERE id = ?")
+      .bind(ctx.farmerId)
+      .first<{ full_name: string }>();
+    if (farmer) farmerName = farmer.full_name;
+  }
+
+  if (plotId) {
+    const plot = await ctx.db
+      .prepare("SELECT plot_code FROM plots WHERE id = ?")
+      .bind(plotId)
+      .first<{ plot_code: string }>();
+    if (plot) plotName = plot.plot_code;
+  }
+
+  const results = plotId
+    ? await fetchResultsData(ctx.db, ctx.farmerId, plotId)
+    : { totalOffset: 0, sfW: 0, approvedPhotos: 0, totalPhotos: 4, pendingPhotos: 4, pendingTasks: 4, backfillCount: 0 };
+
   const resultsText = composeResultsMessage({
-    farmerName: "—",
-    plotName: "แปลงของท่าน",
-    totalOffset: 0,
-    sfW: 0,
-    photoProgress: { approved: 0, total: 4 },
-    backfillCount: 0,
-    pendingPhotos: 4,
+    farmerName,
+    plotName,
+    totalOffset: results.totalOffset,
+    sfW: results.sfW,
+    photoProgress: { approved: results.approvedPhotos, total: results.totalPhotos },
+    backfillCount: results.backfillCount,
+    pendingPhotos: results.pendingPhotos,
   });
   return { reply: resultsText, newState: "results" };
 }

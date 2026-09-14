@@ -15,7 +15,7 @@ function appWithRole(requiredRole: string) {
   return app;
 }
 
-function cookieHeader(session: ReturnType<typeof createSessionCookie>) {
+function cookieHeader(session: string) {
   const raw = session.split(";")[0]?.split("=").slice(1).join("=") ?? "";
   return { Cookie: `nzc_session=${raw}` };
 }
@@ -23,7 +23,7 @@ function cookieHeader(session: ReturnType<typeof createSessionCookie>) {
 describe("requireRole middleware", () => {
   it("allows request with matching role", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "a@test.com" },
       SECRET,
     );
@@ -36,7 +36,7 @@ describe("requireRole middleware", () => {
 
   it("blocks request with wrong role", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "sponsor", email: "s@test.com" },
       SECRET,
     );
@@ -52,7 +52,7 @@ describe("requireRole middleware", () => {
 
   it("blocks request with tampered cookie", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "a@test.com" },
       SECRET,
     );
@@ -64,12 +64,63 @@ describe("requireRole middleware", () => {
 
   it("stores session data in context", async () => {
     const app = appWithRole("admin");
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "a@test.com" },
       SECRET,
     );
     const res = await app.request("/protected", { headers: cookieHeader(cookie) });
     const body = await res.json<{ ok: boolean; role: string }>();
     expect(body.ok).toBe(true);
+  });
+
+  // H4: multi-role array support
+  it("allows any role in the allowed array", async () => {
+    const app = new Hono();
+    app.use("*", requireRole(["admin", "sponsor", "field_agent"], SECRET));
+    app.get("/protected", (c) => c.json({ ok: true }));
+
+    const adminCookie = await createSessionCookie(
+      { userId: "u1", role: "admin", email: "a@test.com" },
+      SECRET,
+    );
+    const sponsorCookie = await createSessionCookie(
+      { userId: "u2", role: "sponsor", email: "s@test.com" },
+      SECRET,
+    );
+    const agentCookie = await createSessionCookie(
+      { userId: "u3", role: "field_agent", email: "f@test.com" },
+      SECRET,
+    );
+
+    const res1 = await app.request("/protected", { headers: cookieHeader(adminCookie) });
+    const res2 = await app.request("/protected", { headers: cookieHeader(sponsorCookie) });
+    const res3 = await app.request("/protected", { headers: cookieHeader(agentCookie) });
+
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(200);
+    expect(res3.status).toBe(200);
+  });
+
+  it("blocks role not in the allowed array", async () => {
+    const app = new Hono();
+    app.use("*", requireRole(["admin", "sponsor"], SECRET));
+    app.get("/protected", (c) => c.json({ ok: true }));
+
+    const auditorCookie = await createSessionCookie(
+      { userId: "u1", role: "auditor", email: "aud@test.com" },
+      SECRET,
+    );
+    const res = await app.request("/protected", { headers: cookieHeader(auditorCookie) });
+    expect(res.status).toBe(403);
+  });
+
+  it("single string role still works (backward-compat)", async () => {
+    const app = appWithRole("admin");
+    const cookie = await createSessionCookie(
+      { userId: "u1", role: "admin", email: "a@test.com" },
+      SECRET,
+    );
+    const res = await app.request("/protected", { headers: cookieHeader(cookie) });
+    expect(res.status).toBe(200);
   });
 });

@@ -9,7 +9,7 @@ function toHex(buf: ArrayBuffer): string {
 function fromHex(hex: string): Uint8Array {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = Number.parseInt(hex.substring(i, i + 2), 16);
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
   }
   return bytes;
 }
@@ -39,17 +39,20 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const hash = parts[1];
   if (!salt || !hash) return false;
   const encoder = new TextEncoder();
+  const passwordBuffer = encoder.encode(password);
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(password),
+    passwordBuffer,
     "PBKDF2",
     false,
     ["deriveBits"],
   );
   const derived = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt: fromHex(salt), iterations: ITERATIONS, hash: "SHA-256" },
+    { name: "PBKDF2", salt: fromHex(salt).buffer as ArrayBuffer, iterations: ITERATIONS, hash: "SHA-256" },
     keyMaterial,
     hash.length * 4,
   );
-  return toHex(derived) === hash;
+  const derivedHex = toHex(derived);
+  if (derivedHex.length !== hash.length) return false;
+  return derivedHex === hash;
 }

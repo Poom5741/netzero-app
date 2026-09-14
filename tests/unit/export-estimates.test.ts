@@ -10,10 +10,9 @@ type Bindings = {
 
 const SECRET = "test-secret-key-for-export";
 
-function adminCookie(): string {
-  return `nzc_session=${
-    createSessionCookie({ userId: "u1", role: "admin", email: "a@test.com" }, SECRET).split("nzc_session=")[1]?.split(";")[0] ?? ""
-  }`;
+async function adminCookie(): Promise<Record<string, string>> {
+  const cookie = await createSessionCookie({ userId: "u1", role: "admin", email: "a@test.com" }, SECRET);
+  return { Cookie: `nzc_session=${cookie.split("nzc_session=")[1]?.split(";")[0] ?? ""}` };
 }
 
 function mockD1(rows: Record<string, unknown>[]) {
@@ -66,7 +65,7 @@ describe("GET /export/estimates", () => {
   it("returns JSON with all estimate fields", async () => {
     const db = mockD1([ESTIMATE_ROW]) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/export/estimates?format=json", { headers: { Cookie: adminCookie() } });
+    const res = await app.request("/export/estimates?format=json", { headers: await adminCookie() });
     const body = (await res.json()) as { estimates: Record<string, unknown>[] };
 
     expect(res.status).toBe(200);
@@ -82,7 +81,7 @@ describe("GET /export/estimates", () => {
   it("returns CSV with headers", async () => {
     const db = mockD1([ESTIMATE_ROW]) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/export/estimates?format=csv", { headers: { Cookie: adminCookie() } });
+    const res = await app.request("/export/estimates?format=csv", { headers: await adminCookie() });
     const text = await res.text();
 
     expect(res.status).toBe(200);
@@ -99,7 +98,7 @@ describe("GET /export/estimates", () => {
   it("CSV data matches on-screen values from sponsor detail", async () => {
     const db = mockD1([ESTIMATE_ROW]) as unknown as D1Database;
     const app = buildApp(db);
-    const csvRes = await app.request("/export/estimates?format=csv", { headers: { Cookie: adminCookie() } });
+    const csvRes = await app.request("/export/estimates?format=csv", { headers: await adminCookie() });
     const text = await csvRes.text();
     const lines = text.trim().split("\n");
     const dataRow = lines[1]?.split(",");
@@ -113,7 +112,7 @@ describe("GET /export/estimates", () => {
   it("JSON data matches on-screen values", async () => {
     const db = mockD1([ESTIMATE_ROW]) as unknown as D1Database;
     const app = buildApp(db);
-    const jsonRes = await app.request("/export/estimates?format=json", { headers: { Cookie: adminCookie() } });
+    const jsonRes = await app.request("/export/estimates?format=json", { headers: await adminCookie() });
     const body = (await jsonRes.json()) as { estimates: Record<string, unknown>[] };
     const est = body.estimates[0];
 

@@ -63,7 +63,7 @@ describe("POST /login", () => {
 
   it("redirects admin to /admin after login", async () => {
     const app = makeApp();
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u1", role: "admin", email: "admin@test.com" },
       SECRET,
     );
@@ -79,7 +79,7 @@ describe("POST /login", () => {
 
   it("redirects sponsor to /sponsor after login", async () => {
     const app = makeApp();
-    const cookie = createSessionCookie(
+    const cookie = await createSessionCookie(
       { userId: "u2", role: "sponsor", email: "sponsor@test.com" },
       SECRET,
     );

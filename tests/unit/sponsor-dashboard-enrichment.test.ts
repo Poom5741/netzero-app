@@ -12,11 +12,12 @@ function mockD1ForPlotsByProvince() {
         bind(..._args: unknown[]) {
           return {
             all: async <T>() => {
-              if (sql.includes("water_state") && sql.includes("GROUP BY water_state")) {
-                return { results: [{ water_state: "flooded", count: 3 }] as T[] };
+              // H2: batch enrichment queries use plot_id IN (...) instead of per-plot
+              if (sql.includes("water_state") && sql.includes("GROUP BY plot_id, water_state")) {
+                return { results: [{ plot_id: "plot-1", water_state: "flooded", count: 3 }] as T[] };
               }
-              if (sql.includes("provenance_type") && sql.includes("GROUP BY provenance_type")) {
-                return { results: [{ provenance_type: "machine", count: 2 }] as T[] };
+              if (sql.includes("provenance_type") && sql.includes("GROUP BY plot_id, provenance_type")) {
+                return { results: [{ plot_id: "plot-1", provenance_type: "machine", count: 2 }] as T[] };
               }
               if (sql.includes("plots p") && sql.includes("carbon_estimates")) {
                 return {

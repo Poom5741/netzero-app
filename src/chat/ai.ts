@@ -127,13 +127,17 @@ export async function chatWithAi(
     if (parsed.type === "reply") {
       const text = typeof parsed.text === "string"
         ? parsed.text
-        : parsed.text?.text || JSON.stringify(parsed.text);
+        : typeof parsed.text === "object" && parsed.text !== null && "text" in parsed.text
+          ? String((parsed.text as { text?: unknown }).text ?? "")
+          : JSON.stringify(parsed.text);
       return { type: "reply", text };
     }
     if (parsed.type === "draft" && parsed.category && parsed.data) {
       const text = typeof parsed.text === "string"
         ? parsed.text
-        : parsed.text?.text || "";
+        : typeof parsed.text === "object" && parsed.text !== null && "text" in parsed.text
+          ? String((parsed.text as { text?: unknown }).text ?? "")
+          : "";
       return {
         type: "draft",
         category: parsed.category as "fertilizer" | "season_input",

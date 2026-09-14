@@ -83,6 +83,10 @@ describe("D1 schema migration", () => {
     expect(sql).toContain("CREATE INDEX IF NOT EXISTS idx_users_email");
   });
 
+  it("creates index on line_links.status for application queue filtering (H3)", () => {
+    expect(sql).toContain("CREATE INDEX IF NOT EXISTS idx_line_links_status ON line_links(status)");
+  });
+
   it("migration is idempotent (uses IF NOT EXISTS)", () => {
     const createTables = sql.match(/CREATE TABLE/g) || [];
     const ifNotExists = sql.match(/IF NOT EXISTS/g) || [];

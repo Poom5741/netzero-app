@@ -14,7 +14,7 @@ exportRoutes.get("/estimates", async (c) => {
   const cookie = c.req.header("Cookie") ?? "";
   const match = cookie.match(/nzc_session=([^;]+)/);
   if (!match) return c.json({ error: "Unauthorized" }, 401);
-  const session = parseSessionCookie(match[1], c.env.SECRET);
+  const session = await parseSessionCookie(match[1], c.env.SECRET);
   if (!session || (session.role !== "admin" && session.role !== "sponsor")) {
     return c.json({ error: "Forbidden" }, 403);
   }

@@ -582,6 +582,225 @@ export function buildCalendarBubble(
 }
 
 // ---------------------------------------------------------------------------
+// 6b. buildConsent4Checkbox  (OB-15)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the OB-15 4-type PDPA consent Flex Message card (CS-01..CS-04).
+ * Shows 4 checkboxes with individual accept toggles and an accept-all button.
+ *
+ * @returns A `LineMessage` with type "flex".
+ */
+export function buildConsent4Checkbox(): LineMessage {
+  const consentItems: Array<{ key: string; code: string; label: string }> = [
+    { key: "pdpa", code: "CS-01", label: "同意 PDPA คุ้มครองข้อมูลส่วนบุคคล" },
+    { key: "data_collection", code: "CS-02", label: "ยอมรับการเก็บข้อมูลการเกษตร" },
+    { key: "photo_sharing", code: "CS-03", label: "ยอมรับการแชร์รูปถ่ายหลักฐาน" },
+    { key: "carbon_project", code: "CS-04", label: "เข้าร่วมโครงการคาร์บอนเครดิต" },
+  ];
+
+  const checkboxes = consentItems.map((item) => ({
+    type: "box" as const,
+    layout: "horizontal" as const,
+    contents: [
+      {
+        type: "text" as const,
+        text: `[ ] ${item.code} · ${item.label}`,
+        size: "sm" as const,
+        wrap: true,
+        color: COLOR_TEXT,
+        flex: 1,
+      },
+    ],
+    action: {
+      type: "postback" as const,
+      label: item.label,
+      data: `action=consent_${item.key}`,
+    },
+  }));
+
+  return {
+    type: "flex",
+    altText: "กรุณาตอบรับเงื่อนไข 4 ข้อ",
+    contents: {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          { type: "text", text: "เงื่อนไขการใช้งาน", weight: "bold", size: "lg", color: COLOR_TEXT },
+          { type: "separator", margin: "sm" },
+          ...checkboxes,
+          { type: "separator", margin: "md" },
+          {
+            type: "text",
+            text: "ยอมรับทั้ง 4 ข้อเพื่อดำเนินการต่อ",
+            size: "xs",
+            color: COLOR_SUBTLE,
+            wrap: true,
+            margin: "md",
+          },
+        ],
+      },
+      footer: {
+        type: "box",
+        layout: "horizontal",
+        contents: [
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "✅ ยอมรับทั้งหมด",
+                size: "sm",
+                color: COLOR_BG,
+                align: "center",
+                weight: "bold",
+              },
+            ],
+            paddingAll: "10px",
+            backgroundColor: COLOR_PRIMARY,
+            cornerRadius: "6px",
+            flex: 1,
+            margin: "md",
+            action: {
+              type: "postback",
+              label: "✅ ยอมรับทั้งหมด",
+              data: "action=consent_accept_all",
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 6c. buildConditions3Checkbox  (OB-05 — tick-accept)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the OB-05 project conditions Flex Message card with 3 checkboxes.
+ * Lists the 3 conditions and provides accept / reject buttons.
+ *
+ * @returns A `LineMessage` with type "flex".
+ */
+export function buildConditions3Checkbox(): LineMessage {
+  return {
+    type: "flex",
+    altText: "เงื่อนไขโครงการ",
+    contents: {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          { type: "text", text: "เงื่อนไขโครงการ", weight: "bold", size: "lg", color: COLOR_TEXT },
+          { type: "separator", margin: "md" },
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "[ ] 1. ส่งภาพหลักฐานตามปฏิทิน 4 รอบต่อครอป",
+                size: "sm",
+                wrap: true,
+                color: COLOR_TEXT,
+                flex: 1,
+              },
+            ],
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "[ ] 2. ให้ข้อมูลแปลงนาตามจริง",
+                size: "sm",
+                wrap: true,
+                color: COLOR_TEXT,
+                flex: 1,
+              },
+            ],
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "[ ] 3. ยินยอมให้ตรวจสอบแปลง",
+                size: "sm",
+                wrap: true,
+                color: COLOR_TEXT,
+                flex: 1,
+              },
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: "box",
+        layout: "horizontal",
+        contents: [
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "✅ ยอมรับ",
+                size: "sm",
+                color: COLOR_BG,
+                align: "center",
+                weight: "bold",
+              },
+            ],
+            paddingAll: "10px",
+            backgroundColor: COLOR_PRIMARY,
+            cornerRadius: "6px",
+            flex: 1,
+            margin: "md",
+            action: {
+              type: "postback",
+              label: "✅ ยอมรับ",
+              data: "action=conditions_accept",
+            },
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            contents: [
+              {
+                type: "text",
+                text: "❌ ไม่ยอมรับ",
+                size: "sm",
+                color: COLOR_BG,
+                align: "center",
+                weight: "bold",
+              },
+            ],
+            paddingAll: "10px",
+            backgroundColor: COLOR_ERROR,
+            cornerRadius: "6px",
+            flex: 1,
+            margin: "md",
+            action: {
+              type: "postback",
+              label: "❌ ไม่ยอมรับ",
+              data: "action=conditions_reject",
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // 7. buildDashboardBubble
 // ---------------------------------------------------------------------------
 

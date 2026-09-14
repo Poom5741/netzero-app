@@ -131,3 +131,13 @@ export function composePhotoRejected(input: PhotoRejectedInput): string {
 
   return lines.join("\n");
 }
+
+/**
+ * Compose the PJ-09 rejection message with admin's reason and resubmission deadline.
+ * Alias for composePhotoRejected with clearer naming for the rejection flow.
+ */
+export type RejectionInput = PhotoRejectedInput;
+
+export function composeRejectionMessage(input: RejectionInput): string {
+  return composePhotoRejected(input);
+}

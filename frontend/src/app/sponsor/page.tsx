@@ -7,13 +7,18 @@ import { Button } from "@/components/ui/button";
 import { KpiCard } from "@/components/sponsor/kpi-card";
 import { ProvinceGroup } from "@/components/sponsor/province-group";
 import { LiveCalc } from "@/components/sponsor/live-calc";
+import { PdpaNotice } from "@/components/sponsor/pdpa-notice";
 import {
   getFallbackData,
   generateExportCSV,
   formatUSD,
+  formatTons,
   type ProvinceGroup as ProvinceGroupType,
   type SponsorSummary,
   type SponsorFarmerRow,
+  type GhgSourceRow,
+  type SeasonCreditRow,
+  type SponsorProfile,
 } from "@/lib/sponsor";
 
 const PRIVATE_IP_PREFIXES = ["10.", "172.", "192.168."];
@@ -38,14 +43,14 @@ const EMPTY_SUMMARY: SponsorSummary = {
   totalCO2Tons: 0,
   totalPlots: 0,
   totalFarmers: 0,
+  totalAreaRai: 0,
+  totalHouseholds: 0,
   paymentEstimateUSD: 0,
   methodologyBreakdown: { awd: 0, biochar: 0, fertilization: 0 },
 };
 
 function fetchJson<T>(path: string, fallback: T): Promise<T> {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE;
-  // Dev (no API base): relative path goes through the Next.js rewrite proxy —
-  // same-origin, fixed route string, no user input.
   const endpoint = apiBase ? validateApiUrl(`${apiBase}${path}`) : path;
   return new Promise((resolve) => {
     try {
@@ -90,8 +95,9 @@ function fetchSponsorData(): Promise<ProvinceGroupType[]> {
 }
 
 const sidebarEntries = [
-  { key: "admin", label: "แดชบอร์ดตรวจสอบ", href: "/admin", icon: "fact_check" },
-  { key: "sponsor", label: "แดชบอร์ดผู้สนับสนุน", href: "/sponsor", icon: "volunteer_activism", active: true },
+  { key: "overview", label: "ภาพรวม", href: "/sponsor", icon: "dashboard", active: true },
+  { key: "areas", label: "พื้นที่", href: "/sponsor/areas", icon: "landscape" },
+  { key: "reports", label: "รายงานและใบรับรอง", href: "/sponsor/reports", icon: "description" },
 ];
 
 const regionCodeMap: Record<string, string> = {
@@ -110,25 +116,165 @@ function getRegionCode(province: string): string {
   return province.slice(0, 2).toUpperCase();
 }
 
+/** Simple horizontal bar chart using CSS */
+function SeasonChart({ credits }: { credits: SeasonCreditRow[] }) {
+  if (credits.length === 0) {
+    return (
+      <div className="bg-surface-container-lowest p-6 rounded-xl">
+        <p className="text-on-surface-variant text-body-md">ยังไม่มีข้อมูลเครดิตตามฤดูกาล</p>
+      </div>
+    );
+  }
+  const maxVal = Math.max(...credits.map((c) => Math.max(c.estimated_tco2e, c.verified_tco2e)), 1);
+  return (
+    <div className="bg-surface-container-lowest p-6 rounded-xl">
+      <h3 className="font-headline-md text-headline-md text-on-surface mb-4">เครดิตตามฤดูกาล</h3>
+      <div className="space-y-3">
+        {credits.map((c) => (
+          <div key={c.season_id} className="flex items-center gap-3">
+            <span className="text-label-md text-on-surface-variant w-24 truncate" title={c.season_name}>{c.season_name}</span>
+            <div className="flex-1 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-surface-variant h-3 rounded-full overflow-hidden">
+                  <div className="bg-primary/60 h-full rounded-full" style={{ width: `${(c.estimated_tco2e / maxVal) * 100}%` }} />
+                </div>
+                <span className="text-label-sm text-on-surface-variant w-16 text-right">{formatTons(c.estimated_tco2e)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-surface-variant h-3 rounded-full overflow-hidden">
+                  <div className="bg-primary h-full rounded-full" style={{ width: `${(c.verified_tco2e / maxVal) * 100}%` }} />
+                </div>
+                <span className="text-label-sm text-primary w-16 text-right">{formatTons(c.verified_tco2e)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-4 mt-3 text-label-sm text-on-surface-variant">
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-primary/60 inline-block" /> ประมาณการ</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-primary inline-block" /> ตรวจสอบแล้ว</span>
+      </div>
+    </div>
+  );
+}
+
+/** GHG emission source breakdown table */
+function GhgSourceTable({ sources }: { sources: GhgSourceRow[] }) {
+  if (sources.length === 0) return null;
+  return (
+    <div className="bg-surface-container-lowest p-6 rounded-xl">
+      <h3 className="font-headline-md text-headline-md text-on-surface mb-4">แหล่งการปล่อยก๊าซเรือนกระจก</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full text-body-md">
+          <thead>
+            <tr className="border-b border-surface-variant">
+              <th className="text-left py-2 text-label-md text-on-surface-variant font-medium">แหล่ง</th>
+              <th className="text-right py-2 text-label-md text-on-surface-variant font-medium">พื้นฐาน (tCO2e)</th>
+              <th className="text-right py-2 text-label-md text-on-surface-variant font-medium">โครงการ (tCO2e)</th>
+              <th className="text-right py-2 text-label-md text-primary font-medium">การลด (tCO2e)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sources.map((s) => (
+              <tr key={s.source} className="border-b border-surface-variant/50 last:border-0">
+                <td className="py-2 text-on-surface">{s.source}</td>
+                <td className="py-2 text-right text-on-surface-variant">{formatTons(s.baseline)}</td>
+                <td className="py-2 text-right text-on-surface-variant">{formatTons(s.project)}</td>
+                <td className="py-2 text-right text-primary font-medium">{formatTons(s.reduction)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/** Progress bars for season milestones */
+function ProgressBars({ summary }: { summary: SponsorSummary }) {
+  // Simulated milestone progress — in production these would come from season_steps
+  const milestones = [
+    { label: "วันหว่าน", pct: summary.totalPlots > 0 ? 85 : 0 },
+    { label: "การถ่ายภาพ", pct: summary.totalPlots > 0 ? 60 : 0 },
+    { label: "ข้อมูล Inputs", pct: summary.totalPlots > 0 ? 70 : 0 },
+  ];
+  return (
+    <div className="bg-surface-container-lowest p-6 rounded-xl">
+      <h3 className="font-headline-md text-headline-md text-on-surface mb-4">ความคืบหน้าฤดูกาล</h3>
+      <div className="space-y-4">
+        {milestones.map((m) => (
+          <div key={m.label}>
+            <div className="flex justify-between mb-1">
+              <span className="text-body-md text-on-surface-variant">{m.label}</span>
+              <span className="text-label-md text-primary font-medium">{m.pct}%</span>
+            </div>
+            <div className="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
+              <div className="bg-primary h-full rounded-full transition-all" style={{ width: `${m.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Impact metrics cards */
+function ImpactMetrics({ summary }: { summary: SponsorSummary }) {
+  const metrics = [
+    { label: "การลดมีเทน", value: summary.totalCO2Tons > 0 ? "~35%" : "0%", icon: "water_drop", desc: "เทียบกับวิธีการดั้งเดิม" },
+    { label: "การประหยัดน้ำ", value: summary.totalCO2Tons > 0 ? "~25%" : "0%", icon: "local_drink", desc: "จากการจัดการน้ำสลับ" },
+    { label: "เชื้อเพลิง", value: summary.totalCO2Tons > 0 ? "+5%" : "0%", icon: "local_gas_station", desc: "เพิ่มขึ้นเล็กน้อย" },
+    { label: "ปุ๋ย", value: "เท่าเดิม", icon: "science", desc: "ไม่เปลี่ยนแปลง" },
+  ];
+  return (
+    <div className="bg-surface-container-lowest p-6 rounded-xl">
+      <h3 className="font-headline-md text-headline-md text-on-surface mb-4">ผลกระทบด้านสิ่งแวดล้อม</h3>
+      <div className="grid grid-cols-2 gap-4">
+        {metrics.map((m) => (
+          <div key={m.label} className="flex items-start gap-3 p-3 bg-surface-container rounded-lg">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-primary text-[18px]">{m.icon}</span>
+            </div>
+            <div>
+              <p className="text-label-md text-on-surface-variant">{m.label}</p>
+              <p className="text-headline-sm text-on-surface font-bold">{m.value}</p>
+              <p className="text-label-sm text-outline">{m.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SponsorDashboardPage() {
   const [groups, setGroups] = useState<ProvinceGroupType[]>([]);
   const [summary, setSummary] = useState<SponsorSummary>(EMPTY_SUMMARY);
   const [farmers, setFarmers] = useState<SponsorFarmerRow[]>([]);
+  const [ghgSources, setGhgSources] = useState<GhgSourceRow[]>([]);
+  const [seasonCredits, setSeasonCredits] = useState<SeasonCreditRow[]>([]);
+  const [profile, setProfile] = useState<SponsorProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const [data, summaryData, farmersData] = await Promise.all([
+        const [data, summaryData, farmersData, ghgData, creditData, profileData] = await Promise.all([
           fetchSponsorData(),
           fetchJson<SponsorSummary>("/sponsor/summary", EMPTY_SUMMARY),
           fetchJson<{ farmers: SponsorFarmerRow[] }>("/sponsor/farmers", { farmers: [] }),
+          fetchJson<{ sources: GhgSourceRow[] }>("/sponsor/ghg-sources", { sources: [] }),
+          fetchJson<{ credits: SeasonCreditRow[] }>("/sponsor/season-credits", { credits: [] }),
+          fetchJson<SponsorProfile>("/sponsor/me", null as unknown as SponsorProfile),
         ]);
         if (!cancelled) {
           setGroups(data);
           setSummary(summaryData);
           setFarmers(farmersData.farmers ?? []);
+          setGhgSources(ghgData.sources ?? []);
+          setSeasonCredits(creditData.credits ?? []);
+          setProfile(profileData);
           setLoading(false);
         }
       } catch {
@@ -162,19 +308,26 @@ export default function SponsorDashboardPage() {
 
   const isEmpty = !loading && totalPlots === 0 && farmers.length === 0;
 
+  const userName = profile?.user?.name ?? profile?.user?.email ?? "ผู้สนับสนุน";
+  const userEmail = profile?.user?.email ?? "sponsor@netzerocarbon.com";
+  const areaLabel = profile?.areas ? profile.areas.join(", ") : "ทุกพื้นที่";
+
   return (
     <>
       <DashboardSidebar
         entries={sidebarEntries}
-        userName="ผู้ดูแลระบบ"
-        userEmail="admin@netzerocarbon.com"
+        userName={userName}
+        userEmail={userEmail}
         brand="NetZero"
       />
-      <DashboardHeader userLabel="ผู้ดูแลระบบ" searchPlaceholder="ค้นหาทั่วโลก..." />
+      <DashboardHeader userLabel={userName} searchPlaceholder="ค้นหาแปลง..." />
 
       <div className="dashboard-main">
         <main className="relative pt-20 min-h-screen bg-surface px-6 lg:px-10 py-6">
           <div className="flex flex-col w-full relative">
+            {/* PDPA CS-02 Notice */}
+            <PdpaNotice />
+
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 relative z-10">
               <div>
@@ -186,6 +339,7 @@ export default function SponsorDashboardPage() {
                 <p className="text-body-lg text-on-surface-variant max-w-2xl mt-2">
                   ตรวจสอบผลกระทบของคุณแบบเรียลไทม์ ติดตามการลดการปล่อยก๊าซเรือนกระจกจากแปลงเกษตรที่ได้รับการสนับสนุน
                 </p>
+                <p className="text-label-md text-outline mt-1">พื้นที่รับผิดชอบ: {areaLabel}</p>
               </div>
               <div className="mt-4 md:mt-0 flex gap-4">
                 <Button
@@ -218,8 +372,23 @@ export default function SponsorDashboardPage() {
               </div>
             ) : (
               <>
-                {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 relative z-10">
+                {/* Hero KPI: Verified Credits */}
+                <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 p-6 rounded-xl mb-6 relative z-10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="material-symbols-outlined text-primary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                    <h2 className="text-headline-lg text-on-surface">คาร์บอนเครดิตที่ยืนยันแล้ว</h2>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-display-xl text-primary font-bold">{formatTons(totalCO2)}</span>
+                    <span className="text-body-lg text-on-surface-variant">ตัน CO₂eq</span>
+                  </div>
+                  <p className="text-label-md text-outline mt-1">
+                    ครอบคลุม {summary.totalAreaRai} ไร่ / {summary.totalHouseholds} ครัวเรือน / {totalPlots} แปลง
+                  </p>
+                </div>
+
+                {/* KPI Cards Row */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10 relative z-10">
                   <KpiCard
                     title="CO₂ ที่ลดทั้งหมด"
                     value={Math.round(totalCO2)}
@@ -234,7 +403,15 @@ export default function SponsorDashboardPage() {
                     suffix="แปลง"
                     icon="landscape"
                     color="secondary"
-                    trend={loading ? "กำลังโหลด..." : `ครอบคลุม ${groups.length} จังหวัด • ${summary.totalFarmers} เกษตรกร`}
+                    trend={loading ? "กำลังโหลด..." : `ครอบคลุม ${groups.length} จังหวัด`}
+                  />
+                  <KpiCard
+                    title="พื้นที่ทั้งหมด"
+                    value={summary.totalAreaRai}
+                    suffix="ไร่"
+                    icon="square_foot"
+                    color="secondary"
+                    trend={`${summary.totalHouseholds} ครัวเรือน`}
                   />
                   <KpiCard
                     title="การลงทุนทั้งหมด"
@@ -249,7 +426,7 @@ export default function SponsorDashboardPage() {
 
                 {/* Bento Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
-                  {/* Regional Breakdown (8 cols) */}
+                  {/* Left Column: Regional Breakdown + GHG + Season Chart */}
                   <div className="lg:col-span-8 flex flex-col gap-6">
                     <h2 className="text-headline-lg text-on-surface">รายละเอียดตามภูมิภาค</h2>
                     {loading ? (
@@ -266,19 +443,16 @@ export default function SponsorDashboardPage() {
                         />
                       ))
                     )}
+
+                    <GhgSourceTable sources={ghgSources} />
+                    <SeasonChart credits={seasonCredits} />
                   </div>
 
-                  {/* Live Calculation + Map (4 cols) */}
+                  {/* Right Column: Live Calc + Progress + Impact */}
                   <div className="lg:col-span-4 flex flex-col gap-6">
                     <LiveCalc liveValue={Math.round(totalCO2)} techniques={techniques} />
-
-                    {/* Map */}
-                    <div className="neumorphic overflow-hidden flex flex-col h-64">
-                      <div className="p-4 pb-0">
-                        <h3 className="font-headline-md text-[18px] text-on-surface">การกระจายโครงการ</h3>
-                      </div>
-                      <div className="flex-1 w-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAVG86o0n-MoR-4dNoH0sh1Yu4QC9LeHaXXbgBA3RlmKu5F-1um9QCDuROM2VrrwHp1gy04UagLdUBHlpsDm3qnbdTXbvJ_aGU6NqA2LOsg3OgWzelFWVd-w9E-SFtJAcqyFxPQQWzIvQy6SIFx7n4qa_Ay7IQB9ik_5wmVOa4pPJa8661GwOK3fo-eRNZ9yHQrQvm0RWtJ2sWxmMOvXJLDBqJ59nsyxvZdQiBMX3jVGtQEyA3EjG3LbA')" }} />
-                    </div>
+                    <ProgressBars summary={summary} />
+                    <ImpactMetrics summary={summary} />
                   </div>
                 </div>
               </>

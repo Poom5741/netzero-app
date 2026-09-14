@@ -4,21 +4,23 @@
 
 import { Hono } from "hono";
 import { handleFarmerCreate, handlePlotCreate } from "../farmer/create";
+import { requireRole } from "../auth/middleware";
 
 type Bindings = {
   DB: D1Database;
+  SECRET: string;
 };
 
 export const farmerRoutes = new Hono<{ Bindings: Bindings }>();
 
 // POST /api/farmer — Create a new farmer
-farmerRoutes.post("/api/farmer", async (c) => {
+farmerRoutes.post("/api/farmer", async (c, next) => requireRole(["admin", "field"], c.env.SECRET)(c, next), async (c) => {
   try {
     const db = c.env.DB;
     const body = await c.req.json<{
       full_name: string;
       phone: string;
-      gender?: string;
+      gender?: "male" | "female" | "unspecified";
       addr_province?: string;
       addr_district?: string;
       addr_subdistrict?: string;
@@ -40,15 +42,15 @@ farmerRoutes.post("/api/farmer", async (c) => {
 });
 
 // POST /api/plot — Create a new plot
-farmerRoutes.post("/api/plot", async (c) => {
+farmerRoutes.post("/api/plot", async (c, next) => requireRole(["admin", "field"], c.env.SECRET)(c, next), async (c) => {
   try {
     const db = c.env.DB;
     const body = await c.req.json<{
       farmer_id: string;
       deed_no: string;
       area_rai: number;
-      doc_type?: string;
-      tenure?: string;
+      doc_type?: "chanote" | "ns3k" | "spk" | "rental";
+      tenure?: "owner" | "tenant" | "proxy";
       addr_province?: string;
       centroid_lat?: number;
       centroid_lng?: number;

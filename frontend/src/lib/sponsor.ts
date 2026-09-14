@@ -27,6 +27,8 @@ export type SponsorSummary = {
   totalCO2Tons: number;
   totalPlots: number;
   totalFarmers: number;
+  totalAreaRai: number;
+  totalHouseholds: number;
   paymentEstimateUSD: number;
   methodologyBreakdown: { awd: number; biochar: number; fertilization: number };
 };
@@ -38,6 +40,50 @@ export type SponsorFarmerRow = {
   plotCount: number;
   totalTCO2e: number;
   progressPercent: number;
+};
+
+// ─── Certificate type ───
+
+export type Certificate = {
+  id: string;
+  certificate_number: string;
+  season_id: string;
+  volume_tco2e: number;
+  status: string;
+  issued_at: string;
+};
+
+// ─── GHG source breakdown ───
+
+export type GhgSourceRow = {
+  source: string;
+  baseline: number;
+  project: number;
+  reduction: number;
+};
+
+// ─── Season credit chart ───
+
+export type SeasonCreditRow = {
+  season_id: string;
+  season_name: string;
+  estimated_tco2e: number;
+  verified_tco2e: number;
+};
+
+// ─── Sponsor profile ───
+
+export type SponsorProfile = {
+  user: { id: string; email: string; name: string | null; role: string };
+  areas: string[] | null;
+};
+
+// ─── Certificate status vocab ───
+
+export const CERT_STATUS: Record<string, { label: string; color: string }> = {
+  verified: { label: "คงเหลือในบัญชี", color: "text-primary" },
+  retired: { label: "ยกเลิกเพื่อชดเชยแล้ว", color: "text-error" },
+  pending: { label: "รอทวนสอบ", color: "text-tertiary" },
 };
 
 // ─── Pure helpers ───

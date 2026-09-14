@@ -89,3 +89,38 @@ export function composeTodoMessage(input: TodoMessageInput): string {
 
   return lines.join("\n");
 }
+
+export interface PendingTasksInput {
+  pendingPhotos: number;
+  retakePhotos: number;
+  backfillSeasons: number;
+}
+
+/**
+ * Compose the pending tasks message (RP-01) showing incomplete items.
+ * Shows real data from photo_evidence and season_inputs tables.
+ */
+export function composePendingTasksMessage(input: PendingTasksInput): string {
+  const total = input.pendingPhotos + input.retakePhotos + input.backfillSeasons;
+
+  if (total === 0) {
+    return "ไม่มีงานค้างครับ 🎉 ทุกอย่างเรียบร้อยแล้ว";
+  }
+
+  const lines: string[] = [];
+  lines.push("งานค้างของคุณ");
+  lines.push(`เหลือ ${total} เรื่องที่ต้องทำครับ`);
+  lines.push("");
+
+  if (input.retakePhotos > 0) {
+    lines.push(`📷 ภาพที่ต้องถ่ายใหม่: ${input.retakePhotos} รายการ`);
+  }
+  if (input.pendingPhotos > 0) {
+    lines.push(`📷 ภาพที่ยังไม่ส่ง: ${input.pendingPhotos} ภาพ`);
+  }
+  if (input.backfillSeasons > 0) {
+    lines.push(`📋 ฤดูย้อนหลังที่ยังไม่กรอก: ${input.backfillSeasons} ฤดู`);
+  }
+
+  return lines.join("\n");
+}

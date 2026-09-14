@@ -7,27 +7,27 @@ import { createWebhookHandler } from "../../src/line/webhook";
 const CHANNEL_SECRET = "test-secret-key-for-webhook";
 
 describe("Line crypto", () => {
-  it("creates valid HMAC-SHA256 signature", () => {
+  it("creates valid HMAC-SHA256 signature", async () => {
     const body = '{"events":[]}';
-    const sig = createSignature(body, CHANNEL_SECRET);
+    const sig = await createSignature(body, CHANNEL_SECRET);
     expect(sig).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it("verifySignature accepts valid signature", () => {
+  it("verifySignature accepts valid signature", async () => {
     const body = '{"events":[{"type":"follow"}]}';
-    const sig = createSignature(body, CHANNEL_SECRET);
-    expect(verifySignature(body, sig, CHANNEL_SECRET)).toBe(true);
+    const sig = await createSignature(body, CHANNEL_SECRET);
+    expect(await verifySignature(body, sig, CHANNEL_SECRET)).toBe(true);
   });
 
-  it("verifySignature rejects invalid signature", () => {
+  it("verifySignature rejects invalid signature", async () => {
     const body = '{"events":[{"type":"follow"}]}';
-    expect(verifySignature(body, "bad-signature", CHANNEL_SECRET)).toBe(false);
+    expect(await verifySignature(body, "bad-signature", CHANNEL_SECRET)).toBe(false);
   });
 
-  it("verifySignature rejects tampered body", () => {
+  it("verifySignature rejects tampered body", async () => {
     const body = '{"events":[{"type":"follow"}]}';
-    const sig = createSignature(body, CHANNEL_SECRET);
-    expect(verifySignature(`${body} `, sig, CHANNEL_SECRET)).toBe(false);
+    const sig = await createSignature(body, CHANNEL_SECRET);
+    expect(await verifySignature(`${body} `, sig, CHANNEL_SECRET)).toBe(false);
   });
 });
 
@@ -64,7 +64,7 @@ describe("Webhook POST /line/webhook", () => {
 
   it("accepts valid signature with empty events", async () => {
     const body = JSON.stringify({ events: [] });
-    const sig = createSignature(body, CHANNEL_SECRET);
+    const sig = await createSignature(body, CHANNEL_SECRET);
     const res = await app.request("/line/webhook", {
       method: "POST",
       body,
@@ -85,7 +85,7 @@ describe("Webhook POST /line/webhook", () => {
       mode: "active",
     };
     const body = JSON.stringify({ events: [event] });
-    const sig = createSignature(body, CHANNEL_SECRET);
+    const sig = await createSignature(body, CHANNEL_SECRET);
 
     const res1 = await app.request("/line/webhook", {
       method: "POST",
@@ -119,7 +119,7 @@ describe("Webhook POST /line/webhook", () => {
       mode: "active",
     };
     const body = JSON.stringify({ events: [event] });
-    const sig = createSignature(body, CHANNEL_SECRET);
+    const sig = await createSignature(body, CHANNEL_SECRET);
 
     const res = await app.request("/line/webhook", {
       method: "POST",

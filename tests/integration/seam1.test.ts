@@ -97,7 +97,7 @@ describe("Seam 1 — full vertical slice", () => {
     expect(estimate.total_offset_tco2e).toBeGreaterThan(0);
 
     // Step 7: Sponsor access
-    const sponsorCookie = makeSessionCookie("sponsor");
+    const sponsorCookie = await makeSessionCookie("sponsor");
     const sponsorRes = await app.request(
       "/sponsor",
       new Request("http://localhost/sponsor", {

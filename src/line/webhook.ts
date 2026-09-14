@@ -17,7 +17,7 @@ export function createWebhookHandler(secret: string) {
     if (!sig) return c.json({ error: "Missing signature" }, 401);
 
     const rawBody = await c.req.text();
-    if (!verifySignature(rawBody, sig, secret)) {
+    if (!(await verifySignature(rawBody, sig, secret))) {
       return c.json({ error: "Invalid signature" }, 401);
     }
 

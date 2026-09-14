@@ -1,0 +1,15 @@
+{
+  "task": "0003-client-design-alignment",
+  "title": "Client design artifacts → spec & build gaps (LINE OA / Admin / Sponsor)",
+  "role": "lead",
+  "mode": { "agents": "multi", "loop": "loop", "commits": "gate" },
+  "phases": {
+    "define":    { "status": "done",       "validated": true,  "approved": true,  "artifact": "spec.md" },
+    "blueprint": { "status": "done",       "validated": true,  "approved": true,  "artifact": "plan.md" },
+    "construct": { "status": "done",       "validated": false,                    "artifact": null },
+    "verify":    { "status": "done",       "validated": true,                     "artifact": null },
+    "inspect":   { "status": "done",       "validated": true,                     "artifact": "review.md" },
+    "harden":    { "status": "done",       "validated": true,                     "artifact": "security-review.md" },
+    "release":   { "status": "todo",        "validated": false,                    "artifact": null }
+  }
+}
