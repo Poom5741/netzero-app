@@ -150,7 +150,7 @@ export default function AdminOverviewPage() {
                     icon="photo_library"
                     label="ภาพรอตรวจ"
                     count={workQueue.photoQueue}
-                    href="/admin/review"
+                    href="/admin/applications"
                     urgency={workQueue.photoQueue > 20 ? "high" : "normal"}
                   />
                   <WorkQueueCard

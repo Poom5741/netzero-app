@@ -9,7 +9,6 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 const adminSidebarEntries: SidebarEntry[] = [
   { key: "overview", label: "ภาพรวม", href: "/admin", icon: "dashboard" },
   { key: "applications", label: "ตรวจสอบใบสมัคร", href: "/admin/applications", icon: "assignment" },
-  { key: "review", label: "ตรวจสอบภาพ", href: "/admin/review", icon: "rate_review" },
   { key: "farmers", label: "เกษตรกร", href: "/admin/farmers", icon: "agriculture" },
   { key: "sponsors", label: "ผู้สนับสนุน", href: "/admin/sponsors", icon: "handshake" },
   { key: "reports", label: "รายงาน", href: "/admin/reports", icon: "summarize" },
