@@ -257,6 +257,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
           farmerId: link.farmer_id,
           state: link.conversation_state,
           selectedPlotId: link.selected_plot_id,
+          liffId: env.LIFF_ID,
           text,
         });
       } catch (flowErr) {
@@ -315,6 +316,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         farmerId: link.farmer_id,
         state: link.conversation_state,
         selectedPlotId: link.selected_plot_id,
+        liffId: env.LIFF_ID,
         text: postbackText === "show_calendar" ? "ดูปฏิทิน" : postbackText,
       });
       break;
