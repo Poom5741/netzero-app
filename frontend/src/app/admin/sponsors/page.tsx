@@ -40,7 +40,7 @@ export default function SponsorsPage() {
         </div>
 
         {loading && (
-          <div className="neumorphic p-6 text-center rounded-xl">
+          <div className="neumorphic p-6 text-center rounded-2xl">
             <div className="flex justify-center gap-2 mb-2">
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
@@ -51,14 +51,14 @@ export default function SponsorsPage() {
         )}
 
         {error && (
-          <div className="neumorphic p-6 text-center rounded-xl">
+          <div className="neumorphic p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
             <p className="text-body-md text-on-surface">{error}</p>
           </div>
         )}
 
         {!loading && !error && sponsors.length === 0 && (
-          <div className="neumorphic p-6 text-center rounded-xl">
+          <div className="neumorphic p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-outline text-4xl mb-2">inbox</span>
             <p className="text-body-md text-on-surface-variant">ไม่มีผู้สนับสนุนในระบบ</p>
           </div>
@@ -67,7 +67,7 @@ export default function SponsorsPage() {
         {!loading && !error && sponsors.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sponsors.map((sponsor) => (
-              <div key={sponsor.id} className="neumorphic rounded-xl p-5">
+              <div key={sponsor.id} className="neumorphic rounded-2xl p-5">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <span className="material-symbols-outlined text-primary text-[20px]">handshake</span>

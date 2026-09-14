@@ -91,6 +91,21 @@ body {
   min-height: 100vh;
 }
 
+/* === Heading Weight Hierarchy === */
+h1 {
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+h2 {
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+h3 {
+  font-weight: 500;
+}
+
 /* === Thai Text Support — Sarabun loaded via @import at top === */
 
 /* === Glassmorphic Utility === */
