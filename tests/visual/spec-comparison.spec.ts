@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { compare } from 'pixelmatch';
+import pixelmatch from 'pixelmatch';
 import { createCanvas, loadImage } from 'canvas';
 
 /**
@@ -34,7 +34,7 @@ test.describe('Spec vs Implementation Visual Comparison', () => {
     expect(welcomeText).toBeTruthy();
 
     // Check for branding
-    const logo = await page.getByText('แชท').isVisible();
+    const logo = await page.getByRole('banner').getByText('แชท').isVisible();
     expect(logo).toBeTruthy();
   });
 
@@ -43,7 +43,7 @@ test.describe('Spec vs Implementation Visual Comparison', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Check for login form or dashboard
-    const hasLogin = await page.getByText('เข้าสู่ระบบ').isVisible().catch(() => false);
+    const hasLogin = await page.getByRole('heading', { name: 'เข้าสู่ระบบ Admin' }).isVisible().catch(() => false);
     const hasDashboard = await page.getByText('ภาพรวมระบบ').isVisible().catch(() => false);
 
     // Either login or dashboard should be visible
@@ -86,7 +86,7 @@ async function compareImages(baselinePath: string, currentPath: string, diffPath
   const img2 = ctx2.getImageData(0, 0, width, height);
   const imgDiff = ctxDiff.createImageData(width, height);
 
-  const numDiffPixels = compare(img1.data, img2.data, imgDiff.data, width, height, { threshold: 0.1 });
+  const numDiffPixels = pixelmatch(img1.data, img2.data, imgDiff.data, width, height, { threshold: 0.1 });
   const totalPixels = width * height;
   const diffRatio = numDiffPixels / totalPixels;
 

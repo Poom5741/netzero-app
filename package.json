@@ -7,6 +7,7 @@
     "check:lint": "bunx biome check src/ tests/",
     "check:type": "bunx tsc --noEmit",
     "check:test": "bun test --bail tests/unit/ tests/integration/",
+    "test:visual": "playwright test --config=tests/visual/playwright.config.ts",
     "check": "bun run check:lint && bun run check:type && bun run check:test",
     "dev": "npx wrangler dev",
     "dev:frontend": "cd frontend && npm run dev",
@@ -26,7 +27,9 @@
     "@biomejs/biome": "^2.5.9",
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.2.0",
+    "canvas": "^3.2.3",
     "concurrently": "^10.0.5",
+    "pixelmatch": "^7.2.0",
     "vitest": "^4.1.11"
   }
 }
