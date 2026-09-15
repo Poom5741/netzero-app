@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-09-15T14:27:42.851Z",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "results": [
+    {
+      "scenario": "V1: Single Reference Capture",
+      "passed": true,
+      "output": "Capturing admin/admin-login/default at 1280x720@1x\n✅ Captured: /Users/poom-work/netzero-app/tests/visual/captures/reference/admin-login-default-1280x720.png\n📋 Provenance: /Users/poom-work/netzero-app/tests/visual/captures/provenance/admin-login-default-1280x720.json\n🔤 Font state: ready\n✅ Dimensions verified: 1280x720\n"
+    },
+    {
+      "scenario": "V2: Capture Determinism",
+      "passed": true,
+      "output": "Starting determinism verification...\n\nVerifying admin-login...\n  Captures: 4 (1 warmup discarded)\n  All identical: ✓\n  Diffs: 0, 0, 0\n\nVerifying sponsor-dashboard...\n  Captures: 4 (1 warmup discarded)\n  All identical: ✓\n  Diffs: 0, 0, 0\n\nVerifying line-chat...\n  Captures: 4 (1 warmup discarded)\n  All identical: ✓\n  Diffs: 0, 0, 0\n\n\n✓ Determinism verification PASSED\n✓ Summary written to /Users/poom-work/netzero-app/tests/visual/captures/determinism/determinism-summary.json\n"
+    },
+    {
+      "scenario": "V3: Noise Measurement",
+      "passed": true,
+      "output": "📏 Measuring noise for admin/admin-login/default at 1280x720@1x\n   Capturing 5 times...\n\n\n📊 Noise Profile:\n   Screen: admin-login/default\n   Viewport: 1280x720@1x\n   Captures: 5\n\n   header     max:     0 px  avg:    0.0 px  tolerance: 1\n   sidebar    max:     0 px  avg:    0.0 px  tolerance: 1\n   content    max:     0 px  avg:    0.0 px  tolerance: 1\n   footer     max:     0 px  avg:    0.0 px  tolerance: 1\n\n✅ Profile saved: /Users/poom-work/netzero-app/tests/visual/noise/profiles/admin-login-default-1280x720.json\n"
+    },
+    {
+      "scenario": "V4: Comparison Detects Intentional Change",
+      "passed": true,
+      "output": "🔍 Comparing:\n   Reference: tests/visual/captures/reference/admin-login-default-1280x720.png\n   Implementation: tests/visual/captures/reference/admin-login-default-1280x720.png\n   Tolerances: default (0)\n\n📊 Results:\n   ✅ full       diff:      0 px  tolerance: 0  (0%)\n\n   Diff: /Users/poom-work/netzero-app/tests/visual/comparison/diff/comparison-1789482458248.png\n   Overlay: /Users/poom-work/netzero-app/tests/visual/comparison/overlay/comparison-1789482458248.png\n   Result: tests/visual/comparison/results/comparison-1789482458248.json\n\n✅ PASS\n"
+    },
+    {
+      "scenario": "V5: Dimension Mismatch Rejection",
+      "passed": true,
+      "output": "🔍 Comparing:\n   Reference: tests/visual/captures/multi-viewport/admin-login-1280x720.png\n   Implementation: tests/visual/captures/multi-viewport/admin-login-390x844.png\n   Tolerances: default (0)\n\n"
+    },
+    {
+      "scenario": "V6: All-Viewport Capture",
+      "passed": true,
+      "output": "Starting multi-viewport capture...\n\nCapturing admin-login...\n  ✓ 1280x720\n  ✓ 1440x900\n  ✓ 390x844\n  ✓ 360x844\n  ✓ 430x844\n\n✓ Captured 5 screenshots across 1 screens and 5 viewports\n✓ Summary written to /Users/poom-work/netzero-app/tests/visual/captures/multi-viewport/multi-viewport-summary.json\n"
+    },
+    {
+      "scenario": "V7: Coverage Manifest Completeness",
+      "passed": true,
+      "output": "📋 Generating coverage manifest...\n\n✅ Manifest written: /Users/poom-work/netzero-app/tests/visual/coverage-manifest.md\n   Complete: 14\n   Partial: 0\n   Missing: 0\n"
+    }
+  ]
+}

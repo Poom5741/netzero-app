@@ -7,7 +7,11 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import { ADMIN_FIXTURES, FARMER_FIXTURES, FIXTURE_META, SPONSOR_FIXTURES } from "./fixtures";
 
 export interface MissingAsset {

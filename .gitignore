@@ -44,3 +44,17 @@ npm-debug.log*
 *.pth
 .mimosa/
 .playwright-mcp/
+
+# ---- Visual QA output (keep .gitkeep placeholders) ----
+tests/visual/captures/reference/
+tests/visual/captures/provenance/
+tests/visual/comparison/diff/
+tests/visual/comparison/overlay/
+tests/visual/comparison/results/
+tests/visual/comparison/temp-*.png
+tests/visual/noise/profiles/
+!tests/visual/captures/.gitkeep
+!tests/visual/comparison/diff/.gitkeep
+!tests/visual/comparison/overlay/.gitkeep
+!tests/visual/comparison/results/.gitkeep
+!tests/visual/noise/profiles/.gitkeep

@@ -1,0 +1,47 @@
+[
+  {
+    "screen": "admin-login",
+    "viewport": "1280x720",
+    "path": "/Users/poom-work/netzero-app/tests/visual/captures/reference/admin-login-default-1280x720.png",
+    "dimensions": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "screen": "admin-login",
+    "viewport": "1440x900",
+    "path": "/Users/poom-work/netzero-app/tests/visual/captures/reference/admin-login-default-1440x900.png",
+    "dimensions": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  {
+    "screen": "admin-login",
+    "viewport": "390x844",
+    "path": "/Users/poom-work/netzero-app/tests/visual/captures/reference/admin-login-default-390x844.png",
+    "dimensions": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "screen": "admin-login",
+    "viewport": "360x844",
+    "path": "/Users/poom-work/netzero-app/tests/visual/captures/reference/admin-login-default-360x844.png",
+    "dimensions": {
+      "width": 360,
+      "height": 844
+    }
+  },
+  {
+    "screen": "admin-login",
+    "viewport": "430x844",
+    "path": "/Users/poom-work/netzero-app/tests/visual/captures/reference/admin-login-default-430x844.png",
+    "dimensions": {
+      "width": 430,
+      "height": 844
+    }
+  }
+]

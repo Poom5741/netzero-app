@@ -1,0 +1,41 @@
+{
+  "match": true,
+  "dimensionsMatch": true,
+  "dimensionMismatchError": null,
+  "overallPass": true,
+  "regions": [
+    {
+      "regionName": "header",
+      "diffPixels": 0,
+      "tolerance": 9007199254740991,
+      "pass": true,
+      "diffPercentage": 0
+    },
+    {
+      "regionName": "sidebar",
+      "diffPixels": 0,
+      "tolerance": 9007199254740991,
+      "pass": true,
+      "diffPercentage": 0
+    },
+    {
+      "regionName": "content",
+      "diffPixels": 0,
+      "tolerance": 9007199254740991,
+      "pass": true,
+      "diffPercentage": 0
+    },
+    {
+      "regionName": "footer",
+      "diffPixels": 0,
+      "tolerance": 9007199254740991,
+      "pass": true,
+      "diffPercentage": 0
+    }
+  ],
+  "diffPixels": 0,
+  "totalPixels": 921600,
+  "diffPercentage": 0,
+  "diffImagePath": "/Users/poom-work/netzero-app/tests/visual/captures/diff/noise-admin-login-1.png",
+  "overlayImagePath": "/Users/poom-work/netzero-app/tests/visual/captures/overlay/noise-admin-login-1.png"
+}

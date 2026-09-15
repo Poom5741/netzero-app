@@ -1,0 +1,35 @@
+[
+  {
+    "screen": "admin-login",
+    "url": "http://localhost:3000/admin/login",
+    "captures": 4,
+    "allIdentical": true,
+    "diffs": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "screen": "sponsor-dashboard",
+    "url": "http://localhost:3000/sponsor",
+    "captures": 4,
+    "allIdentical": true,
+    "diffs": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "screen": "line-chat",
+    "url": "http://localhost:3000/chat",
+    "captures": 4,
+    "allIdentical": true,
+    "diffs": [
+      0,
+      0,
+      0
+    ]
+  }
+]

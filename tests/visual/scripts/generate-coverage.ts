@@ -26,13 +26,17 @@ function main() {
   const provenanceFiles = existsSync(PROVENANCE_DIR) ? readdirSync(PROVENANCE_DIR) : [];
   const capturedScreens = new Map<string, ProvenanceMetadata[]>();
 
+  // Build set of valid screen names from inventory
+  const validScreenNames = new Set(ALL_SCREENS.map(s => s.name));
+
   for (const file of provenanceFiles) {
     if (file.endsWith(".json")) {
       try {
         const content = readFileSync(resolve(PROVENANCE_DIR, file), "utf-8");
         const metadata: ProvenanceMetadata = JSON.parse(content);
 
-        if (metadata.screenName) {
+        // Only count screens that are in the inventory
+        if (metadata.screenName && validScreenNames.has(metadata.screenName)) {
           if (!capturedScreens.has(metadata.screenName)) {
             capturedScreens.set(metadata.screenName, []);
           }

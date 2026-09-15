@@ -1,0 +1,37 @@
+# Project validation hooks for Spec Kit workflows.
+# Hooks are intentionally read-only: they never fix, commit, push, or deploy.
+hooks:
+  before_implement:
+    - extension: project-validation
+      command: project.validate
+      description: Run specification compliance, fixture validation, and type checks before implementation
+      prompt: >
+        Run ./scripts/check-spec-compliance.sh, fixture validation, and the relevant
+        TypeScript checks. Report failures without changing files.
+      optional: false
+
+  after_implement:
+    - extension: automatic-code-review
+      command: code.review
+      description: Review the implementation against the active specification and repository standards
+      prompt: >
+        Review the implementation diff against the active spec, plan, tasks, constitution,
+        tests, security requirements, and repository conventions. Report concrete findings
+        with file and line references. Do not modify files, commit, push, or deploy.
+      optional: false
+    - extension: visual-validation
+      command: visual.quickstart
+      description: Run visual capture and comparison validation after implementation
+      prompt: >
+        Run the relevant visual quickstart validations and report failures. Do not modify
+        application code, commit, push, or deploy.
+      optional: false
+
+  after_converge:
+    - extension: review-reminder
+      command: review.summary
+      description: Summarize remaining review and release gates
+      prompt: >
+        Report specification compliance, tests, lint, typecheck, Mimosa security scan,
+        production QA, and visual QA status. Do not modify files, commit, push, or deploy.
+      optional: true
