@@ -1,0 +1,222 @@
+{
+  "description": "Asset dependency manifest + extracted token values from #142 design artifacts",
+  "updated": "2026-09-15",
+  "fonts": [
+    {
+      "name": "Noto Sans Thai",
+      "type": "font",
+      "source": "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap",
+      "status": "available",
+      "note": "Primary Thai text font. MUST load via <link> not next/font/google."
+    },
+    {
+      "name": "Fira Sans + Noto Sans Thai",
+      "type": "font",
+      "source": "from sponsor/admin index.html",
+      "status": "available",
+      "note": "Reference uses Fira Sans (Latin) + Noto Sans Thai. Current impl uses Plus Jakarta Sans + Sarabun. Font mismatch is a known issue."
+    },
+    {
+      "name": "Material Symbols Outlined",
+      "type": "font",
+      "source": "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0",
+      "status": "available",
+      "note": "Icon font. MUST load via <link> not next/font/google."
+    }
+  ],
+  "icons": [],
+  "images": [],
+  "knownMissing": [],
+  "viewportIssues": [
+    {
+      "screen": "sponsor-dashboard",
+      "issue": "Subpixel anti-aliasing variance in headless Chromium renders",
+      "description": "241 pixel differences between consecutive captures (c1 vs c2) at 1280x720. Root cause: font rendering settling time. Fixed in verify-determinism.ts by discarding 1 warmup capture and using threshold=0.2.",
+      "severity": "resolved",
+      "detectedAt": "2026-09-15T09:23:00Z"
+    }
+  ],
+
+  "admin-login": {
+    "artifactId": "9482f706-3071-47ef-a10d-293ec76b9810",
+    "file": "visual-qa-screenshots/admin-extracted/9482f706-3071-47ef-a10d-293ec76b9810.js",
+    "tokens": {
+      "card-radius": "var(--radius-card) = 12px",
+      "card-padding": "var(--space-6) = 24px",
+      "login-form-maxwidth": "392px",
+      "button-radius": "var(--radius-control) = pill (999px) — primary button",
+      "gradient-left-panel": "var(--gradient-deep) = linear-gradient(150deg,#061E5C 0%,#0B2A72 45%,#027276 100%)",
+      "surface-page-right": "var(--surface-page) = white",
+      "text-primary-on-dark": "#fff",
+      "text-muted-on-dark": "rgba(255,255,255,0.82)",
+      "sidebar-surface": "var(--surface-inverse) = navy-900",
+      "font-family": "var(--font-sans) = Fira Sans, Noto Sans Thai, ...",
+      "heading-weight": "--weight-light = 300 (h1, h2)",
+      "label-weight": "--weight-semibold = 600",
+      "spacing-scale": "8px-based: space-2=8px, space-4=16px, space-5=20px, space-6=24px, space-8=32px, space-10=40px, space-12=48px, space-16=64px"
+    },
+    "key-findings": {
+      "sidebar-width": "232px (gridTemplateColumns: 232px minmax(0,1fr))",
+      "navy-sidebar": "Sidebar uses navy-900 #061E5C not green",
+      "split-layout": "Left panel gradient (navy-teal), right panel white"
+    }
+  },
+
+  "admin-shell": {
+    "artifactId": "1e8c88ce-9966-4c5f-8ec4-ac0bc4ce90d2",
+    "file": "visual-qa-screenshots/admin-extracted/1e8c88ce-9966-4c5f-8ec4-ac0bc4ce90d2.js",
+    "tokens": {
+      "sidebar-width": "232px (gridTemplateColumns: 232px minmax(0,1fr))",
+      "header-height": "56px",
+      "nav-item-padding": "9px 11px",
+      "active-nav-bg": "rgba(255,255,255,0.12)",
+      "active-nav-text": "#fff",
+      "nav-item-font-size": "13px",
+      "card-radius": "var(--radius-card) = 12px",
+      "card-padding": "var(--space-6) = 24px",
+      "avatar-radius": "50%",
+      "logo-height": "28px",
+      "grid-template": "232px minmax(0,1fr)"
+    },
+    "key-findings": {
+      "sidebar-width": "232px — current impl has 288px (severe mismatch)",
+      "no-claymorphic": "Reference does NOT show claymorphic/neumorphic on sidebar"
+    }
+  },
+
+  "admin-components": {
+    "artifactId": "7e8ee94b-8c24-43a0-8119-c202bdb58032",
+    "file": "visual-qa-screenshots/admin-extracted/7e8ee94b-8c24-43a0-8119-c202bdb58032.js",
+    "note": "This file is React library source, not CSS tokens. Component styles found in other JS files.",
+    "tokens": {
+      "card-radius-inline": "4px (borderRadius: 4px) — admin components use smaller radius than sponsor",
+      "status-danger": "#C8464F",
+      "status-warning-soft": "#F2DDB4",
+      "status-success": "green",
+      "chart-estimate-bar": "var(--teal-300)",
+      "chart-verified-bar": "var(--teal-700)",
+      "chart-baseline-bar": "var(--grey-200)"
+    }
+  },
+
+  "sponsor": {
+    "files": [
+      "visual-qa-screenshots/sponsor-extracted/7ccc65fc-cc06-41a3-8112-7407b6d435bb.js",
+      "visual-qa-screenshots/sponsor-extracted/index.html"
+    ],
+    "tokens": {
+      "primary-brand-navy": "#061E5C (--zc-navy, --navy-900)",
+      "primary-brand-teal": "#028E91 (--zc-teal, --teal-600)",
+      "mint-accent": "#52ECCA (--teal-300, --zc-mint)",
+      "sidebar-bg": "var(--surface-inverse) = --navy-900 = #061E5C",
+      "primary-button": "var(--action-primary) = --teal-600 = #028E91",
+      "secondary-button": "var(--action-secondary) = --navy-900 = #061E5C",
+      "text-on-dark": "#fff",
+      "text-on-dark-muted": "rgba(255,255,255,0.72)",
+      "text-accent": "var(--teal-600) = #028E91",
+      "text-heading": "var(--navy-900) = #061E5C",
+      "card-radius": "var(--radius-card) = 16px (--radius-lg)",
+      "card-padding": "var(--space-6) = 24px",
+      "field-height": "46px",
+      "font-family": "Fira Sans, Noto Sans Thai, ...",
+      "font-weights": { "light": 300, "regular": 400, "medium": 500, "semibold": 600, "bold": 700 },
+      "text-scale": { "xs": "12px", "sm": "14px", "base": "16px", "md": "18px", "lg": "20px", "xl": "24px", "2xl": "30px", "3xl": "38px", "4xl": "48px" },
+      "leading-tight": 1.08,
+      "leading-snug": 1.2,
+      "leading-heading": 1.28,
+      "leading-normal": 1.55,
+      "leading-relaxed": 1.7,
+      "spacing": { "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "20px", "6": "24px", "8": "32px", "10": "40px", "12": "48px", "16": "64px" },
+      "radius-xs": "4px",
+      "radius-sm": "8px",
+      "radius-md": "12px",
+      "radius-lg": "16px",
+      "radius-xl": "24px",
+      "radius-pill": "999px",
+      "shadow-xs": "0 1px 2px rgba(6,30,92,.06)",
+      "shadow-sm": "0 2px 6px rgba(6,30,92,.07)",
+      "shadow-md": "0 8px 24px rgba(6,30,92,.09)",
+      "shadow-lg": "0 18px 44px rgba(6,30,92,.12)",
+      "shadow-xl": "0 32px 72px rgba(6,30,92,.16)",
+      "gradient-deep": "linear-gradient(150deg,#061E5C 0%,#0B2A72 45%,#027276 100%)"
+    },
+    "key-findings": {
+      "teal-navy-palette": "Sponsor uses teal (#028E91) + navy (#061E5C) distinct from admin green",
+      "font-mismatch": "Reference uses Fira Sans + Noto Sans Thai; current impl uses Plus Jakarta Sans + Sarabun",
+      "sidebar-width": "232px (same as admin — surfaces share shell geometry)"
+    }
+  },
+
+  "line-oa": {
+    "files": [
+      "visual-qa-screenshots/line-oa-extracted/5a25b866-38ba-416b-afff-53fe6c36cc28.js",
+      "visual-qa-screenshots/line-oa-extracted/c087a24f-4179-4a49-849a-6c05aafd7d3a.js"
+    ],
+    "tokens": {
+      "line-green": "#06C755",
+      "line-green-dark": "#04A344",
+      "line-chat-bg": "#CDD9E5",
+      "line-bubble-me": "#D9F7C9",
+      "line-bubble-you": "#FFFFFF",
+      "line-chat-ink": "#0F1720",
+      "line-chat-ink-2": "#94A2B2",
+      "surface-card": "#FFFFFF",
+      "surface-page": "#F1F4F8",
+      "surface-sunken": "#E9F0E2",
+      "surface-inverse": "#061E5C",
+      "teal-hero": "linear-gradient(120deg,#027276,#02A99E)",
+      "navy-hero": "linear-gradient(120deg,#061E5C,#1C489F)",
+      "thai-leading-body": 1.55,
+      "thai-leading-caption": 1.6,
+      "font-sizes": { "xs": "11px", "sm": "12px", "base": "13px", "md": "13.5px", "lg": "14px" },
+      "liff-content-padding": "14px",
+      "liff-header-padding": "12px 14px",
+      "radius-card": "14px",
+      "radius-pill": "999px"
+    },
+    "key-findings": {
+      "line-green-distinct": "LINE green (#06C755) is distinct from portal teal/navy",
+      "thai-optimized-leading": "line-height 1.55 for body text (Thai-optimized)",
+      "no-neumorphic": "Reference does not show neumorphic/claymorphic in LIFF pages"
+    }
+  },
+
+  "comparison-with-current-globals": {
+    "color-primary": {
+      "current": "#006e2b (green)",
+      "reference-admin-login": "#061E5C (navy-900) for sidebar",
+      "reference-sponsor": "#028E91 (teal-600) for primary button",
+      "severity": "severe — admin sidebar should be navy, sponsor primary should be teal"
+    },
+    "sidebar-width": {
+      "current": "288px",
+      "reference": "232px",
+      "severity": "severe — sidebar too wide by 56px"
+    },
+    "font-family": {
+      "current": "Plus Jakarta Sans + Sarabun",
+      "reference": "Fira Sans + Noto Sans Thai",
+      "severity": "medium — different fonts, both support Thai"
+    },
+    "radius-lg": {
+      "current": "1rem (16px)",
+      "reference": "16px (radius-lg) — matches",
+      "severity": "none"
+    },
+    "spacing-scale": {
+      "current": "8px-based (4,8,16,24,40)",
+      "reference": "4px-based (4,8,12,16,20,24,32,40,48,64)",
+      "severity": "medium — reference uses finer spacing scale"
+    },
+    "neumorphic-shadows": {
+      "current": "present (shadow-neumorphic, shadow-claymorphic)",
+      "reference": "not present in reference design",
+      "severity": "high — should be removed per reference"
+    },
+    "text-heading-weight": {
+      "current": "600 (semibold)",
+      "reference": "300 (light) for display headings",
+      "severity": "medium — reference uses lighter weight for headings"
+    }
+  }
+}

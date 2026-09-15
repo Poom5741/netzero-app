@@ -82,6 +82,9 @@
   --shadow-xl: 0 32px 72px rgba(6,30,92,.16);
   --shadow-accent: 0 12px 28px rgba(2,142,145,.24);
   /* neumorphic/claymorphic removed — not in reference */
+
+  /* === Login Split-Panel Gradients === */
+  --gradient-deep: linear-gradient(150deg, #061E5C 0%, #0B2A72 45%, #027276 100%);
 }
 
 /* === Base Styles === */

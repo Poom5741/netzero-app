@@ -17,10 +17,6 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      // POST to backend login endpoint — browser handles the cookie
-      // Try login — backend returns 302 redirect on success
-      // With redirect:"follow", a successful login navigates to /admin on backend
-      // With redirect:"manual", 302 becomes status 0 (opaqueredirect)
       const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -29,16 +25,13 @@ export default function AdminLoginPage() {
         credentials: "include",
       });
 
-      // status 0 = opaqueredirect (302 success), 200 = login page with error, 401 = bad creds
       if (res.status === 0 || res.status === 302) {
-        // Login succeeded — store credentials for Basic Auth on API calls
         sessionStorage.setItem("nzc_admin_email", email);
         sessionStorage.setItem("nzc_admin_pass", password);
         window.location.href = "/admin";
       } else if (res.status === 401) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {
-        // Unknown status — try anyway
         sessionStorage.setItem("nzc_admin_email", email);
         sessionStorage.setItem("nzc_admin_pass", password);
         window.location.href = "/admin";
@@ -51,47 +44,105 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-container-low flex items-center justify-center p-4">
-      <div className="w-full max-w-[448px]">
-        <div className="card rounded-xl p-6">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="material-symbols-outlined text-white">eco</span>
-            </div>
-            <span className="font-headline-lg text-headline-lg text-on-surface">NetZeroCarbon</span>
+    /**
+     * Split-panel login layout matching reference 9482f706:
+     * - Left panel (≈55%): navy gradient background with branding
+     * - Right panel (≈45%): white background with login form
+     * gridTemplateColumns: 1.05fr 0.95fr per reference
+     */
+    <div className="min-h-screen grid" style={{ gridTemplateColumns: "1.05fr 0.95fr" }}>
+      {/* ── Left Panel: Navy Gradient + Branding ── */}
+      <div
+        className="relative flex flex-col justify-between p-10 overflow-hidden"
+        style={{ background: "var(--gradient-deep)" }}
+      >
+        {/* Background image overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.18] bg-cover bg-center"
+          style={{ backgroundImage: "url('/assets/imagery/renewables-wind-farm.png')" }}
+        />
+
+        {/* Logo */}
+        <div className="relative flex items-center gap-2">
+          <div className="w-9 h-9 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+            <span className="material-symbols-outlined text-white text-lg">eco</span>
+          </div>
+          <span className="text-white font-bold tracking-tight" style={{ fontSize: 20 }}>NetZero</span>
+        </div>
+
+        {/* Branding content */}
+        <div className="relative flex flex-col gap-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#52ECCA" }}>
+              Admin Console
+            </p>
+            <h1 className="text-white leading-tight max-w-[22ch]" style={{ fontSize: 36, fontWeight: 300, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+              โครงการทำนาลดโลกร้อน — ระบบหลังบ้าน
+            </h1>
           </div>
 
-          <h1 className="text-title-lg text-on-surface text-center mb-6">เข้าสู่ระบบ Admin</h1>
+          {/* Gradient rule */}
+          <div className="w-28 h-0.5 rounded-full" style={{ background: "linear-gradient(90deg, #52ECCA, transparent)" }} />
+
+          <p className="text-white/80 max-w-[44ch]" style={{ fontSize: 16, lineHeight: 1.7 }}>
+            ตรวจภาพหลักฐาน อนุมัติใบสมัคร คำนวณเครดิต และส่งออกรายงานสำหรับขึ้นทะเบียน Premium T-VER
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="relative text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
+          ระเบียบวิธี T-VER-P-METH-13-08 · บริษัท เนทซีโรคาร์บอน จำกัด
+        </div>
+      </div>
+
+      {/* ── Right Panel: Login Form ── */}
+      <div className="flex items-center justify-center p-10 bg-white">
+        <div className="w-full" style={{ maxWidth: 392 }}>
+          {/* Form header */}
+          <div className="mb-6">
+            <h2 className="mb-1" style={{ fontSize: 26, fontWeight: 300, color: "var(--color-on-surface)" }}>
+              เข้าสู่ระบบ
+            </h2>
+            <p className="text-sm" style={{ color: "var(--color-on-surface-variant)" }}>
+              บัญชีเจ้าหน้าที่ NZC · เข้าถึงได้ทุกพื้นที่และทุกเมนู
+            </p>
+          </div>
 
           {error && (
-            <div className="bg-error-container/20 border border-error/30 rounded-xl p-3 mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-error text-[16px]">error</span>
-              <span className="text-label-md text-on-surface">{error}</span>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-red-500 text-[16px]">error</span>
+              <span className="text-sm text-red-700">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <form onSubmit={handleLogin} className="flex flex-col gap-5">
+            {/* Email */}
             <div>
-              <label className="text-label-md font-medium text-on-surface block mb-1">อีเมล</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-on-surface)" }}>
+                อีเมลบริษัท
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@netzero.com"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-body-md text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-[#f0f4f8] text-[16px] text-[#171c1f] placeholder:text-[#171c1f]/40 outline-none border border-transparent focus:border-[#028E91] focus:ring-2 focus:ring-[#028E91]/20 transition-all"
               />
             </div>
 
+            {/* Password */}
             <div>
-              <label className="text-label-md font-medium text-on-surface block mb-1">รหัสผ่าน</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-on-surface)" }}>
+                รหัสผ่าน
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-body-md text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-[#f0f4f8] text-[16px] text-[#171c1f] placeholder:text-[#171c1f]/40 outline-none border border-transparent focus:border-[#028E91] focus:ring-2 focus:ring-[#028E91]/20 transition-all"
               />
             </div>
 
@@ -104,9 +155,15 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          {/* Dev bypass — skip API auth entirely */}
-          <div className="mt-6 pt-4 border-t border-outline-variant/30">
-            <p className="text-[11px] text-outline text-center mb-2">Development Only</p>
+          {/* Audit notice */}
+          <div className="mt-4 p-4 rounded-xl bg-[#f0f4f8] flex items-start gap-3" style={{ fontSize: 12, lineHeight: 1.7, color: "var(--color-on-surface-variant)" }}>
+            <span className="material-symbols-outlined text-[#028E91] flex-shrink-0 mt-0.5" style={{ fontSize: 16 }}>shield</span>
+            <span>ทุกการเข้าดูและแก้ไขถูกบันทึกใน audit log (AD-11) พร้อมผู้ใช้ เวลา และค่าก่อน-หลัง</span>
+          </div>
+
+          {/* Dev bypass */}
+          <div className="mt-6 pt-4 border-t border-[#e4e9ed]">
+            <p className="text-[11px] text-[#3c4a3c]/50 text-center mb-2">Development Only</p>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -115,20 +172,16 @@ export default function AdminLoginPage() {
                   sessionStorage.setItem("nzc_admin_pass", "bypass");
                   window.location.href = "/admin";
                 }}
-                className="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface text-label-md hover:bg-surface-container-highest transition-colors"
+                className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
               >
                 Admin (Bypass)
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  sessionStorage.setItem("nzc_admin_email", "sponsor@netzero.com");
-                  sessionStorage.setItem("nzc_admin_pass", "bypass");
-                  window.location.href = "/sponsor";
-                }}
-                className="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface text-label-md hover:bg-surface-container-highest transition-colors"
+                onClick={() => window.location.href = "/sponsor/login"}
+                className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
               >
-                Sponsor (Bypass)
+                Sponsor Login
               </button>
             </div>
           </div>
