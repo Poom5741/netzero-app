@@ -19,7 +19,7 @@ export function BottomNav({ items }: BottomNavProps) {
           key={item.href}
           href={item.href}
           className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all duration-300 ${
-            item.active ? "claymorphic text-white scale-110" : "text-on-surface-variant"
+            item.active ? "bg-[#028E91] text-white scale-110" : "text-on-surface-variant"
           }`}
         >
           <span className="material-symbols-outlined">{item.icon}</span>

@@ -54,7 +54,7 @@ export default function ReportsPage() {
         </div>
 
         {loading && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <div className="flex justify-center gap-2 mb-2">
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
@@ -65,14 +65,14 @@ export default function ReportsPage() {
         )}
 
         {error && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
             <p className="text-body-md text-on-surface">{error}</p>
           </div>
         )}
 
         {!loading && !error && reports.length === 0 && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-outline text-4xl mb-2">inbox</span>
             <p className="text-body-md text-on-surface-variant">ไม่มีรายงาน</p>
           </div>
@@ -83,7 +83,7 @@ export default function ReportsPage() {
             {reports.map((report) => (
               <div
                 key={report.id}
-                className={`neumorphic rounded-2xl p-5 ${
+                className={`card rounded-2xl p-5 ${
                   !report.ready ? "opacity-60" : ""
                 }`}
               >

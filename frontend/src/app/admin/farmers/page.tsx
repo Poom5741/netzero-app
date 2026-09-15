@@ -62,7 +62,7 @@ export default function FarmersPage() {
         </div>
 
         {loading && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <div className="flex justify-center gap-2 mb-2">
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
@@ -73,21 +73,21 @@ export default function FarmersPage() {
         )}
 
         {error && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
             <p className="text-body-md text-on-surface">{error}</p>
           </div>
         )}
 
         {!loading && !error && farmers.length === 0 && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-outline text-4xl mb-2">inbox</span>
             <p className="text-body-md text-on-surface-variant">ไม่มีเกษตรกรในระบบ</p>
           </div>
         )}
 
         {!loading && !error && farmers.length > 0 && (
-          <div className="neumorphic rounded-2xl overflow-hidden">
+          <div className="card rounded-2xl overflow-hidden">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-outline-variant/20">
@@ -285,7 +285,7 @@ function PlotsTab({ detail }: { detail: FarmerDetail }) {
         <p className="text-body-md text-on-surface-variant">ไม่มีแปลงในระบบ</p>
       ) : (
         detail.plots.map((plot) => (
-          <div key={plot.id} className="neumorphic rounded-2xl p-4">
+          <div key={plot.id} className="card rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-body-md font-semibold text-on-surface">{plot.plot_code}</span>
               <span className="text-label-sm text-on-surface-variant">{plot.area_rai} ไร่</span>
@@ -306,7 +306,7 @@ function PlotsTab({ detail }: { detail: FarmerDetail }) {
       ) : (
         <div className="space-y-2">
           {detail.documents.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between px-4 py-3 neumorphic rounded-2xl">
+            <div key={doc.id} className="flex items-center justify-between px-4 py-3 card rounded-2xl">
               <span className="text-body-md text-on-surface">{doc.doc_type}</span>
               <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                 doc.review_status === "approved"
@@ -335,7 +335,7 @@ function CreditTab({ detail }: { detail: FarmerDetail }) {
   return (
     <div className="space-y-4">
       <h3 className="text-label-lg font-semibold text-on-surface">CalcTrace (12 ขั้นตอน)</h3>
-      <div className="neumorphic rounded-xl overflow-hidden">
+      <div className="card rounded-xl overflow-hidden">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-outline-variant/20">
@@ -375,7 +375,7 @@ function NitrogenTab({ detail }: { detail: FarmerDetail }) {
   return (
     <div className="space-y-4">
       <h3 className="text-label-lg font-semibold text-on-surface">แหล่งไนโตรเจน</h3>
-      <div className="neumorphic rounded-xl overflow-hidden">
+      <div className="card rounded-xl overflow-hidden">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-outline-variant/20">
@@ -427,7 +427,7 @@ function PhotosTab({ detail }: { detail: FarmerDetail }) {
       <h3 className="text-label-lg font-semibold text-on-surface">ภาพหลักฐาน</h3>
       <div className="grid grid-cols-2 gap-3">
         {detail.photos.map((photo) => (
-          <div key={photo.id} className="neumorphic rounded-2xl p-3">
+          <div key={photo.id} className="card rounded-2xl p-3">
             <div className="aspect-square bg-surface-container-high rounded-lg mb-2 flex items-center justify-center">
               <span className="material-symbols-outlined text-outline text-3xl">image</span>
             </div>
@@ -470,7 +470,7 @@ function AuditTab({ detail }: { detail: FarmerDetail }) {
       <h3 className="text-label-lg font-semibold text-on-surface">ประวัติการดำเนินการ</h3>
       <div className="space-y-3">
         {detail.auditLog.map((entry) => (
-          <div key={entry.id} className="neumorphic rounded-2xl p-4">
+          <div key={entry.id} className="card rounded-2xl p-4">
             <div className="flex items-center justify-between mb-1">
               <span className="text-body-md font-medium text-on-surface">
                 {actionLabels[entry.action] ?? entry.action}

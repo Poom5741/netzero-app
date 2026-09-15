@@ -200,7 +200,7 @@ function SummaryContent() {
         ) : (
           <div className="space-y-4 w-full">
             {/* Plot Selector */}
-            <div className="neumorphic rounded-xl p-4">
+            <div className="card rounded-xl p-4">
               <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">landscape</span>
                 เลือกแปลงนา
@@ -208,7 +208,7 @@ function SummaryContent() {
               <select
                 value={selectedPlot}
                 onChange={(e) => setSelectedPlot(e.target.value)}
-                className="w-full neumorphic-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full card-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-[#028E91]"
                 disabled={plotsLoading}
               >
                 <option value="">
@@ -223,7 +223,7 @@ function SummaryContent() {
             </div>
 
             {/* Season Selector */}
-            <div className="neumorphic rounded-xl p-4">
+            <div className="card rounded-xl p-4">
               <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">calendar_month</span>
                 ฤดูกาล
@@ -231,7 +231,7 @@ function SummaryContent() {
               <select
                 value={selectedSeason}
                 onChange={(e) => setSelectedSeason(e.target.value)}
-                className="w-full neumorphic-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full card-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-[#028E91]"
                 disabled={!selectedPlot || seasonsLoading}
               >
                 <option value="">
@@ -246,7 +246,7 @@ function SummaryContent() {
             </div>
 
             {/* Water Level */}
-            <div className="neumorphic rounded-xl p-4">
+            <div className="card rounded-xl p-4">
               <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">water_drop</span>
                 ระดับน้ำ (ซม.)
@@ -268,7 +268,7 @@ function SummaryContent() {
             </div>
 
             {/* Straw Management */}
-            <div className="neumorphic rounded-xl p-4">
+            <div className="card rounded-xl p-4">
               <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">grass</span>
                 การจัดการฟางข้าว <span className="text-error">*</span>
@@ -279,7 +279,7 @@ function SummaryContent() {
                   setForm({ ...form, strawManagement: e.target.value });
                   setValidationError(null);
                 }}
-                className="w-full neumorphic-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full card-inset px-4 py-3 rounded-xl text-on-surface focus:outline-none focus:ring-2 focus:ring-[#028E91]"
               >
                 <option value="">เลือก...</option>
                 {strawOptions.map((opt) => (
@@ -300,7 +300,7 @@ function SummaryContent() {
             </div>
 
             {/* Energy */}
-            <div className="neumorphic rounded-xl p-4 space-y-3">
+            <div className="card rounded-xl p-4 space-y-3">
               <label className="flex items-center gap-2 font-headline-md text-headline-md text-primary mb-3">
                 <span className="material-symbols-outlined text-[20px]">bolt</span>
                 พลังงานที่ใช้
@@ -336,7 +336,7 @@ function SummaryContent() {
               onClick={handleSave}
               loading={saving}
               disabled={!isFormValid}
-              className="w-full claymorphic text-body-md py-4 whitespace-nowrap"
+              className="w-full btn-primary text-body-md py-4 whitespace-nowrap"
             >
               <span className="material-symbols-outlined">save</span>
               <span>บันทึกข้อมูล</span>

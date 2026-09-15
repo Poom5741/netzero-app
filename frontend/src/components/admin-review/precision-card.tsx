@@ -8,7 +8,7 @@ interface PrecisionCardProps {
 
 export function PrecisionCard({ auditReviewed, overrides, precision }: PrecisionCardProps) {
   return (
-    <div className="neumorphic p-4 rounded-xl" data-testid="precision-card">
+    <div className="card p-4 rounded-xl" data-testid="precision-card">
       <h3 className="text-label-md font-semibold text-on-surface-variant mb-2">
         ความแม่นยำ AI ก่อนตรวจสอบ
       </h3>

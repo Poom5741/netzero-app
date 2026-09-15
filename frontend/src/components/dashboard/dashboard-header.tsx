@@ -19,7 +19,7 @@ export function DashboardHeader({
   searchPlaceholder = "ค้นหาทั่วโลก...",
 }: DashboardHeaderProps) {
   return (
-    <header className="dashboard-header fixed top-0 left-0 right-0 h-20 bg-surface/80 backdrop-blur-md z-40 px-6 lg:px-10 flex items-center justify-between border-b border-surface-container-highest/30 shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
+    <header className="dashboard-header fixed top-0 left-0 right-0 h-14 bg-surface/80 backdrop-blur-md z-40 px-6 lg:px-10 flex items-center justify-between border-b border-surface-container-highest/30 shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
       <div className="flex items-center gap-4">
         <span className="material-symbols-outlined text-on-surface-variant">search</span>
         <input
@@ -57,8 +57,8 @@ export function DashboardHeader({
         </div>
         <div className="h-8 w-px bg-outline-variant/30" />
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
+          <div className="w-8 h-8 rounded-full bg-[#028E91] flex items-center justify-center">
+            <span className="material-symbols-outlined text-white text-[18px]">person</span>
           </div>
           <span className="text-label-md text-on-surface">{userLabel}</span>
         </div>

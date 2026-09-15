@@ -255,7 +255,7 @@ function UploadContent() {
           </div>
         </header>
         <main className="flex-1 pt-16 pb-24 px-5 flex items-center justify-center overflow-y-auto">
-          <div className="w-full neumorphic rounded-2xl">
+          <div className="w-full card rounded-2xl">
             <VerdictResult
               verdict={photo.verdict}
               reason={photo.verdictReason || undefined}
@@ -280,7 +280,7 @@ function UploadContent() {
             <span className="font-headline-md text-headline-md text-on-surface">อัปโหลดรูป</span>
           </div>
           {!gpsLoading && (
-            <div className={`neumorphic-inset px-3 py-1 rounded-full flex items-center gap-1 ${!photo.gps ? 'border border-error/30' : ''}`}>
+            <div className={`card-inset px-3 py-1 rounded-full flex items-center gap-1 ${!photo.gps ? 'border border-error/30' : ''}`}>
               <span className={`material-symbols-outlined text-[14px] ${photo.gps ? 'text-primary' : 'text-error'}`}>
                 {photo.gps ? 'location_on' : 'location_off'}
               </span>
@@ -299,13 +299,13 @@ function UploadContent() {
           <div className="flex flex-col gap-5">
             {/* Plot & Season Selector */}
             {plots.length > 0 && (
-              <div className="neumorphic rounded-xl p-4 space-y-3">
+              <div className="card rounded-xl p-4 space-y-3">
                 <div>
                   <label className="text-label-md font-medium text-on-surface-variant block mb-1">แปลงนา</label>
                   <select
                     value={selectedPlot}
                     onChange={(e) => setSelectedPlot(e.target.value)}
-                    className="w-full px-3 py-2 pr-8 rounded-xl bg-surface-container-low text-body-md text-on-surface border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary-container appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c7b6b%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_8px_center] bg-no-repeat"
+                    className="w-full px-3 py-2 pr-8 rounded-xl bg-surface-container-low text-body-md text-on-surface border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-[#028E91] appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c7b6b%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_8px_center] bg-no-repeat"
                   >
                     {plots.map((p) => (
                       <option key={p.id} value={p.id}>{p.plot_code} — {p.area_rai} ไร่</option>
@@ -318,7 +318,7 @@ function UploadContent() {
                     <select
                       value={selectedSeason}
                       onChange={(e) => setSelectedSeason(e.target.value)}
-                      className="w-full px-3 py-2 pr-8 rounded-xl bg-surface-container-low text-body-md text-on-surface border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary-container appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c7b6b%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_8px_center] bg-no-repeat"
+                      className="w-full px-3 py-2 pr-8 rounded-xl bg-surface-container-low text-body-md text-on-surface border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-[#028E91] appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%236c7b6b%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:20px] bg-[right_8px_center] bg-no-repeat"
                     >
                       {seasons.map((s) => (
                         <option key={s.id} value={s.id}>{s.name}{s.status === "active" ? " (ปัจจุบัน)" : ""}</option>
@@ -340,7 +340,7 @@ function UploadContent() {
               aria-label="ถ่ายรูป"
               onClick={handleCapture}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleCapture(); }}
-              className="w-full neumorphic rounded-2xl flex items-center justify-center relative overflow-hidden cursor-pointer"
+              className="w-full card rounded-2xl flex items-center justify-center relative overflow-hidden cursor-pointer"
               style={{ aspectRatio: "1 / 1" }}
             >
               <div className="absolute inset-4 border-2 border-primary/30 rounded-xl pointer-events-none" />
@@ -362,7 +362,7 @@ function UploadContent() {
             </div>
 
             {/* GPS Status */}
-            <div className="w-full neumorphic rounded-xl p-4 flex items-center gap-3">
+            <div className="w-full card rounded-xl p-4 flex items-center gap-3">
               <span className={`material-symbols-outlined shrink-0 ${photo.gps ? 'text-primary' : 'text-error'}`}>
                 {photo.gps ? 'my_location' : 'location_off'}
               </span>
@@ -396,7 +396,7 @@ function UploadContent() {
             <Button
               onClick={handleCapture}
               disabled={!photoType}
-              className="w-full claymorphic text-body-md py-4"
+              className="w-full btn-primary text-body-md py-4"
             >
               <span className="material-symbols-outlined">photo_camera</span>
               <span>{photoType ? "ถ่ายรูป" : "เลือกประเภทรูปก่อน"}</span>
@@ -413,7 +413,7 @@ function UploadContent() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="w-full neumorphic rounded-2xl overflow-hidden relative" style={{ aspectRatio: "1 / 1" }}>
+            <div className="w-full card rounded-2xl overflow-hidden relative" style={{ aspectRatio: "1 / 1" }}>
               <img src={photo.preview} alt="Preview" className="w-full h-full object-cover" />
             </div>
 
@@ -435,7 +435,7 @@ function UploadContent() {
               <Button
                 onClick={handleUpload}
                 loading={photo.uploading}
-                className="flex-1 claymorphic"
+                className="flex-1 btn-primary"
               >
                 อัปโหลด
               </Button>
@@ -455,7 +455,7 @@ function UploadContent() {
           aria-modal="true"
           aria-labelledby="gps-warning-title"
         >
-          <div className="neumorphic bg-surface-container-low p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
+          <div className="card bg-surface-container-low p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
             <h3 id="gps-warning-title" className="text-headline-md font-bold text-on-surface mb-4">
               ไม่มีข้อมูล GPS
             </h3>

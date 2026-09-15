@@ -1,26 +1,14 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* === Colors === */
-  --color-primary: #006e2b;
-  --color-primary-container: #06c755;
+  /* === Colors — teal/navy palette per #142 reference === */
+  --color-primary: #028E91;        /* teal-600 — primary action color */
+  --color-primary-container: #E7FCF7; /* teal-50 — light teal for highlights */
   --color-on-primary: #ffffff;
-  --color-on-primary-container: #004c1b;
+  --color-on-primary-container: #013B45;
 
-  --color-secondary: #4a6b5e;
-  --color-secondary-container: #d4eddf;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #2e4a3c;
-
-  --color-tertiary: #ab3500;
-  --color-tertiary-container: #ff8e67;
-  --color-on-tertiary: #ffffff;
-
-  --color-error: #ba1a1a;
-  --color-error-container: #ffdad6;
-  --color-on-error: #ffffff;
-
-  --color-surface: #f6fafe;
+  /* === Surface Colors — white/grey palette === */
+  --color-surface: #f0f4f8;
   --color-surface-dim: #d6dade;
   --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f0f4f8;
@@ -33,10 +21,24 @@
   --color-background: #f0f4f8;
   --color-on-background: #171c1f;
 
-  --color-inverse-surface: #2c3134;
-  --color-inverse-on-surface: #edf1f5;
+  --color-inverse-surface: #061E5C;  /* navy-900 — sidebar bg */
+  --color-inverse-on-surface: #ffffff;
   --color-outline: #6c7b6b;
   --color-outline-variant: #bbcbb8;
+
+  /* === Secondary / Tertiary / Error (kept for compatibility) === */
+  --color-secondary: #4a6b5e;
+  --color-secondary-container: #d4eddf;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #2e4a3c;
+
+  --color-tertiary: #ab3500;
+  --color-tertiary-container: #ff8e67;
+  --color-on-tertiary: #ffffff;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
 
   /* LINE Green accent */
   --color-line-green: #06c755;
@@ -53,27 +55,33 @@
   --text-body-md: 16px;
   --text-label-md: 14px;
 
-  /* === Spacing === */
-  --spacing-unit: 8px;
+  /* === Spacing — 4px-based scale from reference === */
   --spacing-xs: 4px;
-  --custom-spacing-sm: 8px;
+  --spacing-sm: 8px;
   --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 40px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 40px;
+  --spacing-4xl: 48px;
+  --spacing-5xl: 64px;
 
-  /* === Border Radius === */
-  --radius-sm: 0.25rem;
-  --radius-default: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  /* === Border Radius — from reference === */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* === Elevation Shadows === */
-  --shadow-neumorphic: 5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff;
-  --shadow-neumorphic-inset: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff;
-  --shadow-claymorphic: 4px 4px 10px rgba(0,0,0,0.15), -2px -2px 6px rgba(255,255,255,0.7), inset 0 1px 0 rgba(255,255,255,0.5);
-  --shadow-glassmorphic: 0 8px 32px rgba(0,0,0,0.08);
+  /* === Elevation Shadows — subtle flat shadows from reference === */
+  --shadow-xs: 0 1px 2px rgba(6,30,92,.06);
+  --shadow-sm: 0 2px 6px rgba(6,30,92,.07);
+  --shadow-md: 0 8px 24px rgba(6,30,92,.09);
+  --shadow-lg: 0 18px 44px rgba(6,30,92,.12);
+  --shadow-xl: 0 32px 72px rgba(6,30,92,.16);
+  --shadow-accent: 0 12px 28px rgba(2,142,145,.24);
+  /* neumorphic/claymorphic removed — not in reference */
 }
 
 /* === Base Styles === */
@@ -87,7 +95,7 @@ body {
   background: var(--color-background);
   color: var(--color-on-surface);
   font-family: var(--font-sans);
-  line-height: 1.6;
+  line-height: 1.55;
   min-height: 100vh;
 }
 
@@ -123,40 +131,42 @@ h3 {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* === Neumorphic Utility === */
-.neumorphic {
+/* === Flat Card Utility (replaces neumorphic) === */
+.card {
   background: var(--color-surface-container-lowest);
-  box-shadow: var(--shadow-neumorphic);
+  box-shadow: var(--shadow-sm);
   border-radius: var(--radius-lg);
 }
 
-.neumorphic-inset {
+.card-inset {
   background: var(--color-surface-container-low);
-  box-shadow: var(--shadow-neumorphic-inset);
+  box-shadow: inset 0 2px 4px rgba(6,30,92,.06);
   border-radius: var(--radius-md);
 }
 
-/* === Claymorphic Utility === */
-.claymorphic {
-  background: linear-gradient(145deg, var(--color-primary-container), var(--color-line-green-dark));
-  box-shadow: var(--shadow-claymorphic);
-  border-radius: var(--radius-xl);
+/* === Primary Button (replaces claymorphic — teal flat) === */
+.btn-primary {
+  background: var(--color-primary);
   color: var(--color-on-primary);
+  box-shadow: var(--shadow-accent);
+  border-radius: var(--radius-full);
+  font-weight: 600;
 }
 
-.claymorphic:hover {
+.btn-primary:hover {
+  background: #027276; /* teal-700 */
   transform: translateY(-1px);
-  box-shadow: 6px 6px 14px rgba(0,0,0,0.18), -3px -3px 8px rgba(255,255,255,0.7), inset 0 1px 0 rgba(255,255,255,0.5);
+  box-shadow: 0 14px 32px rgba(2,142,145,.30);
 }
 
-.claymorphic:active {
+.btn-primary:active {
   transform: translateY(0);
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 20px rgba(2,142,145,.24);
 }
 
 /* === Status Badges === */
 .badge-verified {
-  background: linear-gradient(135deg, var(--color-primary-container), var(--color-line-green-dark));
+  background: var(--color-primary); /* teal */
   color: var(--color-on-primary);
   padding: 4px 12px;
   border-radius: 9999px;
@@ -165,7 +175,7 @@ h3 {
 }
 
 .badge-pending {
-  background: #fff3cd;
+  background: #F2DDB4; /* soft amber */
   color: #856404;
   padding: 4px 12px;
   border-radius: 9999px;
@@ -183,7 +193,7 @@ h3 {
 }
 
 .badge-flagged {
-  background: #fff3cd;
+  background: #F2DDB4;
   color: #856404;
   padding: 4px 12px;
   border-radius: 9999px;
@@ -247,12 +257,12 @@ h3 {
   }
 }
 
-/* === Dashboard Layout === */
+/* === Dashboard Layout — 232px sidebar per reference === */
 @media (min-width: 1024px) {
   .dashboard-main {
-    padding-left: 288px;
+    padding-left: 232px;
   }
   .dashboard-header {
-    left: 288px;
+    left: 232px;
   }
 }

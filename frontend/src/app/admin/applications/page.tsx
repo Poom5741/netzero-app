@@ -114,7 +114,7 @@ export default function ApplicationsPage() {
         </div>
 
         {loading && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <div className="flex justify-center gap-2 mb-2">
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
@@ -125,14 +125,14 @@ export default function ApplicationsPage() {
         )}
 
         {error && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
             <p className="text-body-md text-on-surface">{error}</p>
           </div>
         )}
 
         {!loading && !error && applications.length === 0 && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-outline text-4xl mb-2">inbox</span>
             <p className="text-body-md text-on-surface-variant">ไม่มีรายการในขณะนี้</p>
           </div>
@@ -147,7 +147,7 @@ export default function ApplicationsPage() {
               return (
                 <div
                   key={app.id}
-                  className={`neumorphic rounded-2xl p-5 border-l-4 ${
+                  className={`card rounded-2xl p-5 border-l-4 ${
                     isReady ? "border-primary" : "border-tertiary"
                   }`}
                 >

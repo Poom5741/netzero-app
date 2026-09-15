@@ -91,7 +91,7 @@ export default function SettingsPage() {
         </div>
 
         {loading && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <div className="flex justify-center gap-2 mb-2">
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
@@ -102,7 +102,7 @@ export default function SettingsPage() {
         )}
 
         {error && (
-          <div className="neumorphic p-6 text-center rounded-2xl">
+          <div className="card p-6 text-center rounded-2xl">
             <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
             <p className="text-body-md text-on-surface">{error}</p>
           </div>
@@ -135,7 +135,7 @@ function PermissionsTab({ settings }: { settings: SettingsData }) {
   const uniquePerms = [...new Set(allPermissions)].sort();
 
   return (
-    <div className="neumorphic rounded-2xl overflow-hidden">
+    <div className="card rounded-2xl overflow-hidden">
       <table className="w-full text-left">
         <thead>
           <tr className="border-b border-outline-variant/20">
@@ -174,7 +174,7 @@ function PermissionsTab({ settings }: { settings: SettingsData }) {
 
 function UsersTab({ settings }: { settings: SettingsData }) {
   return (
-    <div className="neumorphic rounded-2xl overflow-hidden">
+    <div className="card rounded-2xl overflow-hidden">
       <table className="w-full text-left">
         <thead>
           <tr className="border-b border-outline-variant/20">
@@ -235,7 +235,7 @@ function ConstantsTab({
 
   return (
     <div className="space-y-4">
-      <div className="neumorphic rounded-2xl p-6">
+      <div className="card rounded-2xl p-6">
         <h3 className="text-label-lg font-semibold text-on-surface mb-4">ค่าคำนวณเครดิตคาร์บอน</h3>
         <div className="space-y-4">
           {Object.entries(local).map(([key, value]) => (
@@ -267,7 +267,7 @@ function ConstantsTab({
 
 function NotificationsTab({ settings }: { settings: SettingsData }) {
   return (
-    <div className="neumorphic rounded-xl p-6">
+    <div className="card rounded-xl p-6">
       <h3 className="text-label-lg font-semibold text-on-surface mb-4">กฎการแจ้งเตือน</h3>
       <div className="space-y-3">
         {settings.notifications.map((notif) => (
@@ -319,7 +319,7 @@ function GeneralTab({
 
   return (
     <div className="space-y-4">
-      <div className="neumorphic rounded-2xl p-6">
+      <div className="card rounded-2xl p-6">
         <h3 className="text-label-lg font-semibold text-on-surface mb-4">ตั้งค่าทั่วไป</h3>
         <div className="space-y-4">
           {Object.entries(local).map(([key, value]) => (

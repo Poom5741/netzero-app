@@ -28,12 +28,12 @@ export function DashboardSidebar({
   brand = "NetZero",
 }: DashboardSidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 h-full w-72 bg-[#0d1f17] z-50 flex flex-col pt-6 shadow-xl hidden lg:flex">
+    <aside className="fixed left-0 top-0 h-full w-[232px] bg-[#061E5C] z-50 flex flex-col pt-6 shadow-xl hidden lg:flex">
       <div className="px-6 mb-10 flex items-center gap-2">
-        <span className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-sm">
+        <span className="w-8 h-8 rounded-full bg-[#028E91] text-white flex items-center justify-center text-sm">
           <span className="material-symbols-outlined text-[18px]">eco</span>
         </span>
-        <span className="text-headline-md text-surface-container-lowest tracking-tight font-bold">
+        <span className="text-headline-md text-white tracking-tight font-bold">
           {brand}
         </span>
       </div>
@@ -47,8 +47,8 @@ export function DashboardSidebar({
             className={[
               "flex items-center touch-target px-4 rounded-lg transition-all",
               entry.active
-                ? "bg-primary-container text-on-primary-container font-bold"
-                : "text-surface-container-highest hover:bg-white/10 font-label-md text-label-md",
+                ? "bg-white/[0.12] text-white font-semibold"
+                : "text-white/70 hover:bg-white/[0.08] font-label-md text-label-md",
             ].join(" ")}
           >
             <span aria-hidden="true" className="material-symbols-outlined mr-4 text-[20px]">
@@ -61,12 +61,12 @@ export function DashboardSidebar({
 
       <div className="p-6 border-t border-white/5">
         <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
+          <div className="w-8 h-8 rounded-full bg-[#028E91] flex items-center justify-center">
+            <span className="material-symbols-outlined text-white text-[18px]">person</span>
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-surface-container-lowest text-label-md font-medium truncate">{userName}</p>
-            <p className="text-surface-container-highest text-[12px] truncate">{userEmail}</p>
+            <p className="text-white text-label-md font-medium truncate">{userName}</p>
+            <p className="text-white/60 text-[12px] truncate">{userEmail}</p>
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@ export function ChatBubble({ type, avatar, timestamp, children }: ChatBubbleProp
   if (type === "user") {
     return (
       <div className="flex items-end gap-3 self-end max-w-[90%]">
-        <div className="claymorphic rounded-2xl rounded-br-sm p-4 text-white relative">
+        <div className="bg-[#028E91] rounded-2xl rounded-br-sm p-4 text-white relative">
           {children}
           {timestamp && (
             <span className="text-[11px] text-white/90 mt-2 block font-label-md text-right">

@@ -28,7 +28,7 @@ export function PhotoTypePicker({ value, onChange }: PhotoTypePickerProps) {
               min-h-[64px] touch-target transition-all
               ${value === t.id
                 ? "bg-primary-container text-on-primary-container font-semibold"
-                : "neumorphic text-on-surface-variant"}
+                : "card text-on-surface-variant"}
             `}
           >
             <span className="material-symbols-outlined text-xl">{t.icon}</span>

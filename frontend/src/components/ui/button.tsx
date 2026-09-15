@@ -10,9 +10,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "claymorphic text-white font-semibold",
-  secondary: "neumorphic text-on-surface font-medium hover:shadow-lg transition-shadow",
-  danger: "bg-gradient-to-b from-[#EF5350] to-[#BA1A1A] text-on-error font-semibold shadow-[0_4px_10px_rgba(186,26,26,0.3),inset_0_2px_4px_rgba(255,255,255,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all",
+  primary: "bg-primary text-white font-semibold hover:bg-[#027276] shadow-[0_4px_12px_rgba(2,142,145,0.3)] hover:shadow-[0_8px_24px_rgba(2,142,145,0.4)] active:shadow-[0_2px_6px_rgba(2,142,145,0.2)] transition-all",
+  secondary: "bg-surface-container-low text-on-surface font-medium hover:bg-surface-container-high transition-colors",
+  danger: "bg-[#C8464F] text-white font-semibold shadow-[0_4px_10px_rgba(200,70,79,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all",
   ghost: "bg-transparent text-on-surface-variant hover:bg-surface-container-low transition-colors",
 };
 

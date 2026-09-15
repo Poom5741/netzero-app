@@ -29,7 +29,7 @@ export function VerdictResult({ verdict, reason, water_state, onRetake }: Verdic
             กรุณาถ่ายภาพใหม่ตามคำแนะนำ
           </p>
           {onRetake && (
-            <Button onClick={onRetake} className="claymorphic w-full">
+            <Button onClick={onRetake} className="btn-primary w-full">
               <span className="material-symbols-outlined">photo_camera</span>
               <span>ถ่ายภาพใหม่</span>
             </Button>

@@ -67,7 +67,7 @@ export default function AdminOverviewPage() {
   if (authed === null) return null;
 
   return (
-    <main className="pt-20 lg:pt-24 px-4 lg:px-10 pb-10">
+    <main className="pt-14 lg:pt-14 px-4 lg:px-10 pb-10">
       <div className="max-w-[1400px]">
         {/* Page header */}
         <div className="mb-6">
@@ -78,7 +78,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {loading && (
-          <div className="neumorphic p-6 text-center rounded-xl">
+          <div className="card p-6 text-center rounded-xl">
             <div className="flex justify-center gap-2 mb-2">
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
               <div className="typing-dot w-3 h-3 rounded-full bg-primary" />
@@ -89,7 +89,7 @@ export default function AdminOverviewPage() {
         )}
 
         {error && (
-          <div className="neumorphic p-6 text-center rounded-xl">
+          <div className="card p-6 text-center rounded-xl">
             <span className="material-symbols-outlined text-error text-4xl mb-2">error</span>
             <p className="text-body-md text-on-surface">{error}</p>
           </div>
@@ -297,7 +297,7 @@ function KpiTile({
   };
 
   const variantStyles = {
-    elevated: "neumorphic rounded-2xl",
+    elevated: "card rounded-2xl",
     flat: "rounded-2xl bg-surface-container-low/50",
     accent: "rounded-2xl bg-primary text-on-primary",
   };

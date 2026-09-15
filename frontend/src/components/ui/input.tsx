@@ -24,9 +24,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-invalid={error ? true : undefined}
           className={`
             w-full px-4 py-3 rounded-xl
-            neumorphic-inset
+            card-inset
             text-on-surface placeholder:text-on-surface-variant
-            focus:outline-none focus:ring-2 focus:ring-primary-container
+            focus:outline-none focus:ring-2 focus:ring-[#028E91]
             transition-all duration-200
             touch-target
             ${error ? "ring-2 ring-error" : ""}

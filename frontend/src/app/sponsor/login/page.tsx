@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const API_BASE = "https://netzero-carbon-poc.poom-a1d.workers.dev";
 
-export default function AdminLoginPage() {
+export default function SponsorLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,11 +17,7 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      // POST to backend login endpoint — browser handles the cookie
-      // Try login — backend returns 302 redirect on success
-      // With redirect:"follow", a successful login navigates to /admin on backend
-      // With redirect:"manual", 302 becomes status 0 (opaqueredirect)
-      const res = await fetch(`${API_BASE}/login`, {
+      const res = await fetch(`${API_BASE}/sponsor/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ email, password }),
@@ -29,19 +25,12 @@ export default function AdminLoginPage() {
         credentials: "include",
       });
 
-      // status 0 = opaqueredirect (302 success), 200 = login page with error, 401 = bad creds
       if (res.status === 0 || res.status === 302) {
-        // Login succeeded — store credentials for Basic Auth on API calls
-        sessionStorage.setItem("nzc_admin_email", email);
-        sessionStorage.setItem("nzc_admin_pass", password);
-        window.location.href = "/admin";
+        window.location.href = "/sponsor";
       } else if (res.status === 401) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {
-        // Unknown status — try anyway
-        sessionStorage.setItem("nzc_admin_email", email);
-        sessionStorage.setItem("nzc_admin_pass", password);
-        window.location.href = "/admin";
+        window.location.href = "/sponsor";
       }
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
@@ -51,17 +40,17 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-container-low flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#E7FCF7] flex items-center justify-center p-4">
       <div className="w-full max-w-[448px]">
         <div className="card rounded-xl p-6">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#028E91] flex items-center justify-center">
               <span className="material-symbols-outlined text-white">eco</span>
             </div>
-            <span className="font-headline-lg text-headline-lg text-on-surface">NetZeroCarbon</span>
+            <span className="font-headline-lg text-headline-lg text-[#061E5C]">NetZeroCarbon</span>
           </div>
 
-          <h1 className="text-title-lg text-on-surface text-center mb-6">เข้าสู่ระบบ Admin</h1>
+          <h1 className="text-title-lg text-[#061E5C] text-center mb-6">เข้าสู่ระบบผู้สนับสนุน</h1>
 
           {error && (
             <div className="bg-error-container/20 border border-error/30 rounded-xl p-3 mb-4 flex items-center gap-2">
@@ -72,26 +61,26 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
-              <label className="text-label-md font-medium text-on-surface block mb-1">อีเมล</label>
+              <label className="text-label-md font-medium text-[#061E5C] block mb-1">อีเมล</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@netzero.com"
+                placeholder="sponsor@netzero.com"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-body-md text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-[#E7FCF7] text-body-md text-[#061E5C] placeholder:text-[#061E5C]/50 outline-none border border-[#028E91]/20 focus:border-[#028E91] focus:ring-2 focus:ring-[#028E91]/30 transition-all"
               />
             </div>
 
             <div>
-              <label className="text-label-md font-medium text-on-surface block mb-1">รหัสผ่าน</label>
+              <label className="text-label-md font-medium text-[#061E5C] block mb-1">รหัสผ่าน</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-body-md text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-[#E7FCF7] text-body-md text-[#061E5C] placeholder:text-[#061E5C]/50 outline-none border border-[#028E91]/20 focus:border-[#028E91] focus:ring-2 focus:ring-[#028E91]/30 transition-all"
               />
             </div>
 
@@ -104,21 +93,10 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          {/* Dev bypass — skip API auth entirely */}
-          <div className="mt-6 pt-4 border-t border-outline-variant/30">
-            <p className="text-[11px] text-outline text-center mb-2">Development Only</p>
+          {/* Dev bypass */}
+          <div className="mt-6 pt-4 border-t border-[#028E91]/20">
+            <p className="text-[11px] text-[#061E5C]/50 text-center mb-2">Development Only</p>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-                  sessionStorage.setItem("nzc_admin_pass", "bypass");
-                  window.location.href = "/admin";
-                }}
-                className="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface text-label-md hover:bg-surface-container-highest transition-colors"
-              >
-                Admin (Bypass)
-              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -126,9 +104,18 @@ export default function AdminLoginPage() {
                   sessionStorage.setItem("nzc_admin_pass", "bypass");
                   window.location.href = "/sponsor";
                 }}
-                className="flex-1 py-2 rounded-lg bg-surface-container-high text-on-surface text-label-md hover:bg-surface-container-highest transition-colors"
+                className="flex-1 py-2 rounded-lg bg-[#E7FCF7] text-[#061E5C] text-label-md hover:bg-[#028E91]/10 transition-colors border border-[#028E91]/20"
               >
                 Sponsor (Bypass)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/admin/login";
+                }}
+                className="flex-1 py-2 rounded-lg bg-[#E7FCF7] text-[#061E5C] text-label-md hover:bg-[#028E91]/10 transition-colors border border-[#028E91]/20"
+              >
+                Admin Login
               </button>
             </div>
           </div>

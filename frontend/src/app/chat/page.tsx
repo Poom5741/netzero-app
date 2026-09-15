@@ -237,7 +237,7 @@ function ChatContent() {
             onClick={() => handleSend()}
             disabled={!input.trim()}
             aria-label="ส่งข้อความ"
-            className="w-12 h-12 rounded-full claymorphic flex items-center justify-center text-white shrink-0 transform transition-transform active:scale-95 disabled:opacity-50 disabled:grayscale"
+            className="w-12 h-12 rounded-full bg-[#028E91] flex items-center justify-center text-white shrink-0 transform transition-transform active:scale-95 disabled:opacity-50 disabled:grayscale"
           >
             <span className="material-symbols-outlined">send</span>
           </button>
