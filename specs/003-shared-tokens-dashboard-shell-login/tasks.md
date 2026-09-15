@@ -247,7 +247,15 @@
 
 ---
 
-## Notes
+## Phase 10: Convergence (Round 2)
+
+**Purpose**: Three partial findings from Phase 9 require verification or resolution before spec can be declared fully converged.
+
+- [ ] T063 [HIGH] [SC-002] Verify admin shell `gridTemplateColumns` approach: reference `9482f706` shows `gridTemplateColumns: "232px minmax(0,1fr)"` on the outer shell div. Current impl uses `DashboardSidebar` with `fixed` positioning + `.dashboard-main { padding-left: 232px }`. Confirm the fixed+margin approach produces equivalent visual result to the grid approach, or update admin layout to use `gridTemplateColumns` if the reference geometry is not matched. Evidence: read `frontend/src/app/admin/layout.tsx` and `frontend/src/app/globals.css` line 263–271. (partial)
+- [ ] T064 [MEDIUM] [FR-001] Verify wind farm background image exists: split-panel left panel references `url('/assets/imagery/renewables-wind-farm.png')` in the background image overlay. Check if `public/assets/imagery/renewables-wind-farm.png` exists. If missing, either add the asset or remove the `backgroundImage` style from both admin and sponsor login pages. Document resolution in `blockers.md`. (partial)
+- [ ] T065 [HIGH] [SC-001/002/003/008] Complete T057 formal quickstart runs: S1–S7 comparisons blocked by viewport limitation (1164×655 vs 1280×720). When a 1280×720 viewport is available, run `npx tsx tests/visual/scripts/compare-pair.ts --tolerance=0` against all reference captures. Document every diff > 0 px in `blockers.md`. If viewport cannot be obtained, document this as an environmental constraint in `blockers.md` and confirm implementation via alternative verification (manual browser comparison at 1280×720). (missing)
+
+**Checkpoint**: Phase 10 pending T063–T065. All core implementation complete per Phase 9.
 
 - [P] tasks = different files, no dependencies within phase
 - [Story] label maps task to specific user story for traceability
