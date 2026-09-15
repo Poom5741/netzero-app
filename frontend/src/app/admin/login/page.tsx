@@ -56,11 +56,6 @@ export default function AdminLoginPage() {
         className="relative flex flex-col justify-between p-10 overflow-hidden"
         style={{ background: "var(--gradient-deep)" }}
       >
-        {/* Background image overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.18] bg-cover bg-center"
-          style={{ backgroundImage: "url('/assets/imagery/renewables-wind-farm.png')" }}
-        />
 
         {/* Logo */}
         <div className="relative flex items-center gap-2">
