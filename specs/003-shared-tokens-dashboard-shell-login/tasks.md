@@ -243,7 +243,7 @@
 
 - [x] T062 [LOW] [FR-002] Resolve spec ambiguity: FR-002 spec text says "sidebar width of 288px" but `manifest.json` extracted value from reference `1e8c88ce` shows "232px". If reference is 232px (matching current impl), update FR-002 spec text. If spec 288px is authoritative, update implementation and `manifest.json`. (partial — LOW) — DONE: FR-002 spec text updated to 232px; SC-002 updated to 232px
 
-**Checkpoint**: T056, T061, T062 complete. T060 partial (valid creds blocked). T057/T058/T059 blocked by browser viewport limitation. blockers.md updated with 3 documented items.
+**Checkpoint**: T056, T061, T062 complete (commit `29f2f7a`). T060 partial — invalid creds verified (401 Thai error), valid creds blocked by production DB sync (LOW documented in blockers.md). T057/T058/T059 blocked by browser viewport 1164×655 vs reference 1280×720 — formal quickstart S1–S7 deferred. Phase 9 convergence complete.
 
 ---
 
