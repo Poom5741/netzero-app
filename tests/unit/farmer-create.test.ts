@@ -4,11 +4,7 @@ import { describe, expect, it } from "vitest";
  * Tests for POST /api/farmer and POST /api/plot routes.
  */
 
-function mockD1(opts: {
-  farmerExists?: boolean;
-  phoneExists?: boolean;
-  plotCodeExists?: boolean;
-}) {
+function mockD1(opts: { farmerExists?: boolean; phoneExists?: boolean; plotCodeExists?: boolean }) {
   const calls: { sql: string; args: unknown[] }[] = [];
   return {
     calls,

@@ -1,15 +1,14 @@
+import { resolve } from "node:path";
 import { Hono } from "hono";
 import { writeAuditEntry } from "../admin/audit-log";
-import type { ClassifyResult } from "../vision/classifier";
-import { type PreVerifyConfig, shouldAuditSample } from "../vision/preverify";
-import { CLIPClassifier } from "../vision/clip-classifier";
-import { clipInference } from "../vision/clip-inference";
-import { resolve } from "path";
-import { getFarmerTrust } from "../trust/farmer-trust";
-import { evaluateAutoVerify } from "../vision/auto-verify";
-import { composeRetakeMessage } from "../vision/retake-message";
 import { calculatePhaseWindows } from "../season/phase-windows";
 import { validateTemporal } from "../season/temporal-validation";
+import { getFarmerTrust } from "../trust/farmer-trust";
+import { evaluateAutoVerify } from "../vision/auto-verify";
+import type { ClassifyResult } from "../vision/classifier";
+import { CLIPClassifier } from "../vision/clip-classifier";
+import { clipInference } from "../vision/clip-inference";
+import { type PreVerifyConfig, shouldAuditSample } from "../vision/preverify";
 
 // Placeholder SVG for missing evidence images (POC local dev)
 const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
@@ -48,12 +47,17 @@ async function getCLIPClassifier(): Promise<CLIPClassifier | null> {
   return clipClassifier;
 }
 
-function toClassifyResult(clipResult: { label: string; confidence: number; reason: string }): ClassifyResult {
+function toClassifyResult(clipResult: {
+  label: string;
+  confidence: number;
+  reason: string;
+}): ClassifyResult {
   return {
     valid: clipResult.label !== "invalid",
-    water_state: clipResult.label === "flooded" || clipResult.label === "dry"
-      ? clipResult.label
-      : "not-applicable",
+    water_state:
+      clipResult.label === "flooded" || clipResult.label === "dry"
+        ? clipResult.label
+        : "not-applicable",
     confidence: clipResult.confidence,
     reason: clipResult.reason,
   };
@@ -77,7 +81,7 @@ type Verdict = "refused" | "flagged" | "pre_verified" | "queued";
 
 // GET /evidence/:key — serve photo evidence image (placeholder for local dev)
 photoRoutes.get("/evidence/:key", async (c) => {
-  const key = c.req.param("key");
+  const _key = c.req.param("key");
   // In production, fetch from R2: c.env.R2.get(`evidence/${key}`)
   // For POC local dev, return placeholder SVG
   return new Response(PLACEHOLDER_SVG, {
@@ -86,7 +90,6 @@ photoRoutes.get("/evidence/:key", async (c) => {
 });
 
 photoRoutes.post("/api/photo/upload", async (c) => {
-
   const formData = await c.req.formData();
   const file = formData.get("photo");
   const plotId = formData.get("plot_id");
@@ -109,16 +112,18 @@ photoRoutes.post("/api/photo/upload", async (c) => {
 
   // Temporal validation: check if photo was taken within the correct phase window
   const seasonInput = await c.env.DB.prepare(
-    "SELECT sow_date FROM season_inputs WHERE plot_id = ? AND season_id = ?"
-  ).bind(plotId, seasonId).first<{ sow_date: string }>();
+    "SELECT sow_date FROM season_inputs WHERE plot_id = ? AND season_id = ?",
+  )
+    .bind(plotId, seasonId)
+    .first<{ sow_date: string }>();
 
   if (seasonInput?.sow_date) {
     const phaseWindows = calculatePhaseWindows(seasonInput.sow_date);
-    
+
     // Get EXIF timestamp (or use test override)
     const exifTimestampStr = formData.get("__exif_timestamp") as string | null;
     const photoTimestamp = exifTimestampStr ? new Date(exifTimestampStr) : null;
-    
+
     const temporalResult = validateTemporal({
       photo_timestamp: photoTimestamp,
       photo_type: photoType,
@@ -138,7 +143,20 @@ photoRoutes.post("/api/photo/upload", async (c) => {
       await c.env.DB.prepare(
         `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', 'pending', ?, ?)`,
-      ).bind(photoId, plotId, seasonId, key, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt, photoType, waterDepthCm).run();
+      )
+        .bind(
+          photoId,
+          plotId,
+          seasonId,
+          key,
+          gpsLat,
+          gpsLng,
+          gpsAccuracy ?? null,
+          takenAt,
+          photoType,
+          waterDepthCm,
+        )
+        .run();
 
       await writeAuditEntry(c.env.DB, {
         photoId,
@@ -148,13 +166,16 @@ photoRoutes.post("/api/photo/upload", async (c) => {
         reason: temporalResult.reason || "EXIF missing",
       });
 
-      return c.json({
-        id: photoId,
-        verdict: "flagged" as Verdict,
-        photo_url: key,
-        photo_type: photoType,
-        reason: temporalResult.reason,
-      }, 201);
+      return c.json(
+        {
+          id: photoId,
+          verdict: "flagged" as Verdict,
+          photo_url: key,
+          photo_type: photoType,
+          reason: temporalResult.reason,
+        },
+        201,
+      );
     }
   }
 
@@ -379,7 +400,18 @@ photoRoutes.post("/api/photo/upload", async (c) => {
     `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?)`,
   )
-    .bind(photoId, plotId, seasonId, key, gpsLat, gpsLng, gpsAccuracy ?? null, takenAt, photoType, waterDepthCm)
+    .bind(
+      photoId,
+      plotId,
+      seasonId,
+      key,
+      gpsLat,
+      gpsLng,
+      gpsAccuracy ?? null,
+      takenAt,
+      photoType,
+      waterDepthCm,
+    )
     .run();
 
   return c.json(

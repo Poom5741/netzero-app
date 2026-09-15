@@ -31,11 +31,24 @@ export function composeRetakeMessage(reason: string, locale = "th"): RetakeMessa
   // Determine message key from reason
   let key = "default";
   const reasonLower = reason.toLowerCase();
-  if (reasonLower.includes("confidence") || reasonLower.includes("ไม่ชัดเจน") || reasonLower.includes("unclear")) {
+  if (
+    reasonLower.includes("confidence") ||
+    reasonLower.includes("ไม่ชัดเจน") ||
+    reasonLower.includes("unclear")
+  ) {
     key = "low_confidence";
-  } else if (reasonLower.includes("temporal") || reasonLower.includes("ช่วงเวลา") || reasonLower.includes("time")) {
+  } else if (
+    reasonLower.includes("temporal") ||
+    reasonLower.includes("ช่วงเวลา") ||
+    reasonLower.includes("time")
+  ) {
     key = "temporal_mismatch";
-  } else if (reasonLower.includes("invalid") || reasonLower.includes("ไม่พบท่อ") || reasonLower.includes("no water pipe") || reasonLower.includes("pipe")) {
+  } else if (
+    reasonLower.includes("invalid") ||
+    reasonLower.includes("ไม่พบท่อ") ||
+    reasonLower.includes("no water pipe") ||
+    reasonLower.includes("pipe")
+  ) {
     key = "invalid";
   }
 

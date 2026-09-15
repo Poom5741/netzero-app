@@ -60,8 +60,10 @@ ${LIFF_STUB}
 
   const cards = plots
     .map((p) => {
-      const progressPct = p.photosTotal > 0 ? Math.round((p.photosApproved / p.photosTotal) * 100) : 0;
-      const progressColor = progressPct >= 100 ? "#06c755" : progressPct >= 50 ? "#ff9800" : "#dc3545";
+      const progressPct =
+        p.photosTotal > 0 ? Math.round((p.photosApproved / p.photosTotal) * 100) : 0;
+      const progressColor =
+        progressPct >= 100 ? "#06c755" : progressPct >= 50 ? "#ff9800" : "#dc3545";
 
       return `<div class="plot-card" data-plot-id="${p.id}" style="border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:12px;background:#fff;">
           <h3 style="margin:0 0 8px 0;font-size:18px;">${p.plotCode}</h3>

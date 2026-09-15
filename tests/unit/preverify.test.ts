@@ -4,10 +4,10 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  shouldPreVerify,
-  shouldAuditSample,
   applyPreVerification,
   type PreVerifyConfig,
+  shouldAuditSample,
+  shouldPreVerify,
 } from "../../src/vision/preverify";
 
 const defaultConfig: PreVerifyConfig = {
@@ -76,7 +76,9 @@ describe("applyPreVerification", () => {
           bind(...args: unknown[]) {
             calls.push({ sql, args });
             if (sql.includes("SELECT")) {
-              return { first: async () => ({ id: "photo-1", ai_status: "pass", admin_status: "pending" }) };
+              return {
+                first: async () => ({ id: "photo-1", ai_status: "pass", admin_status: "pending" }),
+              };
             }
             return { run: async () => ({ success: true }) };
           },
@@ -84,12 +86,18 @@ describe("applyPreVerification", () => {
       },
     } as unknown as D1Database;
 
-    const result = await applyPreVerification(db, "photo-1", {
-      confidence: 0.92,
-      water_state: "flooded",
-      valid: true,
-      reason: "เห็นน้ำขังชัดเจน",
-    }, defaultConfig, "photo-1");
+    const result = await applyPreVerification(
+      db,
+      "photo-1",
+      {
+        confidence: 0.92,
+        water_state: "flooded",
+        valid: true,
+        reason: "เห็นน้ำขังชัดเจน",
+      },
+      defaultConfig,
+      "photo-1",
+    );
 
     expect(result.stamped).toBe(true);
     expect(result.audit_sample).toBeTypeOf("boolean");
@@ -114,12 +122,18 @@ describe("applyPreVerification", () => {
       },
     } as unknown as D1Database;
 
-    const result = await applyPreVerification(db, "photo-1", {
-      confidence: 0.5,
-      water_state: "flooded",
-      valid: true,
-      reason: "ไม่ชัดเจน",
-    }, defaultConfig, "photo-1");
+    const result = await applyPreVerification(
+      db,
+      "photo-1",
+      {
+        confidence: 0.5,
+        water_state: "flooded",
+        valid: true,
+        reason: "ไม่ชัดเจน",
+      },
+      defaultConfig,
+      "photo-1",
+    );
 
     expect(result.stamped).toBe(false);
   });
@@ -138,12 +152,18 @@ describe("applyPreVerification", () => {
       },
     } as unknown as D1Database;
 
-    const result = await applyPreVerification(db, "photo-1", {
-      confidence: 0.95,
-      water_state: "flooded",
-      valid: true,
-      reason: "เห็นน้ำขังชัดเจน",
-    }, { ...defaultConfig, enabled: false }, "photo-1");
+    const result = await applyPreVerification(
+      db,
+      "photo-1",
+      {
+        confidence: 0.95,
+        water_state: "flooded",
+        valid: true,
+        reason: "เห็นน้ำขังชัดเจน",
+      },
+      { ...defaultConfig, enabled: false },
+      "photo-1",
+    );
 
     expect(result.stamped).toBe(false);
   });

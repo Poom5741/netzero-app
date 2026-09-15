@@ -10,21 +10,10 @@ import { describe, expect, it } from "vitest";
  * 4. composeContactPage shows coordinator info
  */
 
-import {
-  composeRejectionMessage,
-  type RejectionInput,
-} from "../../src/line/flow-photo-reporting";
-import {
-  composePendingTasksMessage,
-  type PendingTasksInput,
-} from "../../src/line/flow-results";
-import {
-  renderPlotCards,
-  type PlotCardData,
-} from "../../src/liff/plot-selection";
-import {
-  composeContactPage,
-} from "../../src/liff/contact-page";
+import { composeContactPage } from "../../src/liff/contact-page";
+import { type PlotCardData, renderPlotCards } from "../../src/liff/plot-selection";
+import { composeRejectionMessage, type RejectionInput } from "../../src/line/flow-photo-reporting";
+import { composePendingTasksMessage } from "../../src/line/flow-results";
 
 // ---------------------------------------------------------------------------
 // Rejection flow (PJ-09)
@@ -143,8 +132,22 @@ describe("renderPlotCards", () => {
 
   it("renders multiple plot cards", () => {
     const plots: PlotCardData[] = [
-      { id: "p1", plotCode: "SPB-0142", areaRai: 15.5, variety: "ข้าวหอมมะลิ", photosApproved: 3, photosTotal: 4 },
-      { id: "p2", plotCode: "SPB-0143", areaRai: 8.0, variety: "ข้าวเหนียว", photosApproved: 1, photosTotal: 4 },
+      {
+        id: "p1",
+        plotCode: "SPB-0142",
+        areaRai: 15.5,
+        variety: "ข้าวหอมมะลิ",
+        photosApproved: 3,
+        photosTotal: 4,
+      },
+      {
+        id: "p2",
+        plotCode: "SPB-0143",
+        areaRai: 8.0,
+        variety: "ข้าวเหนียว",
+        photosApproved: 1,
+        photosTotal: 4,
+      },
     ];
     const html = renderPlotCards(plots);
     expect(html).toContain("SPB-0142");

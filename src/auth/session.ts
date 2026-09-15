@@ -14,15 +14,20 @@ async function sign(data: string, secret: string): Promise<string> {
     keyData,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
   return Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, "0"))
+    .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
-export async function createSessionCookie(data: SessionData, secret: string, secure = true, maxAge = 86400): Promise<string> {
+export async function createSessionCookie(
+  data: SessionData,
+  secret: string,
+  secure = true,
+  maxAge = 86400,
+): Promise<string> {
   const payload = btoa(JSON.stringify(data));
   const sig = await sign(payload, secret);
   const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;

@@ -9,10 +9,7 @@ import { describe, expect, it } from "vitest";
  * - No photos → SF_w = 1.0 (no water management benefit)
  */
 
-function mockD1(opts: {
-  approvedPhotos?: number;
-  totalPhotos?: number;
-}) {
+function mockD1(opts: { approvedPhotos?: number; totalPhotos?: number }) {
   const calls: { sql: string; args: unknown[] }[] = [];
   return {
     calls,

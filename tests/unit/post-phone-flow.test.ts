@@ -29,7 +29,11 @@ function mockD1(opts: {
         return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(farmerRow) }) };
       }
       if (sql.includes("line_links") && sql.includes("SELECT") && sql.includes("status")) {
-        return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue({ status: linkStatus }) }) };
+        return {
+          bind: vi
+            .fn()
+            .mockReturnValue({ first: vi.fn().mockResolvedValue({ status: linkStatus }) }),
+        };
       }
       if (sql.includes("line_links") && sql.includes("SELECT") && sql.includes("id")) {
         return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(null) }) };
@@ -41,15 +45,30 @@ function mockD1(opts: {
         return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(seasonInput) }) };
       }
       if (sql.includes("plots") && sql.includes("SELECT")) {
-        return { bind: vi.fn().mockReturnValue({ all: vi.fn().mockResolvedValue({ results: plots }), first: vi.fn().mockResolvedValue(plots[0] ?? null) }) };
+        return {
+          bind: vi.fn().mockReturnValue({
+            all: vi.fn().mockResolvedValue({ results: plots }),
+            first: vi.fn().mockResolvedValue(plots[0] ?? null),
+          }),
+        };
       }
       if (sql.includes("UPDATE")) {
-        return { bind: vi.fn().mockReturnValue({ run: vi.fn().mockResolvedValue({ success: true }) }) };
+        return {
+          bind: vi.fn().mockReturnValue({ run: vi.fn().mockResolvedValue({ success: true }) }),
+        };
       }
       if (sql.includes("INSERT")) {
-        return { bind: vi.fn().mockReturnValue({ run: vi.fn().mockResolvedValue({ success: true }) }) };
+        return {
+          bind: vi.fn().mockReturnValue({ run: vi.fn().mockResolvedValue({ success: true }) }),
+        };
       }
-      return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(null), all: vi.fn().mockResolvedValue({ results: [] }), run: vi.fn().mockResolvedValue({ success: true }) }) };
+      return {
+        bind: vi.fn().mockReturnValue({
+          first: vi.fn().mockResolvedValue(null),
+          all: vi.fn().mockResolvedValue({ results: [] }),
+          run: vi.fn().mockResolvedValue({ success: true }),
+        }),
+      };
     }),
   } as unknown as D1Database;
 }
@@ -68,7 +87,9 @@ const baseCtx = (overrides: Record<string, unknown> = {}) => ({
 
 describe("Post-phone flow (POOM-190)", () => {
   it("after phone lookup, returns identity confirmation (not old identified state)", async () => {
-    const db = mockD1({ farmer: { id: "f-1", full_name: "สมชาย ใจดี", province: "กรุงเทพฯ", district: "จตุจักร" } });
+    const db = mockD1({
+      farmer: { id: "f-1", full_name: "สมชาย ใจดี", province: "กรุงเทพฯ", district: "จตุจักร" },
+    });
     const result = await handleFlowApi(baseCtx({ db, state: "phone", text: "0812345678" }));
 
     // Should greet by name
@@ -122,7 +143,9 @@ describe("Post-phone flow (POOM-190)", () => {
       farmer: { id: "f-1", full_name: "สมชาย ใจดี" },
       plots: [{ id: "p-1", plot_code: "N-001", area_rai: 10 }],
     });
-    const result = await handleFlowApi(baseCtx({ db, state: "identified", text: "อากาศวันนี้เป็นอย่างไร" }));
+    const result = await handleFlowApi(
+      baseCtx({ db, state: "identified", text: "อากาศวันนี้เป็นอย่างไร" }),
+    );
 
     // Free-text should move to active/chat state and get AI response
     expect(result.newState).toBe("chat");

@@ -15,10 +15,7 @@ export interface FarmerTrust {
  * Get farmer trust score from database.
  * Returns default trust of 0.5 for new farmers.
  */
-export async function getFarmerTrust(
-  db: D1Database,
-  farmerId: string,
-): Promise<FarmerTrust> {
+export async function getFarmerTrust(db: D1Database, farmerId: string): Promise<FarmerTrust> {
   const result = await db
     .prepare("SELECT * FROM farmer_trust WHERE farmer_id = ?")
     .bind(farmerId)
@@ -47,11 +44,11 @@ export async function updateFarmerTrust(
   verified: boolean,
 ): Promise<void> {
   const current = await getFarmerTrust(db, farmerId);
-  
+
   const newTotal = current.total_photos + 1;
   const newVerified = current.verified_count + (verified ? 1 : 0);
   const newRejected = current.rejected_count + (verified ? 0 : 1);
-  
+
   // Trust score = verified / total (with Bayesian smoothing)
   const newTrust = (newVerified + 1) / (newTotal + 2);
 

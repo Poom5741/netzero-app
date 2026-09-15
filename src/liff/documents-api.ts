@@ -17,8 +17,20 @@ export interface RequiredDocument {
 
 export const REQUIRED_DOCUMENTS: RequiredDocument[] = [
   { type: "chanote", code: "DOC-01", name: "โฉนดที่ดิน", nameEn: "Land deed", required: true },
-  { type: "id_copy", code: "DOC-03", name: "สำเนาบัตรประชาชน", nameEn: "ID card copy", required: true },
-  { type: "power_of_attorney", code: "DOC-06", name: "หนังสือมอบอำนาจ", nameEn: "Power of attorney", required: false },
+  {
+    type: "id_copy",
+    code: "DOC-03",
+    name: "สำเนาบัตรประชาชน",
+    nameEn: "ID card copy",
+    required: true,
+  },
+  {
+    type: "power_of_attorney",
+    code: "DOC-06",
+    name: "หนังสือมอบอำนาจ",
+    nameEn: "Power of attorney",
+    required: false,
+  },
 ];
 
 export interface DocumentPromptInput {

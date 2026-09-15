@@ -7,7 +7,7 @@
  * Target: https://netzero-frontend.poom-a1d.workers.dev
  * Backend: https://netzero-carbon-poc.poom-a1d.workers.dev
  */
-import { expect, test, type Page, type BrowserContext } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 const BACKEND_URL = "https://netzero-carbon-poc.poom-a1d.workers.dev";
 
@@ -40,7 +40,9 @@ async function waitForLiffReady(page: Page): Promise<void> {
   // Wait up to 15s for the spinner to vanish.
   try {
     await page.waitForFunction(
-      () => !document.querySelector(".animate-spin") || document.querySelectorAll(".animate-spin").length === 0,
+      () =>
+        !document.querySelector(".animate-spin") ||
+        document.querySelectorAll(".animate-spin").length === 0,
       { timeout: 15_000 },
     );
   } catch {
@@ -118,7 +120,9 @@ test.describe("Journey 1: Admin Login & Review Flow", () => {
     expect(page.url()).not.toContain("/admin/login");
 
     // Verify admin page elements
-    await expect(page.getByRole("heading", { name: "Review Queue" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "Review Queue" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     console.log("[1.2] Login succeeded, admin dashboard accessible");
   });
@@ -158,7 +162,9 @@ test.describe("Journey 1: Admin Login & Review Flow", () => {
     expect(loadMs).toBeLessThan(10_000);
 
     // Verify "Review Queue" heading (use heading role to disambiguate)
-    await expect(page.getByRole("heading", { name: "Review Queue" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "Review Queue" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Verify filter tabs exist (role="tablist")
     const tablist = page.locator('[role="tablist"]');
@@ -290,7 +296,9 @@ test.describe("Journey 2: Sponsor Dashboard Flow", () => {
     expect(status).toBe(200);
 
     // Verify main heading (use heading role to disambiguate from sidebar link)
-    await expect(page.getByRole("heading", { name: "แดชบอร์ดผู้สนับสนุน" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "แดชบอร์ดผู้สนับสนุน" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     console.log(`[2.1] Sponsor dashboard loaded in ${loadMs}ms`);
   });
@@ -308,7 +316,8 @@ test.describe("Journey 2: Sponsor Dashboard Flow", () => {
     const plotsCard = page.locator("text=แปลงที่ได้รับการสนับสนุน");
     const investCard = page.locator("text=การลงทุนทั้งหมด");
 
-    const hasKpi = (await co2Card.isVisible().catch(() => false)) ||
+    const hasKpi =
+      (await co2Card.isVisible().catch(() => false)) ||
       (await plotsCard.isVisible().catch(() => false)) ||
       (await investCard.isVisible().catch(() => false));
 
@@ -361,9 +370,15 @@ test.describe("Journey 2: Sponsor Dashboard Flow", () => {
 
     // LiveCalc shows the live value and technique breakdown
     const liveCalc = page.locator("text=การลดคาร์บอนเครดิตแบบเรียลไทม์").or(page.locator("text=AWD"));
-    const hasLiveCalc = await liveCalc.first().isVisible().catch(() => false);
+    const hasLiveCalc = await liveCalc
+      .first()
+      .isVisible()
+      .catch(() => false);
 
-    const emptyState = await page.locator("text=ยังไม่มีข้อมูล").isVisible().catch(() => false);
+    const emptyState = await page
+      .locator("text=ยังไม่มีข้อมูล")
+      .isVisible()
+      .catch(() => false);
 
     expect(hasLiveCalc || emptyState).toBeTruthy();
     console.log(`[2.5] LiveCalc: visible=${hasLiveCalc}, empty=${emptyState}`);
@@ -377,8 +392,14 @@ test.describe("Journey 2: Sponsor Dashboard Flow", () => {
     const adminLink = page.locator('a[href="/admin"]');
     const sponsorLink = page.locator('a[href="/sponsor"]');
 
-    const adminVisible = await adminLink.first().isVisible().catch(() => false);
-    const sponsorVisible = await sponsorLink.first().isVisible().catch(() => false);
+    const adminVisible = await adminLink
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const sponsorVisible = await sponsorLink
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(adminVisible || sponsorVisible).toBeTruthy();
     console.log(`[2.6] Sidebar: admin=${adminVisible}, sponsor=${sponsorVisible}`);
@@ -446,7 +467,9 @@ test.describe("Journey 3: Chat Flow", () => {
     await page.waitForTimeout(5_000);
 
     // Should have at least 2 messages now (welcome + user + bot response)
-    const messages = page.locator("[data-testid='chat-bubble'], .chat-bubble, [class*='chat']").first();
+    const _messages = page
+      .locator("[data-testid='chat-bubble'], .chat-bubble, [class*='chat']")
+      .first();
     // Just verify the user message is visible and page didn't crash
     expect(await page.locator("text=สวัสดีครับ").count()).toBeGreaterThanOrEqual(1);
 
@@ -509,7 +532,9 @@ test.describe("Journey 3: Chat Flow", () => {
     await expect(page.locator("text=สวัสดีครับ").first()).toBeVisible();
     // Old message should be gone
     const testMsg = page.locator("text=test message");
-    await expect(testMsg).not.toBeVisible({ timeout: 3_000 }).catch(() => {});
+    await expect(testMsg)
+      .not.toBeVisible({ timeout: 3_000 })
+      .catch(() => {});
 
     console.log("[3.6] Chat reset works correctly");
   });
@@ -572,9 +597,9 @@ test.describe("Journey 4: Upload Flow", () => {
     await waitForLiffReady(page);
 
     // Before selecting type
-    const captureBtn = page.locator("button", { hasText: "เลือกประเภทรูปก่อน" }).or(
-      page.locator("button", { hasText: "ถ่ายรูป" })
-    );
+    const captureBtn = page
+      .locator("button", { hasText: "เลือกประเภทรูปก่อน" })
+      .or(page.locator("button", { hasText: "ถ่ายรูป" }));
     await expect(captureBtn.first()).toBeVisible({ timeout: 10_000 });
 
     // Select a type
@@ -649,9 +674,13 @@ test.describe("Journey 5: Error Recovery", () => {
     // The key assertion: the chat interface renders
     await expect(page.locator("text=Chat Hub")).toBeVisible({ timeout: 10_000 });
 
-    const criticalErrors = errors.filter((e) => e.includes("ChunkLoadError") || e.includes("abort"));
+    const criticalErrors = errors.filter(
+      (e) => e.includes("ChunkLoadError") || e.includes("abort"),
+    );
     expect(criticalErrors.length).toBe(0);
-    console.log(`[5.2] Chat page errors: ${errors.length} total, ${criticalErrors.length} critical`);
+    console.log(
+      `[5.2] Chat page errors: ${errors.length} total, ${criticalErrors.length} critical`,
+    );
   });
 
   test("5.3 — /sponsor loads gracefully with fallback data", async ({ page }) => {
@@ -664,9 +693,13 @@ test.describe("Journey 5: Error Recovery", () => {
     const heading = page.getByRole("heading", { name: "แดชบอร์ดผู้สนับสนุน" });
     await expect(heading).toBeVisible();
 
-    const criticalErrors = errors.filter((e) => e.includes("ChunkLoadError") || e.includes("abort"));
+    const criticalErrors = errors.filter(
+      (e) => e.includes("ChunkLoadError") || e.includes("abort"),
+    );
     expect(criticalErrors.length).toBe(0);
-    console.log(`[5.3] Sponsor page errors: ${errors.length} total, ${criticalErrors.length} critical`);
+    console.log(
+      `[5.3] Sponsor page errors: ${errors.length} total, ${criticalErrors.length} critical`,
+    );
   });
 
   test("5.4 — Navigating to non-existent route shows 404", async ({ page }) => {
@@ -691,10 +724,15 @@ test.describe("Journey 5: Error Recovery", () => {
 
     // Should redirect to login or show login form
     const onLogin = page.url().includes("/admin/login");
-    const hasLoginForm = await page.locator('input[type="email"]').isVisible().catch(() => false);
+    const hasLoginForm = await page
+      .locator('input[type="email"]')
+      .isVisible()
+      .catch(() => false);
 
     expect(onLogin || hasLoginForm).toBeTruthy();
-    console.log(`[5.5] Unauthenticated admin access: redirected=${onLogin}, loginForm=${hasLoginForm}`);
+    console.log(
+      `[5.5] Unauthenticated admin access: redirected=${onLogin}, loginForm=${hasLoginForm}`,
+    );
   });
 });
 
@@ -785,11 +823,10 @@ test.describe("Journey 6: API Health Monitor", () => {
   test("6.8 — Photo upload endpoint accepts FormData", async ({ request }) => {
     // Create a minimal test image (1x1 PNG)
     const pngHeader = Buffer.from([
-      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
-      0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-      0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00,
-      0x0c, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
-      0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc, 0x33, 0x00, 0x00, 0x00,
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44,
+      0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90,
+      0x77, 0x53, 0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0xf8,
+      0xcf, 0xc0, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc, 0x33, 0x00, 0x00, 0x00,
       0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
     ]);
 
@@ -816,12 +853,7 @@ test.describe("Journey 6: API Health Monitor", () => {
   });
 
   test("6.9 — No 500 errors on key endpoints", async ({ request }) => {
-    const endpoints = [
-      "/health",
-      "/sponsor",
-      "/sponsor/summary",
-      "/sponsor/farmers",
-    ];
+    const endpoints = ["/health", "/sponsor", "/sponsor/summary", "/sponsor/farmers"];
 
     const results: { endpoint: string; status: number; timeMs: number }[] = [];
 

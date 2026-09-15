@@ -5,9 +5,8 @@
  * to populate carbon_estimates with real values instead of zero.
  */
 
-import { runEstimation, type EstimationInput } from "../calc/orchestrator";
-import { getSfW } from "../calc/sf-w";
-import { SF_W } from "../calc/sf-w";
+import { type EstimationInput, runEstimation } from "../calc/orchestrator";
+import { getSfW, SF_W } from "../calc/sf-w";
 
 type ApproveResult = {
   success: boolean;
@@ -36,7 +35,7 @@ async function buildEstimationInput(
     .prepare(
       `SELECT water_management, organic_material, lime_kg_per_rai, dolomite_kg_per_rai,
               fuel_liters_per_rai, electricity_kwh_per_rai, straw_management, yield_kg_per_rai
-       FROM season_inputs WHERE plot_id = ? AND season_id = ?`
+       FROM season_inputs WHERE plot_id = ? AND season_id = ?`,
     )
     .bind(plotId, seasonId)
     .first<{
@@ -56,7 +55,7 @@ async function buildEstimationInput(
       `SELECT SUM(nitrogen_kg_per_rai) as total_n,
               SUM(CASE WHEN is_urea = 1 THEN rate_kg_per_rai ELSE 0 END) as urea_rate
        FROM fertilizer_entries
-       WHERE plot_id = ? AND season_id = ? AND confirmed = 1`
+       WHERE plot_id = ? AND season_id = ? AND confirmed = 1`,
     )
     .bind(plotId, seasonId)
     .first<{ total_n: number; urea_rate: number }>();

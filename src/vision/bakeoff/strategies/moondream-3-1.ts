@@ -26,8 +26,8 @@ Respond with ONLY JSON: {"valid": boolean, "water_state": "flooded"|"dry"|"not-a
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `Moondream 3.1 failed: ${error.message}`
+        reason: `Moondream 3.1 failed: ${error.message}`,
       };
     }
-  }
+  },
 };

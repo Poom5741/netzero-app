@@ -25,18 +25,14 @@ export const SF_W = {
  * @param seasonId - Season ID
  * @returns SF_w value (0.55, 0.71, or 1.0)
  */
-export async function getSfW(
-  db: D1Database,
-  plotId: string,
-  seasonId: string,
-): Promise<number> {
+export async function getSfW(db: D1Database, plotId: string, seasonId: string): Promise<number> {
   const result = await db
     .prepare(
       `SELECT
         COUNT(CASE WHEN admin_status = 'verified' THEN 1 END) as approved,
         COUNT(*) as total
        FROM photo_evidence
-       WHERE plot_id = ? AND season_id = ?`
+       WHERE plot_id = ? AND season_id = ?`,
     )
     .bind(plotId, seasonId)
     .first<{ approved: number; total: number }>();

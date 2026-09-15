@@ -3,7 +3,6 @@
  */
 
 import { Hono } from "hono";
-import { requireRole } from "../auth/middleware";
 import { handleLiffCalendar } from "../liff/calendar-api";
 import { approveSeason } from "../season/approve-estimate";
 import { handleSeasonCreate, handleStepComplete } from "../season/create";

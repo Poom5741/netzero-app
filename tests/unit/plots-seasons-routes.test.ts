@@ -15,8 +15,8 @@ describe("GET /api/plots", () => {
       plots: Array<{ id: string; plot_code: string; area_rai: number }>;
     }>();
     expect(body.plots).toHaveLength(2);
-    expect(body.plots[0]!.id).toBe("plot-001");
-    expect(body.plots[1]!.id).toBe("plot-004");
+    expect(body.plots[0]?.id).toBe("plot-001");
+    expect(body.plots[1]?.id).toBe("plot-004");
   });
 
   it("returns empty array for farmer with no plots", async () => {
@@ -56,8 +56,8 @@ describe("GET /api/seasons", () => {
 
     const body = await res.json<{ seasons: Array<{ id: string; name: string; status: string }> }>();
     expect(body.seasons).toHaveLength(2);
-    expect(body.seasons[0]!.id).toBe("2568-napi");
-    expect(body.seasons[0]!.status).toBe("active");
+    expect(body.seasons[0]?.id).toBe("2568-napi");
+    expect(body.seasons[0]?.status).toBe("active");
   });
 
   it("returns 400 without plot_id", async () => {

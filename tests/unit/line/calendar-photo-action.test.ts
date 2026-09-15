@@ -17,7 +17,10 @@ function getPhotoButtonAction(bubble: any, stepCode: string) {
     if (content.type === "box" && content.layout === "horizontal") {
       // Check if this is the photo button row
       const firstBox = content.contents?.[0];
-      if (firstBox?.contents?.[0]?.text?.includes("ถ่ายรูป") && firstBox.action?.label?.includes(stepCode)) {
+      if (
+        firstBox?.contents?.[0]?.text?.includes("ถ่ายรูป") &&
+        firstBox.action?.label?.includes(stepCode)
+      ) {
         return firstBox.action;
       }
     }

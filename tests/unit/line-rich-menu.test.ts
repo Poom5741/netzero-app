@@ -9,18 +9,9 @@ import { describe, expect, it } from "vitest";
  * 3. fetchResultsData queries carbon_estimates + photo_evidence for real values
  */
 
-import {
-  buildRichMenu,
-  getRichMenuItems,
-} from "../../src/line/rich-menu";
-import {
-  computeCalendarFromSeasonSteps,
-  type SeasonStepRow,
-} from "../../src/line/calendar-api";
-import {
-  computeResultsFromEstimate,
-  type EstimateResult,
-} from "../../src/line/results-api";
+import { computeCalendarFromSeasonSteps, type SeasonStepRow } from "../../src/line/calendar-api";
+import { computeResultsFromEstimate, type EstimateResult } from "../../src/line/results-api";
+import { buildRichMenu, getRichMenuItems } from "../../src/line/rich-menu";
 
 // ---------------------------------------------------------------------------
 // Rich menu
@@ -106,9 +97,9 @@ describe("computeCalendarFromSeasonSteps", () => {
     ];
     const result = computeCalendarFromSeasonSteps(steps, "2025-06-15");
     expect(result).toHaveLength(9);
-    expect(result[0]!.dueDay).toBe(0);
-    expect(result[2]!.dueDay).toBe(14);
-    expect(result[4]!.dueDay).toBe(45);
+    expect(result[0]?.dueDay).toBe(0);
+    expect(result[2]?.dueDay).toBe(14);
+    expect(result[4]?.dueDay).toBe(45);
   });
 
   it("marks completed steps with status from DB", () => {
@@ -125,9 +116,9 @@ describe("computeCalendarFromSeasonSteps", () => {
     ];
     // Pass today = sow_date + 10 days so only SG-01/02 are completed and rest are pending
     const result = computeCalendarFromSeasonSteps(steps, "2025-06-15", "2025-06-25");
-    expect(result[0]!.status).toBe("completed");
-    expect(result[1]!.status).toBe("completed");
-    expect(result[2]!.status).toBe("pending");
+    expect(result[0]?.status).toBe("completed");
+    expect(result[1]?.status).toBe("completed");
+    expect(result[2]?.status).toBe("pending");
   });
 
   it("marks steps as overdue when past due and not completed", () => {
@@ -145,7 +136,7 @@ describe("computeCalendarFromSeasonSteps", () => {
     // Sow date 2025-06-15, today ~2025-08-15 = ~61 days after sow
     const result = computeCalendarFromSeasonSteps(steps, "2025-06-15", "2025-08-15");
     // SG-05 (due_day 45) should be overdue
-    expect(result[4]!.status).toBe("overdue");
+    expect(result[4]?.status).toBe("overdue");
   });
 
   it("marks photo-required steps correctly", () => {
@@ -162,13 +153,13 @@ describe("computeCalendarFromSeasonSteps", () => {
     ];
     const result = computeCalendarFromSeasonSteps(steps, "2025-06-15");
     // Photo steps: SG-04, SG-05, SG-07, SG-08
-    expect(result[3]!.requiresPhoto).toBe(true);
-    expect(result[4]!.requiresPhoto).toBe(true);
-    expect(result[6]!.requiresPhoto).toBe(true);
-    expect(result[7]!.requiresPhoto).toBe(true);
+    expect(result[3]?.requiresPhoto).toBe(true);
+    expect(result[4]?.requiresPhoto).toBe(true);
+    expect(result[6]?.requiresPhoto).toBe(true);
+    expect(result[7]?.requiresPhoto).toBe(true);
     // Non-photo steps
-    expect(result[0]!.requiresPhoto).toBe(false);
-    expect(result[2]!.requiresPhoto).toBe(false);
+    expect(result[0]?.requiresPhoto).toBe(false);
+    expect(result[2]?.requiresPhoto).toBe(false);
   });
 });
 

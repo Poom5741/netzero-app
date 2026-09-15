@@ -75,9 +75,7 @@ describe("Season creation integration", () => {
     const steps = generateSeasonSteps("input_1", "2026-07-01", 120);
     const photoSteps = steps.filter((s) => s.requires_photo);
     expect(photoSteps).toHaveLength(4);
-    expect(photoSteps.map((s) => s.step_code)).toEqual([
-      "SG-04", "SG-05", "SG-07", "SG-08",
-    ]);
+    expect(photoSteps.map((s) => s.step_code)).toEqual(["SG-04", "SG-05", "SG-07", "SG-08"]);
   });
 });
 
@@ -273,11 +271,21 @@ describe("Backfill integration", () => {
 
   it("validates backfill entry correctly", async () => {
     const { validateBackfillEntry } = await import("../../src/liff/backfill-api");
-    expect(validateBackfillEntry({
-      plot_id: "p1", season_name: "test", sow_date: "2025-07-01", water_management: "awd",
-    }).valid).toBe(true);
-    expect(validateBackfillEntry({
-      plot_id: "p1", season_name: "test", sow_date: "", water_management: "awd",
-    }).valid).toBe(false);
+    expect(
+      validateBackfillEntry({
+        plot_id: "p1",
+        season_name: "test",
+        sow_date: "2025-07-01",
+        water_management: "awd",
+      }).valid,
+    ).toBe(true);
+    expect(
+      validateBackfillEntry({
+        plot_id: "p1",
+        season_name: "test",
+        sow_date: "",
+        water_management: "awd",
+      }).valid,
+    ).toBe(false);
   });
 });

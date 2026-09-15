@@ -76,7 +76,7 @@ export async function fetchCalendarSteps(
        JOIN seasons s ON s.id = si.season_id
        WHERE si.plot_id = ? AND s.status = 'active'
        ORDER BY si.created_at DESC
-       LIMIT 1`
+       LIMIT 1`,
     )
     .bind(plotId)
     .first<{ id: string; sow_date: string; rice_age_days: number }>();
@@ -91,13 +91,10 @@ export async function fetchCalendarSteps(
       `SELECT step_code, step_name, due_day, status
        FROM season_steps
        WHERE season_input_id = ?
-       ORDER BY due_day ASC`
+       ORDER BY due_day ASC`,
     )
     .bind(seasonInput.id)
     .all<SeasonStepRow>();
 
-  return computeCalendarFromSeasonSteps(
-    stepsResult.results,
-    seasonInput.sow_date,
-  );
+  return computeCalendarFromSeasonSteps(stepsResult.results, seasonInput.sow_date);
 }

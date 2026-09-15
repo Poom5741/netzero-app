@@ -38,8 +38,8 @@ Provide your final answer as JSON:
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `Chain-of-thought failed: ${error.message}`
+        reason: `Chain-of-thought failed: ${error.message}`,
       };
     }
-  }
+  },
 };

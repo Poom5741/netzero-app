@@ -26,31 +26,35 @@ export type SettingsData = {
 // T073 — 15 permission categories per AD-PERM-01
 const DEFAULT_PERMISSIONS: Record<string, string[]> = {
   admin: [
-    "dashboard_scope", "identity_fields", "evidence_review", "application_review",
-    "data_entry", "bot_replies", "batch_import", "recalculation", "parameter_edit",
-    "exports", "audit_access", "permission_admin", "user_management", "settings", "reports"
+    "dashboard_scope",
+    "identity_fields",
+    "evidence_review",
+    "application_review",
+    "data_entry",
+    "bot_replies",
+    "batch_import",
+    "recalculation",
+    "parameter_edit",
+    "exports",
+    "audit_access",
+    "permission_admin",
+    "user_management",
+    "settings",
+    "reports",
   ],
-  verifier: [
-    "dashboard_scope", "evidence_review", "identity_fields", "exports"
-  ],
-  field: [
-    "dashboard_scope", "application_review", "data_entry"
-  ],
-  sponsor: [
-    "dashboard_scope", "exports", "reports"
-  ],
-  auditor: [
-    "dashboard_scope", "audit_access", "evidence_review"
-  ],
+  verifier: ["dashboard_scope", "evidence_review", "identity_fields", "exports"],
+  field: ["dashboard_scope", "application_review", "data_entry"],
+  sponsor: ["dashboard_scope", "exports", "reports"],
+  auditor: ["dashboard_scope", "audit_access", "evidence_review"],
 };
 
 // Default calculation constants
 const DEFAULT_CONSTANTS: Record<string, number> = {
-  u_d: 15,       // U_d (damaged area %)
-  cf: 0.89,      // CF (conversion factor)
-  ef_ch4: 1.3,   // EF_CH4
-  ef_n2o: 0.01,  // EF_N2O
-  po4: 0.89,     // PO4
+  u_d: 15, // U_d (damaged area %)
+  cf: 0.89, // CF (conversion factor)
+  ef_ch4: 1.3, // EF_CH4
+  ef_n2o: 0.01, // EF_N2O
+  po4: 0.89, // PO4
 };
 
 // Default notification rules
@@ -80,7 +84,7 @@ export async function getSettings(db: D1Database): Promise<SettingsData> {
     .all<UserRow>();
 
   // 2) Constants from a settings table (if exists) or use defaults
-  let constants = { ...DEFAULT_CONSTANTS };
+  const constants = { ...DEFAULT_CONSTANTS };
   try {
     const { results: constRows } = await db
       .prepare("SELECT key, value FROM settings WHERE category = 'constants'")
@@ -89,7 +93,7 @@ export async function getSettings(db: D1Database): Promise<SettingsData> {
     if (constRows && constRows.length > 0) {
       for (const row of constRows) {
         const num = parseFloat(row.value);
-        if (!isNaN(num)) constants[row.key] = num;
+        if (!Number.isNaN(num)) constants[row.key] = num;
       }
     }
   } catch {

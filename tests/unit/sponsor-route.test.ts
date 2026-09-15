@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { sponsorRoutes } from "../../src/routes/sponsor";
 import { createSessionCookie } from "../../src/auth/session";
+import { sponsorRoutes } from "../../src/routes/sponsor";
 
 const SECRET = "test-secret";
 
@@ -99,9 +99,15 @@ describe("GET /sponsor", () => {
     const db = mockD1([]) as unknown as D1Database;
     const app = buildApp(db);
 
-    const postRes = await app.request("/sponsor", { method: "POST", headers: await sponsorCookie() });
+    const postRes = await app.request("/sponsor", {
+      method: "POST",
+      headers: await sponsorCookie(),
+    });
     const putRes = await app.request("/sponsor", { method: "PUT", headers: await sponsorCookie() });
-    const delRes = await app.request("/sponsor", { method: "DELETE", headers: await sponsorCookie() });
+    const delRes = await app.request("/sponsor", {
+      method: "DELETE",
+      headers: await sponsorCookie(),
+    });
 
     expect(postRes.status).toBe(404);
     expect(putRes.status).toBe(404);

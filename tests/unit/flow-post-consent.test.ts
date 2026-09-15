@@ -5,10 +5,12 @@ import { handleFlowApi } from "../../src/line/flow";
  * Minimal D1 mock that returns configurable results per SQL pattern.
  * Handles consent_log INSERT and COUNT queries for the 4-type consent flow.
  */
-function mockDb(opts: {
-  plots?: Array<{ id: string; plot_code: string; area_rai: number }>;
-  consentCount?: number;
-} = {}) {
+function mockDb(
+  opts: {
+    plots?: Array<{ id: string; plot_code: string; area_rai: number }>;
+    consentCount?: number;
+  } = {},
+) {
   const plots = opts.plots ?? [];
   const consentCount = opts.consentCount ?? 0;
   return {
@@ -41,7 +43,12 @@ function mockDb(opts: {
       if (sql.includes("INSERT")) {
         return { bind: vi.fn().mockReturnValue({ run: vi.fn().mockResolvedValue({}) }) };
       }
-      return { bind: vi.fn().mockReturnValue({ first: vi.fn().mockResolvedValue(null), run: vi.fn().mockResolvedValue({}) }) };
+      return {
+        bind: vi.fn().mockReturnValue({
+          first: vi.fn().mockResolvedValue(null),
+          run: vi.fn().mockResolvedValue({}),
+        }),
+      };
     }),
   } as unknown as D1Database;
 }

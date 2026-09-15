@@ -1,5 +1,5 @@
-import { describe, expect, it, beforeEach } from "vitest";
-import { generateSeasonSteps, COMPLETE_CALENDAR } from "../../src/season/calendar";
+import { describe, expect, it } from "vitest";
+import { COMPLETE_CALENDAR, generateSeasonSteps } from "../../src/season/calendar";
 
 describe("generateSeasonSteps", () => {
   const sowDate = "2026-07-01";
@@ -13,8 +13,15 @@ describe("generateSeasonSteps", () => {
     const steps = generateSeasonSteps("input_1", sowDate, 120);
     const codes = steps.map((s) => s.step_code);
     expect(codes).toEqual([
-      "SG-01", "SG-02", "SG-03", "SG-04", "SG-05",
-      "SG-06", "SG-07", "SG-08", "SG-09",
+      "SG-01",
+      "SG-02",
+      "SG-03",
+      "SG-04",
+      "SG-05",
+      "SG-06",
+      "SG-07",
+      "SG-08",
+      "SG-09",
     ]);
   });
 
@@ -24,15 +31,15 @@ describe("generateSeasonSteps", () => {
     // SG-04: WET-1 (day 28), SG-05: DRY-1 (day 42)
     // SG-06: fertilizer2 (day 50), SG-07: WET-2 (day 61), SG-08: DRY-2 (day 75)
     // SG-09: harvest (day 120)
-    expect(steps[0].due_day).toBe(-7);   // prepare
-    expect(steps[1].due_day).toBe(0);    // sow
-    expect(steps[2].due_day).toBe(7);    // fertilizer 1
-    expect(steps[3].due_day).toBe(28);   // WET-1
-    expect(steps[4].due_day).toBe(42);   // DRY-1
-    expect(steps[5].due_day).toBe(50);   // fertilizer 2
-    expect(steps[6].due_day).toBe(61);   // WET-2
-    expect(steps[7].due_day).toBe(75);   // DRY-2
-    expect(steps[8].due_day).toBe(120);  // harvest
+    expect(steps[0].due_day).toBe(-7); // prepare
+    expect(steps[1].due_day).toBe(0); // sow
+    expect(steps[2].due_day).toBe(7); // fertilizer 1
+    expect(steps[3].due_day).toBe(28); // WET-1
+    expect(steps[4].due_day).toBe(42); // DRY-1
+    expect(steps[5].due_day).toBe(50); // fertilizer 2
+    expect(steps[6].due_day).toBe(61); // WET-2
+    expect(steps[7].due_day).toBe(75); // DRY-2
+    expect(steps[8].due_day).toBe(120); // harvest
   });
 
   it("computes correct due_date strings", () => {
@@ -62,9 +69,7 @@ describe("generateSeasonSteps", () => {
     const steps = generateSeasonSteps("input_1", sowDate, 120);
     const photoSteps = steps.filter((s) => s.requires_photo);
     expect(photoSteps).toHaveLength(4);
-    expect(photoSteps.map((s) => s.step_code)).toEqual([
-      "SG-04", "SG-05", "SG-07", "SG-08",
-    ]);
+    expect(photoSteps.map((s) => s.step_code)).toEqual(["SG-04", "SG-05", "SG-07", "SG-08"]);
   });
 
   it("COMPLETE_CALENDAR has 9 entries", () => {

@@ -13,7 +13,7 @@ export const objectDetectionRules: ClassifierBinding = {
   async classify(image: LabeledImage): Promise<ClassifyResult> {
     try {
       const jimpImage = await Jimp.read(Buffer.from(image.bytes));
-      const { width, height } = jimpImage.bitmap;
+      const { width: _width, height: _height } = jimpImage.bitmap;
 
       // Step 1: Detect pipe (circular object with specific characteristics)
       const pipeDetection = detectPipeStructure(jimpImage);
@@ -23,7 +23,7 @@ export const objectDetectionRules: ClassifierBinding = {
           valid: false,
           water_state: "not-applicable",
           confidence: 0.8,
-          reason: "ไม่พบโครงสร้างท่อในภาพ"
+          reason: "ไม่พบโครงสร้างท่อในภาพ",
         };
       }
 
@@ -38,7 +38,7 @@ export const objectDetectionRules: ClassifierBinding = {
           valid: false,
           water_state: "not-applicable",
           confidence: invalidCheck.confidence,
-          reason: invalidCheck.reason
+          reason: invalidCheck.reason,
         };
       }
 
@@ -48,14 +48,14 @@ export const objectDetectionRules: ClassifierBinding = {
           valid: true,
           water_state: "flooded",
           confidence: waterAnalysis.confidence,
-          reason: `พบน้ำขังรอบท่อ (${(waterAnalysis.waterRatio * 100).toFixed(1)}% ของพื้นที่)`
+          reason: `พบน้ำขังรอบท่อ (${(waterAnalysis.waterRatio * 100).toFixed(1)}% ของพื้นที่)`,
         };
       } else {
         return {
           valid: true,
           water_state: "dry",
           confidence: waterAnalysis.confidence,
-          reason: "ไม่พบน้ำขังรอบท่อ"
+          reason: "ไม่พบน้ำขังรอบท่อ",
         };
       }
     } catch (error) {
@@ -63,10 +63,10 @@ export const objectDetectionRules: ClassifierBinding = {
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `Object detection failed: ${error.message}`
+        reason: `Object detection failed: ${error.message}`,
       };
     }
-  }
+  },
 };
 
 interface PipeDetection {
@@ -103,7 +103,7 @@ function detectPipeStructure(image: any): PipeDetection {
       found: true,
       center: { x: bestCircle.x, y: bestCircle.y },
       radius: bestCircle.radius,
-      confidence: Math.min(0.95, bestCircle.score)
+      confidence: Math.min(0.95, bestCircle.score),
     };
   }
 
@@ -115,7 +115,7 @@ function detectPipeStructure(image: any): PipeDetection {
  */
 function evaluateCircle(image: any, cx: number, cy: number, radius: number): number {
   const { width, height } = image.bitmap;
-  let edgeScore = 0;
+  const _edgeScore = 0;
   let colorConsistency = 0;
   let samples = 0;
 
@@ -158,8 +158,16 @@ function analyzeWaterRegion(image: any, center: { x: number; y: number }): Water
   let totalPixels = 0;
 
   // Analyze region around pipe
-  for (let y = Math.max(0, center.y - searchRadius); y < Math.min(height, center.y + searchRadius); y += 2) {
-    for (let x = Math.max(0, center.x - searchRadius); x < Math.min(width, center.x + searchRadius); x += 2) {
+  for (
+    let y = Math.max(0, center.y - searchRadius);
+    y < Math.min(height, center.y + searchRadius);
+    y += 2
+  ) {
+    for (
+      let x = Math.max(0, center.x - searchRadius);
+      x < Math.min(width, center.x + searchRadius);
+      x += 2
+    ) {
       const dist = Math.sqrt((x - center.x) ** 2 + (y - center.y) ** 2);
       if (dist <= searchRadius) {
         const color = image.getPixelColor(x, y);
@@ -170,9 +178,10 @@ function analyzeWaterRegion(image: any, center: { x: number; y: number }): Water
         totalPixels++;
 
         // Water detection: blue-ish, dark, reflective
-        const isWater = (b > r && b > g && b > 80) ||
-                       (r < 100 && g < 100 && b > 100) || // Dark water
-                       (r > 150 && g > 150 && b > 200); // Reflective water
+        const isWater =
+          (b > r && b > g && b > 80) ||
+          (r < 100 && g < 100 && b > 100) || // Dark water
+          (r > 150 && g > 150 && b > 200); // Reflective water
 
         if (isWater) waterPixels++;
       }
@@ -185,7 +194,9 @@ function analyzeWaterRegion(image: any, center: { x: number; y: number }): Water
   return {
     hasWater,
     waterRatio,
-    confidence: hasWater ? Math.min(0.95, 0.7 + waterRatio) : Math.min(0.95, 0.7 + (1 - waterRatio) * 0.5)
+    confidence: hasWater
+      ? Math.min(0.95, 0.7 + waterRatio)
+      : Math.min(0.95, 0.7 + (1 - waterRatio) * 0.5),
   };
 }
 
@@ -221,7 +232,7 @@ function checkInvalidPatterns(image: any): InvalidCheck {
     return {
       isInvalid: true,
       confidence: 0.9,
-      reason: "ภาพมืดเกินไป ไม่สามารถวิเคราะห์ได้"
+      reason: "ภาพมืดเกินไป ไม่สามารถวิเคราะห์ได้",
     };
   }
 
@@ -245,7 +256,7 @@ function checkInvalidPatterns(image: any): InvalidCheck {
     return {
       isInvalid: true,
       confidence: 0.85,
-      reason: "ภาพไม่มีความชัดเจนหรือเป็นภาพเปล่า"
+      reason: "ภาพไม่มีความชัดเจนหรือเป็นภาพเปล่า",
     };
   }
 

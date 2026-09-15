@@ -76,7 +76,12 @@ const PENDING_PREPARE = {
 
 describe("getReviewQueue — two-tier filtering", () => {
   it("excludes auto-stamped photos that are not audit samples", async () => {
-    const db = mockD1([FLAGGED, PRE_VERIFIED_NO_AUDIT, PRE_VERIFIED_AUDIT, PENDING_PREPARE]) as unknown as D1Database;
+    const db = mockD1([
+      FLAGGED,
+      PRE_VERIFIED_NO_AUDIT,
+      PRE_VERIFIED_AUDIT,
+      PENDING_PREPARE,
+    ]) as unknown as D1Database;
     const result = await getReviewQueue(db, {});
 
     const ids = result.map((r) => r.id);

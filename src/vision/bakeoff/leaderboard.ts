@@ -29,7 +29,7 @@ export function renderLeaderboard(rows: LeaderboardRow[]): string {
 
   const body = sorted
     .map((r) => {
-      const fmt = (n: number) => (n * 100).toFixed(1) + "%";
+      const fmt = (n: number) => `${(n * 100).toFixed(1)}%`;
       const pr = (p: number, rec: number) => `${fmt(p)}/${fmt(rec)}`;
       const v = r.verdict.passed ? "✅ PASS" : `❌ FAIL: ${r.verdict.reason}`;
       return `| ${r.name} | ${pr(r.floodedPrecision, r.floodedRecall)} | ${pr(r.dryPrecision, r.dryRecall)} | ${pr(r.invalidPrecision, r.invalidRecall)} | ${fmt(r.autoPassRate)} | ${fmt(r.badSlipRate)} | ${r.latencyMs}ms | $${r.costPer1000.toFixed(2)} | ${v} |`;

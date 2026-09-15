@@ -66,8 +66,26 @@ describe("GET /api/liff/calendar/:seasonInputId", () => {
 
   it("returns steps sorted by due_day ascending", async () => {
     const steps = [
-      { id: "2", step_code: "SG-02", step_name: "Sow", due_day: 0, due_date: "2026-07-01", status: "pending", photo_evidence_id: null, completed_at: null },
-      { id: "1", step_code: "SG-01", step_name: "Prepare", due_day: -7, due_date: "2026-06-24", status: "completed", photo_evidence_id: null, completed_at: "2026-06-24" },
+      {
+        id: "2",
+        step_code: "SG-02",
+        step_name: "Sow",
+        due_day: 0,
+        due_date: "2026-07-01",
+        status: "pending",
+        photo_evidence_id: null,
+        completed_at: null,
+      },
+      {
+        id: "1",
+        step_code: "SG-01",
+        step_name: "Prepare",
+        due_day: -7,
+        due_date: "2026-06-24",
+        status: "completed",
+        photo_evidence_id: null,
+        completed_at: "2026-06-24",
+      },
     ];
     const db = mockD1({ steps }) as unknown as D1Database;
     const { handleLiffCalendar } = await import("../../src/liff/calendar-api");
@@ -79,8 +97,26 @@ describe("GET /api/liff/calendar/:seasonInputId", () => {
 
   it("marks photo steps as requiring camera", async () => {
     const steps = [
-      { id: "4", step_code: "SG-04", step_name: "WET-1", due_day: 28, due_date: "2026-07-29", status: "pending", photo_evidence_id: null, completed_at: null },
-      { id: "1", step_code: "SG-01", step_name: "Prepare", due_day: -7, due_date: "2026-06-24", status: "completed", photo_evidence_id: null, completed_at: "2026-06-24" },
+      {
+        id: "4",
+        step_code: "SG-04",
+        step_name: "WET-1",
+        due_day: 28,
+        due_date: "2026-07-29",
+        status: "pending",
+        photo_evidence_id: null,
+        completed_at: null,
+      },
+      {
+        id: "1",
+        step_code: "SG-01",
+        step_name: "Prepare",
+        due_day: -7,
+        due_date: "2026-06-24",
+        status: "completed",
+        photo_evidence_id: null,
+        completed_at: "2026-06-24",
+      },
     ];
     const db = mockD1({ steps }) as unknown as D1Database;
     const { handleLiffCalendar } = await import("../../src/liff/calendar-api");

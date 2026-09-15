@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getApplications, approveApplication, rejectApplication } from "../../src/admin/applications";
-import { writeAuditEntry } from "../../src/admin/audit-log";
+import {
+  approveApplication,
+  getApplications,
+  rejectApplication,
+} from "../../src/admin/applications";
 
 function mockD1Sequence(rows: (Record<string, unknown> | null)[]) {
   let idx = 0;
@@ -28,7 +31,7 @@ function mockD1Sequence(rows: (Record<string, unknown> | null)[]) {
   };
 }
 
-function mockD1Multi(prepareResults: Record<string, unknown>[][] ) {
+function mockD1Multi(prepareResults: Record<string, unknown>[][]) {
   let callIdx = 0;
   return {
     prepare(_sql: string) {
@@ -76,9 +79,7 @@ describe("getApplications", () => {
   });
 
   it("returns empty when no pending applications", async () => {
-    const db = mockD1Multi([
-      [],
-    ]) as unknown as D1Database;
+    const db = mockD1Multi([[]]) as unknown as D1Database;
     const result = await getApplications(db);
     expect(result).toEqual([]);
   });
@@ -134,7 +135,7 @@ describe("approveApplication", () => {
           },
         };
       },
-      batch: async (stmts: unknown[]) => {
+      batch: async (_stmts: unknown[]) => {
         batchCallCount++;
         // First batch attempt: simulate UNIQUE constraint collision
         if (batchCallCount === 1) {
@@ -154,7 +155,7 @@ describe("approveApplication", () => {
 describe("rejectApplication", () => {
   it("rejects with reason", async () => {
     const db = mockD1Sequence([
-      { id: "link-1" },  // link lookup
+      { id: "link-1" }, // link lookup
       { success: true }, // update link status
     ]) as unknown as D1Database;
     const result = await rejectApplication(db, "link-1", "เอกสารไม่ครบ");
@@ -184,7 +185,8 @@ describe("rejectApplication", () => {
         return {
           bind(..._args: unknown[]) {
             return {
-              first: async () => (sql.includes("SELECT id FROM line_links") ? { id: "link-1" } : null),
+              first: async () =>
+                sql.includes("SELECT id FROM line_links") ? { id: "link-1" } : null,
               all: async () => ({ results: [] }),
               run: async () => ({ success: true, changes: 1 }),
             };

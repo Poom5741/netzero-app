@@ -2,7 +2,11 @@
  * Task 11 — Sponsor certificates + GHG sources + season credits tests
  */
 import { describe, expect, it } from "vitest";
-import { getCertificates, getGhgSourceBreakdown, getSeasonCredits } from "../../src/sponsor/dashboard";
+import {
+  getCertificates,
+  getGhgSourceBreakdown,
+  getSeasonCredits,
+} from "../../src/sponsor/dashboard";
 
 function mockD1(responses: Record<string, unknown[]>) {
   return {
@@ -33,16 +37,30 @@ describe("getCertificates", () => {
   it("returns certificate list from carbon_credits table", async () => {
     const db = mockD1({
       "cc.id": [
-        { id: "c1", certificate_number: "TVER-001", season_id: "s1", volume_tco2e: 10.5, status: "verified", issued_at: "2026-01-15" },
-        { id: "c2", certificate_number: "TVER-002", season_id: "s2", volume_tco2e: 8.3, status: "pending", issued_at: "2026-06-20" },
+        {
+          id: "c1",
+          certificate_number: "TVER-001",
+          season_id: "s1",
+          volume_tco2e: 10.5,
+          status: "verified",
+          issued_at: "2026-01-15",
+        },
+        {
+          id: "c2",
+          certificate_number: "TVER-002",
+          season_id: "s2",
+          volume_tco2e: 8.3,
+          status: "pending",
+          issued_at: "2026-06-20",
+        },
       ],
     }) as unknown as D1Database;
 
     const certs = await getCertificates(db);
     expect(certs).toHaveLength(2);
-    expect(certs[0]!.certificate_number).toBe("TVER-001");
-    expect(certs[0]!.status).toBe("verified");
-    expect(certs[1]!.volume_tco2e).toBe(8.3);
+    expect(certs[0]?.certificate_number).toBe("TVER-001");
+    expect(certs[0]?.status).toBe("verified");
+    expect(certs[1]?.volume_tco2e).toBe(8.3);
   });
 
   it("returns empty array when no certificates exist", async () => {
@@ -57,7 +75,9 @@ describe("getCertificates", () => {
         return {
           bind() {
             return {
-              all: async () => { throw new Error("no such table: carbon_credits"); },
+              all: async () => {
+                throw new Error("no such table: carbon_credits");
+              },
             };
           },
         };
@@ -71,41 +91,50 @@ describe("getCertificates", () => {
   it("returns area-scoped certificates", async () => {
     const db = mockD1({
       "cc.id": [
-        { id: "c1", certificate_number: "TVER-001", season_id: "s1", volume_tco2e: 5.0, status: "verified", issued_at: "2026-03-01" },
+        {
+          id: "c1",
+          certificate_number: "TVER-001",
+          season_id: "s1",
+          volume_tco2e: 5.0,
+          status: "verified",
+          issued_at: "2026-03-01",
+        },
       ],
     }) as unknown as D1Database;
 
     const certs = await getCertificates(db, ["สุพรรณบุรี"]);
     expect(certs).toHaveLength(1);
-    expect(certs[0]!.certificate_number).toBe("TVER-001");
+    expect(certs[0]?.certificate_number).toBe("TVER-001");
   });
 });
 
 describe("getGhgSourceBreakdown", () => {
   it("returns CH4, N2O, CO2 source breakdown", async () => {
     const db = mockD1({
-      "baseline_ch4": [{
-        baseline_ch4: 100,
-        project_ch4: 65,
-        baseline_n2o: 30,
-        project_n2o: 22,
-        baseline_co2: 50,
-        project_co2: 45,
-      }],
+      baseline_ch4: [
+        {
+          baseline_ch4: 100,
+          project_ch4: 65,
+          baseline_n2o: 30,
+          project_n2o: 22,
+          baseline_co2: 50,
+          project_co2: 45,
+        },
+      ],
     }) as unknown as D1Database;
 
     const sources = await getGhgSourceBreakdown(db);
     expect(sources).toHaveLength(3);
-    expect(sources[0]!.source).toContain("CH");
-    expect(sources[0]!.baseline).toBe(100);
-    expect(sources[0]!.project).toBe(65);
-    expect(sources[0]!.reduction).toBe(35);
-    expect(sources[1]!.source).toContain("N");
-    expect(sources[2]!.source).toContain("CO");
+    expect(sources[0]?.source).toContain("CH");
+    expect(sources[0]?.baseline).toBe(100);
+    expect(sources[0]?.project).toBe(65);
+    expect(sources[0]?.reduction).toBe(35);
+    expect(sources[1]?.source).toContain("N");
+    expect(sources[2]?.source).toContain("CO");
   });
 
   it("returns empty array when no data", async () => {
-    const db = mockD1({ "baseline_ch4": [] }) as unknown as D1Database;
+    const db = mockD1({ baseline_ch4: [] }) as unknown as D1Database;
     const sources = await getGhgSourceBreakdown(db);
     expect(sources).toEqual([]);
   });
@@ -122,9 +151,9 @@ describe("getSeasonCredits", () => {
 
     const credits = await getSeasonCredits(db);
     expect(credits).toHaveLength(2);
-    expect(credits[0]!.season_name).toBe("ฤดูนา 2568");
-    expect(credits[0]!.estimated_tco2e).toBe(50);
-    expect(credits[0]!.verified_tco2e).toBe(40);
+    expect(credits[0]?.season_name).toBe("ฤดูนา 2568");
+    expect(credits[0]?.estimated_tco2e).toBe(50);
+    expect(credits[0]?.verified_tco2e).toBe(40);
   });
 
   it("returns empty array when no season data", async () => {

@@ -5,10 +5,7 @@ import { describe, expect, it } from "vitest";
  * Verifies consent recording and checking logic.
  */
 
-function mockD1(opts: {
-  consentCount?: number;
-  allConsented?: boolean;
-}) {
+function mockD1(opts: { consentCount?: number; allConsented?: boolean }) {
   const calls: { sql: string; args: unknown[] }[] = [];
   return {
     calls,

@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { getOverviewKpis, getWorkQueueAlerts, getCreditChart, getGhgSourceTable, getProvinceTable } from "../../src/admin/overview";
+import {
+  getCreditChart,
+  getGhgSourceTable,
+  getOverviewKpis,
+  getProvinceTable,
+  getWorkQueueAlerts,
+} from "../../src/admin/overview";
 
 /** Single-result mock: every prepare().bind().first() returns the same row. */
-function mockD1First(row: Record<string, unknown> | null) {
+function _mockD1First(row: Record<string, unknown> | null) {
   return {
     prepare(_sql: string) {
       return {
@@ -50,11 +56,11 @@ describe("getOverviewKpis", () => {
   it("returns total farmers, total plots, pending reviews, and total credits", async () => {
     // getOverviewKpis runs 5 sequential queries; mock returns per-query row
     const db = mockD1Sequence([
-      { cnt: 42 },         // farmers count
-      { cnt: 87 },         // plots count
-      { total: 100 },      // total area
-      { cnt: 15 },         // pending reviews count
-      { total: 1234.56 },  // credits sum
+      { cnt: 42 }, // farmers count
+      { cnt: 87 }, // plots count
+      { total: 100 }, // total area
+      { cnt: 15 }, // pending reviews count
+      { total: 1234.56 }, // credits sum
     ]) as unknown as D1Database;
     const result = await getOverviewKpis(db);
     expect(result.totalFarmers).toBe(42);
@@ -83,10 +89,10 @@ describe("getOverviewKpis", () => {
 describe("getWorkQueueAlerts", () => {
   it("returns pending applications, photo queue, missing photos, and SF_w fallback counts", async () => {
     const db = mockD1Sequence([
-      { cnt: 8 },   // pending applications
-      { cnt: 12 },  // photo queue
-      { cnt: 3 },   // missing photos
-      { cnt: 5 },   // SF_w fallback
+      { cnt: 8 }, // pending applications
+      { cnt: 12 }, // photo queue
+      { cnt: 3 }, // missing photos
+      { cnt: 5 }, // SF_w fallback
     ]) as unknown as D1Database;
     const result = await getWorkQueueAlerts(db);
     expect(result.pendingApplications).toBe(8);
@@ -153,10 +159,10 @@ describe("getProvinceTable", () => {
 describe("getOverviewKpis filter", () => {
   it("applies season filter", async () => {
     const db = mockD1Sequence([
-      { cnt: 10 },   // farmers (unaffected by season filter)
-      { cnt: 20 },   // plots
-      { cnt: 3 },    // pending reviews
-      { total: 100 },// credits
+      { cnt: 10 }, // farmers (unaffected by season filter)
+      { cnt: 20 }, // plots
+      { cnt: 3 }, // pending reviews
+      { total: 100 }, // credits
     ]) as unknown as D1Database;
     const result = await getOverviewKpis(db, { season: "season-1" });
     expect(result.totalFarmers).toBe(10);

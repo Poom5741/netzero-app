@@ -134,7 +134,7 @@ function buildCalcTrace(est: EstimateRow): FarmerDetail["carbonTrace"] {
   const ch4Reduction = (est.baseline_ch4 ?? 0) - (est.project_ch4 ?? 0);
   const n2oReduction = (est.baseline_n2o ?? 0) - (est.project_n2o ?? 0);
   const co2Reduction = (est.baseline_co2 ?? 0) - (est.project_co2 ?? 0);
-  const totalGhgReduction = ch4Reduction + n2oReduction + co2Reduction;
+  const _totalGhgReduction = ch4Reduction + n2oReduction + co2Reduction;
 
   return [
     { step: 1, label: "CH4 Baseline", value: `${est.baseline_ch4 ?? 0} tCO2e` },

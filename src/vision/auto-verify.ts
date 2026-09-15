@@ -19,7 +19,7 @@ export interface AutoVerifyResult {
 
 /**
  * Evaluate auto-verify rules.
- * 
+ *
  * Rules:
  * - High confidence (>0.85) + high trust (>0.7) → auto_verify
  * - Low confidence (<0.4) OR low trust (<0.3) → auto_reject

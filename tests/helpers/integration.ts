@@ -57,13 +57,13 @@ export function createMockDB(): MockDB {
     let argIndex = 0;
     cols.forEach((col, i) => {
       const value = values[i];
-      if (value === '?') {
+      if (value === "?") {
         row[col] = args[argIndex++] ?? null;
-      } else if (value === 'null') {
+      } else if (value === "null") {
         row[col] = null;
-      } else if (value === 'true') {
+      } else if (value === "true") {
         row[col] = true;
-      } else if (value === 'false') {
+      } else if (value === "false") {
         row[col] = false;
       } else if (/^-?\d+(\.\d+)?$/.test(value)) {
         row[col] = Number(value);
@@ -183,16 +183,16 @@ function extractValues(sql: string): string[] {
   if (!m?.[1]) return [];
   // Split by comma, but respect quoted strings
   const values: string[] = [];
-  let current = '';
+  let current = "";
   let inQuote = false;
   for (let i = 0; i < m[1].length; i++) {
     const char = m[1][i];
-    if (char === "'" && (i === 0 || m[1][i - 1] !== '\\')) {
+    if (char === "'" && (i === 0 || m[1][i - 1] !== "\\")) {
       inQuote = !inQuote;
       current += char;
-    } else if (char === ',' && !inQuote) {
+    } else if (char === "," && !inQuote) {
       values.push(current.trim());
-      current = '';
+      current = "";
     } else {
       current += char;
     }
@@ -266,7 +266,10 @@ export async function createTestApp(): Promise<{
 
 // ── Session cookie helper ──────────────────────────────────────────
 
-export async function makeSessionCookie(role: "admin" | "sponsor", secret = "test-secret-key"): Promise<string> {
+export async function makeSessionCookie(
+  role: "admin" | "sponsor",
+  secret = "test-secret-key",
+): Promise<string> {
   const data = { userId: `${role}-1`, role, email: `${role}@test.com` };
   const raw = await createSessionCookie(data, secret);
   // extract value: Set-Cookie -> "nzc_session=<payload>.<sig>; Path=/..."

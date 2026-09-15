@@ -21,16 +21,20 @@ describe("Temporal validation integration", () => {
 
   it("valid EXIF within phase window → continues to classification/queue", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed season_inputs with sow_date
-    await db.prepare(
-      "INSERT INTO season_inputs (id, plot_id, season_id, sow_date) VALUES (?, ?, ?, ?)"
-    ).bind("si-1", "plot-1", "season-1", sowDate).run();
-    
+    await db
+      .prepare("INSERT INTO season_inputs (id, plot_id, season_id, sow_date) VALUES (?, ?, ?, ?)")
+      .bind("si-1", "plot-1", "season-1", sowDate)
+      .run();
+
     // Within prepare window (2025-04-04 to 2025-05-29)
-    const res = await app.request("/photo/upload", makeRequest({
-      "__exif_timestamp": "2025-05-10T12:00:00Z",
-    }));
+    const res = await app.request(
+      "/photo/upload",
+      makeRequest({
+        __exif_timestamp: "2025-05-10T12:00:00Z",
+      }),
+    );
 
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -40,16 +44,20 @@ describe("Temporal validation integration", () => {
 
   it("invalid EXIF outside phase window → rejected with 400", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed season_inputs with sow_date
-    await db.prepare(
-      "INSERT INTO season_inputs (id, plot_id, season_id, sow_date) VALUES (?, ?, ?, ?)"
-    ).bind("si-1", "plot-1", "season-1", sowDate).run();
-    
+    await db
+      .prepare("INSERT INTO season_inputs (id, plot_id, season_id, sow_date) VALUES (?, ?, ?, ?)")
+      .bind("si-1", "plot-1", "season-1", sowDate)
+      .run();
+
     // Outside prepare window (2025-04-04 to 2025-05-29) — July is way outside
-    const res = await app.request("/photo/upload", makeRequest({
-      "__exif_timestamp": "2025-07-01T12:00:00Z",
-    }));
+    const res = await app.request(
+      "/photo/upload",
+      makeRequest({
+        __exif_timestamp: "2025-07-01T12:00:00Z",
+      }),
+    );
 
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -58,12 +66,13 @@ describe("Temporal validation integration", () => {
 
   it("missing EXIF → flagged for admin review", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed season_inputs with sow_date
-    await db.prepare(
-      "INSERT INTO season_inputs (id, plot_id, season_id, sow_date) VALUES (?, ?, ?, ?)"
-    ).bind("si-1", "plot-1", "season-1", sowDate).run();
-    
+    await db
+      .prepare("INSERT INTO season_inputs (id, plot_id, season_id, sow_date) VALUES (?, ?, ?, ?)")
+      .bind("si-1", "plot-1", "season-1", sowDate)
+      .run();
+
     // No __exif_timestamp → extractExifTimestamp returns null → unknown
     const res = await app.request("/photo/upload", makeRequest());
 

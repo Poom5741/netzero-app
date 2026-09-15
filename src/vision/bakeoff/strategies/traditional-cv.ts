@@ -22,7 +22,8 @@ export const traditionalCV: ClassifierBinding = {
       let greenPixels = 0;
       let totalPixels = 0;
 
-      for (let y = 0; y < height; y += 4) { // Sample every 4th pixel for speed
+      for (let y = 0; y < height; y += 4) {
+        // Sample every 4th pixel for speed
         for (let x = 0; x < width; x += 4) {
           const color = jimpImage.getPixelColor(x, y);
           const r = (color >> 24) & 255;
@@ -48,7 +49,7 @@ export const traditionalCV: ClassifierBinding = {
 
       const blueRatio = bluePixels / totalPixels;
       const brownRatio = brownPixels / totalPixels;
-      const greenRatio = greenPixels / totalPixels;
+      const _greenRatio = greenPixels / totalPixels;
 
       // Check for pipe detection (circular shapes with high contrast)
       const hasPipe = detectPipe(jimpImage);
@@ -59,7 +60,7 @@ export const traditionalCV: ClassifierBinding = {
           valid: false,
           water_state: "not-applicable",
           confidence: 0.7,
-          reason: "ไม่พบท่อวัดในภาพ"
+          reason: "ไม่พบท่อวัดในภาพ",
         };
       }
 
@@ -69,14 +70,14 @@ export const traditionalCV: ClassifierBinding = {
           valid: true,
           water_state: "flooded",
           confidence: Math.min(0.95, 0.7 + blueRatio),
-          reason: "พบน้ำขังรอบท่อ"
+          reason: "พบน้ำขังรอบท่อ",
         };
       } else if (brownRatio > 0.4 && blueRatio < 0.1) {
         return {
           valid: true,
           water_state: "dry",
           confidence: Math.min(0.95, 0.7 + brownRatio * 0.5),
-          reason: "ดินแห้งรอบท่อ"
+          reason: "ดินแห้งรอบท่อ",
         };
       } else {
         // Uncertain - default to dry with lower confidence
@@ -84,7 +85,7 @@ export const traditionalCV: ClassifierBinding = {
           valid: true,
           water_state: "dry",
           confidence: 0.5,
-          reason: "ไม่สามารถระบุสถานะน้ำได้อย่างชัดเจน"
+          reason: "ไม่สามารถระบุสถานะน้ำได้อย่างชัดเจน",
         };
       }
     } catch (error) {
@@ -92,10 +93,10 @@ export const traditionalCV: ClassifierBinding = {
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `CV analysis failed: ${error.message}`
+        reason: `CV analysis failed: ${error.message}`,
       };
     }
-  }
+  },
 };
 
 /**
@@ -122,10 +123,12 @@ function detectPipe(image: any): boolean {
       const rightR = (right >> 24) & 255;
 
       // Detect strong edges
-      if (Math.abs(centerR - topR) > threshold ||
-          Math.abs(centerR - bottomR) > threshold ||
-          Math.abs(centerR - leftR) > threshold ||
-          Math.abs(centerR - rightR) > threshold) {
+      if (
+        Math.abs(centerR - topR) > threshold ||
+        Math.abs(centerR - bottomR) > threshold ||
+        Math.abs(centerR - leftR) > threshold ||
+        Math.abs(centerR - rightR) > threshold
+      ) {
         edgeCount++;
       }
     }

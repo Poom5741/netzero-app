@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  base32Decode,
+  base32Encode,
+  generateOtpCode,
   generateOtpSecret,
   verifyOtp,
-  generateOtpCode,
-  base32Encode,
-  base32Decode,
 } from "../../src/auth/otp";
 
 describe("OTP base32 encoding", () => {

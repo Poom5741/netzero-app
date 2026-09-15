@@ -13,7 +13,7 @@ export const fineTunedResnet: ClassifierBinding = {
   async classify(image: LabeledImage): Promise<ClassifyResult> {
     try {
       const jimpImage = await Jimp.read(Buffer.from(image.bytes));
-      const { width, height } = jimpImage.bitmap;
+      const { width: _width, height: _height } = jimpImage.bitmap;
 
       // Extract multiple feature types
       const colorFeatures = extractColorFeatures(jimpImage);
@@ -27,7 +27,7 @@ export const fineTunedResnet: ClassifierBinding = {
           valid: false,
           water_state: "not-applicable",
           confidence: 0.85,
-          reason: "ไม่พบท่อวัดในภาพ"
+          reason: "ไม่พบท่อวัดในภาพ",
         };
       }
 
@@ -41,14 +41,14 @@ export const fineTunedResnet: ClassifierBinding = {
           valid: true,
           water_state: "flooded",
           confidence: Math.min(0.95, floodedScore),
-          reason: "พบน้ำขังรอบท่อ"
+          reason: "พบน้ำขังรอบท่อ",
         };
       } else if (dryScore > floodedScore && dryScore > 0.6) {
         return {
           valid: true,
           water_state: "dry",
           confidence: Math.min(0.95, dryScore),
-          reason: "ดินแห้งรอบท่อ"
+          reason: "ดินแห้งรอบท่อ",
         };
       } else {
         // Uncertain - use additional heuristics
@@ -58,14 +58,14 @@ export const fineTunedResnet: ClassifierBinding = {
             valid: true,
             water_state: "flooded",
             confidence: 0.65,
-            reason: "มีแนวโน้มพบน้ำขัง"
+            reason: "มีแนวโน้มพบน้ำขัง",
           };
         } else {
           return {
             valid: true,
             water_state: "dry",
             confidence: 0.65,
-            reason: "มีแนวโน้มดินแห้ง"
+            reason: "มีแนวโน้มดินแห้ง",
           };
         }
       }
@@ -74,10 +74,10 @@ export const fineTunedResnet: ClassifierBinding = {
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `ResNet classification failed: ${error.message}`
+        reason: `ResNet classification failed: ${error.message}`,
       };
     }
-  }
+  },
 };
 
 interface ColorFeatures {
@@ -90,7 +90,11 @@ interface ColorFeatures {
 
 function extractColorFeatures(image: any): ColorFeatures {
   const { width, height } = image.bitmap;
-  let blue = 0, darkBlue = 0, brown = 0, green = 0, brightness = 0;
+  let blue = 0,
+    darkBlue = 0,
+    brown = 0,
+    green = 0,
+    brightness = 0;
   let total = 0;
 
   for (let y = 0; y < height; y += 2) {
@@ -115,7 +119,7 @@ function extractColorFeatures(image: any): ColorFeatures {
     darkBlueRatio: darkBlue / total,
     brownRatio: brown / total,
     greenRatio: green / total,
-    brightness: brightness / total
+    brightness: brightness / total,
   };
 }
 
@@ -155,7 +159,7 @@ function extractTextureFeatures(image: any): TextureFeatures {
   return {
     uniformity: 1 / (1 + stdDev / 50),
     roughness: localDiff / 255,
-    contrast: stdDev / 128
+    contrast: stdDev / 128,
   };
 }
 
@@ -184,10 +188,12 @@ function extractEdgeFeatures(image: any): EdgeFeatures {
       const leftR = (left >> 24) & 255;
       const rightR = (right >> 24) & 255;
 
-      if (Math.abs(centerR - topR) > 30 ||
-          Math.abs(centerR - bottomR) > 30 ||
-          Math.abs(centerR - leftR) > 30 ||
-          Math.abs(centerR - rightR) > 30) {
+      if (
+        Math.abs(centerR - topR) > 30 ||
+        Math.abs(centerR - bottomR) > 30 ||
+        Math.abs(centerR - leftR) > 30 ||
+        Math.abs(centerR - rightR) > 30
+      ) {
         edgeCount++;
       }
     }
@@ -195,7 +201,7 @@ function extractEdgeFeatures(image: any): EdgeFeatures {
 
   return {
     edgeDensity: edgeCount / total,
-    circularity: edgeCount / total // Simplified
+    circularity: edgeCount / total, // Simplified
   };
 }
 
@@ -234,14 +240,14 @@ function extractPipeFeatures(image: any): PipeFeatures {
   return {
     confidence,
     centerX: width / 2,
-    centerY: height / 2
+    centerY: height / 2,
   };
 }
 
 function computeFloodedScore(
   color: ColorFeatures,
   texture: TextureFeatures,
-  edge: EdgeFeatures
+  edge: EdgeFeatures,
 ): number {
   let score = 0;
 
@@ -261,7 +267,7 @@ function computeFloodedScore(
 function computeDryScore(
   color: ColorFeatures,
   texture: TextureFeatures,
-  edge: EdgeFeatures
+  edge: EdgeFeatures,
 ): number {
   let score = 0;
 

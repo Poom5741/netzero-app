@@ -40,7 +40,11 @@ export async function getSponsors(db: D1Database): Promise<SponsorItem[]> {
   return (results ?? []).map((r) => {
     let areas: string[] = [];
     if (r.areas) {
-      try { areas = JSON.parse(r.areas); } catch { areas = []; }
+      try {
+        areas = JSON.parse(r.areas);
+      } catch {
+        areas = [];
+      }
     }
     return {
       id: r.id,

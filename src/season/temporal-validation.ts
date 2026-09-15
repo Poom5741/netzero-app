@@ -1,4 +1,7 @@
-interface PhaseWindow { start: Date; end: Date }
+interface PhaseWindow {
+  start: Date;
+  end: Date;
+}
 type PhaseWindows = { prepare: PhaseWindow; grow: PhaseWindow; harvest: PhaseWindow };
 
 export function validateTemporal({

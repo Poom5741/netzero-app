@@ -32,8 +32,8 @@ Provide your analysis in JSON format:
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `Llama 4 Scout failed: ${error.message}`
+        reason: `Llama 4 Scout failed: ${error.message}`,
       };
     }
-  }
+  },
 };

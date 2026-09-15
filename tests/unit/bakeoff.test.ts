@@ -1,26 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { type LeaderboardRow, renderLeaderboard } from "../../src/vision/bakeoff/leaderboard";
+import { checkPassBar } from "../../src/vision/bakeoff/passbar";
+import { clearRegistry, listStrategies, registerStrategy } from "../../src/vision/bakeoff/registry";
 import {
   type ClassifierBinding,
   type ClassifyResult,
   type LabeledImage,
   runStrategy,
-  type StrategyResult,
 } from "../../src/vision/bakeoff/runner";
-import { computeConfusionMatrix, type ConfusionMatrix } from "../../src/vision/bakeoff/scoring";
-import { checkPassBar, type PassBarVerdict } from "../../src/vision/bakeoff/passbar";
-import {
-  registerStrategy,
-  listStrategies,
-  clearRegistry,
-} from "../../src/vision/bakeoff/registry";
-import { renderLeaderboard, type LeaderboardRow } from "../../src/vision/bakeoff/leaderboard";
+import { computeConfusionMatrix } from "../../src/vision/bakeoff/scoring";
 
 // ── Fixtures ────────────────────────────────────────────────────────
 
-function makeLabeledImage(
-  id: string,
-  truthClass: "flooded" | "dry" | "invalid",
-): LabeledImage {
+function makeLabeledImage(id: string, truthClass: "flooded" | "dry" | "invalid"): LabeledImage {
   return { id, truth_class: truthClass, bytes: new Uint8Array([0]) };
 }
 
@@ -63,15 +55,18 @@ describe("bake-off runner", () => {
 
     const result = await runStrategy("test-strat", binding, images);
     expect(result.predictions).toHaveLength(3);
-    expect(result.predictions[0]!.prediction.water_state).toBe("flooded");
-    expect(result.predictions[1]!.prediction.water_state).toBe("dry");
-    expect(result.predictions[2]!.prediction.valid).toBe(false);
+    expect(result.predictions[0]?.prediction.water_state).toBe("flooded");
+    expect(result.predictions[1]?.prediction.water_state).toBe("dry");
+    expect(result.predictions[2]?.prediction.valid).toBe(false);
   });
 
   it("records latency and cost metrics", async () => {
     const images = [makeLabeledImage("f1", "flooded")];
     const responses = new Map([
-      ["f1", { valid: true, water_state: "flooded", confidence: 0.9, reason: "ok" } as ClassifyResult],
+      [
+        "f1",
+        { valid: true, water_state: "flooded", confidence: 0.9, reason: "ok" } as ClassifyResult,
+      ],
     ]);
     const binding = makeBinding(responses, 200, 0.002);
 

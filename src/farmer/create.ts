@@ -44,23 +44,23 @@ export interface PlotCreateResult {
  * Province abbreviation mapping (Thai province name → 3-letter code).
  */
 const PROVINCE_CODES: Record<string, string> = {
-  "สุพรรณบุรี": "SPB",
-  "กรุงเทพมหานคร": "BKK",
-  "เชียงใหม่": "CNX",
-  "ขอนแก่น": "KKN",
-  "อุบลราชธานี": "UBN",
-  "นครราชสีมา": "NKM",
-  "สุราษฎร์ธานี": "SRT",
-  "ชลบุรี": "CBI",
-  "ภูเก็ต": "HKT",
-  "สงขลา": "SKA",
+  สุพรรณบุรี: "SPB",
+  กรุงเทพมหานคร: "BKK",
+  เชียงใหม่: "CNX",
+  ขอนแก่น: "KKN",
+  อุบลราชธานี: "UBN",
+  นครราชสีมา: "NKM",
+  สุราษฎร์ธานี: "SRT",
+  ชลบุรี: "CBI",
+  ภูเก็ต: "HKT",
+  สงขลา: "SKA",
 };
 
 /**
  * Generate a plot code from province abbreviation + random suffix.
  */
 function generatePlotCode(province?: string): string {
-  const prefix = province ? PROVINCE_CODES[province] ?? "PLT" : "PLT";
+  const prefix = province ? (PROVINCE_CODES[province] ?? "PLT") : "PLT";
   const seq = String(Math.floor(Math.random() * 9999) + 1).padStart(4, "0");
   return `${prefix}-${seq}`;
 }
@@ -100,7 +100,7 @@ export async function handleFarmerCreate(
         id, full_name, gender, phone,
         addr_province, addr_district, addr_subdistrict, addr_village,
         national_id_enc
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       farmerId,
@@ -155,7 +155,7 @@ export async function handlePlotCreate(
       `INSERT INTO plots (
         id, farmer_id, plot_code, deed_no, doc_type, tenure, area_rai,
         centroid_lat, centroid_lng
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       plotId,

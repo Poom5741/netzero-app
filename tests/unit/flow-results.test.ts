@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
  * Tests for RP-01 to RP-04 chat flow: results display and backfill.
  */
 
-function mockD1(opts: {
+function _mockD1(opts: {
   estimate?: {
     total_offset_tco2e: number;
     sf_w: number;
@@ -19,12 +19,20 @@ function mockD1(opts: {
       return {
         bind(...args: unknown[]) {
           calls.push({ sql, args });
-          if (sql.includes("SELECT") && sql.includes("carbon_estimates") && sql.includes("total_offset")) {
+          if (
+            sql.includes("SELECT") &&
+            sql.includes("carbon_estimates") &&
+            sql.includes("total_offset")
+          ) {
             return {
               first: async () => opts.estimate ?? null,
             };
           }
-          if (sql.includes("COUNT") && sql.includes("photo_evidence") && sql.includes("admin_status")) {
+          if (
+            sql.includes("COUNT") &&
+            sql.includes("photo_evidence") &&
+            sql.includes("admin_status")
+          ) {
             return {
               first: async () => opts.photoProgress ?? { approved: 0, total: 0 },
             };

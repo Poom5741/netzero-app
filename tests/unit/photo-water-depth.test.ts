@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
  * Verifies the field is accepted and stored for DRY photo types.
  */
 
-function mockD1() {
+function _mockD1() {
   const calls: { sql: string; args: unknown[] }[] = [];
   return {
     calls,

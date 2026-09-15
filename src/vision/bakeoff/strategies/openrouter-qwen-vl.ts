@@ -31,8 +31,8 @@ Respond with ONLY this JSON structure:
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `Qwen-VL failed: ${error.message}`
+        reason: `Qwen-VL failed: ${error.message}`,
       };
     }
-  }
+  },
 };

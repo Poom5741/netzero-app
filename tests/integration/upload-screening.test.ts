@@ -3,7 +3,7 @@
  * Tests the upload endpoint with photo_type and AI verdict responses.
  */
 import { describe, expect, it } from "vitest";
-import { createTestApp, seedFarmer, seedPlot } from "../helpers/integration";
+import { createTestApp } from "../helpers/integration";
 
 function makeUploadRequest(overrides?: Record<string, string | File>) {
   const fd = new FormData();
@@ -71,8 +71,8 @@ describe("POST /photo/upload — screening verdict", () => {
         valid: false,
         water_state: "not-applicable",
         confidence: 0.1,
-        reason: "ไม่พบท่อวัด"
-      })
+        reason: "ไม่พบท่อวัด",
+      }),
     });
     const res = await app.request("/photo/upload", req);
 
@@ -92,8 +92,8 @@ describe("POST /photo/upload — screening verdict", () => {
         valid: true,
         water_state: "flooded",
         confidence: 0.7,
-        reason: "ภาพไม่ชัดเจน"
-      })
+        reason: "ภาพไม่ชัดเจน",
+      }),
     });
     const res = await app.request("/photo/upload", req);
 
@@ -106,20 +106,23 @@ describe("POST /photo/upload — screening verdict", () => {
 
   it("returns verdict 'pre_verified' for wetdry with high confidence", async () => {
     const { app, db, r2 } = await createTestApp();
-    
+
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
-    
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
+
     const req = makeUploadRequest({
       photo_type: "wetdry",
       __test_classification: JSON.stringify({
         valid: true,
         water_state: "flooded",
         confidence: 0.95,
-        reason: "เห็นน้ำขังชัดเจน"
-      })
+        reason: "เห็นน้ำขังชัดเจน",
+      }),
     });
     const res = await app.request("/photo/upload", req);
 

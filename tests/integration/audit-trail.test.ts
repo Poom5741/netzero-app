@@ -17,12 +17,15 @@ function makeUploadRequest(overrides?: Record<string, string>) {
   fd.append("taken_at", "2026-01-15T10:00:00Z");
   fd.append("photo_type", "wetdry");
   // Default: high confidence pass for pre-verification
-  fd.append("__test_classification", JSON.stringify({
-    valid: true,
-    water_state: "flooded",
-    confidence: 0.95,
-    reason: "เห็นน้ำขังชัดเจน"
-  }));
+  fd.append(
+    "__test_classification",
+    JSON.stringify({
+      valid: true,
+      water_state: "flooded",
+      confidence: 0.95,
+      reason: "เห็นน้ำขังชัดเจน",
+    }),
+  );
   if (overrides) {
     for (const [k, v] of Object.entries(overrides)) {
       fd.set(k, v);
@@ -34,12 +37,15 @@ function makeUploadRequest(overrides?: Record<string, string>) {
 describe("Audit trail — machine decisions", () => {
   it("writes audit entry when photo is pre-verified", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
-    
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
+
     const res = await app.request("/photo/upload", makeUploadRequest());
     expect(res.status).toBe(201);
 
@@ -52,22 +58,28 @@ describe("Audit trail — machine decisions", () => {
 
   it("writes audit entry when photo is flagged", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
-    
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
+
     // Low confidence to trigger flagged
-    const res = await app.request("/photo/upload", makeUploadRequest({
-      __test_classification: JSON.stringify({
-        valid: true,
-        water_state: "flooded",
-        confidence: 0.7,
-        reason: "ภาพไม่ชัดเจน"
+    const res = await app.request(
+      "/photo/upload",
+      makeUploadRequest({
+        __test_classification: JSON.stringify({
+          valid: true,
+          water_state: "flooded",
+          confidence: 0.7,
+          reason: "ภาพไม่ชัดเจน",
+        }),
+        __threshold: "0.85",
       }),
-      __threshold: "0.85"
-    }));
+    );
     expect(res.status).toBe(201);
 
     const auditLog = db.store.get("automation_audit_log") ?? [];
@@ -78,21 +90,27 @@ describe("Audit trail — machine decisions", () => {
 
   it("writes audit entry when photo is refused", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
-    
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
+
     // Invalid classification to trigger refused
-    const res = await app.request("/photo/upload", makeUploadRequest({
-      __test_classification: JSON.stringify({
-        valid: false,
-        water_state: "not-applicable",
-        confidence: 0.1,
-        reason: "ไม่พบท่อวัด"
-      })
-    }));
+    const res = await app.request(
+      "/photo/upload",
+      makeUploadRequest({
+        __test_classification: JSON.stringify({
+          valid: false,
+          water_state: "not-applicable",
+          confidence: 0.1,
+          reason: "ไม่พบท่อวัด",
+        }),
+      }),
+    );
     expect(res.status).toBe(200);
 
     const auditLog = db.store.get("automation_audit_log") ?? [];
@@ -107,9 +125,12 @@ describe("Audit trail — admin decisions", () => {
     const { app, db } = await createTestApp();
 
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
 
     // First: upload a pre-verified photo
     const uploadRes = await app.request("/photo/upload", makeUploadRequest());
@@ -137,15 +158,15 @@ describe("Audit trail — admin decisions", () => {
     const { app, db } = await createTestApp();
 
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
 
     // Upload with 100% audit sample rate
-    const uploadRes = await app.request(
-      "/photo/upload",
-      makeUploadRequest({ __sample_rate: "1" }),
-    );
+    const uploadRes = await app.request("/photo/upload", makeUploadRequest({ __sample_rate: "1" }));
     const body = await uploadRes.json<{ id: string }>();
     const photoId = body.id;
 
@@ -168,19 +189,25 @@ describe("Audit trail — admin decisions", () => {
     const { app, db } = await createTestApp();
 
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
 
     // Upload a flagged photo (not pre-verified) - use low confidence to trigger flagged
-    const uploadRes = await app.request("/photo/upload", makeUploadRequest({
-      __test_classification: JSON.stringify({
-        valid: true,
-        water_state: "flooded",
-        confidence: 0.7,
-        reason: "ภาพไม่ชัดเจน"
-      })
-    }));
+    const uploadRes = await app.request(
+      "/photo/upload",
+      makeUploadRequest({
+        __test_classification: JSON.stringify({
+          valid: true,
+          water_state: "flooded",
+          confidence: 0.7,
+          reason: "ภาพไม่ชัดเจน",
+        }),
+      }),
+    );
     const body = await uploadRes.json<{ id: string }>();
     const photoId = body.id;
 
@@ -204,15 +231,15 @@ describe("GET /api/admin/audit/:photoId — decision history API", () => {
     const { app, db } = await createTestApp();
 
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
 
     // Upload pre-verified with 100% audit sample rate
-    const uploadRes = await app.request(
-      "/photo/upload",
-      makeUploadRequest({ __sample_rate: "1" }),
-    );
+    const uploadRes = await app.request("/photo/upload", makeUploadRequest({ __sample_rate: "1" }));
     const body = await uploadRes.json<{ id: string }>();
     const photoId = body.id;
 

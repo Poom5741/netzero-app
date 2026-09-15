@@ -4,12 +4,13 @@
  *
  * Run: npx tsx src/vision/bakeoff/run-bakeoff.ts
  */
-import { buildStrategies } from "./strategies.js";
-import { generateDataset, splitHoldout, MANIFEST } from "./dataset.js";
+
+import { generateDataset, MANIFEST, splitHoldout } from "./dataset.js";
+import { type LeaderboardRow, renderLeaderboard } from "./leaderboard.js";
+import { checkPassBar } from "./passbar.js";
 import { runStrategy } from "./runner.js";
 import { computeConfusionMatrix, resultToClass } from "./scoring.js";
-import { checkPassBar } from "./passbar.js";
-import { renderLeaderboard, type LeaderboardRow } from "./leaderboard.js";
+import { buildStrategies } from "./strategies.js";
 
 async function main() {
   console.log("═══════════════════════════════════════════════════════");
@@ -19,13 +20,17 @@ async function main() {
   // 1. Dataset
   const allImages = generateDataset();
   const { holdout } = splitHoldout(allImages);
-  console.log(`Dataset: ${MANIFEST.total} images (${MANIFEST.flooded} flooded, ${MANIFEST.dry} dry, ${MANIFEST.invalid} invalid)`);
+  console.log(
+    `Dataset: ${MANIFEST.total} images (${MANIFEST.flooded} flooded, ${MANIFEST.dry} dry, ${MANIFEST.invalid} invalid)`,
+  );
   console.log(`Hold-out split: ${holdout.length} images (untouched by tuning)\n`);
 
   // Verify hold-out class distribution
   const holdoutCounts = { flooded: 0, dry: 0, invalid: 0 };
   for (const img of holdout) holdoutCounts[img.truth_class]++;
-  console.log(`Hold-out distribution: ${holdoutCounts.flooded} flooded, ${holdoutCounts.dry} dry, ${holdoutCounts.invalid} invalid\n`);
+  console.log(
+    `Hold-out distribution: ${holdoutCounts.flooded} flooded, ${holdoutCounts.dry} dry, ${holdoutCounts.invalid} invalid\n`,
+  );
 
   // 2. Run all strategies
   const strategies = buildStrategies();
@@ -45,9 +50,7 @@ async function main() {
     const matrix = computeConfusionMatrix(pairs);
 
     // Auto-pass rate: % of known-good (flooded+dry) photos that get valid=true + confidence >= 0.85
-    const goodPhotos = result.predictions.filter(
-      (p) => p.truth === "flooded" || p.truth === "dry",
-    );
+    const goodPhotos = result.predictions.filter((p) => p.truth === "flooded" || p.truth === "dry");
     const autoPassed = goodPhotos.filter(
       (p) => p.prediction.valid && p.prediction.confidence >= 0.85,
     );
@@ -63,7 +66,9 @@ async function main() {
 
     const verdict = checkPassBar({ badSlipRate, autoPassRate });
 
-    console.log(`  ${strat.name}: auto-pass=${(autoPassRate * 100).toFixed(1)}% bad-slip=${(badSlipRate * 100).toFixed(1)}% ${verdict.passed ? "✅" : "❌"}`);
+    console.log(
+      `  ${strat.name}: auto-pass=${(autoPassRate * 100).toFixed(1)}% bad-slip=${(badSlipRate * 100).toFixed(1)}% ${verdict.passed ? "✅" : "❌"}`,
+    );
 
     rows.push({
       name: strat.name,
@@ -104,7 +109,9 @@ async function main() {
       return bScore - aScore;
     });
     const closest = sorted[0]!;
-    console.log(`  ${closest.name}: auto-pass=${(closest.autoPassRate * 100).toFixed(1)}%, bad-slip=${(closest.badSlipRate * 100).toFixed(1)}%`);
+    console.log(
+      `  ${closest.name}: auto-pass=${(closest.autoPassRate * 100).toFixed(1)}%, bad-slip=${(closest.badSlipRate * 100).toFixed(1)}%`,
+    );
     console.log(`  Reason: ${closest.verdict.reason}`);
     console.log("\nRecommended next move:");
     console.log("  - Collect more labeled invalid photos (currently only 22)");
@@ -124,7 +131,9 @@ async function main() {
     if (passingRows.length > 1) {
       console.log(`\n   ${passingRows.length} strategies passed the bar:`);
       for (const r of passingRows) {
-        console.log(`     - ${r.name} (auto-pass: ${(r.autoPassRate * 100).toFixed(1)}%, bad-slip: ${(r.badSlipRate * 100).toFixed(1)}%)`);
+        console.log(
+          `     - ${r.name} (auto-pass: ${(r.autoPassRate * 100).toFixed(1)}%, bad-slip: ${(r.badSlipRate * 100).toFixed(1)}%)`,
+        );
       }
     }
   }

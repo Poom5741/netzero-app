@@ -348,7 +348,10 @@ export type SponsorFarmerRow = {
  */
 export type SponsorFilters = { province?: string; areaCode?: string; season?: string };
 
-function areaFilter(areas: string[] | null, filters: SponsorFilters = {}): { clause: string; values: string[] } {
+function areaFilter(
+  areas: string[] | null,
+  filters: SponsorFilters = {},
+): { clause: string; values: string[] } {
   const clauses: string[] = [];
   const values: string[] = [];
   if (areas && areas.length > 0) {

@@ -30,10 +30,7 @@ export default defineConfig({
       use: { browserName: "chromium" },
     },
   ],
-  reporter: [
-    ["list"],
-    ["json", { outputFile: "../test-results/journey-results.json" }],
-  ],
+  reporter: [["list"], ["json", { outputFile: "../test-results/journey-results.json" }]],
   metadata: {
     frontendURL: FRONTEND_URL,
     backendURL: BACKEND_URL,

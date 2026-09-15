@@ -99,7 +99,13 @@ authRoutes.post("/login", async (c) => {
       "SELECT id, email, password_hash, role, otp_secret FROM users WHERE email = ?",
     )
       .bind(email)
-      .first<{ id: string; email: string; password_hash: string; role: string; otp_secret: string | null }>();
+      .first<{
+        id: string;
+        email: string;
+        password_hash: string;
+        role: string;
+        otp_secret: string | null;
+      }>();
 
     if (!user) {
       return c.html(renderLoginPage("Invalid credentials"), 401);
@@ -121,38 +127,43 @@ authRoutes.post("/login", async (c) => {
       if (!verifyOtp(user.otp_secret, otp)) {
         return c.html(renderLoginPage("Invalid OTP code"), 401);
       }
-  }
+    }
 
-  const { createSessionCookie } = await import("../auth/session");
-  const remember = form.get("remember") === "on";
-  // T090 — extend session to 30 days when "remember device" is checked (AD-AUTH-02)
-  const maxAge = remember ? 86400 * 30 : 86400;
-  const cookie = await createSessionCookie(
-    { userId: user.id, role: user.role as "admin" | "sponsor", email: user.email },
-    c.env.SECRET,
-    true,
-    maxAge,
-  );
+    const { createSessionCookie } = await import("../auth/session");
+    const remember = form.get("remember") === "on";
+    // T090 — extend session to 30 days when "remember device" is checked (AD-AUTH-02)
+    const maxAge = remember ? 86400 * 30 : 86400;
+    const cookie = await createSessionCookie(
+      { userId: user.id, role: user.role as "admin" | "sponsor", email: user.email },
+      c.env.SECRET,
+      true,
+      maxAge,
+    );
 
-  // T063 — audit log entry for successful sign-in (AD-AUTH-03)
-  try {
-    const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    await c.env.DB.prepare(
-      `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
+    // T063 — audit log entry for successful sign-in (AD-AUTH-03)
+    try {
+      const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      await c.env.DB.prepare(
+        `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
        VALUES (?, NULL, 'admin', 'sign_in', ?, 'user', ?, datetime('now'))`,
-    ).bind(auditId, `sign-in ${user.role}`, user.id).run();
-  } catch (err) {
-    console.error("sign-in audit log failed:", err);
-  }
+      )
+        .bind(auditId, `sign-in ${user.role}`, user.id)
+        .run();
+    } catch (err) {
+      console.error("sign-in audit log failed:", err);
+    }
 
-  const redirectPath = user.role === "admin" ? "/admin" : "/sponsor";
-  return new Response(null, {
-    status: 302,
-    headers: { Location: redirectPath, "Set-Cookie": cookie },
-  });
+    const redirectPath = user.role === "admin" ? "/admin" : "/sponsor";
+    return new Response(null, {
+      status: 302,
+      headers: { Location: redirectPath, "Set-Cookie": cookie },
+    });
   } catch (error) {
     console.error("Login error:", error);
-    return c.json({ error: "Login failed", details: error instanceof Error ? error.message : String(error) }, 500);
+    return c.json(
+      { error: "Login failed", details: error instanceof Error ? error.message : String(error) },
+      500,
+    );
   }
 });
 

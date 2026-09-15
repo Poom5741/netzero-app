@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { getSponsors } from "../../src/admin/sponsors";
-import { getSettings, updateSettings } from "../../src/admin/settings";
 import { getReports, logReportDownload } from "../../src/admin/reports";
+import { getSettings, updateSettings } from "../../src/admin/settings";
+import { getSponsors } from "../../src/admin/sponsors";
 
 function mockD1Multi(prepareResults: Record<string, unknown>[][]) {
   let callIdx = 0;
@@ -31,9 +31,17 @@ function mockD1Sequence(rows: (Record<string, unknown> | null)[]) {
       return {
         bind(..._args: unknown[]) {
           if (row === null) {
-            return { first: async () => null, all: async () => ({ results: [] }), run: async () => ({ success: true }) };
+            return {
+              first: async () => null,
+              all: async () => ({ results: [] }),
+              run: async () => ({ success: true }),
+            };
           }
-          return { first: async () => row, all: async () => ({ results: [row] }), run: async () => ({ success: true }) };
+          return {
+            first: async () => row,
+            all: async () => ({ results: [row] }),
+            run: async () => ({ success: true }),
+          };
         },
       };
     },
@@ -84,7 +92,10 @@ describe("getSettings", () => {
   it("returns settings with permissions, users, constants, notifications, general", async () => {
     const db = mockD1Multi([
       [{ id: "u1", email: "admin@test.com", role: "admin", name: "Admin" }],
-      [{ key: "u_d", value: "15" }, { key: "cf", value: "0.89" }],
+      [
+        { key: "u_d", value: "15" },
+        { key: "cf", value: "0.89" },
+      ],
     ]) as unknown as D1Database;
     const result = await getSettings(db);
     expect(result.users.length).toBe(1);

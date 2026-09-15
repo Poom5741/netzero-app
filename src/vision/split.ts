@@ -13,7 +13,10 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
-export interface SplitRow { path: string; label: PipeLabel }
+export interface SplitRow {
+  path: string;
+  label: PipeLabel;
+}
 export interface SplitResult {
   train: SplitRow[];
   holdout: SplitRow[];

@@ -34,7 +34,7 @@ export async function handleLiffCalendar(
       `SELECT id, step_code, step_name, due_day, due_date, status, photo_evidence_id, completed_at
        FROM season_steps
        WHERE season_input_id = ?
-       ORDER BY due_day ASC`
+       ORDER BY due_day ASC`,
     )
     .bind(seasonInputId)
     .all<{

@@ -9,18 +9,17 @@
  * over the labeled dataset.
  */
 
-import { traditionalCV } from "./strategies/traditional-cv.js";
-import { objectDetectionRules } from "./strategies/object-detection-rules.js";
+import type { ClassifierBinding } from "./runner.js";
 import { fewShotEmbeddings } from "./strategies/few-shot-embeddings.js";
 import { fineTunedResnet } from "./strategies/fine-tuned-resnet.js";
-import { moondream31 } from "./strategies/moondream-3-1.js";
 import { llama4Scout } from "./strategies/llama4-scout.js";
-import { openrouterQwenVl } from "./strategies/openrouter-qwen-vl.js";
+import { moondream31 } from "./strategies/moondream-3-1.js";
 import { multiModelConsensus } from "./strategies/multi-model-consensus.js";
+import { objectDetectionRules } from "./strategies/object-detection-rules.js";
+import { openrouterQwenVl } from "./strategies/openrouter-qwen-vl.js";
+import { traditionalCV } from "./strategies/traditional-cv.js";
 import { vlmPromptCot } from "./strategies/vlm-prompt-cot.js";
 import { vlmPromptFewshot } from "./strategies/vlm-prompt-fewshot.js";
-
-import type { ClassifierBinding } from "./runner.js";
 
 export interface StrategyDef {
   name: string;

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 
 /**
  * Tests for POST /api/season/create route.
@@ -27,8 +27,7 @@ function mockD1(opts: {
           // Check existing season_input
           if (sql.includes("SELECT id FROM season_inputs WHERE plot_id = ? AND season_id = ?")) {
             return {
-              first: async () =>
-                opts.existingSeasonInput ? { id: "existing_input_1" } : null,
+              first: async () => (opts.existingSeasonInput ? { id: "existing_input_1" } : null),
             };
           }
           // Insert season_input

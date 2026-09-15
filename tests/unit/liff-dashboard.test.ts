@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
  * Shows carbon credits, photo progress, and pending tasks.
  */
 
-function mockD1(opts: {
+function _mockD1(opts: {
   estimate?: { total_offset_tco2e: number; sf_w: number };
   photoProgress?: { approved: number; total: number };
   pendingPhotos?: number;
@@ -24,7 +24,11 @@ function mockD1(opts: {
           if (sql.includes("carbon_estimates") && sql.includes("total_offset")) {
             return { first: async () => opts.estimate ?? null };
           }
-          if (sql.includes("COUNT") && sql.includes("photo_evidence") && sql.includes("admin_status")) {
+          if (
+            sql.includes("COUNT") &&
+            sql.includes("photo_evidence") &&
+            sql.includes("admin_status")
+          ) {
             return { first: async () => opts.photoProgress ?? { approved: 0, total: 0 } };
           }
           if (sql.includes("photo_evidence") && sql.includes("status = 'pending'")) {
@@ -42,7 +46,11 @@ function mockD1(opts: {
           if (sql.includes("season_inputs") && sql.includes("rice_variety")) {
             return { first: async () => opts.seasonInput ?? null };
           }
-          return { run: async () => ({ success: true }), first: async () => null, all: async () => ({ results: [] }) };
+          return {
+            run: async () => ({ success: true }),
+            first: async () => null,
+            all: async () => ({ results: [] }),
+          };
         },
       };
     },

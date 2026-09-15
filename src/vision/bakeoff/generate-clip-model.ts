@@ -14,8 +14,8 @@
  *
  * Run: bun src/vision/bakeoff/generate-clip-model.ts
  */
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 // Seeded PRNG (mulberry32)
 function mulberry32(seed: number): () => number {
@@ -28,8 +28,8 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-const INPUT_DIM = 256;  // byte histogram bins
-const EMBEDDING_DIM = 768;  // CLIP ViT-L/14 embedding dim
+const INPUT_DIM = 256; // byte histogram bins
+const EMBEDDING_DIM = 768; // CLIP ViT-L/14 embedding dim
 const EXAMPLES_PER_CLASS = 10;
 const SEED = 42;
 
@@ -50,7 +50,7 @@ function generateProjectionMatrix(rng: () => number): number[][] {
 function l2Normalize(vec: number[]): number[] {
   const norm = Math.sqrt(vec.reduce((s, v) => s + v * v, 0));
   if (norm === 0) return vec;
-  return vec.map(v => v / norm);
+  return vec.map((v) => v / norm);
 }
 
 /**
@@ -96,7 +96,7 @@ function generateReferenceEmbeddings(rng: () => number) {
 
     for (let i = 0; i < EXAMPLES_PER_CLASS; i++) {
       // Add noise to prototype for each example
-      const example = prototype.map(v => v + (rng() - 0.5) * 0.05);
+      const example = prototype.map((v) => v + (rng() - 0.5) * 0.05);
       embeddings[cls].push(l2Normalize(example));
     }
   }

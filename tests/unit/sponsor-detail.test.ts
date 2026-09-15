@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { sponsorRoutes } from "../../src/routes/sponsor";
 import { createSessionCookie } from "../../src/auth/session";
+import { sponsorRoutes } from "../../src/routes/sponsor";
 
 const SECRET = "test-secret";
 
@@ -113,7 +113,9 @@ type DetailBody = {
 
 describe("GET /sponsor/:plotId", () => {
   it("returns plot detail with live math fields", async () => {
-    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, ["Chiang Mai"]) as unknown as D1Database;
+    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, [
+      "Chiang Mai",
+    ]) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/plot-1", { headers: await sponsorCookie() });
     const body = await res.json<DetailBody>();
@@ -126,7 +128,9 @@ describe("GET /sponsor/:plotId", () => {
   });
 
   it("shows estimate — not yet verified label", async () => {
-    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, ["Chiang Mai"]) as unknown as D1Database;
+    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, [
+      "Chiang Mai",
+    ]) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/plot-1", { headers: await sponsorCookie() });
     const body = await res.json<DetailBody>();
@@ -135,7 +139,9 @@ describe("GET /sponsor/:plotId", () => {
   });
 
   it("returns plot metadata: code, area, CPA code, province", async () => {
-    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, ["Chiang Mai"]) as unknown as D1Database;
+    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, [
+      "Chiang Mai",
+    ]) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/plot-1", { headers: await sponsorCookie() });
     const body = await res.json<DetailBody>();
@@ -147,7 +153,9 @@ describe("GET /sponsor/:plotId", () => {
   });
 
   it("returns water management from season inputs", async () => {
-    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, ["Chiang Mai"]) as unknown as D1Database;
+    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, [
+      "Chiang Mai",
+    ]) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/plot-1", { headers: await sponsorCookie() });
     const body = await res.json<DetailBody>();
@@ -156,7 +164,9 @@ describe("GET /sponsor/:plotId", () => {
   });
 
   it("returns water-state tallies per plot-season", async () => {
-    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, ["Chiang Mai"]) as unknown as D1Database;
+    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, [
+      "Chiang Mai",
+    ]) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/plot-1", { headers: await sponsorCookie() });
     const body = await res.json<DetailBody>();
@@ -168,7 +178,9 @@ describe("GET /sponsor/:plotId", () => {
   });
 
   it("returns provenance counts (machine vs human stamps)", async () => {
-    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, ["Chiang Mai"]) as unknown as D1Database;
+    const db = mockD1Prepare([PLOT_DETAIL_ROW], WATER_STATE_TALLIES, PROVENANCE_COUNTS, [
+      "Chiang Mai",
+    ]) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/plot-1", { headers: await sponsorCookie() });
     const body = await res.json<DetailBody>();

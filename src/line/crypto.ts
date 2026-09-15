@@ -6,15 +6,19 @@ export async function createSignature(body: string, secret: string): Promise<str
     keyData,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
   return Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, "0"))
+    .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
-export async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
+export async function verifySignature(
+  body: string,
+  signature: string,
+  secret: string,
+): Promise<boolean> {
   const expected = await createSignature(body, secret);
   if (signature.length !== expected.length) return false;
   // Simple string comparison for hex signatures

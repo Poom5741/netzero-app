@@ -5,7 +5,7 @@
  * Provides auth setup, page-object patterns, console error collection,
  * and common assertions.
  */
-import { expect, type Page, type BrowserContext } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 // ─── Constants ────────────────────────────────────────────────────────
 
@@ -52,11 +52,7 @@ export async function loginAsSponsor(page: Page): Promise<void> {
  * Perform actual login via the backend API (sets cookies).
  * Returns true if login succeeded.
  */
-export async function performLogin(
-  page: Page,
-  email: string,
-  password: string,
-): Promise<boolean> {
+export async function performLogin(page: Page, email: string, password: string): Promise<boolean> {
   const result = await page.evaluate(
     async ({ email, password }) => {
       try {
@@ -135,10 +131,7 @@ export async function waitForAdminQueue(page: Page): Promise<void> {
  * Collect console errors during a callback.
  * Returns array of error messages.
  */
-export async function collectConsoleErrors(
-  page: Page,
-  fn: () => Promise<void>,
-): Promise<string[]> {
+export async function collectConsoleErrors(page: Page, fn: () => Promise<void>): Promise<string[]> {
   const errors: string[] = [];
   const handler = (msg: { type: string; text: string }) => {
     if (msg.type() === "error") errors.push(msg.text());
@@ -353,10 +346,7 @@ export class SummaryPage {
 /**
  * Take a screenshot and return its path for evidence.
  */
-export async function takeEvidenceScreenshot(
-  page: Page,
-  name: string,
-): Promise<string> {
+export async function takeEvidenceScreenshot(page: Page, name: string): Promise<string> {
   const path = `tests/e2e/test-results/${name}-${Date.now()}.png`;
   await page.screenshot({ path, fullPage: true });
   return path;

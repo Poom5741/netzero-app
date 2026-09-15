@@ -67,9 +67,9 @@ export class CLIPClassifier {
 
       console.log(
         `CLIP classifier loaded: ${model.model}, ` +
-        `${model.input_dim}→${model.embedding_dim} projection, ` +
-        `${refs.examples_per_class} examples/class, ` +
-        `${refs.classes.length} classes`
+          `${model.input_dim}→${model.embedding_dim} projection, ` +
+          `${refs.examples_per_class} examples/class, ` +
+          `${refs.classes.length} classes`,
       );
 
       return new CLIPClassifier(model, refs);
@@ -98,7 +98,7 @@ export class CLIPClassifier {
     for (let d = 0; d < this.embeddingDim; d++) {
       let sum = 0;
       for (let i = 0; i < 256; i++) {
-        sum += histogram[i]! * this.projection[i]![d]!;
+        sum += histogram[i]! * (this.projection[i]?.[d] ?? 0);
       }
       embedding[d] = sum;
     }

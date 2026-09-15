@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSponsorSummary, getSponsorFarmers } from "../../src/sponsor/dashboard";
+import { getSponsorFarmers, getSponsorSummary } from "../../src/sponsor/dashboard";
 
 /**
  * Minimal D1 mock that returns configured rows based on SQL content hints.
@@ -29,7 +29,7 @@ describe("getSponsorSummary", () => {
       "SUM(coalesce": [{ total_co2: 25.5 }],
       "COUNT(DISTINCT p.id)": [{ total_plots: 3 }],
       "COUNT(DISTINCT f.id)": [{ total_farmers: 2 }],
-      "water_management": [
+      water_management: [
         { water_management: "AWD", cnt: 5 },
         { water_management: "Biochar", cnt: 2 },
         { water_management: null, cnt: 1 },
@@ -48,7 +48,7 @@ describe("getSponsorSummary", () => {
       "SUM(coalesce": [{ total_co2: null }],
       "COUNT(DISTINCT p.id)": [{ total_plots: 0 }],
       "COUNT(DISTINCT f.id)": [{ total_farmers: 0 }],
-      "water_management": [],
+      water_management: [],
     }) as unknown as D1Database;
 
     const result = await getSponsorSummary(db);
@@ -63,7 +63,7 @@ describe("getSponsorSummary", () => {
       "SUM(coalesce": [{ total_co2: 100 }],
       "COUNT(DISTINCT p.id)": [{ total_plots: 10 }],
       "COUNT(DISTINCT f.id)": [{ total_farmers: 5 }],
-      "water_management": [
+      water_management: [
         { water_management: "AWD", cnt: 6 },
         { water_management: "Biochar", cnt: 3 },
         { water_management: "Fertilization", cnt: 1 },
@@ -83,7 +83,7 @@ describe("getSponsorSummary", () => {
       "SUM(coalesce": [{ total_co2: 50 }],
       "COUNT(DISTINCT p.id)": [{ total_plots: 5 }],
       "COUNT(DISTINCT f.id)": [{ total_farmers: 3 }],
-      "water_management": [],
+      water_management: [],
     }) as unknown as D1Database;
 
     const result = await getSponsorSummary(db);
@@ -122,11 +122,11 @@ describe("getSponsorFarmers", () => {
 
     const result = await getSponsorFarmers(db);
     expect(result).toHaveLength(2);
-    expect(result[0]!.farmer_id).toBe("f1");
-    expect(result[0]!.cpa_code).toBe("CPA001");
-    expect(result[0]!.plotCount).toBe(2);
-    expect(result[0]!.totalTCO2e).toBe(15.5);
-    expect(result[0]!.progressPercent).toBe(80); // 8/10 * 100
+    expect(result[0]?.farmer_id).toBe("f1");
+    expect(result[0]?.cpa_code).toBe("CPA001");
+    expect(result[0]?.plotCount).toBe(2);
+    expect(result[0]?.totalTCO2e).toBe(15.5);
+    expect(result[0]?.progressPercent).toBe(80); // 8/10 * 100
   });
 
   it("returns empty array when no farmers", async () => {
@@ -154,6 +154,6 @@ describe("getSponsorFarmers", () => {
     }) as unknown as D1Database;
 
     const result = await getSponsorFarmers(db);
-    expect(result[0]!.progressPercent).toBe(0);
+    expect(result[0]?.progressPercent).toBe(0);
   });
 });

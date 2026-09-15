@@ -33,7 +33,7 @@ export async function getQueueDigest(db: D1Database): Promise<QueueDigest> {
        WHERE admin_status IN ('verified', 'rejected')`,
     )
     .first<{ verified: number; rejected: number }>();
-  
+
   const verified = statsResult?.verified ?? 0;
   const rejected = statsResult?.rejected ?? 0;
   const total = verified + rejected;

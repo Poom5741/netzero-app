@@ -28,7 +28,11 @@ function mockD1(opts: {
               first: async () => opts.seasonInput ?? { sow_date: "2026-07-01" },
             };
           }
-          if (sql.includes("COUNT") && sql.includes("photo_evidence") && sql.includes("photo_type")) {
+          if (
+            sql.includes("COUNT") &&
+            sql.includes("photo_evidence") &&
+            sql.includes("photo_type")
+          ) {
             const photoType = args[2] as string;
             return {
               first: async () => ({ cnt: opts.photoCounts?.[photoType] ?? 0 }),
@@ -37,22 +41,35 @@ function mockD1(opts: {
           if (sql.includes("COUNT") && sql.includes("fertilizer")) {
             return { first: async () => ({ cnt: opts.fertCount ?? 0 }) };
           }
-          if (sql.includes("COUNT") && sql.includes("photo_evidence") && sql.includes("admin_status")) {
+          if (
+            sql.includes("COUNT") &&
+            sql.includes("photo_evidence") &&
+            sql.includes("admin_status")
+          ) {
             return { first: async () => ({ approved: 4, total: 4 }) };
           }
-          if (sql.includes("SELECT") && sql.includes("season_inputs") && sql.includes("rice_variety")) {
+          if (
+            sql.includes("SELECT") &&
+            sql.includes("season_inputs") &&
+            sql.includes("rice_variety")
+          ) {
             return {
-              first: async () => opts.seasonInput ?? {
-                rice_variety: "RD6",
-                sow_date: "2026-07-01",
-                area_rai: 14,
-              },
+              first: async () =>
+                opts.seasonInput ?? {
+                  rice_variety: "RD6",
+                  sow_date: "2026-07-01",
+                  area_rai: 14,
+                },
             };
           }
           if (sql.includes("SELECT") && sql.includes("fertilizer_entries") && sql.includes("SUM")) {
             return { first: async () => ({ total_n: 8.5, is_urea: 1 }) };
           }
-          if (sql.includes("SELECT") && sql.includes("season_inputs") && sql.includes("water_management")) {
+          if (
+            sql.includes("SELECT") &&
+            sql.includes("season_inputs") &&
+            sql.includes("water_management")
+          ) {
             return {
               first: async () => ({
                 water_management: "awd",

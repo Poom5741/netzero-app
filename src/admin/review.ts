@@ -1,5 +1,5 @@
-import { writeAuditEntry } from "./audit-log";
 import { updateFarmerTrust } from "../trust/farmer-trust";
+import { writeAuditEntry } from "./audit-log";
 
 type ReviewResult = { success: boolean; error?: string; promoted?: boolean };
 

@@ -67,7 +67,7 @@ export async function handleSeasonCreate(
     .prepare(
       `INSERT INTO season_inputs (
         id, plot_id, season_id, rice_variety, sow_date, rice_age_days, status
-      ) VALUES (?, ?, ?, ?, ?, ?, 'open')`
+      ) VALUES (?, ?, ?, ?, ?, ?, 'open')`,
     )
     .bind(
       seasonInputId,
@@ -88,7 +88,7 @@ export async function handleSeasonCreate(
       .prepare(
         `INSERT INTO season_steps (
           id, season_input_id, step_code, step_name, due_day, due_date, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         `ss_${crypto.randomUUID()}`,
@@ -127,7 +127,7 @@ export async function handleStepComplete(
        SET status = 'completed',
            photo_evidence_id = COALESCE(?, photo_evidence_id),
            completed_at = datetime('now')
-       WHERE id = ?`
+       WHERE id = ?`,
     )
     .bind(photoEvidenceId ?? null, stepId)
     .run();

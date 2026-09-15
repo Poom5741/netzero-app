@@ -67,7 +67,7 @@ const HOLDING_DOC_RULES: Record<string, { code: string; label: string }[]> = {
 };
 
 export function getRequiredDocs(holdingType: string): { code: string; label: string }[] {
-  return HOLDING_DOC_RULES[holdingType] ?? HOLDING_DOC_RULES["owner"];
+  return HOLDING_DOC_RULES[holdingType] ?? HOLDING_DOC_RULES.owner;
 }
 
 // T092 — Document checklist categorization per AD-APP-03
@@ -160,10 +160,7 @@ type ApproveResult = {
   error?: string;
 };
 
-export async function approveApplication(
-  db: D1Database,
-  linkId: string,
-): Promise<ApproveResult> {
+export async function approveApplication(db: D1Database, linkId: string): Promise<ApproveResult> {
   // 1) Look up the line_link
   const link = await db
     .prepare("SELECT id, farmer_id FROM line_links WHERE id = ?")
@@ -191,20 +188,21 @@ export async function approveApplication(
         .prepare("UPDATE farmers SET cpa_code = ?, updated_at = datetime('now') WHERE id = ?")
         .bind(cpaCode, link.farmer_id);
       const linkStmt = db
-        .prepare("UPDATE line_links SET status = 'verified', verified_by = 'admin', updated_at = datetime('now') WHERE id = ?")
+        .prepare(
+          "UPDATE line_links SET status = 'verified', verified_by = 'admin', updated_at = datetime('now') WHERE id = ?",
+        )
         .bind(linkId);
 
       const results = await db.batch([farmerStmt, linkStmt]);
       // Verify the farmer UPDATE actually changed a row across runtime/test result shapes.
-      const first = results[0] as unknown as { changes?: number; meta?: { changes?: number } } | undefined;
+      const first = results[0] as unknown as
+        | { changes?: number; meta?: { changes?: number } }
+        | undefined;
       const farmerChanges = first?.changes ?? first?.meta?.changes ?? 0;
       if (farmerChanges > 0) {
         return { success: true, cpa_code: cpaCode };
       }
-    } catch {
-      // UNIQUE constraint violation on cpa_code — collision, retry
-      continue;
-    }
+    } catch {}
   }
 
   return { success: false, error: "CPA code assignment failed after retries" };
@@ -223,15 +221,25 @@ export async function holdApplication(
   if (!reason || reason.trim().length === 0) {
     return { success: false, error: "Hold reason is required" };
   }
-  const link = await db.prepare("SELECT id FROM line_links WHERE id = ?").bind(linkId).first<{ id: string }>();
+  const link = await db
+    .prepare("SELECT id FROM line_links WHERE id = ?")
+    .bind(linkId)
+    .first<{ id: string }>();
   if (!link) return { success: false, error: "Application not found" };
-  await db.prepare("UPDATE line_links SET status = 'hold', review_reason = ?, updated_at = datetime('now') WHERE id = ?")
-    .bind(reason.trim(), linkId).run();
+  await db
+    .prepare(
+      "UPDATE line_links SET status = 'hold', review_reason = ?, updated_at = datetime('now') WHERE id = ?",
+    )
+    .bind(reason.trim(), linkId)
+    .run();
   const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  await db.prepare(
-    `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, old_value, new_value, created_at)
+  await db
+    .prepare(
+      `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, old_value, new_value, created_at)
      VALUES (?, NULL, 'admin', 'hold_application', ?, 'line_link', ?, 'pending', 'hold', datetime('now'))`,
-  ).bind(auditId, reason.trim(), linkId).run();
+    )
+    .bind(auditId, reason.trim(), linkId)
+    .run();
   return { success: true };
 }
 
@@ -282,14 +290,24 @@ export async function requestDocuments(
   if (!reason || reason.trim().length === 0) {
     return { success: false, error: "Request reason is required" };
   }
-  const link = await db.prepare("SELECT id FROM line_links WHERE id = ?").bind(linkId).first<{ id: string }>();
+  const link = await db
+    .prepare("SELECT id FROM line_links WHERE id = ?")
+    .bind(linkId)
+    .first<{ id: string }>();
   if (!link) return { success: false, error: "Application not found" };
-  await db.prepare("UPDATE line_links SET status = 'documents_requested', review_reason = ?, updated_at = datetime('now') WHERE id = ?")
-    .bind(reason.trim(), linkId).run();
+  await db
+    .prepare(
+      "UPDATE line_links SET status = 'documents_requested', review_reason = ?, updated_at = datetime('now') WHERE id = ?",
+    )
+    .bind(reason.trim(), linkId)
+    .run();
   const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  await db.prepare(
-    `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
+  await db
+    .prepare(
+      `INSERT INTO automation_audit_log (id, photo_evidence_id, actor_type, action, reason, entity_type, entity_id, created_at)
      VALUES (?, NULL, 'admin', 'request_documents', ?, 'line_link', ?, datetime('now'))`,
-  ).bind(auditId, reason.trim(), linkId).run();
+    )
+    .bind(auditId, reason.trim(), linkId)
+    .run();
   return { success: true };
 }

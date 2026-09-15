@@ -43,7 +43,7 @@ export async function recordConsent(
   await db
     .prepare(
       `INSERT INTO consent_log (id, farmer_id, consent_type, accepted)
-       VALUES (?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?)`,
     )
     .bind(id, farmerId, consentType, accepted ? 1 : 0)
     .run();
@@ -57,15 +57,12 @@ export async function recordConsent(
  * Counts distinct consent types where accepted = 1.
  * Returns true only if all 4 are present and accepted.
  */
-export async function hasAllConsents(
-  db: D1Database,
-  farmerId: string,
-): Promise<boolean> {
+export async function hasAllConsents(db: D1Database, farmerId: string): Promise<boolean> {
   const result = await db
     .prepare(
       `SELECT COUNT(DISTINCT consent_type) as cnt
        FROM consent_log
-       WHERE farmer_id = ? AND accepted = 1`
+       WHERE farmer_id = ? AND accepted = 1`,
     )
     .bind(farmerId)
     .first<{ cnt: number }>();

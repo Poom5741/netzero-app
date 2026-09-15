@@ -6,11 +6,7 @@
  * confidence, reason, and timestamp.
  */
 import { describe, expect, it } from "vitest";
-import {
-  writeAuditEntry,
-  getDecisionHistory,
-  type AuditEntry,
-} from "../../src/admin/audit-log";
+import { getDecisionHistory, writeAuditEntry } from "../../src/admin/audit-log";
 
 function mockD1() {
   const store: Record<string, unknown>[] = [];
@@ -20,9 +16,23 @@ function mockD1() {
       return {
         bind(...args: unknown[]) {
           if (sql.includes("INSERT INTO automation_audit_log")) {
-            const cols = ["id", "photo_evidence_id", "actor_type", "actor_id", "action", "confidence", "reason", "field_name", "old_value", "new_value", "created_at"];
+            const cols = [
+              "id",
+              "photo_evidence_id",
+              "actor_type",
+              "actor_id",
+              "action",
+              "confidence",
+              "reason",
+              "field_name",
+              "old_value",
+              "new_value",
+              "created_at",
+            ];
             const row: Record<string, unknown> = {};
-            cols.forEach((col, i) => { row[col] = args[i] ?? null; });
+            cols.forEach((col, i) => {
+              row[col] = args[i] ?? null;
+            });
             store.push(row);
             return { run: async () => ({ success: true }), first: async () => null };
           }
@@ -35,7 +45,11 @@ function mockD1() {
               all: async () => ({ results: filtered }),
             };
           }
-          return { run: async () => ({ success: true }), first: async () => null, all: async () => ({ results: [] }) };
+          return {
+            run: async () => ({ success: true }),
+            first: async () => null,
+            all: async () => ({ results: [] }),
+          };
         },
       };
     },

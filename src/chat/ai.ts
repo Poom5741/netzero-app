@@ -74,9 +74,10 @@ export async function chatWithAi(
   if (context.seasonId) contextParts.push(`ฤดู: ${context.seasonId}`);
   if (context.linkedFarmer === false) contextParts.push(`สถานะ: ยังไม่ได้ผูกบัญชี`);
 
-  const userPrompt = contextParts.length > 0
-    ? `[ข้อมูลผู้ใช้]\n${contextParts.join("\n")}\n\n[ข้อความจากเกษตรกร]\n${userMessage}`
-    : userMessage;
+  const userPrompt =
+    contextParts.length > 0
+      ? `[ข้อมูลผู้ใช้]\n${contextParts.join("\n")}\n\n[ข้อความจากเกษตรกร]\n${userMessage}`
+      : userMessage;
 
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -98,7 +99,7 @@ export async function chatWithAi(
     }),
   });
 
-  const json = await res.json() as {
+  const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string | null; reasoning?: string } }>;
     error?: { message?: string };
   };
@@ -125,19 +126,21 @@ export async function chatWithAi(
 
   if (parsed) {
     if (parsed.type === "reply") {
-      const text = typeof parsed.text === "string"
-        ? parsed.text
-        : typeof parsed.text === "object" && parsed.text !== null && "text" in parsed.text
-          ? String((parsed.text as { text?: unknown }).text ?? "")
-          : JSON.stringify(parsed.text);
+      const text =
+        typeof parsed.text === "string"
+          ? parsed.text
+          : typeof parsed.text === "object" && parsed.text !== null && "text" in parsed.text
+            ? String((parsed.text as { text?: unknown }).text ?? "")
+            : JSON.stringify(parsed.text);
       return { type: "reply", text };
     }
     if (parsed.type === "draft" && parsed.category && parsed.data) {
-      const text = typeof parsed.text === "string"
-        ? parsed.text
-        : typeof parsed.text === "object" && parsed.text !== null && "text" in parsed.text
-          ? String((parsed.text as { text?: unknown }).text ?? "")
-          : "";
+      const text =
+        typeof parsed.text === "string"
+          ? parsed.text
+          : typeof parsed.text === "object" && parsed.text !== null && "text" in parsed.text
+            ? String((parsed.text as { text?: unknown }).text ?? "")
+            : "";
       return {
         type: "draft",
         category: parsed.category as "fertilizer" | "season_input",

@@ -9,15 +9,11 @@ import { describe, expect, it } from "vitest";
  * 3. Submit gate: blocked until all required docs attached
  */
 
+import { REQUIRED_DOCUMENTS } from "../../src/liff/documents-api";
 import {
-  validateRegistrationForm,
   type RegistrationFormData,
+  validateRegistrationForm,
 } from "../../src/liff/registration-api";
-import {
-  validateDocumentSubmission,
-  REQUIRED_DOCUMENTS,
-  type DocumentSubmissionInput,
-} from "../../src/liff/documents-api";
 
 // ---------------------------------------------------------------------------
 // Registration form validation
@@ -158,19 +154,19 @@ describe("document submission gate", () => {
   it("DOC-01 (chanote) is required", () => {
     const doc = REQUIRED_DOCUMENTS.find((d) => d.code === "DOC-01");
     expect(doc).toBeDefined();
-    expect(doc!.required).toBe(true);
+    expect(doc?.required).toBe(true);
   });
 
   it("DOC-03 (id_copy) is required", () => {
     const doc = REQUIRED_DOCUMENTS.find((d) => d.code === "DOC-03");
     expect(doc).toBeDefined();
-    expect(doc!.required).toBe(true);
+    expect(doc?.required).toBe(true);
   });
 
   it("DOC-06 (power_of_attorney) is optional", () => {
     const doc = REQUIRED_DOCUMENTS.find((d) => d.code === "DOC-06");
     expect(doc).toBeDefined();
-    expect(doc!.required).toBe(false);
+    expect(doc?.required).toBe(false);
   });
 
   it("allDocsAttached returns false when no docs", () => {

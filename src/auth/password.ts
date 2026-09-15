@@ -40,15 +40,16 @@ export async function verifyPassword(password: string, stored: string): Promise<
   if (!salt || !hash) return false;
   const encoder = new TextEncoder();
   const passwordBuffer = encoder.encode(password);
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    passwordBuffer,
-    "PBKDF2",
-    false,
-    ["deriveBits"],
-  );
+  const keyMaterial = await crypto.subtle.importKey("raw", passwordBuffer, "PBKDF2", false, [
+    "deriveBits",
+  ]);
   const derived = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt: fromHex(salt).buffer as ArrayBuffer, iterations: ITERATIONS, hash: "SHA-256" },
+    {
+      name: "PBKDF2",
+      salt: fromHex(salt).buffer as ArrayBuffer,
+      iterations: ITERATIONS,
+      hash: "SHA-256",
+    },
     keyMaterial,
     hash.length * 4,
   );

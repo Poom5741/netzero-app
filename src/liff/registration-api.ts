@@ -48,9 +48,7 @@ const VALID_HOLDING_STATUSES = ["owner", "tenant", "proxy", "renter"];
  * Validate a registration form submission.
  * Checks required fields, phone format, deed type, and holding status.
  */
-export function validateRegistrationForm(
-  data: RegistrationFormData,
-): ValidationResult {
+export function validateRegistrationForm(data: RegistrationFormData): ValidationResult {
   if (!data.full_name?.trim()) {
     return { valid: false, error: "full_name is required" };
   }

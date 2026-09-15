@@ -13,10 +13,7 @@ if (!API_KEY) {
   console.warn("Warning: NINE_ROUTER_API_KEY not set, VLM strategies will fail");
 }
 
-export async function callVLM(
-  imageBase64: string,
-  prompt: string
-): Promise<ClassifyResult> {
+export async function callVLM(imageBase64: string, prompt: string): Promise<ClassifyResult> {
   if (!API_KEY) {
     throw new Error("NINE_ROUTER_API_KEY not configured");
   }
@@ -24,7 +21,7 @@ export async function callVLM(
   const response = await fetch(API_URL, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -35,19 +32,19 @@ export async function callVLM(
           content: [
             {
               type: "text",
-              text: prompt
+              text: prompt,
             },
             {
               type: "image_url",
-              image_url: { url: `data:image/jpeg;base64,${imageBase64}` }
-            }
-          ]
-        }
+              image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
+            },
+          ],
+        },
       ],
       max_tokens: 300,
       stream: false,
-      redirect: "manual"
-    })
+      redirect: "manual",
+    }),
   });
 
   // Check for redirects
@@ -76,8 +73,8 @@ export async function callVLM(
     valid: result.valid === true,
     water_state: result.water_state || "not-applicable",
     confidence: result.confidence || 0,
-    reason: result.reason || ""
+    reason: result.reason || "",
   };
 }
 
-export { API_URL, API_KEY, MODEL };
+export { API_KEY, API_URL, MODEL };

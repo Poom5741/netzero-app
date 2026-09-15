@@ -20,9 +20,9 @@ export interface RichMenuItem {
   };
 }
 
-const COLOR_PRIMARY = "#06c755";
-const COLOR_BG = "#FFFFFF";
-const COLOR_TEXT = "#333333";
+const _COLOR_PRIMARY = "#06c755";
+const _COLOR_BG = "#FFFFFF";
+const _COLOR_TEXT = "#333333";
 
 /**
  * Get the 6 rich menu items with Thai labels and postback actions.

@@ -16,7 +16,9 @@ import {
   type SponsorFilters,
 } from "../sponsor/dashboard";
 
-function requestFilters(c: { req: { query: (key: string) => string | undefined } }): SponsorFilters {
+function requestFilters(c: {
+  req: { query: (key: string) => string | undefined };
+}): SponsorFilters {
   return {
     province: c.req.query("province") || undefined,
     areaCode: c.req.query("area_code") || undefined,
@@ -69,7 +71,7 @@ sponsorRoutes.post("/login", async (c) => {
       role: string;
       otp_secret: string | null;
     }>();
-  if (!user || user.role !== "sponsor" || !(await verifyPassword(password, user.password_hash))) {
+  if (user?.role !== "sponsor" || !(await verifyPassword(password, user.password_hash))) {
     return c.html(loginPage("Invalid credentials"), 401);
   }
   if (user.otp_secret && !verifyOtp(user.otp_secret, otp))
@@ -86,7 +88,7 @@ sponsorRoutes.post("/login", async (c) => {
 
 sponsorRoutes.post(
   "/logout",
-  (c) =>
+  (_c) =>
     new Response(null, {
       status: 302,
       headers: {

@@ -37,8 +37,8 @@ Now classify this photo using the same format:
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `Few-shot failed: ${error.message}`
+        reason: `Few-shot failed: ${error.message}`,
       };
     }
-  }
+  },
 };

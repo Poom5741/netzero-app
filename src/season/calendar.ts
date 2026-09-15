@@ -46,7 +46,7 @@ export const COMPLETE_CALENDAR: CalendarEntry[] = [
  * Add days to a date string (YYYY-MM-DD) and return a new date string.
  */
 function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr + "T00:00:00Z");
+  const d = new Date(`${dateStr}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   const y = d.getUTCFullYear();
   const m = String(d.getUTCMonth() + 1).padStart(2, "0");
@@ -65,7 +65,7 @@ function addDays(dateStr: string, days: number): string {
 export function generateSeasonSteps(
   seasonInputId: string,
   sowDate: string,
-  riceAgeDays: number = 120,
+  _riceAgeDays: number = 120,
 ): SeasonStep[] {
   return COMPLETE_CALENDAR.map((entry) => ({
     season_input_id: seasonInputId,

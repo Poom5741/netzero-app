@@ -8,7 +8,12 @@ import { approveSeason } from "../../src/season/approve";
 
 function mockD1ForTypedGate(opts: {
   seasonStatus?: string;
-  photoTypes?: { photo_type: string; verified: boolean; pre_verified: boolean; superseded: boolean }[];
+  photoTypes?: {
+    photo_type: string;
+    verified: boolean;
+    pre_verified: boolean;
+    superseded: boolean;
+  }[];
   fertCount?: number;
 }) {
   const calls: { sql: string; args: unknown[] }[] = [];
@@ -28,9 +33,13 @@ function mockD1ForTypedGate(opts: {
             const typeMatch = sql.match(/photo_type\s*=\s*\?/i);
             if (typeMatch && args.length > 0) {
               // Find the photo_type arg — it's after the plot_id and season_id
-              const photoType = args.find((a) => typeof a === "string" && ["prepare", "wetdry", "harvest"].includes(a));
+              const photoType = args.find(
+                (a) => typeof a === "string" && ["prepare", "wetdry", "harvest"].includes(a),
+              );
               const matching = opts.photoTypes?.filter((p) => p.photo_type === photoType) ?? [];
-              const count = matching.filter((p) => p.verified || (p.pre_verified && !p.superseded)).length;
+              const count = matching.filter(
+                (p) => p.verified || (p.pre_verified && !p.superseded),
+              ).length;
               return { first: async () => ({ cnt: count }) };
             }
             return { first: async () => ({ cnt: 0 }) };
@@ -62,7 +71,7 @@ describe("approveSeason — typed gate", () => {
     const r = await approveSeason(db, "p1", "s1");
     expect(r.success).toBe(false);
     expect(r.missing).toBeDefined();
-    expect(r.missing!.some((m: string) => m.includes("wetdry"))).toBe(true);
+    expect(r.missing?.some((m: string) => m.includes("wetdry"))).toBe(true);
   });
 
   it("rejects when all photos of a type are superseded pre-verified", async () => {
@@ -78,7 +87,7 @@ describe("approveSeason — typed gate", () => {
 
     const r = await approveSeason(db, "p1", "s1");
     expect(r.success).toBe(false);
-    expect(r.missing!.some((m: string) => m.includes("prepare"))).toBe(true);
+    expect(r.missing?.some((m: string) => m.includes("prepare"))).toBe(true);
   });
 
   it("accepts pre-verified (unsuperseded) photos toward gate", async () => {
@@ -123,6 +132,6 @@ describe("approveSeason — typed gate", () => {
 
     const r = await approveSeason(db, "p1", "s1");
     expect(r.success).toBe(false);
-    expect(r.missing!.some((m: string) => m.includes("harvest"))).toBe(true);
+    expect(r.missing?.some((m: string) => m.includes("harvest"))).toBe(true);
   });
 });

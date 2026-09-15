@@ -3,16 +3,27 @@
  */
 
 import { Hono } from "hono";
+import {
+  approveApplication,
+  getApplications,
+  holdApplication,
+  rejectApplication,
+} from "../admin/applications";
 import { getDecisionHistory } from "../admin/audit-log";
-import { approveApplication, getApplications, rejectApplication, holdApplication } from "../admin/applications";
-import { getFarmerDetail, getFarmerAuditLog } from "../admin/farmer-detail";
-import { getOverviewKpis, getWorkQueueAlerts, getCreditChart, getGhgSourceTable, getProvinceTable } from "../admin/overview";
-import { getReports, logReportDownload } from "../admin/reports";
-import { getSponsors } from "../admin/sponsors";
-import { getSettings, updateSettings } from "../admin/settings";
+import { getFarmerAuditLog, getFarmerDetail } from "../admin/farmer-detail";
+import {
+  getCreditChart,
+  getGhgSourceTable,
+  getOverviewKpis,
+  getProvinceTable,
+  getWorkQueueAlerts,
+} from "../admin/overview";
 import { getPrecisionStat } from "../admin/precision";
 import { getReviewQueue } from "../admin/queue";
+import { getReports, logReportDownload } from "../admin/reports";
 import { reviewPhoto } from "../admin/review";
+import { getSettings, updateSettings } from "../admin/settings";
+import { getSponsors } from "../admin/sponsors";
 import { requireRole } from "../auth/middleware";
 
 type Bindings = {
@@ -326,7 +337,9 @@ adminRoutes.get("/api/photo/:photoId", async (c) => {
 // POST /api/admin/applications — List applications (pending/verified/rejected)
 adminRoutes.post("/api/admin/applications", async (c) => {
   const db = c.env.DB;
-  const body = await c.req.json<{ status?: string }>().catch(() => ({ status: undefined as string | undefined }));
+  const body = await c.req
+    .json<{ status?: string }>()
+    .catch(() => ({ status: undefined as string | undefined }));
   const apps = await getApplications(db, body.status);
   return c.json(apps);
 });
@@ -483,7 +496,7 @@ adminRoutes.post("/api/admin/settings", async (c) => {
   const result = await updateSettings(db, body.tab, body.data);
 
   // Audit-log the settings change
-  const session = c.get("session" as never) as { userId?: string } | undefined;
+  const _session = c.get("session" as never) as { userId?: string } | undefined;
   const auditId = `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   try {
     await db
@@ -542,7 +555,9 @@ adminRoutes.get("/admin/overview", async (c) => {
     getProvinceTable(db),
   ]);
 
-  const visibleProvinces = provinceFilter ? provinces.filter((p) => p.province === provinceFilter) : provinces;
+  const visibleProvinces = provinceFilter
+    ? provinces.filter((p) => p.province === provinceFilter)
+    : provinces;
   const body = `
     <div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <strong>ตัวกรอง:</strong>
@@ -603,10 +618,15 @@ adminRoutes.get("/admin/applications", async (c) => {
   const body = `
     <div class="card">
       <h3 style="margin-bottom:12px">📝 คิวคำขอจดทะเบียน</h3>
-      ${apps.length === 0 ? '<div class="empty">ไม่มีคำขอ</div>' : `
+      ${
+        apps.length === 0
+          ? '<div class="empty">ไม่มีคำขอ</div>'
+          : `
       <table>
         <tr><th>ID</th><th>เกษตรกร</th><th>จังหวัด</th><th>ประเภท</th><th>เอกสาร</th><th>อายุ(วัน)</th><th>สถานะ</th><th>จัดการ</th></tr>
-        ${apps.map((a: Record<string, unknown>) => `<tr>
+        ${apps
+          .map(
+            (a: Record<string, unknown>) => `<tr>
           <td>${a.id}</td>
           <td>${a.farmer_name ?? "-"}</td>
           <td>${a.province ?? "-"}</td>
@@ -615,14 +635,21 @@ adminRoutes.get("/admin/applications", async (c) => {
           <td>${a.age_days ?? 0}</td>
           <td><span class="badge" style="background:${a.status === "verified" ? "#d4edda" : a.status === "hold" ? "#fff3cd" : a.status === "rejected" ? "#f8d7da" : "#e2e3e5"};color:${a.status === "verified" ? "#155724" : a.status === "hold" ? "#856404" : a.status === "rejected" ? "#721c24" : "#383d41"}">${a.status}</span></td>
           <td>
-            ${a.status === "pending" ? `
+            ${
+              a.status === "pending"
+                ? `
               <button class="btn btn-primary" onclick="appAction('${a.id}','approve')">✓ อนุมัติ</button>
               <button class="btn btn-warn" onclick="appAction('${a.id}','hold')">⏸ ถือ</button>
               <button class="btn btn-danger" onclick="appAction('${a.id}','reject')">✗ ปฏิเสธ</button>
-            ` : "-"}
+            `
+                : "-"
+            }
           </td>
-        </tr>`).join("")}
-      </table>`}
+        </tr>`,
+          )
+          .join("")}
+      </table>`
+      }
       <p style="font-size:11px;color:#999;margin-top:8px">⚠️ OCR ไม่พร้อมใช้งาน — ข้อมูลตัวอย่าง</p>
     </div>
     <script>
@@ -671,10 +698,15 @@ adminRoutes.get("/admin/farmers", async (c) => {
   const body = `
     <div class="card">
       <h3 style="margin-bottom:12px">🌾 ทะเบียนเกษตรกร (${farmers.length})</h3>
-      ${farmers.length === 0 ? '<div class="empty">ไม่มีข้อมูลเกษตรกร</div>' : `
+      ${
+        farmers.length === 0
+          ? '<div class="empty">ไม่มีข้อมูลเกษตรกร</div>'
+          : `
       <table>
         <tr><th>CPA</th><th>ชื่อ</th><th>จังหวัด</th><th>แปลง</th><th>ไร่</th><th>BE</th><th>PE</th><th>ER</th><th>ดู</th></tr>
-        ${farmers.map((f: Record<string, unknown>) => `<tr>
+        ${farmers
+          .map(
+            (f: Record<string, unknown>) => `<tr>
           <td>${f.cpa_code ?? "-"}</td>
           <td>${f.full_name ?? "-"}</td>
           <td>${f.addr_province ?? "-"}</td>
@@ -684,8 +716,11 @@ adminRoutes.get("/admin/farmers", async (c) => {
           <td>${f.PE}</td>
           <td><span class="badge" style="background:${f.ER === "verified" ? "#d4edda" : f.ER === "estimated" ? "#fff3cd" : "#e2e3e5"};color:${f.ER === "verified" ? "#155724" : f.ER === "estimated" ? "#856404" : "#383d41"}">${f.ER}</span></td>
           <td><a href="/admin/farmers/${f.id}" class="btn btn-secondary">รายละเอียด</a></td>
-        </tr>`).join("")}
-      </table>`}
+        </tr>`,
+          )
+          .join("")}
+      </table>`
+      }
     </div>
   `;
   return c.html(adminShell("ทะเบียนเกษตรกร", "farmers", body));
@@ -696,57 +731,87 @@ adminRoutes.get("/admin/farmers/:id", async (c) => {
   const db = c.env.DB;
   const farmerId = c.req.param("id");
   const detail = await getFarmerDetail(db, farmerId);
-  if (!detail) return c.html(adminShell("ไม่พบเกษตรกร", "farmers", '<div class="empty">ไม่พบข้อมูลเกษตรกร</div>'));
+  if (!detail)
+    return c.html(adminShell("ไม่พบเกษตรกร", "farmers", '<div class="empty">ไม่พบข้อมูลเกษตรกร</div>'));
 
-  const plots = (detail as Record<string, unknown>).plots as Array<Record<string, unknown>> | undefined ?? [];
-  const photos = (detail as Record<string, unknown>).photos as Array<Record<string, unknown>> | undefined ?? [];
-  const trace = (detail as Record<string, unknown>).carbonTrace as Record<string, unknown> | undefined;
+  const plots =
+    ((detail as Record<string, unknown>).plots as Array<Record<string, unknown>> | undefined) ?? [];
+  const photos =
+    ((detail as Record<string, unknown>).photos as Array<Record<string, unknown>> | undefined) ??
+    [];
+  const trace = (detail as Record<string, unknown>).carbonTrace as
+    | Record<string, unknown>
+    | undefined;
 
   const body = `
     <div class="card">
       <h3 style="margin-bottom:12px">🌾 รายละเอียดเกษตรกร</h3>
       <h4 style="font-size:14px;margin-bottom:8px">แปลงและเอกสาร (${plots.length})</h4>
-      ${plots.length === 0 ? '<p style="color:#999">ไม่มีแปลง</p>' : `
+      ${
+        plots.length === 0
+          ? '<p style="color:#999">ไม่มีแปลง</p>'
+          : `
       <table>
         <tr><th>รหัสแปลง</th><th>ไร่</th><th>พันธุ์ข้าว</th><th>เอกสาร</th><th>ฤดู</th><th>คาร์บอน</th></tr>
-        ${plots.map((p) => `<tr>
+        ${plots
+          .map(
+            (p) => `<tr>
           <td>${p.plot_code ?? "-"}</td>
           <td>${Number(p.area_rai ?? 0).toFixed(1)}</td>
           <td>${p.rice_variety ?? "-"}</td>
           <td>${p.doc_type ?? "-"}</td>
           <td>${p.season_name ?? "-"}</td>
           <td>${Number(p.carbon_total ?? 0).toFixed(2)}</td>
-        </tr>`).join("")}
-      </table>`}
+        </tr>`,
+          )
+          .join("")}
+      </table>`
+      }
     </div>
-    ${trace ? `
+    ${
+      trace
+        ? `
     <div class="card">
       <h4 style="font-size:14px;margin-bottom:8px">📊 CalcTrace — T-VER-P-METH-13-08</h4>
       <table>
         <tr><th>ขั้นตอน</th><th>พื้นฐาน</th><th>โครงการ</th><th>การลด</th></tr>
-        ${["ch4", "n2o", "co2"].map((g) => `<tr>
+        ${["ch4", "n2o", "co2"]
+          .map(
+            (g) => `<tr>
           <td>${g.toUpperCase()} baseline/project</td>
           <td>${Number((trace as Record<string, Record<string, number>>)[`${g}_baseline`] ?? 0).toFixed(3)}</td>
           <td>${Number((trace as Record<string, Record<string, number>>)[`${g}_project`] ?? 0).toFixed(3)}</td>
           <td style="color:#06c755;font-weight:600">${Number((trace as Record<string, Record<string, number>>)[`${g}_reduction`] ?? 0).toFixed(3)}</td>
-        </tr>`).join("")}
+        </tr>`,
+          )
+          .join("")}
         <tr><td>SF_w / SF_p / SF_o</td><td>${Number((trace as Record<string, number>).sf_w ?? 0).toFixed(3)}</td><td>${Number((trace as Record<string, number>).sf_p ?? 0).toFixed(3)}</td><td>${Number((trace as Record<string, number>).sf_o ?? 0).toFixed(3)}</td></tr>
         <tr style="font-weight:600"><td>Uncertainty deduction (U_d)</td><td colspan="3">${Number((trace as Record<string, number>).u_d ?? 0).toFixed(3)} tCO₂eq</td></tr>
       </table>
-    </div>` : ""}
+    </div>`
+        : ""
+    }
     <div class="card">
       <h4 style="font-size:14px;margin-bottom:8px">📸 ภาพถ่าย (${photos.length})</h4>
-      ${photos.length === 0 ? '<p style="color:#999">ไม่มีภาพถ่าย</p>' : `
+      ${
+        photos.length === 0
+          ? '<p style="color:#999">ไม่มีภาพถ่าย</p>'
+          : `
       <table>
         <tr><th>ประเภท</th><th>GPS</th><th>วันที่</th><th>สถานะ AI</th><th>สถานะ Admin</th></tr>
-        ${photos.map((p) => `<tr>
+        ${photos
+          .map(
+            (p) => `<tr>
           <td>${p.photo_type ?? "-"}</td>
           <td>${p.gps_lat ?? "-"}, ${p.gps_lng ?? "-"}</td>
           <td>${p.taken_at ?? "-"}</td>
           <td>${p.ai_status ?? "-"}</td>
           <td>${p.admin_status ?? "-"}</td>
-        </tr>`).join("")}
-      </table>`}
+        </tr>`,
+          )
+          .join("")}
+      </table>`
+      }
     </div>
   `;
   return c.html(adminShell("รายละเอียดเกษตรกร", "farmers", body));
@@ -760,15 +825,23 @@ adminRoutes.get("/admin/sponsors", async (c) => {
   const body = `
     <div class="card">
       <h3 style="margin-bottom:12px">🏢 ผู้สนับสนุน (${sponsors.length})</h3>
-      ${sponsors.length === 0 ? '<div class="empty">ไม่มีผู้สนับสนุน</div>' : `
+      ${
+        sponsors.length === 0
+          ? '<div class="empty">ไม่มีผู้สนับสนุน</div>'
+          : `
       <table>
         <tr><th>ชื่อ</th><th>อีเมล</th><th>พื้นที่</th></tr>
-        ${sponsors.map((s: Record<string, unknown>) => `<tr>
+        ${sponsors
+          .map(
+            (s: Record<string, unknown>) => `<tr>
           <td>${s.name ?? "-"}</td>
           <td>${s.email ?? "-"}</td>
           <td>${Array.isArray(s.areas) ? (s.areas as string[]).join(", ") : "-"}</td>
-        </tr>`).join("")}
-      </table>`}
+        </tr>`,
+          )
+          .join("")}
+      </table>`
+      }
     </div>
   `;
   return c.html(adminShell("ผู้สนับสนุน", "sponsors", body));
@@ -784,12 +857,16 @@ adminRoutes.get("/admin/reports", async (c) => {
       <h3 style="margin-bottom:12px">📥 รายงาน (${reports.length})</h3>
       <table>
         <tr><th>รหัส</th><th>ชื่อ</th><th>คำอธิบาย</th><th>ดาวน์โหลด</th></tr>
-        ${reports.map((r: Record<string, unknown>) => `<tr>
+        ${reports
+          .map(
+            (r: Record<string, unknown>) => `<tr>
           <td>${r.id ?? r.code ?? "-"}</td>
           <td>${r.name ?? r.title ?? "-"}</td>
           <td>${r.description ?? "-"}</td>
           <td><a href="/api/admin/reports/${r.id ?? r.code}/download" class="btn btn-primary">📥 ดาวน์โหลด</a></td>
-        </tr>`).join("")}
+        </tr>`,
+          )
+          .join("")}
       </table>
     </div>
   `;
@@ -801,8 +878,11 @@ adminRoutes.get("/admin/settings", async (c) => {
   const db = c.env.DB;
   const settings = await getSettings(db);
 
-  const perms = (settings as Record<string, unknown>).permissions as Record<string, unknown> | undefined ?? {};
-  const constants = (settings as Record<string, unknown>).constants as Record<string, unknown> | undefined ?? {};
+  const perms =
+    ((settings as Record<string, unknown>).permissions as Record<string, unknown> | undefined) ??
+    {};
+  const constants =
+    ((settings as Record<string, unknown>).constants as Record<string, unknown> | undefined) ?? {};
 
   const body = `
     <div class="card">
@@ -810,17 +890,23 @@ adminRoutes.get("/admin/settings", async (c) => {
       <h4 style="font-size:14px;margin-bottom:8px">สิทธิ์การเข้าถึง (5 บทบาท × 15 หมวดหมู่)</h4>
       <table>
         <tr><th>บทบาท</th><th>สิทธิ์</th></tr>
-        ${Object.entries(perms).map(([role, permsList]) => `<tr>
+        ${Object.entries(perms)
+          .map(
+            ([role, permsList]) => `<tr>
           <td><strong>${role}</strong></td>
           <td style="font-size:11px">${Array.isArray(permsList) ? (permsList as string[]).join(", ") : JSON.stringify(permsList)}</td>
-        </tr>`).join("")}
+        </tr>`,
+          )
+          .join("")}
       </table>
     </div>
     <div class="card">
       <h4 style="font-size:14px;margin-bottom:8px">ค่าคงที่วิธีการคำนวณ</h4>
       <table>
         <tr><th>พารามิเตอร์</th><th>ค่า</th></tr>
-        ${Object.entries(constants).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("")}
+        ${Object.entries(constants)
+          .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
+          .join("")}
       </table>
     </div>
   `;

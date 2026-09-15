@@ -21,7 +21,9 @@ function mockDB(rows: Record<string, unknown>[] = []) {
 
 describe("getFarmerTrust", () => {
   it("returns trust object for existing farmer", async () => {
-    const db = mockDB([{ trust_score: 0.75, total_photos: 10, verified_count: 7, rejected_count: 3 }]);
+    const db = mockDB([
+      { trust_score: 0.75, total_photos: 10, verified_count: 7, rejected_count: 3 },
+    ]);
     const trust = await getFarmerTrust(db as any, "farmer-1");
     expect(trust.trust_score).toBe(0.75);
     expect(trust.total_photos).toBe(10);

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
  * Handles photo capture with GPS and water depth for DRY rounds.
  */
 
-function mockD1() {
+function _mockD1() {
   const calls: { sql: string; args: unknown[] }[] = [];
   return {
     calls,

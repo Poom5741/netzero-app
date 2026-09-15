@@ -9,7 +9,7 @@ function mockDB() {
       return {
         bind(...args: unknown[]) {
           calls.push({ sql, args });
-          return { 
+          return {
             run: async () => ({ success: true }),
             first: async () => null, // No season_inputs found
           };

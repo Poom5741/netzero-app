@@ -5,8 +5,8 @@
  */
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { sponsorRoutes } from "../../src/routes/sponsor";
 import { createSessionCookie } from "../../src/auth/session";
+import { sponsorRoutes } from "../../src/routes/sponsor";
 
 const SECRET = "test-secret";
 
@@ -63,11 +63,16 @@ describe("GET /sponsor/me", () => {
   it("returns user profile and areas", async () => {
     const db = mockD1({
       "SELECT areas FROM users": [{ areas: '["สุพรรณบุรี"]' }],
-      "SELECT id, email, name, role FROM users": [{ id: "u1", email: "sponsor@test.com", name: "ทดสอบ", role: "sponsor" }],
+      "SELECT id, email, name, role FROM users": [
+        { id: "u1", email: "sponsor@test.com", name: "ทดสอบ", role: "sponsor" },
+      ],
     }) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/me", { headers: await sponsorCookie() });
-    const body = await res.json<{ user: { id: string; email: string; name: string; role: string }; areas: string[] | null }>();
+    const body = await res.json<{
+      user: { id: string; email: string; name: string; role: string };
+      areas: string[] | null;
+    }>();
 
     expect(res.status).toBe(200);
     expect(body.user.id).toBe("u1");
@@ -79,7 +84,9 @@ describe("GET /sponsor/me", () => {
   it("returns null areas when user has no areas", async () => {
     const db = mockD1({
       "SELECT areas FROM users": [{ areas: null }],
-      "SELECT id, email, name, role FROM users": [{ id: "u1", email: "sponsor@test.com", name: null, role: "sponsor" }],
+      "SELECT id, email, name, role FROM users": [
+        { id: "u1", email: "sponsor@test.com", name: null, role: "sponsor" },
+      ],
     }) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/me", { headers: await sponsorCookie() });
@@ -101,20 +108,27 @@ describe("GET /sponsor/me", () => {
 describe("GET /sponsor/ghg-sources", () => {
   it("returns GHG source breakdown", async () => {
     const db = mockD1({
-      "baseline_ch4": [{
-        baseline_ch4: 100, project_ch4: 65,
-        baseline_n2o: 30, project_n2o: 22,
-        baseline_co2: 50, project_co2: 45,
-      }],
+      baseline_ch4: [
+        {
+          baseline_ch4: 100,
+          project_ch4: 65,
+          baseline_n2o: 30,
+          project_n2o: 22,
+          baseline_co2: 50,
+          project_co2: 45,
+        },
+      ],
       "SELECT areas FROM users": [{ areas: '["สุพรรณบุรี"]' }],
     }) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/ghg-sources", { headers: await sponsorCookie() });
-    const body = await res.json<{ sources: { source: string; baseline: number; project: number; reduction: number }[] }>();
+    const body = await res.json<{
+      sources: { source: string; baseline: number; project: number; reduction: number }[];
+    }>();
 
     expect(res.status).toBe(200);
     expect(body.sources).toHaveLength(3);
-    expect(body.sources[0]!.reduction).toBe(35);
+    expect(body.sources[0]?.reduction).toBe(35);
   });
 
   it("returns 401 without session cookie", async () => {
@@ -135,11 +149,18 @@ describe("GET /sponsor/season-credits", () => {
     }) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/season-credits", { headers: await sponsorCookie() });
-    const body = await res.json<{ credits: { season_id: string; season_name: string; estimated_tco2e: number; verified_tco2e: number }[] }>();
+    const body = await res.json<{
+      credits: {
+        season_id: string;
+        season_name: string;
+        estimated_tco2e: number;
+        verified_tco2e: number;
+      }[];
+    }>();
 
     expect(res.status).toBe(200);
     expect(body.credits).toHaveLength(1);
-    expect(body.credits[0]!.season_name).toBe("ฤดูนา 2568");
+    expect(body.credits[0]?.season_name).toBe("ฤดูนา 2568");
   });
 
   it("returns 401 without session cookie", async () => {
@@ -154,18 +175,27 @@ describe("GET /sponsor/certificates", () => {
   it("returns certificate list", async () => {
     const db = mockD1({
       "cc.id": [
-        { id: "c1", certificate_number: "TVER-001", season_id: "s1", volume_tco2e: 10.5, status: "verified", issued_at: "2026-01-15" },
+        {
+          id: "c1",
+          certificate_number: "TVER-001",
+          season_id: "s1",
+          volume_tco2e: 10.5,
+          status: "verified",
+          issued_at: "2026-01-15",
+        },
       ],
       "SELECT areas FROM users": [{ areas: '["สุพรรณบุรี"]' }],
     }) as unknown as D1Database;
     const app = buildApp(db);
     const res = await app.request("/sponsor/certificates", { headers: await sponsorCookie() });
-    const body = await res.json<{ certificates: { certificate_number: string; status: string }[] }>();
+    const body = await res.json<{
+      certificates: { certificate_number: string; status: string }[];
+    }>();
 
     expect(res.status).toBe(200);
     expect(body.certificates).toHaveLength(1);
-    expect(body.certificates[0]!.certificate_number).toBe("TVER-001");
-    expect(body.certificates[0]!.status).toBe("verified");
+    expect(body.certificates[0]?.certificate_number).toBe("TVER-001");
+    expect(body.certificates[0]?.status).toBe("verified");
   });
 
   it("returns 401 without session cookie", async () => {
@@ -188,7 +218,9 @@ describe("GET /sponsor/reports/:id/download", () => {
       "SELECT areas FROM users": [{ areas: '["สุพรรณบุรี"]' }],
     }) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/reports/EX-2042/download", { headers: await sponsorCookie() });
+    const res = await app.request("/sponsor/reports/EX-2042/download", {
+      headers: await sponsorCookie(),
+    });
 
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/csv");
@@ -201,7 +233,9 @@ describe("GET /sponsor/reports/:id/download", () => {
   it("returns 404 for non-EX-2042 report IDs", async () => {
     const db = mockD1({}) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/reports/OTHER-123/download", { headers: await sponsorCookie() });
+    const res = await app.request("/sponsor/reports/OTHER-123/download", {
+      headers: await sponsorCookie(),
+    });
     expect(res.status).toBe(404);
   });
 
@@ -222,7 +256,9 @@ describe("Auth guard — non-sponsor role", () => {
     const raw = adminCookie.split(";")[0]?.split("=").slice(1).join("=") ?? "";
     const db = mockD1({}) as unknown as D1Database;
     const app = buildApp(db);
-    const res = await app.request("/sponsor/summary", { headers: { Cookie: `nzc_session=${raw}` } });
+    const res = await app.request("/sponsor/summary", {
+      headers: { Cookie: `nzc_session=${raw}` },
+    });
     expect(res.status).toBe(403);
   });
 

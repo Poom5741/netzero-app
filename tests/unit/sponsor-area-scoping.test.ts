@@ -5,10 +5,10 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  getSponsorSummary,
-  getSponsorFarmers,
   getPlotsByProvinceScoped,
   getSponsorAreas,
+  getSponsorFarmers,
+  getSponsorSummary,
 } from "../../src/sponsor/dashboard";
 
 /** D1 mock that returns different rows based on SQL pattern matching. */
@@ -86,7 +86,7 @@ describe("getSponsorSummary — area-scoped", () => {
       "COUNT(DISTINCT p.id)": [{ total_plots: 10 }],
       "si.water_management": [{ water_management: "AWD", cnt: 5 }],
       "COALESCE(SUM(p.area_rai)": [{ total_rai: 100 }],
-      "total_hh": [{ total_hh: 8 }],
+      total_hh: [{ total_hh: 8 }],
       "COUNT(DISTINCT f.id)": [{ total_farmers: 8 }],
     }) as unknown as D1Database;
 
@@ -104,7 +104,7 @@ describe("getSponsorSummary — area-scoped", () => {
       "COUNT(DISTINCT p.id)": [{ total_plots: 5 }],
       "si.water_management": [{ water_management: "AWD", cnt: 3 }],
       "COALESCE(SUM(p.area_rai)": [{ total_rai: 50 }],
-      "total_hh": [{ total_hh: 4 }],
+      total_hh: [{ total_hh: 4 }],
       "COUNT(DISTINCT f.id)": [{ total_farmers: 4 }],
     }) as unknown as D1Database;
 
@@ -139,7 +139,7 @@ describe("getSponsorSummary — area-scoped", () => {
       "COUNT(DISTINCT p.id)": [{ total_plots: 2 }],
       "si.water_management": [],
       "COALESCE(SUM(p.area_rai)": [{ total_rai: 30 }],
-      "total_hh": [{ total_hh: 2 }],
+      total_hh: [{ total_hh: 2 }],
       "COUNT(DISTINCT f.id)": [{ total_farmers: 2 }],
     }) as unknown as D1Database;
 
@@ -153,25 +153,41 @@ describe("getSponsorFarmers — area-scoped", () => {
   it("returns unscoped farmers when areas is null", async () => {
     const db = mockD1({
       "f.id AS farmer_id": [
-        { farmer_id: "f1", cpa_code: "CPA001", province: "เชียงใหม่", plot_count: 2, total_tco2e: 10, verified_photos: 5, total_photos: 8 },
+        {
+          farmer_id: "f1",
+          cpa_code: "CPA001",
+          province: "เชียงใหม่",
+          plot_count: 2,
+          total_tco2e: 10,
+          verified_photos: 5,
+          total_photos: 8,
+        },
       ],
     }) as unknown as D1Database;
 
     const result = await getSponsorFarmers(db, null);
     expect(result).toHaveLength(1);
-    expect(result[0]!.farmer_id).toBe("f1");
+    expect(result[0]?.farmer_id).toBe("f1");
   });
 
   it("returns scoped farmers when areas is provided", async () => {
     const db = mockD1({
       "f.id AS farmer_id": [
-        { farmer_id: "f2", cpa_code: "CPA002", province: "สุพรรณบุรี", plot_count: 1, total_tco2e: 5, verified_photos: 3, total_photos: 4 },
+        {
+          farmer_id: "f2",
+          cpa_code: "CPA002",
+          province: "สุพรรณบุรี",
+          plot_count: 1,
+          total_tco2e: 5,
+          verified_photos: 3,
+          total_photos: 4,
+        },
       ],
     }) as unknown as D1Database;
 
     const result = await getSponsorFarmers(db, ["สุพรรณบุรี"]);
     expect(result).toHaveLength(1);
-    expect(result[0]!.province).toBe("สุพรรณบุรี");
+    expect(result[0]?.province).toBe("สุพรรณบุรี");
   });
 
   it("returns empty array when no farmers match areas", async () => {
@@ -188,7 +204,17 @@ describe("getPlotsByProvinceScoped — area-scoped", () => {
   it("returns plots grouped by province when areas is null", async () => {
     const db = mockD1({
       "plots p": [
-        { plot_id: "p1", plot_code: "P-001", area_rai: 10, cpa_code: "CPA001", province: "เชียงใหม่", district: "เมือง", total_offset_tco2e: 5, latest_season_id: "s1", estimate_status: "draft" },
+        {
+          plot_id: "p1",
+          plot_code: "P-001",
+          area_rai: 10,
+          cpa_code: "CPA001",
+          province: "เชียงใหม่",
+          district: "เมือง",
+          total_offset_tco2e: 5,
+          latest_season_id: "s1",
+          estimate_status: "draft",
+        },
       ],
       "GROUP BY plot_id, water_state": [],
       "GROUP BY plot_id, provenance_type": [],
@@ -196,14 +222,24 @@ describe("getPlotsByProvinceScoped — area-scoped", () => {
 
     const result = await getPlotsByProvinceScoped(db, null);
     expect(result).toHaveLength(1);
-    expect(result[0]!.province).toBe("เชียงใหม่");
-    expect(result[0]!.plots).toHaveLength(1);
+    expect(result[0]?.province).toBe("เชียงใหม่");
+    expect(result[0]?.plots).toHaveLength(1);
   });
 
   it("returns scoped plots when areas is provided", async () => {
     const db = mockD1({
       "plots p": [
-        { plot_id: "p2", plot_code: "SP-001", area_rai: 15, cpa_code: "CPA002", province: "สุพรรณบุรี", district: "เมือง", total_offset_tco2e: 8, latest_season_id: "s1", estimate_status: "final" },
+        {
+          plot_id: "p2",
+          plot_code: "SP-001",
+          area_rai: 15,
+          cpa_code: "CPA002",
+          province: "สุพรรณบุรี",
+          district: "เมือง",
+          total_offset_tco2e: 8,
+          latest_season_id: "s1",
+          estimate_status: "final",
+        },
       ],
       "GROUP BY plot_id, water_state": [],
       "GROUP BY plot_id, provenance_type": [],
@@ -211,7 +247,7 @@ describe("getPlotsByProvinceScoped — area-scoped", () => {
 
     const result = await getPlotsByProvinceScoped(db, ["สุพรรณบุรี"]);
     expect(result).toHaveLength(1);
-    expect(result[0]!.province).toBe("สุพรรณบุรี");
+    expect(result[0]?.province).toBe("สุพรรณบุรี");
   });
 
   it("returns empty when no plots match areas", async () => {

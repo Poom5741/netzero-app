@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { generateDataset, splitHoldout, MANIFEST } from "../../src/vision/bakeoff/dataset";
-import { buildStrategies } from "../../src/vision/bakeoff/strategies";
+import { generateDataset, MANIFEST, splitHoldout } from "../../src/vision/bakeoff/dataset";
+import { type LeaderboardRow, renderLeaderboard } from "../../src/vision/bakeoff/leaderboard";
+import { checkPassBar } from "../../src/vision/bakeoff/passbar";
 import { runStrategy } from "../../src/vision/bakeoff/runner";
 import { computeConfusionMatrix, resultToClass } from "../../src/vision/bakeoff/scoring";
-import { checkPassBar } from "../../src/vision/bakeoff/passbar";
-import { renderLeaderboard, type LeaderboardRow } from "../../src/vision/bakeoff/leaderboard";
+import { buildStrategies } from "../../src/vision/bakeoff/strategies";
 
 describe("bake-off integration — full pipeline", () => {
   it("generates dataset matching manifest counts", () => {
@@ -105,8 +105,8 @@ describe("bake-off integration — full pipeline", () => {
     const images2 = generateDataset(42);
     expect(images1).toHaveLength(images2.length);
     for (let i = 0; i < images1.length; i++) {
-      expect(images1[i]!.id).toBe(images2[i]!.id);
-      expect(images1[i]!.truth_class).toBe(images2[i]!.truth_class);
+      expect(images1[i]?.id).toBe(images2[i]?.id);
+      expect(images1[i]?.truth_class).toBe(images2[i]?.truth_class);
     }
   });
 

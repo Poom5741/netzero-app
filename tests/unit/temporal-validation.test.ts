@@ -3,7 +3,7 @@ import { validateTemporal } from "../../src/season/temporal-validation";
 
 const windows = {
   prepare: { start: new Date("2025-04-01"), end: new Date("2025-05-15") },
-  grow:    { start: new Date("2025-05-01"), end: new Date("2025-09-15") },
+  grow: { start: new Date("2025-05-01"), end: new Date("2025-09-15") },
   harvest: { start: new Date("2025-08-15"), end: new Date("2025-10-15") },
 };
 

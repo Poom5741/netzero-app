@@ -11,10 +11,7 @@ import { describe, expect, it } from "vitest";
  * 5. Conditions gate progression until accepted
  */
 
-import {
-  buildConsent4Checkbox,
-  buildConditions3Checkbox,
-} from "../../src/line/flex-builders";
+import { buildConditions3Checkbox, buildConsent4Checkbox } from "../../src/line/flex-builders";
 
 describe("buildConsent4Checkbox", () => {
   it("returns a flex message", () => {

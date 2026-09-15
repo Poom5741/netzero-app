@@ -16,12 +16,15 @@ function makeUploadRequest(overrides?: Record<string, string | File>) {
   fd.append("taken_at", "2026-01-15T10:00:00Z");
   fd.append("photo_type", "wetdry");
   // Default: high confidence pass for pre-verification
-  fd.append("__test_classification", JSON.stringify({
-    valid: true,
-    water_state: "flooded",
-    confidence: 0.95,
-    reason: "เห็นน้ำขังชัดเจน"
-  }));
+  fd.append(
+    "__test_classification",
+    JSON.stringify({
+      valid: true,
+      water_state: "flooded",
+      confidence: 0.95,
+      reason: "เห็นน้ำขังชัดเจน",
+    }),
+  );
   if (overrides) {
     for (const [k, v] of Object.entries(overrides)) {
       fd.set(k, v);
@@ -33,12 +36,15 @@ function makeUploadRequest(overrides?: Record<string, string | File>) {
 describe("POST /photo/upload — pre-verification stamp", () => {
   it("stamps high-confidence pass as pre_verified in DB", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed farmer with high trust score (>0.7) for auto-verify
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
-    
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
+
     const req = makeUploadRequest();
     const res = await app.request("/photo/upload", req);
 
@@ -54,12 +60,15 @@ describe("POST /photo/upload — pre-verification stamp", () => {
 
   it("does not stamp when kill switch is on", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
-    
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
+
     const req = makeUploadRequest({
       __kill_switch: "true",
     });
@@ -77,12 +86,15 @@ describe("POST /photo/upload — pre-verification stamp", () => {
 
   it("configures threshold via form field (integration)", async () => {
     const { app, db } = await createTestApp();
-    
+
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
-    
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
+
     // With threshold=0.99, a 0.95 confidence should NOT pre-verify
     const req = makeUploadRequest({
       __threshold: "0.99",
@@ -101,9 +113,12 @@ describe("POST /photo/upload — audit sampling", () => {
     const { app, db } = await createTestApp();
 
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
 
     // Upload 10 photos with high confidence
     for (let i = 0; i < 10; i++) {
@@ -129,9 +144,12 @@ describe("POST /photo/upload — audit sampling", () => {
     const { app, db } = await createTestApp();
 
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
 
     for (let i = 0; i < 5; i++) {
       const req = makeUploadRequest({
@@ -149,9 +167,12 @@ describe("POST /photo/upload — audit sampling", () => {
     const { app, db } = await createTestApp();
 
     // Seed farmer with high trust score
-    await db.prepare(
-      "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)"
-    ).bind("farmer_plot-1", 0.8, 10, 8, 2).run();
+    await db
+      .prepare(
+        "INSERT INTO farmer_trust (farmer_id, trust_score, total_photos, verified_count, rejected_count) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind("farmer_plot-1", 0.8, 10, 8, 2)
+      .run();
 
     for (let i = 0; i < 5; i++) {
       const req = makeUploadRequest({

@@ -57,7 +57,7 @@ export async function getOverviewKpis(
     bindValues.push(filters.province);
   }
   if (conditions.length > 0) {
-    whereClause = " WHERE " + conditions.join(" AND ");
+    whereClause = ` WHERE ${conditions.join(" AND ")}`;
   }
 
   const provinceFilter = filters.province ? ` WHERE addr_province = '${filters.province}'` : "";
@@ -68,12 +68,16 @@ export async function getOverviewKpis(
     .first<{ cnt: number }>();
 
   const plotCountRow = await db
-    .prepare(`SELECT COUNT(*) as cnt FROM plots p JOIN farmers f ON p.farmer_id = f.id${provinceFilter ? " WHERE f.addr_province = ?" : ""}`)
+    .prepare(
+      `SELECT COUNT(*) as cnt FROM plots p JOIN farmers f ON p.farmer_id = f.id${provinceFilter ? " WHERE f.addr_province = ?" : ""}`,
+    )
     .bind(...(filters.province ? [filters.province] : []))
     .first<{ cnt: number }>();
 
   const areaRow = await db
-    .prepare(`SELECT COALESCE(SUM(p.area_rai), 0) as total FROM plots p JOIN farmers f ON p.farmer_id = f.id${provinceFilter ? " WHERE f.addr_province = ?" : ""}`)
+    .prepare(
+      `SELECT COALESCE(SUM(p.area_rai), 0) as total FROM plots p JOIN farmers f ON p.farmer_id = f.id${provinceFilter ? " WHERE f.addr_province = ?" : ""}`,
+    )
     .bind(...(filters.province ? [filters.province] : []))
     .first<{ total: number }>();
 

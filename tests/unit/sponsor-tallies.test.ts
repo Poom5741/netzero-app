@@ -3,7 +3,7 @@
  * Tests for water-state tallies and provenance counts in sponsor plot detail.
  */
 import { describe, expect, it } from "vitest";
-import { getPlotDetail, type PlotDetail } from "../../src/sponsor/dashboard";
+import { getPlotDetail } from "../../src/sponsor/dashboard";
 
 function mockD1Prepare(responses: Map<string, unknown[]>) {
   return {
@@ -98,12 +98,7 @@ describe("getPlotDetail — water-state tallies", () => {
   it("handles plots with only flooded photos", async () => {
     const responses = new Map<string, unknown[]>([
       ["detail", [BASE_PLOT_DETAIL]],
-      [
-        "tallies",
-        [
-          { water_state: "flooded", count: 5 },
-        ],
-      ],
+      ["tallies", [{ water_state: "flooded", count: 5 }]],
       ["provenance", []],
     ]);
     const db = mockD1Prepare(responses) as unknown as D1Database;
@@ -161,12 +156,7 @@ describe("getPlotDetail — provenance counts", () => {
     const responses = new Map<string, unknown[]>([
       ["detail", [BASE_PLOT_DETAIL]],
       ["tallies", []],
-      [
-        "provenance",
-        [
-          { provenance_type: "machine", count: 7 },
-        ],
-      ],
+      ["provenance", [{ provenance_type: "machine", count: 7 }]],
     ]);
     const db = mockD1Prepare(responses) as unknown as D1Database;
 
@@ -182,12 +172,7 @@ describe("getPlotDetail — provenance counts", () => {
     const responses = new Map<string, unknown[]>([
       ["detail", [BASE_PLOT_DETAIL]],
       ["tallies", []],
-      [
-        "provenance",
-        [
-          { provenance_type: "human", count: 3 },
-        ],
-      ],
+      ["provenance", [{ provenance_type: "human", count: 3 }]],
     ]);
     const db = mockD1Prepare(responses) as unknown as D1Database;
 

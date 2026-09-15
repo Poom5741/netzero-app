@@ -21,7 +21,14 @@ function mockD1ForPreVerify(photo: Record<string, unknown>) {
             return { first: async () => ({ farmer_id: "farmer-1" }) };
           }
           if (sql.includes("SELECT") && sql.includes("farmer_trust")) {
-            return { first: async () => ({ trust_score: 0.5, total_photos: 0, verified_count: 0, rejected_count: 0 }) };
+            return {
+              first: async () => ({
+                trust_score: 0.5,
+                total_photos: 0,
+                verified_count: 0,
+                rejected_count: 0,
+              }),
+            };
           }
           return { run: async () => ({ success: true }) };
         },
@@ -65,9 +72,7 @@ describe("reviewPhoto — supersede pre-verification", () => {
 
     expect(result.success).toBe(true);
     // Should NOT contain supersede logic
-    const supersedeCall = mock.calls.find(
-      (c) => c.sql.includes("superseded"),
-    );
+    const supersedeCall = mock.calls.find((c) => c.sql.includes("superseded"));
     expect(supersedeCall).toBeUndefined();
   });
 });

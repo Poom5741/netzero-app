@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getQueueDigest, formatDigestMessage } from "../../src/admin/queue-digest";
+import { formatDigestMessage, getQueueDigest } from "../../src/admin/queue-digest";
 
 function mockDB(queueLength: number, verified: number, rejected: number) {
   return {
@@ -16,7 +16,7 @@ function mockDB(queueLength: number, verified: number, rejected: number) {
         }
         return null;
       },
-      bind: (...args: unknown[]) => ({
+      bind: (..._args: unknown[]) => ({
         first: async <T>(): Promise<T | null> => {
           if (sql.includes("COUNT(*)")) {
             return { count: queueLength } as T;
@@ -38,7 +38,7 @@ describe("getQueueDigest", () => {
   it("returns queue stats", async () => {
     const db = mockDB(15, 20, 5);
     const digest = await getQueueDigest(db);
-    
+
     expect(digest.queueLength).toBe(15);
     expect(digest.precisionStat).toContain("80%");
     expect(digest.trustDistribution.high).toBe(5);
@@ -47,7 +47,7 @@ describe("getQueueDigest", () => {
   it("handles empty queue", async () => {
     const db = mockDB(0, 0, 0);
     const digest = await getQueueDigest(db);
-    
+
     expect(digest.queueLength).toBe(0);
     expect(digest.precisionStat).toContain("N/A");
   });
@@ -60,7 +60,7 @@ describe("formatDigestMessage", () => {
       precisionStat: "Precision: 92%",
       trustDistribution: { high: 10, medium: 5, low: 3 },
     };
-    
+
     const message = formatDigestMessage(digest);
     expect(message).toContain("15");
     expect(message).toContain("92%");

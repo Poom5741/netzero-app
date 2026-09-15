@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { getFarmerDetail, getFarmerAuditLog } from "../../src/admin/farmer-detail";
+import { getFarmerAuditLog, getFarmerDetail } from "../../src/admin/farmer-detail";
 
-function mockD1Multi(prepareResults: Record<string, unknown>[][] ) {
+function mockD1Multi(prepareResults: Record<string, unknown>[][]) {
   let callIdx = 0;
   return {
     prepare(_sql: string) {
@@ -75,35 +75,35 @@ const AUDIT_ROW = {
 describe("getFarmerDetail", () => {
   it("returns farmer with plots, documents, carbon trace, nitrogen, photos, and audit", async () => {
     const db = mockD1Multi([
-      [FARMER_ROW],           // 0: farmer
-      [PLOT_ROW],             // 1: plots
-      [DOC_ROW],              // 2: documents
-      [],                     // 3: carbon estimates (used for trace)
-      [NITROGEN_ROW],         // 4: nitrogen/fertilizer
-      [PHOTO_ROW],            // 5: photos
-      [AUDIT_ROW],            // 6: audit log
+      [FARMER_ROW], // 0: farmer
+      [PLOT_ROW], // 1: plots
+      [DOC_ROW], // 2: documents
+      [], // 3: carbon estimates (used for trace)
+      [NITROGEN_ROW], // 4: nitrogen/fertilizer
+      [PHOTO_ROW], // 5: photos
+      [AUDIT_ROW], // 6: audit log
     ]) as unknown as D1Database;
     const result = await getFarmerDetail(db, "farmer-1");
 
     expect(result).not.toBeNull();
-    expect(result!.id).toBe("farmer-1");
-    expect(result!.full_name).toBe("สมชาย ใจดี");
-    expect(result!.cpa_code).toBe("CPA1001");
-    expect(result!.plots.length).toBe(1);
-    expect(result!.plots[0].plot_code).toBe("CPA1001/F01");
-    expect(result!.documents.length).toBe(1);
-    expect(result!.documents[0].doc_type).toBe("DOC-01");
-    expect(result!.nitrogenEntries.length).toBe(1);
-    expect(result!.nitrogenEntries[0].formula).toBe("46-0-0");
-    expect(result!.photos.length).toBe(1);
-    expect(result!.photos[0].ai_status).toBe("pass");
-    expect(result!.auditLog.length).toBe(1);
-    expect(result!.auditLog[0].action).toBe("verified");
+    expect(result?.id).toBe("farmer-1");
+    expect(result?.full_name).toBe("สมชาย ใจดี");
+    expect(result?.cpa_code).toBe("CPA1001");
+    expect(result?.plots.length).toBe(1);
+    expect(result?.plots[0].plot_code).toBe("CPA1001/F01");
+    expect(result?.documents.length).toBe(1);
+    expect(result?.documents[0].doc_type).toBe("DOC-01");
+    expect(result?.nitrogenEntries.length).toBe(1);
+    expect(result?.nitrogenEntries[0].formula).toBe("46-0-0");
+    expect(result?.photos.length).toBe(1);
+    expect(result?.photos[0].ai_status).toBe("pass");
+    expect(result?.auditLog.length).toBe(1);
+    expect(result?.auditLog[0].action).toBe("verified");
   });
 
   it("returns null when farmer not found", async () => {
     const db = mockD1Multi([
-      [],  // farmer not found
+      [], // farmer not found
     ]) as unknown as D1Database;
     const result = await getFarmerDetail(db, "missing");
     expect(result).toBeNull();
@@ -125,30 +125,28 @@ describe("getFarmerDetail", () => {
       nitrogen_total_kg_per_rai: 12,
     };
     const db = mockD1Multi([
-      [FARMER_ROW],      // farmer
-      [PLOT_ROW],        // plots
-      [],                // documents
-      [estimateRow],     // carbon estimates
-      [],                // nitrogen
-      [],                // photos
-      [],                // audit
+      [FARMER_ROW], // farmer
+      [PLOT_ROW], // plots
+      [], // documents
+      [estimateRow], // carbon estimates
+      [], // nitrogen
+      [], // photos
+      [], // audit
     ]) as unknown as D1Database;
     const result = await getFarmerDetail(db, "farmer-1");
 
     expect(result).not.toBeNull();
-    expect(result!.carbonTrace.length).toBeGreaterThan(0);
+    expect(result?.carbonTrace.length).toBeGreaterThan(0);
     // Should contain SF_w factor
-    const sfwEntry = result!.carbonTrace.find((e) => e.label.includes("SF_w"));
+    const sfwEntry = result?.carbonTrace.find((e) => e.label.includes("SF_w"));
     expect(sfwEntry).toBeDefined();
-    expect(sfwEntry!.value).toContain("0.85");
+    expect(sfwEntry?.value).toContain("0.85");
   });
 });
 
 describe("getFarmerAuditLog", () => {
   it("returns audit log entries for a farmer", async () => {
-    const db = mockD1Multi([
-      [AUDIT_ROW],
-    ]) as unknown as D1Database;
+    const db = mockD1Multi([[AUDIT_ROW]]) as unknown as D1Database;
     const result = await getFarmerAuditLog(db, "farmer-1");
     expect(result.length).toBe(1);
     expect(result[0].action).toBe("verified");

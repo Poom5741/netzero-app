@@ -1,19 +1,17 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { type ConversationState, handleFlow } from "./line/flow";
+import { pushMessage, replyMessage } from "./line/reply";
+import { adminRoutes } from "./routes/admin";
 import { authRoutes } from "./routes/auth";
 import { dashboardRoutes } from "./routes/dashboard";
 import { exportRoutes } from "./routes/export";
-import { healthRoutes } from "./routes/health";
-import { photoRoutes } from "./routes/photo";
-import { sponsorRoutes } from "./routes/sponsor";
-import { adminRoutes } from "./routes/admin";
-import { liffRoutes } from "./routes/liff";
-import { seasonRoutes } from "./routes/season";
 import { farmerRoutes } from "./routes/farmer";
-import { replyMessage, pushMessage } from "./line/reply";
-import { buildWelcomeFlex } from "./line/welcome";
-import { buildConsentCard } from "./line/consent";
-import { handleFlow, type ConversationState } from "./line/flow";
+import { healthRoutes } from "./routes/health";
+import { liffRoutes } from "./routes/liff";
+import { photoRoutes } from "./routes/photo";
+import { seasonRoutes } from "./routes/season";
+import { sponsorRoutes } from "./routes/sponsor";
 
 type Bindings = {
   DB: D1Database;
@@ -41,12 +39,19 @@ type WebhookEvent = {
 const app = new Hono<{ Bindings: Bindings }>();
 
 // Allow the deployed LIFF frontend (and local dev on :3000) to call the API
-app.use("*", cors({
-  origin: ["https://netzero-frontend.poom-a1d.workers.dev", "https://netzero-frontend.pages.dev", "http://localhost:3000"],
-  allowMethods: ["GET", "POST", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+app.use(
+  "*",
+  cors({
+    origin: [
+      "https://netzero-frontend.poom-a1d.workers.dev",
+      "https://netzero-frontend.pages.dev",
+      "http://localhost:3000",
+    ],
+    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 // LIFF chat app
 app.route("/", liffRoutes);
@@ -71,7 +76,7 @@ app.use("/api/season", async (c, next) => {
     if (!match) return c.json({ error: "Unauthorized" }, 401);
     const { parseSessionCookie } = await import("./auth/session");
     const session = await parseSessionCookie(match[1], c.env.SECRET);
-    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+    if (session?.role !== "admin") return c.json({ error: "Forbidden" }, 403);
   }
   await next();
 });
@@ -82,7 +87,7 @@ app.use("/api/season/approve", async (c, next) => {
     if (!match) return c.json({ error: "Unauthorized" }, 401);
     const { parseSessionCookie } = await import("./auth/session");
     const session = await parseSessionCookie(match[1], c.env.SECRET);
-    if (!session || session.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+    if (session?.role !== "admin") return c.json({ error: "Forbidden" }, 403);
   }
   await next();
 });
@@ -124,7 +129,9 @@ app.post("/webhook/line", async (c) => {
         expected = btoa(expected);
 
         if (sig !== expected) {
-          console.log(`SIG_MISMATCH: got=${sig.substring(0, 20)}... expected=${expected.substring(0, 20)}...`);
+          console.log(
+            `SIG_MISMATCH: got=${sig.substring(0, 20)}... expected=${expected.substring(0, 20)}...`,
+          );
           return c.json({ error: "Invalid signature" }, 401);
         }
       }
@@ -168,12 +175,20 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
           type: "bubble",
           contents: [
             { type: "text", text: "🌱 NetZeroCarbon", weight: "bold", size: "xl" },
-            { type: "text", text: "ผู้ช่วยเกษตรกรโครงการคาร์บอนเครดิต AWD", size: "sm", wrap: true, margin: "md" },
+            {
+              type: "text",
+              text: "ผู้ช่วยเกษตรกรโครงการคาร์บอนเครดิต AWD",
+              size: "sm",
+              wrap: true,
+              margin: "md",
+            },
             { type: "text", text: "─", separator: true, margin: "md" },
             {
               type: "text",
               text: "เปิดแอปเพื่อกรอกข้อมูลการทำนา ถ่ายรูปหลักฐาน และดูคาร์บอนเครดิตของท่าน",
-              size: "md", wrap: true, margin: "md",
+              size: "md",
+              wrap: true,
+              margin: "md",
             },
             {
               type: "button",
@@ -183,7 +198,13 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
               margin: "lg",
             },
             { type: "text", text: "─", separator: true, margin: "md" },
-            { type: "text", text: "หรือพิมพ์เบอร์โทรศัพท์เพื่อผูกบัญชีในแชทนี้", size: "xs", wrap: true, margin: "sm" },
+            {
+              type: "text",
+              text: "หรือพิมพ์เบอร์โทรศัพท์เพื่อผูกบัญชีในแชทนี้",
+              size: "xs",
+              wrap: true,
+              margin: "sm",
+            },
           ],
         },
       };
@@ -223,9 +244,17 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
 
       // Get or create link
       let link = await db
-        .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
+        .prepare(
+          "SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?",
+        )
         .bind(event.source.userId)
-        .first<{ id: string; farmer_id: string; status: string; conversation_state: ConversationState; selected_plot_id: string | null }>();
+        .first<{
+          id: string;
+          farmer_id: string;
+          status: string;
+          conversation_state: ConversationState;
+          selected_plot_id: string | null;
+        }>();
 
       if (!link) {
         // New user — create link in welcome state
@@ -265,7 +294,9 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         console.error(`[FLOW_ERR] ${errMsg}`);
         // Try to send error message to user
         try {
-          await pushMessage(token, event.source.userId, [{ type: "text", text: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งค่ะ" }]);
+          await pushMessage(token, event.source.userId, [
+            { type: "text", text: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งค่ะ" },
+          ]);
         } catch (pushErr) {
           console.error(`[PUSH_ERR_FALLBACK] ${pushErr}`);
         }
@@ -284,9 +315,17 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
       const postbackText = actionMatch ? actionMatch[1] : postData;
       // Route through the same state machine — treat postback data as the user's text input
       let link = await db
-        .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
+        .prepare(
+          "SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?",
+        )
         .bind(event.source.userId)
-        .first<{ id: string; farmer_id: string; status: string; conversation_state: ConversationState; selected_plot_id: string | null }>();
+        .first<{
+          id: string;
+          farmer_id: string;
+          status: string;
+          conversation_state: ConversationState;
+          selected_plot_id: string | null;
+        }>();
 
       if (!link) {
         // Postback from unknown user — create link in welcome state

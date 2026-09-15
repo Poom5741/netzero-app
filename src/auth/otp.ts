@@ -53,11 +53,7 @@ export function generateOtpCode(secret: string, counter?: number): string {
 }
 
 /** Verify a TOTP code against the secret. Returns false for empty/invalid inputs. */
-export function verifyOtp(
-  secret: string,
-  code: string,
-  tolerance = 1,
-): boolean {
+export function verifyOtp(secret: string, code: string, tolerance = 1): boolean {
   if (!secret || !code || code.length !== DIGITS || !/^\d+$/.test(code)) {
     return false;
   }

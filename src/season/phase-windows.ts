@@ -11,7 +11,7 @@ export function calculatePhaseWindows(sowDate: string) {
   const GRACE = 7;
   return {
     prepare: { start: addDays(sow, -37 - GRACE), end: addDays(sow, 7 + GRACE) },
-    grow:    { start: addDays(sow,  -7 - GRACE), end: addDays(sow, 127 + GRACE) },
+    grow: { start: addDays(sow, -7 - GRACE), end: addDays(sow, 127 + GRACE) },
     harvest: { start: addDays(sow, 113 - GRACE), end: addDays(sow, 157 + GRACE) },
   };
 }

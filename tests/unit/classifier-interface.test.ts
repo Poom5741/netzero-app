@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseClassifierResponse, type ClassifyResult } from "../../src/vision/classifier";
+import { parseClassifierResponse } from "../../src/vision/classifier";
 
 describe("classifier interface — fail-safe parsing", () => {
   it("parses well-formed JSON into ClassifyResult", () => {

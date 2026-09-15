@@ -50,7 +50,7 @@ export const fewShotEmbeddings: ClassifierBinding = {
           valid: false,
           water_state: "not-applicable",
           confidence: 0.75,
-          reason: "ไม่พบท่อวัดในภาพ"
+          reason: "ไม่พบท่อวัดในภาพ",
         };
       }
 
@@ -68,7 +68,7 @@ export const fewShotEmbeddings: ClassifierBinding = {
           valid: false,
           water_state: "not-applicable",
           confidence: 0.7,
-          reason: "ภาพไม่ถูกต้องตามเกณฑ์"
+          reason: "ภาพไม่ถูกต้องตามเกณฑ์",
         };
       }
 
@@ -79,17 +79,17 @@ export const fewShotEmbeddings: ClassifierBinding = {
         valid: true,
         water_state: waterState,
         confidence: Math.min(0.95, confidence),
-        reason: waterState === "flooded" ? "พบน้ำขังรอบท่อ" : "ดินแห้งรอบท่อ"
+        reason: waterState === "flooded" ? "พบน้ำขังรอบท่อ" : "ดินแห้งรอบท่อ",
       };
     } catch (error) {
       return {
         valid: false,
         water_state: "not-applicable",
         confidence: 0,
-        reason: `Embedding classification failed: ${error.message}`
+        reason: `Embedding classification failed: ${error.message}`,
       };
     }
-  }
+  },
 };
 
 /**
@@ -120,7 +120,7 @@ function computeColorHistogram(image: any): number[] {
 
   // Normalize
   const total = histogram.reduce((sum, count) => sum + count, 0);
-  return histogram.map(count => count / total);
+  return histogram.map((count) => count / total);
 }
 
 /**
@@ -129,15 +129,15 @@ function computeColorHistogram(image: any): number[] {
 function findKNearestNeighbors(
   embedding: number[],
   samples: ReferenceSample[],
-  k: number
+  k: number,
 ): ReferenceSample[] {
-  const distances = samples.map(sample => ({
+  const distances = samples.map((sample) => ({
     sample,
-    distance: euclideanDistance(embedding, sample.embedding)
+    distance: euclideanDistance(embedding, sample.embedding),
   }));
 
   distances.sort((a, b) => a.distance - b.distance);
-  return distances.slice(0, k).map(d => d.sample);
+  return distances.slice(0, k).map((d) => d.sample);
 }
 
 /**

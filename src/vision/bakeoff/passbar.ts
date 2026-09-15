@@ -7,10 +7,7 @@ export interface PassBarVerdict {
   reason: string;
 }
 
-export function checkPassBar(input: {
-  badSlipRate: number;
-  autoPassRate: number;
-}): PassBarVerdict {
+export function checkPassBar(input: { badSlipRate: number; autoPassRate: number }): PassBarVerdict {
   const reasons: string[] = [];
 
   if (input.badSlipRate > 0.02) {

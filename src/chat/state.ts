@@ -85,10 +85,7 @@ export async function confirmDraft(
   if (!row) return null;
 
   const draft = JSON.parse(row.draft_json);
-  await db
-    .prepare(`UPDATE farmer_messages SET confirmed = 1 WHERE id = ?`)
-    .bind(row.id)
-    .run();
+  await db.prepare(`UPDATE farmer_messages SET confirmed = 1 WHERE id = ?`).bind(row.id).run();
 
   return { category: draft.category, data: draft.data };
 }
@@ -96,10 +93,7 @@ export async function confirmDraft(
 /**
  * Reject a pending draft.
  */
-export async function rejectDraft(
-  db: D1Database,
-  farmerId: string,
-): Promise<boolean> {
+export async function rejectDraft(db: D1Database, farmerId: string): Promise<boolean> {
   const row = await db
     .prepare(
       `SELECT id FROM farmer_messages
@@ -111,10 +105,7 @@ export async function rejectDraft(
 
   if (!row) return false;
 
-  await db
-    .prepare(`DELETE FROM farmer_messages WHERE id = ?`)
-    .bind(row.id)
-    .run();
+  await db.prepare(`DELETE FROM farmer_messages WHERE id = ?`).bind(row.id).run();
 
   return true;
 }

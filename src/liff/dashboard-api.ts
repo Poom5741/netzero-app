@@ -39,7 +39,9 @@ export function composeDashboardMessage(input: DashboardInput): string {
   lines.push(`${input.areaRai} ไร่`);
   lines.push("");
   lines.push("ภาพหลักฐานครอปนี้");
-  lines.push(`${input.photoProgress.approved}/${input.photoProgress.total} ภาพ — เปียก 2 แห้ง 2 สลับกัน`);
+  lines.push(
+    `${input.photoProgress.approved}/${input.photoProgress.total} ภาพ — เปียก 2 แห้ง 2 สลับกัน`,
+  );
 
   const totalTasks = input.pendingPhotos + input.backfillCount;
   lines.push("");

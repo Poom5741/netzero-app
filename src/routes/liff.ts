@@ -3,15 +3,9 @@
  */
 
 import { Hono } from "hono";
-import { handleFlowApi, type FlowApiResult } from "../line/flow";
-import {
-  validateRegistrationForm,
-  type RegistrationFormData,
-} from "../liff/registration-api";
-import {
-  validateDocumentSubmission,
-  REQUIRED_DOCUMENTS,
-} from "../liff/documents-api";
+import { REQUIRED_DOCUMENTS, validateDocumentSubmission } from "../liff/documents-api";
+import { type RegistrationFormData, validateRegistrationForm } from "../liff/registration-api";
+import { handleFlowApi } from "../line/flow";
 
 type Bindings = {
   DB: D1Database;
@@ -89,7 +83,7 @@ liffRoutes.get("/", (c) => {
     let uid=null;
     async function init(){
       try{
-        const liffId="${c.env.LIFF_ID || ''}";
+        const liffId="${c.env.LIFF_ID || ""}";
         if(liffId){await liff.init({liffId});uid=(await liff.getProfile()).userId}
         else{uid='demo'}
       }catch(e){uid='demo'}
@@ -181,7 +175,7 @@ liffRoutes.get("/camera", (c) => {
 
     async function init(){
       try{
-        const liffId="${c.env.LIFF_ID || ''}";
+        const liffId="${c.env.LIFF_ID || ""}";
         if(liffId){await liff.init({liffId})}
       }catch(e){}
       document.getElementById('loading').style.display='none';
@@ -227,8 +221,8 @@ liffRoutes.get("/camera", (c) => {
       status.textContent='กำลังส่งรูป...';
       sendBtn.disabled=true;
       try{
-        const plotId="${c.req.query('plot_id') || 'plot-001'}";
-        const seasonId="${c.req.query('season_id') || '2568-napi'}";
+        const plotId="${c.req.query("plot_id") || "plot-001"}";
+        const seasonId="${c.req.query("season_id") || "2568-napi"}";
 
         const fd=new FormData();
         fd.append('photo',capturedBlob,'photo.jpg');
@@ -299,9 +293,17 @@ liffRoutes.post("/api/chat", async (c) => {
       .run();
 
     const link = await db
-      .prepare("SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?")
+      .prepare(
+        "SELECT id, farmer_id, status, conversation_state, selected_plot_id FROM line_links WHERE line_user_id = ?",
+      )
       .bind(userId)
-      .first<{ id: string; farmer_id: string; status: string; conversation_state: string; selected_plot_id: string | null }>();
+      .first<{
+        id: string;
+        farmer_id: string;
+        status: string;
+        conversation_state: string;
+        selected_plot_id: string | null;
+      }>();
 
     if (!link) {
       return c.json({ error: "Failed to create link" }, 500);
@@ -314,7 +316,9 @@ liffRoutes.post("/api/chat", async (c) => {
         .bind(link.farmer_id)
         .first<{ id: string }>();
       const season = await db
-        .prepare("SELECT season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1")
+        .prepare(
+          "SELECT season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1",
+        )
         .bind(plot?.id)
         .first<{ season_id: string }>();
       return c.json({
@@ -339,7 +343,9 @@ liffRoutes.post("/api/chat", async (c) => {
 
     // Update state
     await db
-      .prepare("UPDATE line_links SET conversation_state = ?, selected_plot_id = COALESCE(?, selected_plot_id) WHERE id = ?")
+      .prepare(
+        "UPDATE line_links SET conversation_state = ?, selected_plot_id = COALESCE(?, selected_plot_id) WHERE id = ?",
+      )
       .bind(result.newState, result.selectedPlotId ?? null, link.id)
       .run();
 
@@ -393,7 +399,7 @@ liffRoutes.post("/api/register", async (c) => {
           addr_village = COALESCE(NULLIF(?, ''), addr_village),
           national_id_enc = COALESCE(NULLIF(?, ''), national_id_enc),
           updated_at = datetime('now')
-        WHERE id = ?`
+        WHERE id = ?`,
       )
       .bind(
         formData.full_name,
@@ -424,7 +430,7 @@ liffRoutes.post("/api/register", async (c) => {
             centroid_lat = COALESCE(NULLIF(?, 0), centroid_lat),
             centroid_lng = COALESCE(NULLIF(?, 0), centroid_lng),
             updated_at = datetime('now')
-          WHERE id = ?`
+          WHERE id = ?`,
         )
         .bind(
           formData.deed_no,
@@ -442,7 +448,7 @@ liffRoutes.post("/api/register", async (c) => {
       await db
         .prepare(
           `INSERT INTO plots (id, farmer_id, plot_code, deed_no, doc_type, tenure, area_rai, centroid_lat, centroid_lng)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           plotId,
@@ -475,15 +481,15 @@ liffRoutes.get("/api/documents/:farmerId", async (c) => {
     const farmerId = c.req.param("farmerId");
 
     const docs = await db
-      .prepare("SELECT id, doc_type, submitted_at, review_status FROM application_documents WHERE farmer_id = ?")
+      .prepare(
+        "SELECT id, doc_type, submitted_at, review_status FROM application_documents WHERE farmer_id = ?",
+      )
       .bind(farmerId)
       .all<{ id: string; doc_type: string; submitted_at: string; review_status: string }>();
 
     const required = REQUIRED_DOCUMENTS.filter((d) => d.required);
     const submittedTypes = docs.results.map((d) => d.doc_type);
-    const allRequiredAttached = required.every((d) =>
-      submittedTypes.includes(d.code),
-    );
+    const allRequiredAttached = required.every((d) => submittedTypes.includes(d.code));
 
     return c.json({
       documents: docs.results,
@@ -530,7 +536,7 @@ liffRoutes.post("/api/documents/submit", async (c) => {
         `INSERT INTO application_documents (id, farmer_id, doc_type, r2_key, submitted_at)
          VALUES (?, ?, ?, ?, datetime('now'))
          ON CONFLICT(farmer_id, doc_type)
-         DO UPDATE SET r2_key = excluded.r2_key, submitted_at = datetime('now'), review_status = 'pending'`
+         DO UPDATE SET r2_key = excluded.r2_key, submitted_at = datetime('now'), review_status = 'pending'`,
       )
       .bind(docId, body.farmer_id, docCode, body.r2_key)
       .run();
@@ -543,9 +549,7 @@ liffRoutes.post("/api/documents/submit", async (c) => {
 
     const submittedTypes = docs.results.map((d) => d.doc_type);
     const required = REQUIRED_DOCUMENTS.filter((d) => d.required);
-    const allRequiredAttached = required.every((d) =>
-      submittedTypes.includes(d.code),
-    );
+    const allRequiredAttached = required.every((d) => submittedTypes.includes(d.code));
 
     return c.json({
       ok: true,

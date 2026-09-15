@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { updateFarmerTrust } from "../../src/trust/farmer-trust";
 
-function mockDB(initialRow?: { total_photos: number; verified_count: number; rejected_count: number }) {
+function mockDB(initialRow?: {
+  total_photos: number;
+  verified_count: number;
+  rejected_count: number;
+}) {
   const calls: { sql: string; args: unknown[] }[] = [];
-  let row = initialRow ?? null;
+  const row = initialRow ?? null;
   return {
     calls,
     prepare(sql: string) {
@@ -29,14 +33,14 @@ describe("updateFarmerTrust", () => {
     await updateFarmerTrust(db as any, "farmer-1", true);
     // Should SELECT then INSERT/UPDATE
     expect(db.calls.length).toBe(2);
-    expect(db.calls[1]!.sql).toContain("INSERT INTO farmer_trust");
+    expect(db.calls[1]?.sql).toContain("INSERT INTO farmer_trust");
   });
 
   it("increments total_photos and rejected_count on rejected", async () => {
     const db = mockDB({ total_photos: 5, verified_count: 3, rejected_count: 2 });
     await updateFarmerTrust(db as any, "farmer-1", false);
     expect(db.calls.length).toBe(2);
-    expect(db.calls[1]!.sql).toContain("INSERT INTO farmer_trust");
+    expect(db.calls[1]?.sql).toContain("INSERT INTO farmer_trust");
   });
 
   it("calculates trust_score with Bayesian smoothing", async () => {

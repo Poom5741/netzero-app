@@ -12,7 +12,10 @@ function makeApp() {
 }
 
 async function cookieHeader(role: "admin" | "sponsor") {
-  const cookie = await createSessionCookie({ userId: "u1", role, email: `${role}@test.com` }, SECRET);
+  const cookie = await createSessionCookie(
+    { userId: "u1", role, email: `${role}@test.com` },
+    SECRET,
+  );
   const raw = cookie.split(";")[0]?.split("=").slice(1).join("=") ?? "";
   return { Cookie: `nzc_session=${raw}` };
 }

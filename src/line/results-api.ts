@@ -64,7 +64,7 @@ export function computeResultsFromEstimate(
  */
 export async function fetchResultsData(
   db: D1Database,
-  farmerId: string,
+  _farmerId: string,
   plotId: string,
 ): Promise<ResultsComputed> {
   // Get the latest carbon estimate for this plot
@@ -74,7 +74,7 @@ export async function fetchResultsData(
        FROM carbon_estimates
        WHERE plot_id = ? AND status = 'final'
        ORDER BY created_at DESC
-       LIMIT 1`
+       LIMIT 1`,
     )
     .bind(plotId)
     .first<{ total_offset_tco2e: number; sf_w: number }>();
@@ -87,7 +87,7 @@ export async function fetchResultsData(
          SUM(CASE WHEN admin_status = 'verified' THEN 1 ELSE 0 END) as approved,
          SUM(CASE WHEN admin_status = 'pending' THEN 1 ELSE 0 END) as pending
        FROM photo_evidence
-       WHERE plot_id = ?`
+       WHERE plot_id = ?`,
     )
     .bind(plotId)
     .first<{ total: number; approved: number; pending: number }>();
@@ -98,7 +98,7 @@ export async function fetchResultsData(
       `SELECT COUNT(*) as cnt
        FROM season_inputs si
        JOIN seasons s ON s.id = si.season_id
-       WHERE si.plot_id = ? AND si.status = 'draft' AND s.status = 'closed'`
+       WHERE si.plot_id = ? AND si.status = 'draft' AND s.status = 'closed'`,
     )
     .bind(plotId)
     .first<{ cnt: number }>();

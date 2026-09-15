@@ -9,14 +9,13 @@
 import { expect, test } from "@playwright/test";
 import {
   AdminPage,
-  loginAsAdmin,
-  navigateTo,
-  waitForAdminQueue,
-  collectConsoleErrors,
-  takeEvidenceScreenshot,
   assertLoadTime,
   assertOnPage,
+  collectConsoleErrors,
+  loginAsAdmin,
   NETWORK_TIMEOUT,
+  navigateTo,
+  takeEvidenceScreenshot,
 } from "./helpers";
 
 // ─── 1.1 Admin Login Page ────────────────────────────────────────────
@@ -157,7 +156,7 @@ test.describe("1.3 Admin Review Actions", () => {
     // Should show undo toast or confirmation
     const undoToast = page.locator("text=ยกเลิก, text=Undo");
     const confirmDialog = page.locator('[role="dialog"]');
-    const hasFeedback =
+    const _hasFeedback =
       (await undoToast.isVisible().catch(() => false)) ||
       (await confirmDialog.isVisible().catch(() => false));
 
@@ -180,7 +179,7 @@ test.describe("1.3 Admin Review Actions", () => {
     // Should show undo toast or confirmation
     const undoToast = page.locator("text=ยกเลิก, text=Undo");
     const confirmDialog = page.locator('[role="dialog"]');
-    const hasFeedback =
+    const _hasFeedback =
       (await undoToast.isVisible().catch(() => false)) ||
       (await confirmDialog.isVisible().catch(() => false));
 
