@@ -165,6 +165,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
             takenAt,
             photoType,
             waterDepthCm,
+            stepCode,
           )
           .run();
 
