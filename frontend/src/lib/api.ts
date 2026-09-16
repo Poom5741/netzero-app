@@ -103,7 +103,7 @@ export async function getReviewQueue(status?: string): Promise<PhotoReview[]> {
 
 export async function reviewPhoto(
   photoId: string,
-  status: "verified" | "rejected",
+  status: "verified" | "rejected" | "retake",
   reason?: string,
 ): Promise<{ ok: boolean }> {
   const res = await apiRequest<{ ok: boolean }>(`/api/admin/review/${photoId}`, {

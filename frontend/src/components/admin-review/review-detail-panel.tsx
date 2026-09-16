@@ -9,6 +9,7 @@ interface ReviewDetailPanelProps {
   review: PhotoReview | null;
   onApprove: (id: string, reason?: string) => void;
   onReject: (id: string, reason: string) => void;
+  onRetake?: (id: string, reason: string) => void;
   onClose: () => void;
 }
 
@@ -21,11 +22,14 @@ export function ReviewDetailPanel({
   review,
   onApprove,
   onReject,
+  onRetake,
   onClose,
 }: ReviewDetailPanelProps) {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRetakeModal, setShowRetakeModal] = useState(false);
+  const [retakeReason, setRetakeReason] = useState("");
 
   // Escape key closes modals + focus trap
   const rejectModalRef = useRef<HTMLDivElement>(null);
@@ -248,6 +252,16 @@ export function ReviewDetailPanel({
               <span className="material-symbols-outlined text-[18px]">cancel</span>
               ปฏิเสธ
             </Button>
+            {onRetake && (
+              <Button
+                variant="secondary"
+                onClick={() => setShowRetakeModal(true)}
+                className="flex-1"
+              >
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                ถ่ายใหม่
+              </Button>
+            )}
             <Button
               variant="primary"
               onClick={() => setShowApproveModal(true)}
@@ -293,6 +307,50 @@ export function ReviewDetailPanel({
                 disabled={!rejectReason.trim()}
               >
                 ยืนยันการปฏิเสธ
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Retake Reason Modal */}
+      {showRetakeModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="retake-modal-title"
+        >
+          <div className="card bg-surface-container-low p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
+            <h3 id="retake-modal-title" className="text-headline-md font-bold text-on-surface mb-4">
+              ขอถ่ายภาพใหม่
+            </h3>
+            <p className="text-body-md text-on-surface-variant mb-4">
+              ระบุเหตุผลที่ต้องถ่ายภาพใหม่:
+            </p>
+            <textarea
+              className="w-full h-28 p-3 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-secondary"
+              placeholder="เช่น ภาพเลือน ไม่เห็นแปลง ถ่ายผิดแปลง..."
+              value={retakeReason}
+              onChange={(e) => setRetakeReason(e.target.value)}
+              aria-label="เหตุผลในการขอถ่ายใหม่"
+            />
+            <div className="flex gap-3 mt-4 justify-end">
+              <Button variant="ghost" onClick={() => { setRetakeReason(""); setShowRetakeModal(false); }}>
+                ยกเลิก
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  if (retakeReason.trim() && onRetake) {
+                    onRetake(review.id, retakeReason.trim());
+                    setRetakeReason("");
+                    setShowRetakeModal(false);
+                  }
+                }}
+                disabled={!retakeReason.trim()}
+              >
+                ส่งคำขอถ่ายใหม่
               </Button>
             </div>
           </div>

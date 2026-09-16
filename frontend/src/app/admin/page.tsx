@@ -23,6 +23,7 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
 
   // Check auth
   useEffect(() => {
@@ -41,7 +42,7 @@ export default function AdminOverviewPage() {
     queueMicrotask(() => setLoading(true));
 
     Promise.all([
-      getOverviewKpis().catch(() => null),
+      getOverviewKpis(seasonFilter || undefined).catch(() => null),
       getWorkQueueAlerts().catch(() => null),
       getCreditChart().catch(() => []),
       getGhgSources().catch(() => []),
@@ -62,7 +63,7 @@ export default function AdminOverviewPage() {
     });
 
     return () => { cancelled = true; };
-  }, [authed]);
+  }, [authed, seasonFilter]);
 
   if (authed === null) return null;
 
@@ -70,11 +71,33 @@ export default function AdminOverviewPage() {
     <main className="pt-14 lg:pt-14 px-4 lg:px-10 pb-10">
       <div className="max-w-[1400px]">
         {/* Page header */}
-        <div className="mb-6">
-          <h1 className="font-headline-lg text-headline-lg text-on-surface">ภาพรวมระบบ</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-            สรุปข้อมูลโครงการ NetZeroCarbon
-          </p>
+        <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+          <div>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface">ภาพรวมระบบ</h1>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+              สรุปข้อมูลโครงการ NetZeroCarbon
+            </p>
+          </div>
+          {creditChart.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="season-filter" className="text-label-md text-on-surface-variant whitespace-nowrap">
+                กรองตามฤดูกาล:
+              </label>
+              <select
+                id="season-filter"
+                value={seasonFilter}
+                onChange={(e) => setSeasonFilter(e.target.value)}
+                className="h-9 px-3 pr-8 rounded-lg border border-outline-variant bg-surface-container-low text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              >
+                <option value="">ทุกฤดูกาล</option>
+                {creditChart.map((item) => (
+                  <option key={item.season} value={item.season}>
+                    {item.season}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {loading && (
