@@ -1,0 +1,56 @@
+{
+  "id": "welcome-bubble",
+  "builder": "buildWelcomeBubble",
+  "inputs": {
+    "liffUrl": "https://liff.line.me/2011183008-7bEomfVF"
+  },
+  "expectedJson": {
+    "type": "flex",
+    "altText": "ยินดีต้อนรับสู่ NetZeroCarbon",
+    "contents": {
+      "type": "bubble",
+      "hero": {
+        "type": "image",
+        "url": "https://example.com/welcome-hero.png",
+        "size": "full",
+        "aspectRatio": "20:13",
+        "aspectMode": "cover"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "ยินดีต้อนรับสู่ NetZeroCarbon",
+            "weight": "bold",
+            "size": "xl"
+          },
+          {
+            "type": "text",
+            "text": "โครงการคาร์บอนเครดิตสำหรับเกษตรกรรายย่อย",
+            "size": "sm",
+            "color": "#666666",
+            "margin": "md"
+          }
+        ]
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "เริ่มลงทะเบียน",
+              "uri": "https://liff.line.me/2011183008-7bEomfVF"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "validationEndpoint": "https://api.line.me/v2/bot/message/validate"
+}

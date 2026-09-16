@@ -1,0 +1,17 @@
+{
+  "id": "conditions-001",
+  "description": "User accepts conditions with 'ยอมรับ'",
+  "initialState": "conditions",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "ยอมรับ" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "registration",
+  "expectedReply": {
+    "type": "text",
+    "text": "LIFF registration link"
+  }
+}

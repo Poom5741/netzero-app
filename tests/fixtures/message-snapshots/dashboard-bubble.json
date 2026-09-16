@@ -1,0 +1,95 @@
+{
+  "type": "flex",
+  "altText": "แดชบอร์ดของฉัน",
+  "contents": {
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "แดชบอร์ดของฉัน",
+          "weight": "bold",
+          "size": "lg",
+          "color": "#333333"
+        },
+        {
+          "type": "separator",
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "สมชาย ใจดี · แปลงนา A",
+          "size": "sm",
+          "color": "#333333",
+          "weight": "bold",
+          "wrap": true,
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "คาร์บอนเครดิต: 9.42 tCO₂eq\nSF_w: 0.55\nภาพถ่าย: 3/4\nงานค้าง: 2",
+          "size": "xs",
+          "color": "#333333",
+          "wrap": true,
+          "margin": "md"
+        }
+      ]
+    },
+    "footer": {
+      "type": "box",
+      "layout": "horizontal",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "📊 ดูปฏิทิน",
+              "size": "xs",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#06c755",
+          "cornerRadius": "6px",
+          "flex": 1,
+          "margin": "md",
+          "action": {
+            "type": "postback",
+            "label": "📊 ดูปฏิทิน",
+            "data": "action=show_calendar"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "📷 ส่งภาพ",
+              "size": "xs",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#06c755",
+          "cornerRadius": "6px",
+          "flex": 1,
+          "margin": "md",
+          "action": {
+            "type": "uri",
+            "label": "📷 ส่งภาพ",
+            "uri": "https://liff.line.me/camera"
+          }
+        }
+      ]
+    }
+  }
+}

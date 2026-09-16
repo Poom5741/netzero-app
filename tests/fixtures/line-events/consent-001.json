@@ -1,0 +1,17 @@
+{
+  "id": "consent-001",
+  "description": "User accepts all 4 consents",
+  "initialState": "consent",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "consent_accept_all" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "phone",
+  "expectedReply": {
+    "type": "text",
+    "text": "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "type": "rich",
+  "size": {
+    "width": 2500,
+    "height": 843
+  },
+  "selected": false,
+  "name": "NetZeroCarbon Menu",
+  "chatBarText": "เมนู",
+  "areas": [
+    {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 833,
+        "height": 420
+      },
+      "action": {
+        "type": "postback",
+        "label": "กรอกข้อมูลย้อนหลัง",
+        "data": "action=BL_HOME"
+      }
+    },
+    {
+      "bounds": {
+        "x": 833,
+        "y": 0,
+        "width": 833,
+        "height": 420
+      },
+      "action": {
+        "type": "postback",
+        "label": "บันทึกงานในแปลง",
+        "data": "action=SEASON_HOME"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1666,
+        "y": 0,
+        "width": 833,
+        "height": 420
+      },
+      "action": {
+        "type": "postback",
+        "label": "งานที่ต้องทำ",
+        "data": "action=TODO"
+      }
+    },
+    {
+      "bounds": {
+        "x": 0,
+        "y": 420,
+        "width": 833,
+        "height": 420
+      },
+      "action": {
+        "type": "postback",
+        "label": "แปลงของฉัน",
+        "data": "action=FIELD_LIST"
+      }
+    },
+    {
+      "bounds": {
+        "x": 833,
+        "y": 420,
+        "width": 833,
+        "height": 420
+      },
+      "action": {
+        "type": "postback",
+        "label": "สรุปผลของฉัน",
+        "data": "action=SUMMARY"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1666,
+        "y": 420,
+        "width": 833,
+        "height": 420
+      },
+      "action": {
+        "type": "postback",
+        "label": "ติดต่อเจ้าหน้าที่",
+        "data": "action=CONTACT"
+      }
+    }
+  ]
+}

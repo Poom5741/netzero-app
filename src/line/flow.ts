@@ -74,6 +74,7 @@ type FlowContext = {
   text: string;
   liffId?: string; // LIFF app ID for deep-links
   seasonId?: string; // Active season context for deep-links
+  pushFn?: (token: string, userId: string, messages: any[]) => Promise<{ status: number; body: string }>; // Test injection
 };
 
 type FlowResult = {
@@ -99,7 +100,8 @@ async function safePush(
   }>,
 ): Promise<void> {
   try {
-    const r = await pushMessage(ctx.token, ctx.userId, messages);
+    const pushFn = ctx.pushFn ?? pushMessage;
+    const r = await pushFn(ctx.token, ctx.userId, messages);
     console.log(`[PUSH] status=${r.status} body=${r.body.substring(0, 100)}`);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
@@ -216,7 +218,7 @@ export async function handleFlow(ctx: FlowContext): Promise<void> {
   // Update state in DB
   await ctx.db
     .prepare(
-      "UPDATE line_links SET conversation_state = ?, selected_plot_id = COALESCE(?, selected_plot_id) WHERE id = ?",
+      "UPDATE line_links SET conversation_state = ?, selected_plot_id = ? WHERE id = ?",
     )
     .bind(result.newState, result.selectedPlotId ?? null, ctx.linkId)
     .run();

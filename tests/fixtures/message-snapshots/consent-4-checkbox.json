@@ -1,0 +1,142 @@
+{
+  "type": "flex",
+  "altText": "กรุณาตอบรับเงื่อนไข 4 ข้อ",
+  "contents": {
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "เงื่อนไขการใช้งาน",
+          "weight": "bold",
+          "size": "lg",
+          "color": "#333333"
+        },
+        {
+          "type": "separator",
+          "margin": "sm"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "[ ] CS-01 · 同意 PDPA คุ้มครองข้อมูลส่วนบุคคล",
+              "size": "sm",
+              "wrap": true,
+              "color": "#333333",
+              "flex": 1
+            }
+          ],
+          "action": {
+            "type": "postback",
+            "label": "同意 PDPA คุ้มครองข้อมูลส่วนบุคคล",
+            "data": "action=consent_pdpa"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "[ ] CS-02 · ยอมรับการเก็บข้อมูลการเกษตร",
+              "size": "sm",
+              "wrap": true,
+              "color": "#333333",
+              "flex": 1
+            }
+          ],
+          "action": {
+            "type": "postback",
+            "label": "ยอมรับการเก็บข้อมูลการเกษตร",
+            "data": "action=consent_data_collection"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "[ ] CS-03 · ยอมรับการแชร์รูปถ่ายหลักฐาน",
+              "size": "sm",
+              "wrap": true,
+              "color": "#333333",
+              "flex": 1
+            }
+          ],
+          "action": {
+            "type": "postback",
+            "label": "ยอมรับการแชร์รูปถ่ายหลักฐาน",
+            "data": "action=consent_photo_sharing"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "[ ] CS-04 · เข้าร่วมโครงการคาร์บอนเครดิต",
+              "size": "sm",
+              "wrap": true,
+              "color": "#333333",
+              "flex": 1
+            }
+          ],
+          "action": {
+            "type": "postback",
+            "label": "เข้าร่วมโครงการคาร์บอนเครดิต",
+            "data": "action=consent_carbon_project"
+          }
+        },
+        {
+          "type": "separator",
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "ยอมรับทั้ง 4 ข้อเพื่อดำเนินการต่อ",
+          "size": "xs",
+          "color": "#888888",
+          "wrap": true,
+          "margin": "md"
+        }
+      ]
+    },
+    "footer": {
+      "type": "box",
+      "layout": "horizontal",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "✅ ยอมรับทั้งหมด",
+              "size": "sm",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#06c755",
+          "cornerRadius": "6px",
+          "flex": 1,
+          "margin": "md",
+          "action": {
+            "type": "postback",
+            "label": "✅ ยอมรับทั้งหมด",
+            "data": "action=consent_accept_all"
+          }
+        }
+      ]
+    }
+  }
+}

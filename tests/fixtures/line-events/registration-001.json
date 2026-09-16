@@ -1,0 +1,17 @@
+{
+  "id": "registration-001",
+  "description": "User completes registration",
+  "initialState": "registration",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "registration_complete" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "documents",
+  "expectedReply": {
+    "type": "text",
+    "text": "✅ ลงทะเบียนเรียบร้อยแล้วค่ะ"
+  }
+}

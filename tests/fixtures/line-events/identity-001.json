@@ -1,0 +1,17 @@
+{
+  "id": "identity-001",
+  "description": "User confirms identity with 'ใช่'",
+  "initialState": "identity_confirm",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "ใช่" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "conditions",
+  "expectedReply": {
+    "type": "flex",
+    "contents": {}
+  }
+}

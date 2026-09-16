@@ -1,0 +1,17 @@
+{
+  "id": "confirm-draft-001",
+  "description": "User confirms draft with 'ยืนยัน'",
+  "initialState": "confirm_draft",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "ยืนยัน" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "chat",
+  "expectedReply": {
+    "type": "text",
+    "text": "✅ บันทึกข้อมูลเรียบร้อยแล้วค่ะ"
+  }
+}

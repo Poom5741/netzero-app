@@ -1,0 +1,17 @@
+{
+  "id": "photo-report-001",
+  "description": "User in photo_report state requests results",
+  "initialState": "photo_report",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "ดูผล" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "results",
+  "expectedReply": {
+    "type": "text",
+    "text": "แดชบอร์ดของฉัน"
+  }
+}

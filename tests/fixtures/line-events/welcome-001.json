@@ -1,0 +1,17 @@
+{
+  "id": "welcome-001",
+  "description": "New user sends 'ลงทะเบียน' to start registration",
+  "initialState": "welcome",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "ลงทะเบียน" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "consent",
+  "expectedReply": {
+    "type": "text",
+    "text": "PDPA consent message"
+  }
+}

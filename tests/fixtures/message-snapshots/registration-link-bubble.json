@@ -1,0 +1,60 @@
+{
+  "type": "flex",
+  "altText": "ฟอร์มสมัคร (LF-01)",
+  "contents": {
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "ฟอร์มสมัคร (LF-01)",
+          "weight": "bold",
+          "size": "lg",
+          "color": "#333333"
+        },
+        {
+          "type": "separator",
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "กรอกข้อมูลส่วนตัว ข้อมูลแปลงนา และเอกสารสิทธิ์ในฟอร์มนี้",
+          "size": "sm",
+          "color": "#333333",
+          "wrap": true,
+          "margin": "md"
+        }
+      ]
+    },
+    "footer": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "📝 เปิดฟอร์มสมัคร",
+              "size": "sm",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#06c755",
+          "cornerRadius": "6px",
+          "action": {
+            "type": "uri",
+            "label": "📝 เปิดฟอร์มสมัคร",
+            "uri": "https://liff.line.me/test-liff-id/register"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "pending-review-001",
+  "description": "User in pending_review state sends any message",
+  "initialState": "pending_review",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "any message" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "pending_review",
+  "expectedReply": {
+    "type": "text",
+    "text": " บัญชีอยู่ระหว่างรอการยืนยัน"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "type": "flex",
+  "altText": "CS-01 · PDPA — ความยินยอมเก็บและใช้ข้อมูลส่วนบุคคล",
+  "contents": {
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "CS-01 · PDPA",
+          "weight": "bold",
+          "size": "lg",
+          "color": "#333333"
+        },
+        {
+          "type": "separator",
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "ความยินยอมเก็บและใช้ข้อมูลส่วนบุคคล",
+          "size": "sm",
+          "color": "#333333",
+          "wrap": true,
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "เก็บอะไร\nชื่อ · เพศ · เบอร์โทร · ที่อยู่ · เลขบัตร ปชช.\n\nใช้ทำอะไร\nขึ้นทะเบียนโครงการคาร์บอนเครดิต\n\nถอนความยินยอม\nทำได้ทุกเมื่อ แจ้งผู้ประสานงาน",
+          "size": "xs",
+          "color": "#333333",
+          "wrap": true,
+          "margin": "md"
+        }
+      ]
+    },
+    "footer": {
+      "type": "box",
+      "layout": "horizontal",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "✅ ยินยอม",
+              "size": "sm",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#06c755",
+          "cornerRadius": "6px",
+          "flex": 1,
+          "margin": "md",
+          "action": {
+            "type": "postback",
+            "label": "✅ ยินยอม",
+            "data": "action=consent_accept"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "❌ ไม่ยินยอม",
+              "size": "sm",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#dc3545",
+          "cornerRadius": "6px",
+          "flex": 1,
+          "margin": "md",
+          "action": {
+            "type": "postback",
+            "label": "❌ ไม่ยินยอม",
+            "data": "action=consent_reject"
+          }
+        }
+      ]
+    }
+  }
+}

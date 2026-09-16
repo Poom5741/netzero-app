@@ -1,0 +1,17 @@
+{
+  "id": "results-001",
+  "description": "User in results state requests calendar",
+  "initialState": "results",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "ดูปฏิทิน" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "calendar",
+  "expectedReply": {
+    "type": "text",
+    "text": "ปฏิทินฤดูปัจจุบัน"
+  }
+}

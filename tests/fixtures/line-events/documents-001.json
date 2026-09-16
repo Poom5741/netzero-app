@@ -1,0 +1,17 @@
+{
+  "id": "documents-001",
+  "description": "User completes document upload",
+  "initialState": "documents",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "documents_complete" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "pending_review",
+  "expectedReply": {
+    "type": "text",
+    "text": "✅ ได้รับเอกสารแล้วค่ะ"
+  }
+}

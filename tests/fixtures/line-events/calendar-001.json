@@ -1,0 +1,17 @@
+{
+  "id": "calendar-001",
+  "description": "User requests photo upload with 'ถ่ายรูป'",
+  "initialState": "calendar",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "ถ่ายรูป" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "photo_report",
+  "expectedReply": {
+    "type": "text",
+    "text": "LIFF camera link"
+  }
+}

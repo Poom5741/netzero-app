@@ -1,0 +1,17 @@
+{
+  "id": "chat-001",
+  "description": "User sends greeting in chat state",
+  "initialState": "chat",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "สวัสดี" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "chat",
+  "expectedReply": {
+    "type": "text",
+    "text": "สวัสดีครับ! ยินดีช่วยเหลือคุณ"
+  }
+}

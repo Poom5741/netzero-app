@@ -1,0 +1,61 @@
+{
+  "type": "flex",
+  "altText": "ยินดีต้อนรับสู่ NetZeroCarbon",
+  "contents": {
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "🌱 NetZeroCarbon",
+          "weight": "bold",
+          "size": "xl",
+          "color": "#333333"
+        },
+        {
+          "type": "separator",
+          "margin": "lg"
+        },
+        {
+          "type": "text",
+          "text": "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)\n\nสวัสดีครับ 🌾 นี่คือ LINE ของ NetZeroCarbon\nใช้ส่งภาพและกรอกข้อมูลแปลงนา เพื่อคิดคาร์บอนเครดิตให้พี่น้องเกษตรกรครับ",
+          "size": "sm",
+          "color": "#333333",
+          "wrap": true,
+          "margin": "lg"
+        }
+      ]
+    },
+    "footer": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "🔗 เริ่มผูกบัญชี",
+              "size": "sm",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold",
+              "flex": 0
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#06c755",
+          "cornerRadius": "6px",
+          "action": {
+            "type": "postback",
+            "label": "🔗 เริ่มผูกบัญชี",
+            "data": "action=start_registration&liffId=test-liff-id-123"
+          }
+        }
+      ]
+    }
+  }
+}

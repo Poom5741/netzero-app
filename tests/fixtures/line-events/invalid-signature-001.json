@@ -1,0 +1,17 @@
+{
+  "id": "invalid-signature-001",
+  "description": "Webhook event with invalid signature should be rejected",
+  "initialState": "welcome",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "test" },
+    "timestamp": 1234567890
+  },
+  "signature": "invalid-signature-should-fail",
+  "expectedState": "welcome",
+  "expectedReply": {
+    "type": "text",
+    "text": "401 Unauthorized"
+  }
+}

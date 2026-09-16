@@ -1,0 +1,103 @@
+{
+  "type": "flex",
+  "altText": "ยืนยันตัวตน",
+  "contents": {
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "ยืนยันตัวตน",
+          "weight": "bold",
+          "size": "lg",
+          "color": "#333333"
+        },
+        {
+          "type": "separator",
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "พบเบอร์นี้ในทะเบียนแล้ว",
+          "size": "sm",
+          "color": "#333333",
+          "wrap": true,
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "สมชาย ใจดี\nอ.เมือง จ.เชียงใหม่",
+          "size": "md",
+          "color": "#333333",
+          "wrap": true,
+          "weight": "bold",
+          "margin": "md"
+        },
+        {
+          "type": "text",
+          "text": "ใช่ท่านหรือไม่ครับ",
+          "size": "sm",
+          "color": "#333333",
+          "wrap": true,
+          "margin": "md"
+        }
+      ]
+    },
+    "footer": {
+      "type": "box",
+      "layout": "horizontal",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "✅ ใช่",
+              "size": "sm",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#06c755",
+          "cornerRadius": "6px",
+          "flex": 1,
+          "margin": "md",
+          "action": {
+            "type": "postback",
+            "label": "✅ ใช่",
+            "data": "action=identity_confirm"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "❌ ไม่ใช่",
+              "size": "sm",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "bold"
+            }
+          ],
+          "paddingAll": "10px",
+          "backgroundColor": "#dc3545",
+          "cornerRadius": "6px",
+          "flex": 1,
+          "margin": "md",
+          "action": {
+            "type": "postback",
+            "label": "❌ ไม่ใช่",
+            "data": "action=identity_reject"
+          }
+        }
+      ]
+    }
+  }
+}

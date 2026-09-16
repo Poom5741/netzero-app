@@ -1,0 +1,184 @@
+{
+  "type": "flex",
+  "altText": "ปฏิทิน 9 ขั้น",
+  "contents": {
+    "type": "bubble",
+    "size": "mega",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "text",
+          "text": "ปฏิทิน 9 ขั้น",
+          "weight": "bold",
+          "size": "lg",
+          "color": "#333333"
+        },
+        {
+          "type": "separator",
+          "margin": "md"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "✅ SG-01",
+              "size": "xs",
+              "color": "#333333",
+              "weight": "bold",
+              "flex": 2
+            },
+            {
+              "type": "text",
+              "text": "เตรียมแปลง",
+              "size": "xs",
+              "color": "#333333",
+              "wrap": false,
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "วันที่ 0",
+              "size": "xs",
+              "color": "#888888",
+              "flex": 1,
+              "align": "end"
+            }
+          ],
+          "spacing": "sm",
+          "margin": "none"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "✅ SG-02",
+              "size": "xs",
+              "color": "#333333",
+              "weight": "bold",
+              "flex": 2
+            },
+            {
+              "type": "text",
+              "text": "หว่านข้าว",
+              "size": "xs",
+              "color": "#333333",
+              "wrap": false,
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "วันที่ 0",
+              "size": "xs",
+              "color": "#888888",
+              "flex": 1,
+              "align": "end"
+            }
+          ],
+          "spacing": "sm",
+          "margin": "xs"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "⏳ SG-03",
+              "size": "xs",
+              "color": "#333333",
+              "weight": "bold",
+              "flex": 2
+            },
+            {
+              "type": "text",
+              "text": "ใส่ปุ๋ยครั้งที่ 1",
+              "size": "xs",
+              "color": "#333333",
+              "wrap": false,
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "วันที่ 14",
+              "size": "xs",
+              "color": "#888888",
+              "flex": 1,
+              "align": "end"
+            }
+          ],
+          "spacing": "sm",
+          "margin": "xs"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "text",
+              "text": "⏳ SG-04",
+              "size": "xs",
+              "color": "#333333",
+              "weight": "bold",
+              "flex": 2
+            },
+            {
+              "type": "text",
+              "text": "WET-1",
+              "size": "xs",
+              "color": "#333333",
+              "wrap": false,
+              "flex": 3
+            },
+            {
+              "type": "text",
+              "text": "วันที่ 30",
+              "size": "xs",
+              "color": "#888888",
+              "flex": 1,
+              "align": "end"
+            }
+          ],
+          "spacing": "sm",
+          "margin": "xs"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "📸 ถ่ายรูป",
+                  "size": "xs",
+                  "color": "#FFFFFF",
+                  "align": "center",
+                  "weight": "bold",
+                  "flex": 0
+                }
+              ],
+              "paddingAll": "6px",
+              "backgroundColor": "#06c755",
+              "cornerRadius": "4px",
+              "margin": "md",
+              "action": {
+                "type": "uri",
+                "label": "📸 ถ่ายรูป SG-04",
+                "uri": "https://liff.line.me/test-liff-id/camera?step=SG-04&plot_id=plot-001&season_id=season-001"
+              }
+            }
+          ],
+          "margin": "xs"
+        }
+      ]
+    }
+  }
+}

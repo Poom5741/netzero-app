@@ -108,6 +108,15 @@ export function createMockDB(): MockDB {
     if (!m?.[1]) return null;
     const table = m[1];
     const rows = ensureTable(table);
+    if (/COUNT\s*\(\s*DISTINCT\s+consent_type\s*\)/i.test(sql)) {
+      const farmerId = args[0];
+      const count = new Set(
+        rows
+          .filter((row) => row.farmer_id === farmerId && row.accepted === 1)
+          .map((row) => row.consent_type),
+      ).size;
+      return { cnt: count } as T;
+    }
     let filtered = rows;
     if (sql.includes("WHERE") && args.length > 0) {
       const whereMatch = sql.match(/WHERE\s+(.+?)(?:\s+ORDER|\s+GROUP|\s+LIMIT|$)/i);
@@ -503,4 +512,34 @@ export async function seedUser(db: MockDB, overrides?: Partial<Row>): Promise<Ro
     .bind(user.id, user.email, user.password_hash, user.role, user.name)
     .run();
   return user;
+}
+
+export async function seedLineLink(
+  db: MockDB,
+  farmerId: string,
+  overrides?: Partial<Row>,
+): Promise<Row> {
+  const link = {
+    id: overrides?.id ?? `line-${Date.now()}`,
+    farmer_id: farmerId,
+    line_user_id: overrides?.line_user_id ?? "U-test-user-001",
+    status: overrides?.status ?? "verified",
+    conversation_state: overrides?.conversation_state ?? "welcome",
+    selected_plot_id: overrides?.selected_plot_id ?? null,
+    ...overrides,
+  };
+  await db
+    .prepare(
+      "INSERT OR IGNORE INTO line_links (id, farmer_id, line_user_id, status, conversation_state, selected_plot_id) VALUES (?, ?, ?, ?, ?, ?)",
+    )
+    .bind(
+      link.id,
+      link.farmer_id,
+      link.line_user_id,
+      link.status,
+      link.conversation_state,
+      link.selected_plot_id,
+    )
+    .run();
+  return link;
 }

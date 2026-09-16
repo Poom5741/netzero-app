@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WebhookFixture",
+  "description": "Schema for LINE webhook test fixtures",
+  "type": "object",
+  "required": ["id", "description", "initialState", "event", "signature", "expectedState", "expectedReply"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Unique identifier, kebab-case (e.g., 'welcome-001')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the scenario"
+    },
+    "initialState": {
+      "type": "string",
+      "enum": [
+        "welcome", "consent", "phone", "identity_confirm", "conditions",
+        "registration", "documents", "pending_review", "activation",
+        "season_setup", "calendar", "chat", "confirm_draft", "photo_report",
+        "results", "select_plot", "identified", "pending"
+      ],
+      "description": "State before the event is processed"
+    },
+    "event": {
+      "type": "object",
+      "required": ["type", "source", "timestamp"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["message", "postback", "follow", "unfollow"]
+        },
+        "source": {
+          "type": "object",
+          "required": ["type", "userId"],
+          "properties": {
+            "type": { "type": "string", "const": "user" },
+            "userId": { "type": "string" }
+          }
+        },
+        "message": {
+          "type": "object",
+          "required": ["type", "text"],
+          "properties": {
+            "type": { "type": "string", "const": "text" },
+            "text": { "type": "string" },
+            "id": { "type": "string" }
+          }
+        },
+        "postback": {
+          "type": "object",
+          "required": ["data"],
+          "properties": {
+            "data": { "type": "string" },
+            "params": { "type": "object" }
+          }
+        },
+        "timestamp": { "type": "number" }
+      }
+    },
+    "signature": {
+      "type": "string",
+      "description": "Valid HMAC-SHA256 signature of the event body using the test channel secret"
+    },
+    "expectedState": {
+      "type": "string",
+      "enum": [
+        "welcome", "consent", "phone", "identity_confirm", "conditions",
+        "registration", "documents", "pending_review", "activation",
+        "season_setup", "calendar", "chat", "confirm_draft", "photo_report",
+        "results", "select_plot", "identified", "pending"
+      ],
+      "description": "Expected state after processing"
+    },
+    "expectedReply": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["text", "flex", "sticker", "image"]
+        },
+        "text": { "type": "string" },
+        "contents": {},
+        "quickReply": {}
+      }
+    },
+    "databaseChanges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["table", "operation"],
+        "properties": {
+          "table": { "type": "string" },
+          "operation": { "type": "string", "enum": ["insert", "update", "delete"] },
+          "where": { "type": "object" },
+          "values": { "type": "object" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "phone-001",
+  "description": "User shares valid phone that matches a farmer",
+  "initialState": "phone",
+  "event": {
+    "type": "message",
+    "source": { "type": "user", "userId": "U-test-user-001" },
+    "message": { "type": "text", "text": "0812345678" },
+    "timestamp": 1234567890
+  },
+  "signature": "placeholder-signature",
+  "expectedState": "identity_confirm",
+  "expectedReply": {
+    "type": "flex",
+    "contents": {}
+  }
+}
