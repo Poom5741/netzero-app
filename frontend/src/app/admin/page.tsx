@@ -202,17 +202,26 @@ export default function AdminOverviewPage() {
                   <div className="flex items-end gap-3 h-48">
                     {creditChart.map((item, i) => {
                       const maxVal = Math.max(...creditChart.map((c) => c.estimated), 1);
-                      const estHeight = (item.verified / maxVal) * 100;
+                      const verifiedHeight = (item.verified / maxVal) * 100;
+                      const estimatedHeight = (item.estimated / maxVal) * 100;
                       return (
                         <div key={i} className="flex-1 flex flex-col items-center gap-1">
                           <span className="text-[11px] text-on-surface-variant font-medium tabular-nums">
-                            {item.verified.toFixed(0)}
+                            {item.estimated.toFixed(0)}
                           </span>
                           <div className="w-full flex flex-col gap-1 items-center" style={{ height: "140px", justifyContent: "flex-end" }}>
-                            <div
-                              className="w-full max-w-[40px] rounded-t-lg bg-gradient-to-t from-primary to-primary-container"
-                              style={{ height: `${estHeight}%`, minHeight: "4px" }}
-                            />
+                            <div className="w-full max-w-[40px] flex flex-col gap-0.5 items-center" style={{ height: `${estimatedHeight}%`, minHeight: "4px" }}>
+                              <div
+                                className="w-full rounded-t-lg bg-gradient-to-t from-primary to-primary-container"
+                                style={{ height: `${(item.verified / item.estimated) * 100}%`, minHeight: "4px" }}
+                                title={`ยืนยันแล้ว: ${item.verified.toFixed(2)} tCO2e`}
+                              />
+                              <div
+                                className="w-full rounded-b-lg bg-surface-container-high border border-outline-variant/30"
+                                style={{ height: `${((item.estimated - item.verified) / item.estimated) * 100}%`, minHeight: "2px" }}
+                                title={`ประมาณการ: ${(item.estimated - item.verified).toFixed(2)} tCO2e`}
+                              />
+                            </div>
                           </div>
                           <span className="text-[10px] text-on-surface-variant text-center truncate w-full" title={item.season}>
                             {item.season}
@@ -223,7 +232,10 @@ export default function AdminOverviewPage() {
                   </div>
                   <div className="flex items-center gap-4 mt-4 text-[12px] text-on-surface-variant">
                     <span className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded bg-primary" /> ยืนยันแล้ว (tCO2e)
+                      <span className="w-3 h-3 rounded bg-primary" /> ยืนยันแล้ว
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded bg-surface-container-high border border-outline-variant/30" /> ประมาณการ
                     </span>
                   </div>
                 </div>

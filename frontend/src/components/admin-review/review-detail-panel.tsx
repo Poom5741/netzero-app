@@ -233,10 +233,23 @@ export function ReviewDetailPanel({
           {/* GPS Coordinates */}
           {(review.gps_lat != null && review.gps_lng != null) && (
             <div className="bg-surface rounded-xl p-4 shadow-sm">
-              <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">พิกัด GPS</p>
-              <p className="font-body-md text-body-md text-on-surface text-[14px]">
-                ละติจูด: {review.gps_lat}, ลองจิจูด: {review.gps_lng}
-              </p>
+              <p className="font-label-md text-label-md text-on-surface-variant mb-2 uppercase tracking-wider text-[11px]">พิกัด GPS</p>
+              <div className="relative w-full h-40 bg-surface-container-high rounded-xl overflow-hidden border border-surface-container-highest/30">
+                {/* Static map placeholder with gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-surface-container to-secondary/10" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">map</span>
+                </div>
+                {/* Coordinate overlay */}
+                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
+                  <div className="bg-surface/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-body-md text-on-surface">
+                    {review.gps_lat.toFixed(4)}° N, {review.gps_lng.toFixed(4)}° E
+                  </div>
+                  <div className="bg-surface/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-body-md text-on-surface flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px]">verified</span> GPS
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

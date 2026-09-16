@@ -280,12 +280,38 @@ h3 {
   }
 }
 
-/* === Dashboard Layout — 232px sidebar per reference === */
-@media (min-width: 1024px) {
+/* === Dashboard Layout — responsive sidebar === */
+@media (min-width: 768px) {
   .dashboard-main {
-    padding-left: 232px;
+    padding-left: 72px;
   }
   .dashboard-header {
-    left: 232px;
+    left: 72px;
   }
+}
+@media (min-width: 1024px) {
+  .dashboard-main {
+    padding-left: 260px;
+  }
+  .dashboard-header {
+    left: 260px;
+  }
+}
+
+/* === Reduced Motion === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* === Focus Visible === */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }

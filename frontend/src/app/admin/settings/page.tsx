@@ -149,7 +149,7 @@ function PermissionsTab({ settings }: { settings: SettingsData }) {
         </thead>
         <tbody>
           {Object.entries(settings.permissions).map(([role, perms]) => (
-            <tr key={role} className="border-b border-outline-variant/10 last:border-0">
+            <tr key={role} className="border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-low/30 transition-colors">
               <td className="px-4 py-3 text-body-md text-on-surface font-medium">
                 {roleLabels[role] ?? role}
               </td>
@@ -185,7 +185,7 @@ function UsersTab({ settings }: { settings: SettingsData }) {
         </thead>
         <tbody>
           {settings.users.map((user) => (
-            <tr key={user.id} className="border-b border-outline-variant/10 last:border-0">
+            <tr key={user.id} className="border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-low/30 transition-colors">
               <td className="px-4 py-3 text-body-md text-on-surface font-medium">{user.name ?? "-"}</td>
               <td className="px-4 py-3 text-body-md text-on-surface-variant">{user.email}</td>
               <td className="px-4 py-3">

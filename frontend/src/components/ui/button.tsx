@@ -10,9 +10,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-white font-semibold hover:bg-[#027276] shadow-[0_4px_12px_rgba(2,142,145,0.3)] hover:shadow-[0_8px_24px_rgba(2,142,145,0.4)] active:shadow-[0_2px_6px_rgba(2,142,145,0.2)] transition-all",
-  secondary: "bg-surface-container-low text-on-surface font-medium hover:bg-surface-container-high transition-colors",
-  danger: "bg-[#C8464F] text-white font-semibold shadow-[0_4px_10px_rgba(200,70,79,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all",
+  primary: "bg-gradient-to-b from-[#02A8AC] to-[#028E91] text-white font-semibold shadow-[0_4px_10px_rgba(2,142,145,0.3),inset_0_1px_2px_rgba(255,255,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(2,142,145,0.4),inset_0_1px_2px_rgba(255,255,255,0.3)] active:translate-y-0 active:shadow-[0_2px_6px_rgba(2,142,145,0.2),inset_0_1px_2px_rgba(255,255,255,0.2)] transition-all",
+  secondary: "bg-surface-container-low text-on-surface font-medium hover:bg-surface-container-high shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] transition-colors",
+  danger: "bg-gradient-to-b from-[#D95560] to-[#C8464F] text-white font-semibold shadow-[0_4px_10px_rgba(200,70,79,0.3),inset_0_1px_2px_rgba(255,255,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(200,70,79,0.4),inset_0_1px_2px_rgba(255,255,255,0.3)] active:translate-y-0 transition-all",
   ghost: "bg-transparent text-on-surface-variant hover:bg-surface-container-low transition-colors",
 };
 
