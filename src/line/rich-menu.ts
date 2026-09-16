@@ -1,12 +1,12 @@
 /**
  * LINE Rich Menu — 6-item postback menu for NetZeroCarbon.
  *
- * Items (per artifact):
- * BL_HOME:     หน้าหลัก (Home)
- * SEASON_HOME: ฤดูปัจจุบัน (Current season / calendar)
- * TODO:        งานค้าง (Pending tasks)
- * FIELD_LIST:  แปลงนาของฉัน (My plots)
- * SUMMARY:     สรุปผล (Results dashboard)
+ * Labels per REQUIREMENTS.md section 1.5 (LO-MENU-01 through LO-MENU-06):
+ * BL_HOME:     กรอกข้อมูลย้อนหลัง (Backfill registration)
+ * SEASON_HOME: บันทึกงานในแปลง (Record field work)
+ * TODO:        งานที่ต้องทำ (Pending tasks)
+ * FIELD_LIST:  แปลงของฉัน (My plots)
+ * SUMMARY:     สรุปผลของฉัน (My results)
  * CONTACT:     ติดต่อเจ้าหน้าที่ (Contact coordinator)
  */
 
@@ -20,38 +20,35 @@ export interface RichMenuItem {
   };
 }
 
-const _COLOR_PRIMARY = "#06c755";
-const _COLOR_BG = "#FFFFFF";
-const _COLOR_TEXT = "#333333";
-
 /**
  * Get the 6 rich menu items with Thai labels and postback actions.
+ * Labels match REQUIREMENTS.md section 1.5.
  */
 export function getRichMenuItems(): RichMenuItem[] {
   return [
     {
-      label: "🏠 หน้าหลัก",
-      action: { type: "postback", label: "🏠 หน้าหลัก", data: "action=BL_HOME" },
+      label: "กรอกข้อมูลย้อนหลัง",
+      action: { type: "postback", label: "กรอกข้อมูลย้อนหลัง", data: "action=BL_HOME" },
     },
     {
-      label: "📅 ฤดูปัจจุบัน",
-      action: { type: "postback", label: "📅 ฤดูปัจจุบัน", data: "action=SEASON_HOME" },
+      label: "บันทึกงานในแปลง",
+      action: { type: "postback", label: "บันทึกงานในแปลง", data: "action=SEASON_HOME" },
     },
     {
-      label: "📋 งานค้าง",
-      action: { type: "postback", label: "📋 งานค้าง", data: "action=TODO" },
+      label: "งานที่ต้องทำ",
+      action: { type: "postback", label: "งานที่ต้องทำ", data: "action=TODO" },
     },
     {
-      label: "🌾 แปลงนาของฉัน",
-      action: { type: "postback", label: "🌾 แปลงนาของฉัน", data: "action=FIELD_LIST" },
+      label: "แปลงของฉัน",
+      action: { type: "postback", label: "แปลงของฉัน", data: "action=FIELD_LIST" },
     },
     {
-      label: "📊 สรุปผล",
-      action: { type: "postback", label: "📊 สรุปผล", data: "action=SUMMARY" },
+      label: "สรุปผลของฉัน",
+      action: { type: "postback", label: "สรุปผลของฉัน", data: "action=SUMMARY" },
     },
     {
-      label: "📞 ติดต่อเจ้าหน้าที่",
-      action: { type: "postback", label: "📞 ติดต่อเจ้าหน้าที่", data: "action=CONTACT" },
+      label: "ติดต่อเจ้าหน้าที่",
+      action: { type: "postback", label: "ติดต่อเจ้าหน้าที่", data: "action=CONTACT" },
     },
   ];
 }
