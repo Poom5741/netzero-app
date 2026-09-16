@@ -856,12 +856,12 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
       ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
       : "";
 
-    const photoCount = plot?.id
+    const photoCount = plot?.id && season?.season_id
       ? await ctx.db
           .prepare(
-            "SELECT COUNT(*) as cnt FROM photo_evidence WHERE plot_id = ? AND admin_status = 'verified'",
+            "SELECT COUNT(*) as cnt FROM photo_evidence WHERE plot_id = ? AND season_id = ? AND admin_status = 'verified'",
           )
-          .bind(plot.id)
+          .bind(plot.id, season.season_id)
           .first<{ cnt: number }>()
       : null;
 
