@@ -53,17 +53,14 @@ app.use(
   }),
 );
 
-// LIFF chat app
-app.route("/", liffRoutes);
+// LIFF chat app — mounted at /liff so the LIFF URL registered in LINE Developer Console works
+app.route("/liff", liffRoutes);
 
 // Auth (login/logout)
 app.route("/", authRoutes);
 
 // Health check
 app.route("/", healthRoutes);
-
-// LIFF chat app
-app.route("/", liffRoutes);
 
 // Photo upload
 app.route("/", photoRoutes);

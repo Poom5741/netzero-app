@@ -97,7 +97,7 @@ liffRoutes.get("/", (c) => {
       inp.value='';document.getElementById('btn').disabled=true;
       add('user',t);showTyping();
       try{
-        const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t,userId:uid})});
+        const r=await fetch('/liff/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t,userId:uid})});
         const d=await r.json();hideTyping();
         add('bot',d.reply||d.error||'ไม่สามารถประมวลผลได้');
       }catch(e){hideTyping();add('sys','เกิดข้อผิดพลาด กรุณาลองใหม่')}
