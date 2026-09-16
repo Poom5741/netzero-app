@@ -1,0 +1,19 @@
+/**
+ * Feature flags for conditional login controls (OTP, remember-device, forgot-password)
+ * These controls are hidden until backend support is confirmed.
+ * See specs/006-match-dashboard-shell-login/contracts/feature-flags.md
+ */
+
+export interface LoginFeatureFlags {
+  otp: boolean;
+  rememberDevice: boolean;
+  forgotPassword: boolean;
+}
+
+export function getLoginFeatureFlags(): LoginFeatureFlags {
+  return {
+    otp: process.env.NEXT_PUBLIC_ENABLE_OTP === 'true',
+    rememberDevice: process.env.NEXT_PUBLIC_ENABLE_REMEMBER_DEVICE === 'true',
+    forgotPassword: process.env.NEXT_PUBLIC_ENABLE_FORGOT_PASSWORD === 'true',
+  };
+}

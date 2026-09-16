@@ -1,18 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { LoginForm } from "@/components/auth/login-form";
 
 const API_BASE = "https://netzero-carbon-poc.poom-a1d.workers.dev";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleLogin(credentials: { email: string; password: string }) {
     setLoading(true);
     setError("");
 
@@ -20,20 +17,20 @@ export default function AdminLoginPage() {
       const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ email, password }),
+        body: new URLSearchParams(credentials),
         redirect: "manual",
         credentials: "include",
       });
 
       if (res.status === 0 || res.status === 302) {
-        sessionStorage.setItem("nzc_admin_email", email);
-        sessionStorage.setItem("nzc_admin_pass", password);
+        sessionStorage.setItem("nzc_admin_email", credentials.email);
+        sessionStorage.setItem("nzc_admin_pass", credentials.password);
         window.location.href = "/admin";
       } else if (res.status === 401) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {
-        sessionStorage.setItem("nzc_admin_email", email);
-        sessionStorage.setItem("nzc_admin_pass", password);
+        sessionStorage.setItem("nzc_admin_email", credentials.email);
+        sessionStorage.setItem("nzc_admin_pass", credentials.password);
         window.location.href = "/admin";
       }
     } catch {
@@ -45,12 +42,11 @@ export default function AdminLoginPage() {
 
   return (
     /**
-     * Split-panel login layout matching reference 9482f706:
-     * - Left panel (≈55%): navy gradient background with branding
-     * - Right panel (≈45%): white background with login form
-     * gridTemplateColumns: 1.05fr 0.95fr per reference
+     * Split-panel login layout matching spec 006:
+     * - Left panel (45%): navy gradient background with branding
+     * - Right panel (55%): white background with login form
      */
-    <div className="min-h-screen grid" style={{ gridTemplateColumns: "1.05fr 0.95fr" }}>
+    <div className="min-h-screen grid" style={{ gridTemplateColumns: 'var(--login-branding-panel-width, 45%) var(--login-form-panel-width, 55%)' }}>
       {/* ── Left Panel: Navy Gradient + Branding ── */}
       <div
         className="relative flex flex-col justify-between p-10 overflow-hidden"
@@ -92,7 +88,7 @@ export default function AdminLoginPage() {
 
       {/* ── Right Panel: Login Form ── */}
       <div className="flex items-center justify-center p-10 bg-white">
-        <div className="w-full" style={{ maxWidth: 392 }}>
+        <div className="w-full" style={{ maxWidth: 'var(--login-form-max-width, 420px)' }}>
           {/* Form header */}
           <div className="mb-6">
             <h2 className="mb-1" style={{ fontSize: 26, fontWeight: 300, color: "var(--color-on-surface)" }}>
@@ -103,58 +99,12 @@ export default function AdminLoginPage() {
             </p>
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-red-500 text-[16px]">error</span>
-              <span className="text-sm text-red-700">{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="flex flex-col gap-5">
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-on-surface)" }}>
-                อีเมลบริษัท
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@netzero.com"
-                required
-                className="w-full px-4 py-3 rounded-xl bg-[#f0f4f8] text-[16px] text-[#171c1f] placeholder:text-[#171c1f]/40 outline-none border border-transparent focus:border-[#028E91] focus:ring-2 focus:ring-[#028E91]/20 transition-all"
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-on-surface)" }}>
-                รหัสผ่าน
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full px-4 py-3 rounded-xl bg-[#f0f4f8] text-[16px] text-[#171c1f] placeholder:text-[#171c1f]/40 outline-none border border-transparent focus:border-[#028E91] focus:ring-2 focus:ring-[#028E91]/20 transition-all"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              loading={loading}
-              className="w-full"
-            >
-              เข้าสู่ระบบ
-            </Button>
-          </form>
-
-          {/* Audit notice */}
-          <div className="mt-4 p-4 rounded-xl bg-[#f0f4f8] flex items-start gap-3" style={{ fontSize: 12, lineHeight: 1.7, color: "var(--color-on-surface-variant)" }}>
-            <span className="material-symbols-outlined text-[#028E91] flex-shrink-0 mt-0.5" style={{ fontSize: 16 }}>shield</span>
-            <span>ทุกการเข้าดูและแก้ไขถูกบันทึกใน audit log (AD-11) พร้อมผู้ใช้ เวลา และค่าก่อน-หลัง</span>
-          </div>
+          <LoginForm
+            type="admin"
+            onSubmit={handleLogin}
+            error={error}
+            loading={loading}
+          />
 
           {/* Dev bypass */}
           <div className="mt-6 pt-4 border-t border-[#e4e9ed]">

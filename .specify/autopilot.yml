@@ -1,0 +1,37 @@
+# Autopilot Configuration for speckit-autopilot skill
+# Controls autonomous workflow execution parameters
+
+autopilot:
+  # Maximum iterations for spec self-critique loop before pausing
+  max_critique_iterations: 2
+
+  # Maximum iterations for implement-converge loop before pausing
+  max_convergence_iterations: 5
+
+  # Maximum iterations for fixing quality gate failures
+  max_fix_iterations: 3
+
+  # Enable automatic deployment after successful build
+  auto_deploy: false
+
+  # Deploy command (uncomment and customize for your project)
+  # deploy_command: "npm run deploy"
+
+  # Health check URL to verify deployment success
+  # health_check_url: "https://your-app.workers.dev/health"
+
+  # Pause execution when warnings are found (vs only critical issues)
+  pause_on_warnings: false
+
+  # Enable parallel implementation using multiple subagents
+  # When true, large features can be split across multiple implementation agents
+  parallel_implementation: true
+
+  # Maximum number of parallel implementation agents (only used when parallel_implementation is true)
+  max_parallel_agents: 4
+
+  # Strategy for parallel implementation:
+  # - "component": Split by major components/modules
+  # - "layer": Split by frontend/backend/shared
+  # - "task": Split by task groups from tasks.md
+  parallel_strategy: "component"

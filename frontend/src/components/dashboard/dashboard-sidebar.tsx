@@ -28,7 +28,7 @@ export function DashboardSidebar({
   brand = "NetZero",
 }: DashboardSidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 h-full w-[232px] bg-[#061E5C] z-50 flex flex-col pt-6 shadow-xl hidden lg:flex">
+    <aside className="fixed left-0 top-0 h-full bg-[#061E5C] z-50 flex flex-col pt-6 shadow-xl hidden lg:flex" style={{ width: 'var(--sidebar-width, 260px)' }}>
       <div className="px-6 mb-10 flex items-center gap-2">
         <span className="w-8 h-8 rounded-full bg-[#028E91] text-white flex items-center justify-center text-sm">
           <span className="material-symbols-outlined text-[18px]">eco</span>
@@ -50,6 +50,7 @@ export function DashboardSidebar({
                 ? "bg-white/[0.12] text-white font-semibold"
                 : "text-white/70 hover:bg-white/[0.08] font-label-md text-label-md",
             ].join(" ")}
+            style={{ height: 'var(--nav-item-height, 40px)' }}
           >
             <span aria-hidden="true" className="material-symbols-outlined mr-4 text-[20px]">
               {entry.icon}
