@@ -1,13 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 interface DashboardHeaderProps {
   userLabel: string;
   searchPlaceholder?: string;
-}
-
-async function handleLogout() {
-  await fetch("/api/auth/logout", { method: "POST" });
-  window.location.assign("/login");
 }
 
 /**
@@ -18,6 +15,13 @@ export function DashboardHeader({
   userLabel = "System Admin",
   searchPlaceholder = "ค้นหาทั่วโลก...",
 }: DashboardHeaderProps) {
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
+
   return (
     <header className="dashboard-header fixed top-0 left-0 right-0 bg-surface/80 backdrop-blur-md z-40 px-6 lg:px-10 flex items-center justify-between border-b border-surface-container-highest/30 shadow-[0_1px_8px_rgba(0,0,0,0.02)]" style={{ height: 'var(--header-height, 64px)' }}>
       <div className="flex items-center gap-4">

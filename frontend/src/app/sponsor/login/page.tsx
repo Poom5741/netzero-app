@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 
 const API_BASE = "https://netzero-carbon-poc.poom-a1d.workers.dev";
 
 export default function SponsorLoginPage() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -23,11 +25,11 @@ export default function SponsorLoginPage() {
       });
 
       if (res.status === 0 || res.status === 302) {
-        window.location.href = "/sponsor";
+        router.push("/sponsor");
       } else if (res.status === 401) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {
-        window.location.href = "/sponsor";
+        router.push("/sponsor");
       }
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
@@ -111,7 +113,7 @@ export default function SponsorLoginPage() {
                 onClick={() => {
                   sessionStorage.setItem("nzc_admin_email", "sponsor@netzero.com");
                   sessionStorage.setItem("nzc_admin_pass", "bypass");
-                  window.location.href = "/sponsor";
+                  router.push("/sponsor");
                 }}
                 className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
               >
@@ -119,7 +121,7 @@ export default function SponsorLoginPage() {
               </button>
               <button
                 type="button"
-                onClick={() => window.location.href = "/admin/login"}
+                onClick={() => router.push("/admin/login")}
                 className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
               >
                 Admin Login
