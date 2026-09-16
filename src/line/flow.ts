@@ -859,7 +859,10 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
     const photoCount = plot?.id && season?.season_id
       ? await ctx.db
           .prepare(
-            "SELECT COUNT(*) as cnt FROM photo_evidence WHERE plot_id = ? AND season_id = ? AND admin_status = 'verified'",
+            `SELECT COUNT(*) as cnt FROM season_steps
+             WHERE season_input_id IN (SELECT id FROM season_inputs WHERE plot_id = ? AND season_id = ?)
+             AND step_code IN ('SG-04', 'SG-05', 'SG-07', 'SG-08')
+             AND status = 'completed'`,
           )
           .bind(plot.id, season.season_id)
           .first<{ cnt: number }>()
