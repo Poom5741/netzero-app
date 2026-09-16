@@ -66,8 +66,8 @@ describe("DashboardHeader", () => {
     const mockFetch = vi.fn().mockResolvedValue({ ok: true });
     global.fetch = mockFetch;
     const mockAssign = vi.fn();
-    delete (window as any).location;
-    (window as any).location = { assign: mockAssign } as any;
+    delete (window as unknown as Record<string, unknown>).location;
+    (window as unknown as Record<string, unknown>).location = { assign: mockAssign };
 
     render(<DashboardHeader userLabel="System Admin" />);
     fireEvent.click(screen.getByLabelText("ออกจากระบบ"));

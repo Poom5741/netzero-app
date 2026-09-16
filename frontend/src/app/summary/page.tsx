@@ -55,7 +55,7 @@ function SummaryContent() {
   // Fetch plots on mount
   useEffect(() => {
     if (!farmerId) return;
-    setPlotsLoading(true);
+    queueMicrotask(() => setPlotsLoading(true));
     apiRequest<{ plots: Plot[] }>(`/api/plots?farmer_id=${farmerId}`)
       .then((res) => {
         setPlotsLoading(false);
@@ -77,7 +77,7 @@ function SummaryContent() {
   // Fetch seasons when plot changes
   useEffect(() => {
     if (!selectedPlot) return;
-    setSeasonsLoading(true);
+    queueMicrotask(() => setSeasonsLoading(true));
     apiRequest<{ seasons: Season[] }>(`/api/seasons?plot_id=${selectedPlot}`)
       .then((res) => {
         setSeasonsLoading(false);

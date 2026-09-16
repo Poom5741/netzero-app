@@ -32,13 +32,13 @@ export default function AdminOverviewPage() {
       window.location.href = "/admin/login";
       return;
     }
-    setAuthed(true);
+    queueMicrotask(() => setAuthed(true));
   }, []);
 
   useEffect(() => {
     if (!authed) return;
     let cancelled = false;
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
 
     Promise.all([
       getOverviewKpis().catch(() => null),

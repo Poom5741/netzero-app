@@ -35,7 +35,7 @@ export default function ApplicationsPage() {
       window.location.href = "/admin/login";
       return;
     }
-    setAuthed(true);
+    queueMicrotask(() => setAuthed(true));
   }, []);
 
   const fetchApplications = useCallback(async (tab: TabKey) => {
@@ -53,7 +53,7 @@ export default function ApplicationsPage() {
   }, []);
 
   useEffect(() => {
-    if (authed) fetchApplications(activeTab);
+    if (authed) queueMicrotask(() => fetchApplications(activeTab));
   }, [authed, activeTab, fetchApplications]);
 
   const handleApprove = async (id: string) => {

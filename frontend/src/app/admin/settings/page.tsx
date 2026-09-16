@@ -48,12 +48,12 @@ export default function SettingsPage() {
       window.location.href = "/admin/login";
       return;
     }
-    setAuthed(true);
+    queueMicrotask(() => setAuthed(true));
   }, []);
 
   useEffect(() => {
     if (!authed) return;
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     getSettings()
       .then(setSettings)
       .catch(() => setError("ไม่สามารถโหลดข้อมูลได้"))

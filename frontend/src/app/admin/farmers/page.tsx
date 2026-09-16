@@ -31,12 +31,12 @@ export default function FarmersPage() {
       window.location.href = "/admin/login";
       return;
     }
-    setAuthed(true);
+    queueMicrotask(() => setAuthed(true));
   }, []);
 
   useEffect(() => {
     if (!authed) return;
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     fetch("/api/admin/farmers", {
       headers: {
         Authorization: "Basic " + btoa(
@@ -187,7 +187,7 @@ function FarmerDetailPanel({
   const [activeTab, setActiveTab] = useState<TabKey>("plots");
 
   useEffect(() => {
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     getFarmerDetail(farmerId)
       .then(setDetail)
       .catch(() => setDetail(null))

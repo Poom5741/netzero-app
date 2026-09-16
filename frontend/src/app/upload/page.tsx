@@ -94,7 +94,7 @@ function UploadContent() {
 
   useEffect(() => {
     if ("geolocation" in navigator) {
-      setGpsLoading(true);
+      queueMicrotask(() => setGpsLoading(true));
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setPhoto((p) => ({

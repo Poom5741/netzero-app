@@ -25,7 +25,7 @@ vi.mock("@/components/ui/bottom-nav", () => ({
 
 // Mock Button
 vi.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick, disabled, className, loading, ...rest }: any) => (
+  Button: ({ children, onClick, disabled, className, loading, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean }) => (
     <button onClick={onClick} disabled={disabled || loading} className={className} data-loading={loading}>
       {children}
     </button>
@@ -40,8 +40,8 @@ describe("Upload page — camera frame", () => {
     // Mock geolocation
     Object.defineProperty(navigator, "geolocation", {
       value: {
-        getCurrentPosition: (success: any) =>
-          success({ coords: { latitude: 13.75, longitude: 100.5, accuracy: 10 } }),
+        getCurrentPosition: (success: (position: GeolocationPosition) => void) =>
+          success({ coords: { latitude: 13.75, longitude: 100.5, accuracy: 10 } } as GeolocationPosition),
       },
       configurable: true,
     });
