@@ -30,6 +30,7 @@ type Bindings = {
   DB: D1Database;
   R2: R2Bucket;
   SECRET: string;
+  LINE_CHANNEL_ACCESS_TOKEN: string;
 };
 
 export const adminRoutes = new Hono<{ Bindings: Bindings }>();
@@ -308,6 +309,20 @@ adminRoutes.post("/api/admin/review/:photoId", async (c) => {
     body.reason || "",
   );
   if (result.success) {
+    // Send LINE push notification to farmer if approved
+    if (result.lineUserId && body.status === "verified") {
+      const accessToken = c.env.LINE_CHANNEL_ACCESS_TOKEN;
+      if (accessToken) {
+        try {
+          const { pushMessage } = await import("../line/reply");
+          await pushMessage(accessToken, result.lineUserId, [
+            { type: "text", text: "✅ ภาพของคุณได้รับการอนุมัติแล้วครับ" },
+          ]);
+        } catch (err) {
+          console.error("Failed to send LINE notification:", err);
+        }
+      }
+    }
     return c.json({ ok: true });
   }
   return c.json({ error: result.error }, 400);

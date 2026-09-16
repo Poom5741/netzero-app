@@ -1,7 +1,7 @@
 import { updateFarmerTrust } from "../trust/farmer-trust";
 import { writeAuditEntry } from "./audit-log";
 
-type ReviewResult = { success: boolean; error?: string; promoted?: boolean };
+type ReviewResult = { success: boolean; error?: string; promoted?: boolean; lineUserId?: string };
 
 const VALID_STATUSES = ["verified", "rejected", "retake"] as const;
 type AdminStatus = (typeof VALID_STATUSES)[number];
@@ -21,9 +21,9 @@ export async function reviewPhoto(
   }
 
   const photo = await db
-    .prepare("SELECT id, plot_id, pre_verified, audit_sample FROM photo_evidence WHERE id = ?")
+    .prepare("SELECT id, plot_id, season_id, step_code, pre_verified, audit_sample FROM photo_evidence WHERE id = ?")
     .bind(photoId)
-    .first<{ id: string; plot_id: string; pre_verified?: number; audit_sample?: number }>();
+    .first<{ id: string; plot_id: string; season_id: string; step_code?: string; pre_verified?: number; audit_sample?: number }>();
 
   if (!photo) {
     return { success: false, error: "Photo not found" };
@@ -34,6 +34,14 @@ export async function reviewPhoto(
     .prepare("SELECT farmer_id FROM plots WHERE id = ?")
     .bind(photo.plot_id)
     .first<{ farmer_id: string }>();
+
+  // Resolve farmer's LINE user ID for push notification
+  const lineLink = plot?.farmer_id
+    ? await db
+        .prepare("SELECT line_user_id FROM line_links WHERE farmer_id = ? AND status = 'verified' LIMIT 1")
+        .bind(plot.farmer_id)
+        .first<{ line_user_id: string }>()
+    : null;
 
   // Supersede: admin rejects a pre-verified photo
   if (adminStatus === "rejected" && photo.pre_verified === 1) {
@@ -87,6 +95,18 @@ export async function reviewPhoto(
     .bind(adminStatus, reason, photoId)
     .run();
 
+  if (adminStatus === "verified" && photo.step_code) {
+    await db
+      .prepare(
+        `UPDATE season_steps
+         SET status = 'completed', photo_evidence_id = ?, completed_at = datetime('now')
+         WHERE step_code = ?
+           AND season_input_id IN (SELECT id FROM season_inputs WHERE plot_id = ? AND season_id = ?)` ,
+      )
+      .bind(photoId, photo.step_code, photo.plot_id, photo.season_id)
+      .run();
+  }
+
   // Update farmer trust score based on admin decision.
   // Trust is auxiliary — a trust-write failure must never fail the review action.
   if (plot?.farmer_id) {
@@ -97,5 +117,5 @@ export async function reviewPhoto(
     }
   }
 
-  return { success: true, promoted };
+  return { success: true, promoted, lineUserId: lineLink?.line_user_id };
 }

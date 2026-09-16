@@ -155,8 +155,10 @@ liffRoutes.get("/camera", (c) => {
       <video id="video" autoplay playsinline></video>
       <canvas id="canvas"></canvas>
       <img id="preview" class="preview" style="display:none">
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
       <div class="btn-row">
         <button class="btn btn-primary" id="captureBtn">📷 ถ่ายรูป</button>
+        <button class="btn btn-secondary" id="uploadBtn">📁 อัพโหลดรูป</button>
         <button class="btn btn-secondary" id="retakeBtn" style="display:none">🔄 ถ่ายใหม่</button>
         <button class="btn btn-primary" id="sendBtn" style="display:none">✅ ส่งรูป</button>
       </div>
@@ -169,6 +171,8 @@ liffRoutes.get("/camera", (c) => {
     const canvas=document.getElementById('canvas');
     const preview=document.getElementById('preview');
     const captureBtn=document.getElementById('captureBtn');
+    const uploadBtn=document.getElementById('uploadBtn');
+    const fileInput=document.getElementById('fileInput');
     const retakeBtn=document.getElementById('retakeBtn');
     const sendBtn=document.getElementById('sendBtn');
     const status=document.getElementById('status');
@@ -185,7 +189,8 @@ liffRoutes.get("/camera", (c) => {
         video.srcObject=stream;
         status.textContent='พร้อมถ่ายรูป — ชี้กล้องไปที่ท่อ PVC แล้วกดถ่ายรูป';
       }catch(e){
-        status.textContent='ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการเข้าถึงกล้อง';
+        status.textContent='ไม่สามารถเปิดกล้องได้ — ใช้อัพโหลดรูปแทน';
+        captureBtn.style.display='none';
       }
     }
 
@@ -200,20 +205,38 @@ liffRoutes.get("/camera", (c) => {
         preview.style.display='block';
         video.style.display='none';
         captureBtn.style.display='none';
+        uploadBtn.style.display='none';
         retakeBtn.style.display='inline-block';
         sendBtn.style.display='inline-block';
         status.textContent='ถ่ายรูปแล้ว — กดส่งรูปเพื่อบันทึก';
       },'image/jpeg',0.9);
     };
 
+    uploadBtn.onclick=()=>fileInput.click();
+    fileInput.onchange=(e)=>{
+      const file=e.target.files[0];
+      if(!file) return;
+      capturedBlob=file;
+      preview.src=URL.createObjectURL(file);
+      preview.style.display='block';
+      video.style.display='none';
+      captureBtn.style.display='none';
+      uploadBtn.style.display='none';
+      retakeBtn.style.display='inline-block';
+      sendBtn.style.display='inline-block';
+      status.textContent='เลือกรูปแล้ว — กดส่งรูปเพื่อบันทึก';
+    };
+
     retakeBtn.onclick=()=>{
       preview.style.display='none';
       video.style.display='block';
-      captureBtn.style.display='inline-block';
+      captureBtn.style.display=stream?'inline-block':'none';
+      uploadBtn.style.display='inline-block';
       retakeBtn.style.display='none';
       sendBtn.style.display='none';
       capturedBlob=null;
-      status.textContent='พร้อมถ่ายรูป — ชี้กล้องไปที่ท่อ PVC แล้วกดถ่ายรูป';
+      fileInput.value='';
+      status.textContent=stream?'พร้อมถ่ายรูป — ชี้กล้องไปที่ท่อ PVC แล้วกดถ่ายรูป':'ไม่สามารถเปิดกล้องได้ — ใช้อัพโหลดรูปแทน';
     };
 
     sendBtn.onclick=async()=>{
@@ -223,6 +246,7 @@ liffRoutes.get("/camera", (c) => {
       try{
         const plotId="${c.req.query("plot_id") || "plot-001"}";
         const seasonId="${c.req.query("season_id") || "2568-napi"}";
+        const stepCode="${c.req.query("step") || "SG-04"}";
 
         const fd=new FormData();
         fd.append('photo',capturedBlob,'photo.jpg');
@@ -230,7 +254,8 @@ liffRoutes.get("/camera", (c) => {
         fd.append('season_id',seasonId);
         fd.append('gps_lat','0');
         fd.append('gps_lng','0');
-        fd.append('photo_type','wetdry');
+        fd.append('photo_type',stepCode==='SG-01'?'prepare':stepCode==='SG-09'?'harvest':'wetdry');
+        fd.append('step_code',stepCode);
         fd.append('taken_at',new Date().toISOString());
         const r=await fetch('/api/photo/upload',{method:'POST',body:fd});
         const d=await r.json();

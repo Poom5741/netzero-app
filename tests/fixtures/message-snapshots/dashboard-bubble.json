@@ -86,7 +86,7 @@
           "action": {
             "type": "uri",
             "label": "📷 ส่งภาพ",
-            "uri": "https://liff.line.me/camera"
+            "uri": "https://example.com/liff/camera"
           }
         }
       ]

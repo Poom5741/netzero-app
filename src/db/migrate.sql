@@ -247,6 +247,8 @@ CREATE INDEX IF NOT EXISTS idx_season_steps_input ON season_steps(season_input_i
 
 -- Issue #LINE-OA: Water depth for DRY photo rounds
 ALTER TABLE photo_evidence ADD COLUMN water_depth_cm INTEGER;
+-- Preserve the calendar round selected by the farmer for approval linkage.
+ALTER TABLE photo_evidence ADD COLUMN step_code TEXT;
 
 -- Issue #LINE-OA: Rice age and dynamic SF_w factor
 ALTER TABLE season_inputs ADD COLUMN rice_age_days INTEGER DEFAULT 120;
@@ -303,6 +305,7 @@ CREATE TABLE automation_audit_log_new (
   id TEXT PRIMARY KEY,
   photo_evidence_id TEXT REFERENCES photo_evidence(id),
   actor_type TEXT CHECK(actor_type IN ('machine', 'admin')) NOT NULL,
+  actor_id TEXT,
   action TEXT NOT NULL,
   confidence REAL,
   reason TEXT,
@@ -314,8 +317,8 @@ CREATE TABLE automation_audit_log_new (
   new_value TEXT
 );
 INSERT OR IGNORE INTO automation_audit_log_new
-  (id, photo_evidence_id, actor_type, action, confidence, reason, created_at, entity_type, entity_id, field_name, old_value, new_value)
-SELECT id, photo_evidence_id, actor_type, action, confidence, reason, created_at, entity_type, entity_id, field_name, old_value, new_value
+  (id, photo_evidence_id, actor_type, actor_id, action, confidence, reason, created_at, entity_type, entity_id, field_name, old_value, new_value)
+SELECT id, photo_evidence_id, actor_type, NULL as actor_id, action, confidence, reason, created_at, entity_type, entity_id, field_name, old_value, new_value
 FROM automation_audit_log;
 DROP TABLE IF EXISTS automation_audit_log;
 ALTER TABLE automation_audit_log_new RENAME TO automation_audit_log;

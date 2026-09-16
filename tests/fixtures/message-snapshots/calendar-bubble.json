@@ -172,7 +172,7 @@
               "action": {
                 "type": "uri",
                 "label": "📸 ถ่ายรูป SG-04",
-                "uri": "https://liff.line.me/test-liff-id/camera?step=SG-04&plot_id=plot-001&season_id=season-001"
+                "uri": "https://example.com/liff/camera?step=SG-04&plot_id=plot-001&season_id=season-001"
               }
             }
           ],

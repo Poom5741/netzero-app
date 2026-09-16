@@ -15,7 +15,11 @@ function mockD1() {
                 id: "photo-1",
                 ai_status: "flag",
                 admin_status: "pending",
+                plot_id: "plot-1",
+                season_id: "season-1",
+                step_code: "SG-04",
               }),
+              run: async () => ({ success: true }),
             };
           }
           return { run: async () => ({ success: true }) };

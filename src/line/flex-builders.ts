@@ -494,12 +494,12 @@ export function buildCalendarBubble(
     status: string;
     requiresPhoto: boolean;
   }>,
-  liffId: string,
+  appUrl: string,
   plotId?: string,
   seasonId?: string,
 ): LineMessage {
-  // Error handling for missing LIFF_ID (US3)
-  if (!liffId || liffId.trim() === "" || liffId === "no-liff") {
+  // Error handling for missing APP_URL (US3)
+  if (!appUrl || appUrl.trim() === "" || appUrl === "no-app") {
     return {
       type: "text",
       text: " กล้องถ่ายรูปยังไม่พร้อมใช้งาน กรุณาติดต่อเจ้าหน้าที่",
@@ -540,8 +540,8 @@ export function buildCalendarBubble(
 
     // Photo button row for pending steps that require a photo
     if (step.requiresPhoto && step.status === "pending") {
-      // Construct LIFF camera URL with step, plot_id, and season_id (US1, US2)
-      const cameraUrl = new URL(`https://liff.line.me/${liffId}/camera`);
+      // Construct camera URL with step, plot_id, and season_id (US1, US2)
+      const cameraUrl = new URL(`${appUrl}/liff/camera`);
       cameraUrl.searchParams.set("step", step.stepCode);
       if (plotId) cameraUrl.searchParams.set("plot_id", plotId);
       if (seasonId) cameraUrl.searchParams.set("season_id", seasonId);
@@ -838,6 +838,7 @@ export function buildDashboardBubble(data: {
   approvedPhotos: number;
   totalPhotos: number;
   pendingTasks: number;
+  appUrl?: string;
 }): LineMessage {
   return {
     type: "flex",
@@ -923,7 +924,7 @@ export function buildDashboardBubble(data: {
             action: {
               type: "uri",
               label: "📷 ส่งภาพ",
-              uri: "https://liff.line.me/camera",
+              uri: data.appUrl ? `${data.appUrl}/liff/camera` : "",
             },
           },
         ],

@@ -21,3 +21,4 @@ binding = "AI"
 # Environment variables
 [vars]
 ENVIRONMENT = "development"
+APP_URL = "https://netzero-carbon-poc.poom-a1d.workers.dev"

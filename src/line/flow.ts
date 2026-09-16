@@ -73,6 +73,7 @@ type FlowContext = {
   selectedPlotId: string | null;
   text: string;
   liffId?: string; // LIFF app ID for deep-links
+  appUrl?: string; // Worker URL for camera links (liff.line.me doesn't forward sub-paths)
   seasonId?: string; // Active season context for deep-links
   pushFn?: (token: string, userId: string, messages: any[]) => Promise<{ status: number; body: string }>; // Test injection
 };
@@ -603,7 +604,7 @@ async function handleSeasonSetup(ctx: FlowContext): Promise<FlowResult> {
       textMessage("ข้ามการตั้งวันหว่านค่ะ"),
       buildCalendarBubble(
         calendarSteps(),
-        ctx.liffId || "no-liff",
+        ctx.appUrl || "no-app",
         ctx.selectedPlotId ?? undefined,
         ctx.seasonId ?? undefined,
       ),
@@ -617,7 +618,7 @@ async function handleSeasonSetup(ctx: FlowContext): Promise<FlowResult> {
       textMessage(`✅ บันทึกวันหว่าน: ${created.displayDate}`),
       buildCalendarBubble(
         calendarSteps(),
-        ctx.liffId || "no-liff",
+        ctx.appUrl || "no-app",
         ctx.selectedPlotId ?? undefined,
         ctx.seasonId ?? undefined,
       ),
@@ -687,7 +688,7 @@ async function handleCalendar(ctx: FlowContext): Promise<FlowResult> {
   await safePush(ctx, [
     buildCalendarBubble(
       steps,
-      ctx.liffId || "no-liff",
+      ctx.appUrl || "no-app",
       ctx.selectedPlotId ?? undefined,
       ctx.seasonId ?? undefined,
     ),
@@ -851,9 +852,18 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
           .bind(plot.id)
           .first<{ season_id: string }>()
       : null;
-    const cameraUrl = ctx.liffId
-      ? `https://liff.line.me/${ctx.liffId}/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}`
-      : "https://liff.line.me/";
+    const cameraUrl = ctx.appUrl
+      ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
+      : "";
+
+    const photoCount = plot?.id
+      ? await ctx.db
+          .prepare(
+            "SELECT COUNT(*) as cnt FROM photo_evidence WHERE plot_id = ? AND admin_status = 'verified'",
+          )
+          .bind(plot.id)
+          .first<{ cnt: number }>()
+      : null;
 
     const reminderText = composePhotoReminder({
       roundLabel: "WET-1",
@@ -863,7 +873,7 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
       deadline: "—",
       daysLeft: 0,
       isWet: true,
-      photosSubmitted: 0,
+      photosSubmitted: photoCount?.cnt ?? 0,
       totalPhotos: 4,
     });
 
@@ -979,6 +989,7 @@ async function handleResults(ctx: FlowContext): Promise<FlowResult> {
       approvedPhotos: results.approvedPhotos,
       totalPhotos: results.totalPhotos,
       pendingTasks: results.pendingTasks,
+      appUrl: ctx.appUrl,
     }),
   ]);
   return { newState: "results" };
@@ -1515,9 +1526,23 @@ async function handleCalendarApi(ctx: FlowContext): Promise<FlowApiResult> {
 async function handlePhotoReportApi(ctx: FlowContext): Promise<FlowApiResult> {
   const lower = ctx.text.toLowerCase().trim();
   if (lower.includes("ถ่ายรูป") || lower.includes("ถ่าย")) {
-    const cameraUrl = ctx.liffId
-      ? `https://liff.line.me/${ctx.liffId}/camera`
-      : "https://liff.line.me/";
+    const plot = ctx.selectedPlotId
+      ? { id: ctx.selectedPlotId }
+      : await ctx.db
+          .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+          .bind(ctx.farmerId)
+          .first<{ id: string }>();
+    const season = plot?.id
+      ? await ctx.db
+          .prepare(
+            "SELECT season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1",
+          )
+          .bind(plot.id)
+          .first<{ season_id: string }>()
+      : null;
+    const cameraUrl = ctx.appUrl
+      ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
+      : "";
     return {
       reply: `📸 เปิดกล้องถ่ายรูปได้ที่ลิงก์นี้:\n${cameraUrl}`,
       newState: "photo_report",

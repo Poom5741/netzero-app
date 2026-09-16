@@ -3,8 +3,8 @@
  *
  * Tests that the "ถ่ายรูป" button in the calendar Flex message:
  * - Uses type: "uri" action (not postback)
- * - Constructs correct LIFF camera URL with step, plot_id, season_id
- * - Handles missing LIFF_ID gracefully
+ * - Constructs correct camera URL with step, plot_id, season_id
+ * - Handles missing APP_URL gracefully
  */
 
 import { describe, expect, it } from "vitest";
@@ -34,22 +34,22 @@ describe("Calendar Photo Button Action (US1)", () => {
   ];
 
   it("T005: uses type: uri action for photo button", () => {
-    const bubble = buildCalendarBubble(mockSteps, "test-liff-id", "plot-123", "season-456");
+    const bubble = buildCalendarBubble(mockSteps, "https://example.com", "plot-123", "season-456");
     const action = getPhotoButtonAction(bubble, "SG-04");
 
     expect(action).toBeDefined();
     expect(action.type).toBe("uri");
   });
 
-  it("T006: LIFF camera URL includes step parameter", () => {
-    const bubble = buildCalendarBubble(mockSteps, "test-liff-id", "plot-123", "season-456");
+  it("T006: camera URL includes step parameter", () => {
+    const bubble = buildCalendarBubble(mockSteps, "https://example.com", "plot-123", "season-456");
     const action = getPhotoButtonAction(bubble, "SG-04");
 
     expect(action.uri).toContain("step=SG-04");
   });
 
-  it("T007: LIFF camera URL includes plot_id and season_id", () => {
-    const bubble = buildCalendarBubble(mockSteps, "test-liff-id", "plot-123", "season-456");
+  it("T007: camera URL includes plot_id and season_id", () => {
+    const bubble = buildCalendarBubble(mockSteps, "https://example.com", "plot-123", "season-456");
     const action = getPhotoButtonAction(bubble, "SG-04");
 
     expect(action.uri).toContain("plot_id=plot-123");
@@ -66,7 +66,7 @@ describe("All Photo Rounds (US2)", () => {
   ];
 
   it("T011: DRY-1 (SG-05) button has correct step in URL", () => {
-    const bubble = buildCalendarBubble(allPhotoSteps, "test-liff-id", "plot-123", "season-456");
+    const bubble = buildCalendarBubble(allPhotoSteps, "https://example.com", "plot-123", "season-456");
     const action = getPhotoButtonAction(bubble, "SG-05");
 
     expect(action).toBeDefined();
@@ -74,7 +74,7 @@ describe("All Photo Rounds (US2)", () => {
   });
 
   it("T012: WET-2 (SG-07) button has correct step in URL", () => {
-    const bubble = buildCalendarBubble(allPhotoSteps, "test-liff-id", "plot-123", "season-456");
+    const bubble = buildCalendarBubble(allPhotoSteps, "https://example.com", "plot-123", "season-456");
     const action = getPhotoButtonAction(bubble, "SG-07");
 
     expect(action).toBeDefined();
@@ -82,7 +82,7 @@ describe("All Photo Rounds (US2)", () => {
   });
 
   it("T013: DRY-2 (SG-08) button has correct step in URL", () => {
-    const bubble = buildCalendarBubble(allPhotoSteps, "test-liff-id", "plot-123", "season-456");
+    const bubble = buildCalendarBubble(allPhotoSteps, "https://example.com", "plot-123", "season-456");
     const action = getPhotoButtonAction(bubble, "SG-08");
 
     expect(action).toBeDefined();
@@ -95,7 +95,7 @@ describe("Error Handling (US3)", () => {
     { stepCode: "SG-04", stepName: "WET-1", dueDay: 30, status: "pending", requiresPhoto: true },
   ];
 
-  it("T016: returns error message when LIFF_ID is missing", () => {
+  it("T016: returns error message when APP_URL is missing", () => {
     const result = buildCalendarBubble(mockSteps, "", "plot-123", "season-456");
 
     // Should return a text message instead of flex bubble
@@ -105,7 +105,7 @@ describe("Error Handling (US3)", () => {
     }
   });
 
-  it("T017: returns error message when LIFF_ID is empty string", () => {
+  it("T017: returns error message when APP_URL is empty string", () => {
     const result = buildCalendarBubble(mockSteps, "", "plot-123", "season-456");
 
     expect(result.type).toBe("text");

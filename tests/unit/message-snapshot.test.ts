@@ -100,7 +100,7 @@ describe("Message Snapshots", () => {
           requiresPhoto: true,
         },
       ];
-      const msg = buildCalendarBubble(steps, "test-liff-id", "plot-001", "season-001");
+      const msg = buildCalendarBubble(steps, "https://example.com", "plot-001", "season-001");
       assertSnapshot("calendar-bubble", msg);
     });
 
@@ -123,6 +123,7 @@ describe("Message Snapshots", () => {
         approvedPhotos: 3,
         totalPhotos: 4,
         pendingTasks: 2,
+        appUrl: "https://example.com",
       });
       assertSnapshot("dashboard-bubble", msg);
     });

@@ -32,6 +32,7 @@ export function apiRequest<T = unknown>(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(init?.method || "GET", url);
+    xhr.withCredentials = true; // send nzc_session cookie cross-origin
 
     // Add Basic Auth for admin endpoints if credentials exist
     const email = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("nzc_admin_email") : null;

@@ -24,6 +24,7 @@ type Bindings = {
   LINE_CHANNEL_SECRET: string;
   OPENROUTER_API_KEY: string;
   LIFF_ID: string;
+  APP_URL: string;
 };
 
 type WebhookEvent = {
@@ -284,6 +285,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
           state: link.conversation_state,
           selectedPlotId: link.selected_plot_id,
           liffId: env.LIFF_ID,
+          appUrl: env.APP_URL,
           text,
         });
       } catch (flowErr) {
@@ -353,6 +355,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         state: link.conversation_state,
         selectedPlotId: link.selected_plot_id,
         liffId: env.LIFF_ID,
+        appUrl: env.APP_URL,
         text: postbackText === "show_calendar" ? "ดูปฏิทิน" : postbackText,
       });
       break;

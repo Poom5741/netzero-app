@@ -90,166 +90,69 @@ photoRoutes.get("/evidence/:key", async (c) => {
 });
 
 photoRoutes.post("/api/photo/upload", async (c) => {
-  const formData = await c.req.formData();
-  const file = formData.get("photo");
-  const plotId = formData.get("plot_id");
-  const seasonId = formData.get("season_id");
-  const gpsLat = Number(formData.get("gps_lat"));
-  const gpsLng = Number(formData.get("gps_lng"));
-  const gpsAccuracy = formData.get("gps_accuracy");
-  const takenAt = formData.get("taken_at") as string;
-  const photoType = formData.get("photo_type") as string | null;
-  const waterDepthRaw = formData.get("water_depth_cm");
-  const waterDepthCm = waterDepthRaw !== null ? Number(waterDepthRaw) : null;
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get("photo");
+    const plotId = formData.get("plot_id");
+    const seasonId = formData.get("season_id");
+    const gpsLat = Number(formData.get("gps_lat"));
+    const gpsLng = Number(formData.get("gps_lng"));
+    const gpsAccuracy = formData.get("gps_accuracy");
+    const takenAt = formData.get("taken_at") as string;
+    const photoType = formData.get("photo_type") as string | null;
+    const waterDepthRaw = formData.get("water_depth_cm");
+    const waterDepthCm = waterDepthRaw !== null ? Number(waterDepthRaw) : null;
+    const stepCode = formData.get("step_code") as string | null;
 
-  if (!(file instanceof File) || !plotId || !seasonId) {
-    return c.json({ error: "Missing required fields" }, 400);
-  }
-
-  if (!photoType || !["prepare", "wetdry", "harvest"].includes(photoType)) {
-    return c.json({ error: "photo_type is required (prepare, wetdry, harvest)" }, 400);
-  }
-
-  // Temporal validation: check if photo was taken within the correct phase window
-  const seasonInput = await c.env.DB.prepare(
-    "SELECT sow_date FROM season_inputs WHERE plot_id = ? AND season_id = ?",
-  )
-    .bind(plotId, seasonId)
-    .first<{ sow_date: string }>();
-
-  if (seasonInput?.sow_date) {
-    const phaseWindows = calculatePhaseWindows(seasonInput.sow_date);
-
-    // Get EXIF timestamp (or use test override)
-    const exifTimestampStr = formData.get("__exif_timestamp") as string | null;
-    const photoTimestamp = exifTimestampStr ? new Date(exifTimestampStr) : null;
-
-    const temporalResult = validateTemporal({
-      photo_timestamp: photoTimestamp,
-      photo_type: photoType,
-      phase_windows: phaseWindows,
-    });
-
-    if (temporalResult.status === "invalid") {
-      return c.json({ error: "Photo taken at wrong time", reason: temporalResult.reason }, 400);
+    if (!(file instanceof File) || !plotId || !seasonId) {
+      return c.json({ error: "Missing required fields" }, 400);
     }
 
-    if (temporalResult.status === "unknown") {
-      // Missing EXIF → flag for admin review
-      const photoId = `photo_${crypto.randomUUID()}`;
-      const key = `evidence/${photoId}.jpg`;
-      await c.env.R2.put(key, file);
+    if (!photoType || !["prepare", "wetdry", "harvest"].includes(photoType)) {
+      return c.json({ error: "photo_type is required (prepare, wetdry, harvest)" }, 400);
+    }
 
-      await c.env.DB.prepare(
-        `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', 'pending', ?, ?)`,
-      )
-        .bind(
-          photoId,
-          plotId,
-          seasonId,
-          key,
-          gpsLat,
-          gpsLng,
-          gpsAccuracy ?? null,
-          takenAt,
-          photoType,
-          waterDepthCm,
-        )
-        .run();
+    // Temporal validation: check if photo was taken within the correct phase window
+    const seasonInput = await c.env.DB.prepare(
+      "SELECT sow_date FROM season_inputs WHERE plot_id = ? AND season_id = ?",
+    )
+      .bind(plotId, seasonId)
+      .first<{ sow_date: string }>();
 
-      await writeAuditEntry(c.env.DB, {
-        photoId,
-        actorType: "machine",
-        action: "flagged",
-        confidence: null,
-        reason: temporalResult.reason || "EXIF missing",
+    if (seasonInput?.sow_date) {
+      let phaseWindows;
+      try {
+        phaseWindows = calculatePhaseWindows(seasonInput.sow_date);
+      } catch {
+        // Unparseable sow_date (e.g. Thai Buddhist format) — skip temporal validation
+        phaseWindows = null;
+      }
+
+      if (phaseWindows) {
+
+      // Get EXIF timestamp (or use test override)
+      const exifTimestampStr = formData.get("__exif_timestamp") as string | null;
+      const photoTimestamp = exifTimestampStr ? new Date(exifTimestampStr) : null;
+
+      const temporalResult = validateTemporal({
+        photo_timestamp: photoTimestamp,
+        photo_type: photoType,
+        phase_windows: phaseWindows,
       });
 
-      return c.json(
-        {
-          id: photoId,
-          verdict: "flagged" as Verdict,
-          photo_url: key,
-          photo_type: photoType,
-          reason: temporalResult.reason,
-        },
-        201,
-      );
-    }
-  }
-
-  // Kill switch check
-  const killSwitch = formData.get("__kill_switch") === "true";
-  const config = getConfig(formData);
-  if (killSwitch) config.enabled = false;
-
-  // Screening for wetdry only
-  if (photoType === "wetdry" && config.enabled) {
-    // Use CLIP classifier for real inference
-    const classifier = await getCLIPClassifier();
-    let classification: ClassifyResult | null = null;
-
-    // Test override: allow tests to inject classification result
-    const testClassification = formData.get("__test_classification") as string | null;
-    if (testClassification) {
-      try {
-        classification = JSON.parse(testClassification);
-      } catch (err) {
-        console.error("Failed to parse test classification:", err);
-      }
-    } else if (classifier) {
-      try {
-        const imageBuffer = Buffer.from(await file.arrayBuffer());
-        const clipResult = await clipInference(classifier, imageBuffer);
-        classification = toClassifyResult(clipResult);
-      } catch (err) {
-        console.error("CLIP inference failed:", err);
-        classification = null;
-      }
-    }
-
-    if (classification) {
-      // Get farmer trust score (derive farmer_id from plot_id for now)
-      const farmerId = `farmer_${plotId}`;
-      const farmerTrust = await getFarmerTrust(c.env.DB, farmerId);
-
-      // Evaluate auto-verify rules first
-      const autoVerifyResult = evaluateAutoVerify({
-        confidence: classification.confidence,
-        trustScore: farmerTrust.trust_score,
-        valid: classification.valid,
-      });
-
-      // Handle auto_reject (invalid photos) - refuse with 200
-      if (autoVerifyResult.decision === "auto_reject") {
-        const photoId = `photo_${crypto.randomUUID()}`;
-        await writeAuditEntry(c.env.DB, {
-          photoId,
-          actorType: "machine",
-          action: "refused",
-          confidence: classification.confidence,
-          reason: autoVerifyResult.reason,
-        });
-        return c.json(
-          {
-            verdict: "refused" as Verdict,
-            photo_type: photoType,
-            reason: autoVerifyResult.reason,
-          },
-          200,
-        );
+      if (temporalResult.status === "invalid") {
+        return c.json({ error: "Photo taken at wrong time", reason: temporalResult.reason }, 400);
       }
 
-      // Check threshold - if below threshold, flag for admin review
-      if (classification.confidence < config.confidenceThreshold) {
+      if (temporalResult.status === "unknown") {
+        // Missing EXIF → flag for admin review
         const photoId = `photo_${crypto.randomUUID()}`;
         const key = `evidence/${photoId}.jpg`;
         await c.env.R2.put(key, file);
 
         await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0, ?)`,
+          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm, step_code)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', 'pending', ?, ?, ?)`,
         )
           .bind(
             photoId,
@@ -260,11 +163,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
             gpsLng,
             gpsAccuracy ?? null,
             takenAt,
-            classification.water_state,
-            classification.reason,
-            classification.confidence,
             photoType,
-            classification.water_state,
             waterDepthCm,
           )
           .run();
@@ -273,8 +172,8 @@ photoRoutes.post("/api/photo/upload", async (c) => {
           photoId,
           actorType: "machine",
           action: "flagged",
-          confidence: classification.confidence,
-          reason: `Below threshold (${classification.confidence.toFixed(2)} < ${config.confidenceThreshold})`,
+          confidence: null,
+          reason: temporalResult.reason || "EXIF missing",
         });
 
         return c.json(
@@ -283,146 +182,266 @@ photoRoutes.post("/api/photo/upload", async (c) => {
             verdict: "flagged" as Verdict,
             photo_url: key,
             photo_type: photoType,
-            water_state: classification.water_state,
-            ai_confidence: classification.confidence,
+            reason: temporalResult.reason,
           },
           201,
         );
       }
+      } // end if (phaseWindows)
+    }
 
-      const photoId = `photo_${crypto.randomUUID()}`;
-      const key = `evidence/${photoId}.jpg`;
+    // Kill switch check
+    const killSwitch = formData.get("__kill_switch") === "true";
+    const config = getConfig(formData);
+    if (killSwitch) config.enabled = false;
 
-      if (autoVerifyResult.decision === "auto_verify") {
-        // Auto-verify: pre_verified=1, admin_status='verified'
-        await c.env.R2.put(key, file);
-        const isAudit = shouldAuditSample(photoId, config.auditSampleRate);
+    // Screening for wetdry only
+    if (photoType === "wetdry" && config.enabled) {
+      // Use CLIP classifier for real inference
+      const classifier = await getCLIPClassifier();
+      let classification: ClassifyResult | null = null;
 
-        await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'verified', ?, ?, 1, ?, ?)`,
-        )
-          .bind(
-            photoId,
-            plotId,
-            seasonId,
-            key,
-            gpsLat,
-            gpsLng,
-            gpsAccuracy ?? null,
-            takenAt,
-            classification.water_state,
-            classification.reason,
-            classification.confidence,
-            photoType,
-            classification.water_state,
-            isAudit ? 1 : 0,
-            waterDepthCm,
-          )
-          .run();
+      // Test override: allow tests to inject classification result
+      const testClassification = formData.get("__test_classification") as string | null;
+      if (testClassification) {
+        try {
+          classification = JSON.parse(testClassification);
+        } catch (err) {
+          console.error("Failed to parse test classification:", err);
+        }
+      } else if (classifier) {
+        try {
+          const imageBuffer = Buffer.from(await file.arrayBuffer());
+          const clipResult = await clipInference(classifier, imageBuffer);
+          classification = toClassifyResult(clipResult);
+        } catch (err) {
+          console.error("CLIP inference failed:", err);
+          classification = null;
+        }
+      }
 
-        await writeAuditEntry(c.env.DB, {
-          photoId,
-          actorType: "machine",
-          action: "pre_verified",
+      if (classification) {
+        // Get farmer trust score (derive farmer_id from plot_id for now)
+        const farmerId = `farmer_${plotId}`;
+        const farmerTrust = await getFarmerTrust(c.env.DB, farmerId);
+
+        // Evaluate auto-verify rules first
+        const autoVerifyResult = evaluateAutoVerify({
           confidence: classification.confidence,
-          reason: autoVerifyResult.reason,
+          trustScore: farmerTrust.trust_score,
+          valid: classification.valid,
         });
 
-        return c.json(
-          {
-            id: photoId,
-            verdict: "pre_verified" as Verdict,
-            photo_url: key,
-            photo_type: photoType,
-            water_state: classification.water_state,
-            ai_confidence: classification.confidence,
-            pre_verified: true,
-            audit_sample: isAudit,
-          },
-          201,
-        );
-      } else {
-        // Queue for admin: ai_status='flag', admin_status='pending'
-        await c.env.R2.put(key, file);
-
-        await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0, ?)`,
-        )
-          .bind(
+        // Handle auto_reject (invalid photos) - refuse with 200
+        if (autoVerifyResult.decision === "auto_reject") {
+          const photoId = `photo_${crypto.randomUUID()}`;
+          await writeAuditEntry(c.env.DB, {
             photoId,
-            plotId,
-            seasonId,
-            key,
-            gpsLat,
-            gpsLng,
-            gpsAccuracy ?? null,
-            takenAt,
-            classification.water_state,
-            classification.reason,
-            classification.confidence,
-            photoType,
-            classification.water_state,
-            waterDepthCm,
+            actorType: "machine",
+            action: "refused",
+            confidence: classification.confidence,
+            reason: autoVerifyResult.reason,
+          });
+          return c.json(
+            {
+              verdict: "refused" as Verdict,
+              photo_type: photoType,
+              reason: autoVerifyResult.reason,
+            },
+            200,
+          );
+        }
+
+        // Check threshold - if below threshold, flag for admin review
+        if (classification.confidence < config.confidenceThreshold) {
+          const photoId = `photo_${crypto.randomUUID()}`;
+          const key = `evidence/${photoId}.jpg`;
+          await c.env.R2.put(key, file);
+
+          await c.env.DB.prepare(
+            `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm, step_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0, ?, ?)`,
           )
-          .run();
+            .bind(
+              photoId,
+              plotId,
+              seasonId,
+              key,
+              gpsLat,
+              gpsLng,
+              gpsAccuracy ?? null,
+              takenAt,
+              classification.water_state,
+              classification.reason,
+              classification.confidence,
+              photoType,
+              classification.water_state,
+              waterDepthCm,
+              stepCode,
+            )
+            .run();
 
-        await writeAuditEntry(c.env.DB, {
-          photoId,
-          actorType: "machine",
-          action: "flagged",
-          confidence: classification.confidence,
-          reason: autoVerifyResult.reason,
-        });
+          await writeAuditEntry(c.env.DB, {
+            photoId,
+            actorType: "machine",
+            action: "flagged",
+            confidence: classification.confidence,
+            reason: `Below threshold (${classification.confidence.toFixed(2)} < ${config.confidenceThreshold})`,
+          });
 
-        return c.json(
-          {
-            id: photoId,
-            verdict: "flagged" as Verdict,
-            photo_url: key,
-            photo_type: photoType,
-            water_state: classification.water_state,
-            ai_confidence: classification.confidence,
-          },
-          201,
-        );
+          return c.json(
+            {
+              id: photoId,
+              verdict: "flagged" as Verdict,
+              photo_url: key,
+              photo_type: photoType,
+              water_state: classification.water_state,
+              ai_confidence: classification.confidence,
+            },
+            201,
+          );
+        }
+
+        const photoId = `photo_${crypto.randomUUID()}`;
+        const key = `evidence/${photoId}.jpg`;
+
+        if (autoVerifyResult.decision === "auto_verify") {
+          // Auto-verify: pre_verified=1, admin_status='verified'
+          await c.env.R2.put(key, file);
+          const isAudit = shouldAuditSample(photoId, config.auditSampleRate);
+
+          await c.env.DB.prepare(
+            `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm, step_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'verified', ?, ?, 1, ?, ?)`,
+          )
+            .bind(
+              photoId,
+              plotId,
+              seasonId,
+              key,
+              gpsLat,
+              gpsLng,
+              gpsAccuracy ?? null,
+              takenAt,
+              classification.water_state,
+              classification.reason,
+              classification.confidence,
+              photoType,
+              classification.water_state,
+              isAudit ? 1 : 0,
+              waterDepthCm,
+              stepCode,
+            )
+            .run();
+
+          await writeAuditEntry(c.env.DB, {
+            photoId,
+            actorType: "machine",
+            action: "pre_verified",
+            confidence: classification.confidence,
+            reason: autoVerifyResult.reason,
+          });
+
+          return c.json(
+            {
+              id: photoId,
+              verdict: "pre_verified" as Verdict,
+              photo_url: key,
+              photo_type: photoType,
+              water_state: classification.water_state,
+              ai_confidence: classification.confidence,
+              pre_verified: true,
+              audit_sample: isAudit,
+            },
+            201,
+          );
+        } else {
+          // Queue for admin: ai_status='flag', admin_status='pending'
+          await c.env.R2.put(key, file);
+
+          await c.env.DB.prepare(
+            `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm, step_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', ?, ?, ?, 'pending', ?, ?, 0, 0, ?, ?)`,
+          )
+            .bind(
+              photoId,
+              plotId,
+              seasonId,
+              key,
+              gpsLat,
+              gpsLng,
+              gpsAccuracy ?? null,
+              takenAt,
+              classification.water_state,
+              classification.reason,
+              classification.confidence,
+              photoType,
+              classification.water_state,
+              waterDepthCm,
+              stepCode,
+            )
+            .run();
+
+          await writeAuditEntry(c.env.DB, {
+            photoId,
+            actorType: "machine",
+            action: "flagged",
+            confidence: classification.confidence,
+            reason: autoVerifyResult.reason,
+          });
+
+          return c.json(
+            {
+              id: photoId,
+              verdict: "flagged" as Verdict,
+              photo_url: key,
+              photo_type: photoType,
+              water_state: classification.water_state,
+              ai_confidence: classification.confidence,
+            },
+            201,
+          );
+        }
       }
     }
-  }
 
-  // Default: queue for human review (prepare, harvest, or kill-switch wetdry)
-  const photoId = `photo_${crypto.randomUUID()}`;
-  const key = `evidence/${photoId}.jpg`;
-  await c.env.R2.put(key, file);
+    // Default: queue for human review (prepare, harvest, or kill-switch wetdry)
+    const photoId = `photo_${crypto.randomUUID()}`;
+    const key = `evidence/${photoId}.jpg`;
+    await c.env.R2.put(key, file);
 
-  await c.env.DB.prepare(
-    `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?)`,
-  )
-    .bind(
-      photoId,
-      plotId,
-      seasonId,
-      key,
-      gpsLat,
-      gpsLng,
-      gpsAccuracy ?? null,
-      takenAt,
-      photoType,
-      waterDepthCm,
+    await c.env.DB.prepare(
+      `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm, step_code)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?, ?)`,
     )
-    .run();
+      .bind(
+        photoId,
+        plotId,
+        seasonId,
+        key,
+        gpsLat,
+        gpsLng,
+        gpsAccuracy ?? null,
+        takenAt,
+        photoType,
+        waterDepthCm,
+        stepCode,
+      )
+      .run();
 
-  return c.json(
-    {
-      id: photoId,
-      photo_url: key,
-      verdict: "queued" as Verdict,
-      photo_type: photoType,
-    },
-    201,
-  );
+    return c.json(
+      {
+        id: photoId,
+        photo_url: key,
+        verdict: "queued" as Verdict,
+        photo_type: photoType,
+      },
+      201,
+    );
+  } catch (err) {
+    console.error("Photo upload error:", err);
+    return c.json({ error: err instanceof Error ? err.message : "Upload failed" }, 500);
+  }
 });
 
 photoRoutes.post("/photo/upload", async (c) => {
