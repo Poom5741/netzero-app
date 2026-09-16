@@ -868,6 +868,8 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
           .first<{ cnt: number }>()
       : null;
 
+    console.log(`Photo count for plot ${plot?.id}, season ${season?.season_id}: ${photoCount?.cnt}`);
+
     const reminderText = composePhotoReminder({
       roundLabel: "WET-1",
       stepCode: "SG-04",
