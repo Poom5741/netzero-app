@@ -48,10 +48,10 @@ export function KpiCard({ title, value, suffix, icon, trend, color = "primary", 
   const trendColor = variant === "accent" ? "text-white/80" : "text-outline";
 
   return (
-    <div className={`${variantStyles[variant]} p-6 rounded-2xl flex flex-col justify-between h-48 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300`}>
-      <div className="flex justify-between items-start">
-        <h3 className={`font-headline-md text-headline-md ${titleColor}`}>{title}</h3>
-        <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center ${variant === "accent" ? "text-white" : palette.text}`}>
+    <div className={`${variantStyles[variant]} min-w-0 p-6 rounded-2xl flex flex-col justify-between h-48 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300`}>
+      <div className="flex min-w-0 justify-between items-start gap-3">
+        <h3 className={`min-w-0 break-words font-headline-md text-headline-md ${titleColor}`}>{title}</h3>
+        <div className={`w-10 h-10 shrink-0 rounded-full ${iconBg} flex items-center justify-center ${variant === "accent" ? "text-white" : palette.text}`}>
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
             {icon}
           </span>

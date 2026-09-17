@@ -363,7 +363,7 @@ export default function SponsorDashboardPage() {
                   ติดตามคาร์บอนแบบเรียลไทม์
                 </p>
                 <h1 className="text-display-lg text-on-surface whitespace-nowrap">แดชบอร์ดผู้สนับสนุน</h1>
-                <p className="text-body-lg text-on-surface-variant max-w-2xl mt-2">
+                <p className="text-body-lg text-on-surface-variant max-w-[672px] mt-2">
                   ตรวจสอบผลกระทบของคุณแบบเรียลไทม์ ติดตามการลดการปล่อยก๊าซเรือนกระจกจากแปลงเกษตรที่ได้รับการสนับสนุน
                 </p>
                 <p className="text-label-md text-outline mt-1">พื้นที่รับผิดชอบ: {areaLabel} · มาตรฐาน T-VER-P-METH-13-08</p>
@@ -435,7 +435,7 @@ export default function SponsorDashboardPage() {
                 </p>
 
                 {/* KPI Cards Row — varied variants */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
                   <KpiCard
                     title="CO₂ ที่ลดทั้งหมด"
                     value={Math.round(totalCO2)}
