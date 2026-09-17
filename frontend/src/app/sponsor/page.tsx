@@ -356,13 +356,13 @@ export default function SponsorDashboardPage() {
             <PdpaNotice />
 
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 relative z-10">
-              <div>
+            <div className="flex flex-col mb-6 relative z-10 gap-4">
+              <div className="w-full">
                 <p className="text-label-md text-tertiary uppercase tracking-widest mb-1 flex items-center gap-2">
                   <span className="pulse-live w-2 h-2 rounded-full bg-primary" />
                   ติดตามคาร์บอนแบบเรียลไทม์
                 </p>
-                <h1 className="text-display-lg text-on-surface">แดชบอร์ดผู้สนับสนุน</h1>
+                <h1 className="text-display-lg text-on-surface whitespace-nowrap">แดชบอร์ดผู้สนับสนุน</h1>
                 <p className="text-body-lg text-on-surface-variant max-w-2xl mt-2">
                   ตรวจสอบผลกระทบของคุณแบบเรียลไทม์ ติดตามการลดการปล่อยก๊าซเรือนกระจกจากแปลงเกษตรที่ได้รับการสนับสนุน
                 </p>
