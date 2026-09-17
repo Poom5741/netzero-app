@@ -46,6 +46,7 @@ app.use(
     origin: [
       "https://netzero-frontend.poom-a1d.workers.dev",
       "https://netzero-frontend.pages.dev",
+      "https://011-admin-farmer-registratio.netzero-frontend.pages.dev",
       "http://localhost:3000",
     ],
     allowMethods: ["GET", "POST", "OPTIONS"],
