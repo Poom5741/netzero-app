@@ -1,21 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createFarmer, getFarmerDetail, type FarmerDetail } from "@/lib/api";
+import { createFarmer, getFarmers, getFarmerDetail, type FarmerDetail, type FarmerListItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 // ── Farmer List Page ──────────────────────────────────────────────
-
-type FarmerListItem = {
-  id: string;
-  full_name: string;
-  phone: string;
-  addr_province: string | null;
-  addr_district: string | null;
-  cpa_code: string | null;
-  trust_score: number;
-  plot_count: number;
-};
 
 export default function FarmersPage() {
   const [farmers, setFarmers] = useState<FarmerListItem[]>([]);
@@ -40,16 +29,7 @@ export default function FarmersPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/admin/farmers", {
-        headers: {
-          Authorization: "Basic " + btoa(
-            `${sessionStorage.getItem("nzc_admin_email")}:${sessionStorage.getItem("nzc_admin_pass")}`,
-          ),
-        },
-      });
-      if (!response.ok) throw new Error("load failed");
-      const data = await response.json();
-      setFarmers(Array.isArray(data) ? data : []);
+      setFarmers(await getFarmers());
     } catch {
       setError("ไม่สามารถโหลดข้อมูลได้");
     } finally {
@@ -58,7 +38,8 @@ export default function FarmersPage() {
   }, []);
 
   useEffect(() => {
-    if (authed) void loadFarmers();
+    if (!authed) return;
+    queueMicrotask(() => void loadFarmers());
   }, [authed, loadFarmers]);
 
   const handleCreated = () => {
@@ -204,12 +185,12 @@ function CreateFarmerForm({ onCancel, onCreated }: { onCancel: () => void; onCre
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    const phone = form.phone.replace(/[\\s-]/g, "");
+    const phone = form.phone.replace(/[\s-]/g, "");
     if (!form.full_name.trim()) {
       setError("กรุณาระบุชื่อเกษตรกร");
       return;
     }
-    if (!/^0\\d{9}$/.test(phone)) {
+    if (!/^0\d{9}$/.test(phone)) {
       setError("เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมีความยาว 10 หลัก)");
       return;
     }

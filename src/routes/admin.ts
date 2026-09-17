@@ -439,7 +439,7 @@ adminRoutes.get("/api/admin/farmers", async (c) => {
               COALESCE((SELECT trust_score FROM farmer_trust WHERE farmer_id = f.id), 0.5) as trust_score,
               COUNT(DISTINCT p.id) as plot_count,
               COALESCE(SUM(p.area_rai), 0) as total_area_rai,
-              COALESCE((SELECT u.name FROM users u WHERE u.id = f.sponsor_id), '-') as sponsor_name,
+              COALESCE((SELECT u.name FROM users u WHERE u.sponsor_id = f.id), '-') as sponsor_name,
               COALESCE((SELECT SUM(ce.burning_emissions) FROM carbon_estimates ce
                         JOIN plots p2 ON p2.id = ce.plot_id WHERE p2.farmer_id = f.id), 0) as burning_emissions,
               (SELECT COUNT(*) FROM photo_evidence pe

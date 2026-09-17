@@ -309,6 +309,23 @@ export type CreateFarmerResponse = {
   updated_at: string;
 };
 
+export type FarmerListItem = {
+  id: string;
+  full_name: string;
+  phone: string;
+  addr_province: string | null;
+  addr_district: string | null;
+  cpa_code: string | null;
+  trust_score: number;
+  plot_count: number;
+};
+
+export async function getFarmers(): Promise<FarmerListItem[]> {
+  const res = await apiRequest<FarmerListItem[]>("/api/admin/farmers");
+  if (!res.ok) throw new Error(`Farmers list error: ${res.status}`);
+  return res.data;
+}
+
 export async function createFarmer(input: CreateFarmerInput): Promise<ApiResult<CreateFarmerResponse | { error?: string; message?: string; details?: { message?: string } }>> {
   return apiRequest("/api/admin/farmers", { method: "POST", json: input });
 }
