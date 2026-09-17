@@ -1,15 +1,18 @@
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
 import { webcrypto } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 export interface CaptureProvenance {
   artifactId: string;
   screenName: string;
   stateName: string;
+  sourceModule?: string;
+  captureKind: "source-reference" | "implementation";
   viewport: { width: number; height: number };
   deviceScaleFactor: number;
   fixtureId: string;
   fontState: "ready" | "timeout";
+  assetStatus: "ready" | "missing" | "blocked";
   captureTimestamp: string;
   sourceHash: string;
   captureTool: string;
@@ -20,10 +23,13 @@ export interface ProvenanceOptions {
   artifactId: string;
   screenName: string;
   stateName: string;
+  sourceModule?: string;
+  captureKind: "source-reference" | "implementation";
   viewport: { width: number; height: number };
   deviceScaleFactor: number;
   fixtureId: string;
   fontState: "ready" | "timeout";
+  assetStatus: "ready" | "missing" | "blocked";
   sourceHash: string;
   noiseProfileId?: string;
 }
@@ -41,10 +47,13 @@ export function generateProvenance(options: ProvenanceOptions): CaptureProvenanc
     artifactId: options.artifactId,
     screenName: options.screenName,
     stateName: options.stateName,
+    sourceModule: options.sourceModule,
+    captureKind: options.captureKind,
     viewport: options.viewport,
     deviceScaleFactor: options.deviceScaleFactor,
     fixtureId: options.fixtureId,
     fontState: options.fontState,
+    assetStatus: options.assetStatus,
     captureTimestamp: new Date().toISOString(),
     sourceHash: options.sourceHash,
     captureTool: "playwright",
@@ -81,6 +90,6 @@ export function saveProvenance(record: ProvenanceRecord, outputDir: string): str
 }
 
 export function loadProvenance(provenancePath: string): ProvenanceRecord {
-  const content = require("fs").readFileSync(provenancePath, "utf-8");
+  const content = require("node:fs").readFileSync(provenancePath, "utf-8");
   return JSON.parse(content);
 }

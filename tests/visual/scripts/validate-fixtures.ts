@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * Validate all fixture data for compliance with constraints:
  * - Synthetic phone patterns (no real PII)
@@ -7,8 +8,8 @@
  * - Fixed dates and timezone
  */
 
-import { validateFarmerFixtures } from "../reference-harness/fixtures/farmers";
 import { validateAdminFixtures } from "../reference-harness/fixtures/admin";
+import { validateFarmerFixtures } from "../reference-harness/fixtures/farmers";
 import { validateSponsorFixtures } from "../reference-harness/fixtures/sponsor";
 
 console.log("🔍 Validating fixture data...\n");

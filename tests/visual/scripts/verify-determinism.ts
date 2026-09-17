@@ -1,10 +1,10 @@
-import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync } from 'fs';
-import { join } from 'path';
-import pixelmatch from 'pixelmatch';
-import { PNG } from 'pngjs';
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import pixelmatch from "pixelmatch";
+import { chromium } from "playwright";
+import { PNG } from "pngjs";
 
-const OUTPUT_DIR = join(process.cwd(), 'tests/visual/captures/determinism');
+const OUTPUT_DIR = join(process.cwd(), "tests/visual/captures/determinism");
 
 interface DeterminismResult {
   screen: string;
@@ -14,7 +14,11 @@ interface DeterminismResult {
   diffs: number[];
 }
 
-async function verifyDeterminism(screenName: string, url: string, captureCount: number = 5): Promise<DeterminismResult> {
+async function verifyDeterminism(
+  screenName: string,
+  url: string,
+  captureCount: number = 5,
+): Promise<DeterminismResult> {
   const screenDir = join(OUTPUT_DIR, screenName);
   mkdirSync(screenDir, { recursive: true });
 
@@ -28,8 +32,8 @@ async function verifyDeterminism(screenName: string, url: string, captureCount: 
 
   for (let i = 0; i < captureCount; i++) {
     const page = await context.newPage();
-    await page.goto(url, { waitUntil: 'networkidle' });
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto(url, { waitUntil: "networkidle" });
+    await page.waitForLoadState("domcontentloaded");
     // Wait for dynamic dashboard data to settle (charts, counters, tables load async)
     await page.waitForTimeout(2000);
 
@@ -61,14 +65,9 @@ async function verifyDeterminism(screenName: string, url: string, captureCount: 
     // Use threshold 0.2 — subpixel anti-aliasing/font rendering in headless Chromium
     // produces minor pixel-level variance (<0.05% of pixels) that is not a content
     // change. Threshold 0.2 ignores AA noise but still catches genuine layout shifts.
-    const numDiffPixels = pixelmatch(
-      img1.data,
-      img2.data,
-      diff.data,
-      width,
-      height,
-      { threshold: 0.2 }
-    );
+    const numDiffPixels = pixelmatch(img1.data, img2.data, diff.data, width, height, {
+      threshold: 0.2,
+    });
 
     diffs.push(numDiffPixels);
 
@@ -76,7 +75,7 @@ async function verifyDeterminism(screenName: string, url: string, captureCount: 
     writeFileSync(diffPath, PNG.sync.write(diff));
   }
 
-  const allIdentical = diffs.every(d => d === 0);
+  const allIdentical = diffs.every((d) => d === 0);
 
   return {
     screen: screenName,
@@ -88,14 +87,14 @@ async function verifyDeterminism(screenName: string, url: string, captureCount: 
 }
 
 async function main() {
-  console.log('Starting determinism verification...\n');
+  console.log("Starting determinism verification...\n");
 
   mkdirSync(OUTPUT_DIR, { recursive: true });
 
   const screens = [
-    { name: 'admin-login', url: 'http://localhost:3000/admin/login' },
-    { name: 'sponsor-dashboard', url: 'http://localhost:3000/sponsor' },
-    { name: 'line-chat', url: 'http://localhost:3000/chat' },
+    { name: "admin-login", url: "http://localhost:3000/admin/login" },
+    { name: "sponsor-dashboard", url: "http://localhost:3000/sponsor" },
+    { name: "line-chat", url: "http://localhost:3000/chat" },
   ];
 
   const results: DeterminismResult[] = [];
@@ -106,23 +105,25 @@ async function main() {
     results.push(result);
 
     console.log(`  Captures: ${result.captures} (1 warmup discarded)`);
-    console.log(`  All identical: ${result.allIdentical ? '✓' : '✗'}`);
-    console.log(`  Diffs: ${result.diffs.join(', ')}`);
+    console.log(`  All identical: ${result.allIdentical ? "✓" : "✗"}`);
+    console.log(`  Diffs: ${result.diffs.join(", ")}`);
     console.log();
   }
 
   // Write summary
-  const summaryPath = join(OUTPUT_DIR, 'determinism-summary.json');
+  const summaryPath = join(OUTPUT_DIR, "determinism-summary.json");
   writeFileSync(summaryPath, JSON.stringify(results, null, 2));
 
-  const allPassed = results.every(r => r.allIdentical);
-  console.log(`\n${allPassed ? '✓' : '✗'} Determinism verification ${allPassed ? 'PASSED' : 'FAILED'}`);
+  const allPassed = results.every((r) => r.allIdentical);
+  console.log(
+    `\n${allPassed ? "✓" : "✗"} Determinism verification ${allPassed ? "PASSED" : "FAILED"}`,
+  );
   console.log(`✓ Summary written to ${summaryPath}`);
 
   process.exit(allPassed ? 0 : 1);
 }
 
-main().catch(err => {
-  console.error('Error:', err);
+main().catch((err) => {
+  console.error("Error:", err);
   process.exit(1);
 });

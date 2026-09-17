@@ -54,6 +54,8 @@ async function main() {
   // Look up screen config
   const config = getScreenConfig(surface, screenName, stateName);
   const artifactId = config?.artifactId ?? "unknown";
+  const sourceModule = config?.fixtureMapping ?? "unknown";
+  const captureKind = config?.name.includes("reference") ? "source-reference" : "source-reference";
 
   // Start harness server
   const { server, baseUrl } = serveHarness(HARNESS_PORT);
@@ -61,7 +63,7 @@ async function main() {
 
   try {
     console.log(
-      `Capturing ${surface}/${screenName}/${stateName} at ${width}x${height}@${deviceScaleFactor}x`,
+      `Capturing ${surface}/${screenName}/${stateName} at ${width}x${height}@${deviceScaleFactor}x (artifact: ${artifactId})`,
     );
 
     const result = await captureReference({
@@ -69,6 +71,8 @@ async function main() {
       screenName,
       stateName,
       artifactId,
+      sourceModule,
+      captureKind,
       viewport: { width, height },
       deviceScaleFactor,
       fixtureId: FIXTURE_META.fixtureId,
@@ -80,6 +84,8 @@ async function main() {
       `📋 Provenance: ${resolve(OUTPUT_DIR, "provenance", `${screenName}-${stateName}-${width}x${height}.json`)}`,
     );
     console.log(`🔤 Font state: ${result.fontReady ? "ready" : "timeout"}`);
+    console.log(`📦 Asset status: ${result.assetStatus}`);
+    console.log(`🎨 Capture kind: ${captureKind}`);
 
     // Validate dimensions
     const { loadImage } = await import("canvas");

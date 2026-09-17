@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
+
 /**
  * Generate coverage manifest showing which screens have been captured.
  * Reads provenance JSON metadata to determine capture status.
  */
 
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { writeFileSync, readdirSync, existsSync, readFileSync } from "node:fs";
 import { ALL_SCREENS } from "../reference-harness/screens";
 
 const PROVENANCE_DIR = resolve("tests/visual/captures/provenance");
@@ -27,7 +28,7 @@ function main() {
   const capturedScreens = new Map<string, ProvenanceMetadata[]>();
 
   // Build set of valid screen names from inventory
-  const validScreenNames = new Set(ALL_SCREENS.map(s => s.name));
+  const validScreenNames = new Set(ALL_SCREENS.map((s) => s.name));
 
   for (const file of provenanceFiles) {
     if (file.endsWith(".json")) {
@@ -79,13 +80,17 @@ function main() {
     if (captures && captures.length > 0) {
       capturedCount++;
       const uniqueStates = new Set(captures.map((c) => c.stateName));
-      const uniqueViewports = new Set(captures.map((c) => `${c.viewport.width}x${c.viewport.height}@${c.deviceScaleFactor}x`));
+      const uniqueViewports = new Set(
+        captures.map((c) => `${c.viewport.width}x${c.viewport.height}@${c.deviceScaleFactor}x`),
+      );
       const stateCount = uniqueStates.size;
       const viewportCount = uniqueViewports.size;
       const status = viewportCount >= 5 ? "✅ Complete" : `⚠️ Partial (${viewportCount}/5)`;
       const provenance = `[${captures.length} files](captures/provenance/)`;
 
-      lines.push(`| ${surface} | ${config.name} | ${stateCount} | ${viewportCount} | ${status} | ${provenance} |`);
+      lines.push(
+        `| ${surface} | ${config.name} | ${stateCount} | ${viewportCount} | ${status} | ${provenance} |`,
+      );
     } else {
       missingCount++;
       lines.push(`| ${surface} | ${config.name} | 0 | 0 | ❌ Missing | — |`);
@@ -102,7 +107,9 @@ function main() {
   lines.push("## Next Steps");
   lines.push("");
   lines.push("- Run `capture-all-viewports.ts --all` to capture all screens at all viewports");
-  lines.push("- Run `measure-noise.ts --screen=<name>` to generate noise profiles for captured screens");
+  lines.push(
+    "- Run `measure-noise.ts --screen=<name>` to generate noise profiles for captured screens",
+  );
   lines.push("- Run `validate-tolerances.ts` to verify noise profile invariants");
   lines.push("");
 

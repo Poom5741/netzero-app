@@ -1,7 +1,7 @@
 import { captureReference } from "./capture";
+import type { RegionTolerance } from "./compare";
 import { compareImages } from "./compare";
 import { DEFAULT_REGIONS, type RegionDefinition } from "./regions";
-import type { RegionTolerance } from "./compare";
 
 export interface NoiseMeasurementOptions {
   source: string;

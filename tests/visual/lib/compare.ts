@@ -1,7 +1,7 @@
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
 
 export interface RegionTolerance {
   name: string;
@@ -63,7 +63,9 @@ export async function compareImages(options: CompareOptions): Promise<Comparison
   }
 
   const diff = new PNG({ width: ref.width, height: ref.height });
-  const diffPixels = pixelmatch(ref.data, impl.data, diff.data, ref.width, ref.height, { threshold: 0.1 });
+  const diffPixels = pixelmatch(ref.data, impl.data, diff.data, ref.width, ref.height, {
+    threshold: 0.1,
+  });
   const totalPixels = ref.width * ref.height;
   const diffPercentage = totalPixels ? (diffPixels / totalPixels) * 100 : 0;
   const diffPath = join(options.outputDir, "diff", `${options.comparisonId}.png`);
@@ -87,8 +89,16 @@ export async function compareImages(options: CompareOptions): Promise<Comparison
     const regionImpl = new PNG({ width, height });
     PNG.bitblt(ref, regionRef, x, y, width, height, 0, 0);
     PNG.bitblt(impl, regionImpl, x, y, width, height, 0, 0);
-    const count = pixelmatch(regionRef.data, regionImpl.data, regionDiff.data, width, height, { threshold: 0.1 });
-    return { regionName: region.name, diffPixels: count, tolerance: region.tolerance, pass: count <= region.tolerance, diffPercentage: width * height ? (count / (width * height)) * 100 : 0 };
+    const count = pixelmatch(regionRef.data, regionImpl.data, regionDiff.data, width, height, {
+      threshold: 0.1,
+    });
+    return {
+      regionName: region.name,
+      diffPixels: count,
+      tolerance: region.tolerance,
+      pass: count <= region.tolerance,
+      diffPercentage: width * height ? (count / (width * height)) * 100 : 0,
+    };
   });
 
   const result: ComparisonResult = {
@@ -112,6 +122,11 @@ export function loadTolerances(path: string): RegionTolerance[] {
   return profile.regions;
 }
 
-export function rejectDimensionMismatch(ref: { width: number; height: number }, impl: { width: number; height: number }): Error {
-  return new Error(`Dimension mismatch: reference is ${ref.width}x${ref.height}, implementation is ${impl.width}x${impl.height}. Cannot compare.`);
+export function rejectDimensionMismatch(
+  ref: { width: number; height: number },
+  impl: { width: number; height: number },
+): Error {
+  return new Error(
+    `Dimension mismatch: reference is ${ref.width}x${ref.height}, implementation is ${impl.width}x${impl.height}. Cannot compare.`,
+  );
 }

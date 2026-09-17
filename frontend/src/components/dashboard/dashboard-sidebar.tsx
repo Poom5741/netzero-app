@@ -55,9 +55,9 @@ export function DashboardSidebar({
       <aside
         className={[
           "fixed left-0 top-0 h-full bg-[#061E5C] z-50 flex flex-col pt-6 shadow-xl transition-all duration-300",
-          // Mobile: hidden by default, shown when expanded
+          // Claude source: 232px sidebar width
           "md:flex",
-          expanded ? "flex w-[260px]" : "hidden md:flex md:w-[72px] lg:w-[260px]",
+          expanded ? "flex w-[232px]" : "hidden md:flex md:w-[72px] lg:w-[232px]",
         ].join(" ")}
       >
         <div className="px-4 lg:px-6 mb-10 flex items-center gap-2">

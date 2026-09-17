@@ -3,20 +3,18 @@
  * a unified validation function.
  */
 
-export { FARMER_FIXTURES, validateFarmerFixtures } from "./farmers";
-export type { FarmerFixture, DeedFixture, PlotFixture, SeasonFixture } from "./farmers";
-
-export { ADMIN_FIXTURES, validateAdminFixtures } from "./admin";
 export type { AdminUserFixture } from "./admin";
-
-export { SPONSOR_FIXTURES, validateSponsorFixtures } from "./sponsor";
+export { ADMIN_FIXTURES, validateAdminFixtures } from "./admin";
+export type { DeedFixture, FarmerFixture, PlotFixture, SeasonFixture } from "./farmers";
+export { FARMER_FIXTURES, validateFarmerFixtures } from "./farmers";
 export type { SponsorAccountFixture } from "./sponsor";
+export { SPONSOR_FIXTURES, validateSponsorFixtures } from "./sponsor";
 
 /** Fixed fixture metadata */
 export const FIXTURE_META = {
-	fixtureId: "fixed-2026-09-15",
-	todayDate: "2026-09-15",
-	timezone: "Asia/Bangkok",
+  fixtureId: "fixed-2026-09-15",
+  todayDate: "2026-09-15",
+  timezone: "Asia/Bangkok",
 } as const;
 
 /**
@@ -24,7 +22,7 @@ export const FIXTURE_META = {
  * Throws if any fixture violates invariants.
  */
 export function validateFixtures(): void {
-	validateFarmerFixtures();
-	validateAdminFixtures();
-	validateSponsorFixtures();
+  validateFarmerFixtures();
+  validateAdminFixtures();
+  validateSponsorFixtures();
 }

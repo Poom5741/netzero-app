@@ -12,11 +12,7 @@ export { LINE_OA_SCREENS } from "./line-oa";
 export { SPONSOR_SCREENS } from "./sponsor";
 
 /** All screens combined */
-export const ALL_SCREENS = [
-  ...ADMIN_SCREENS,
-  ...SPONSOR_SCREENS,
-  ...LINE_OA_SCREENS,
-];
+export const ALL_SCREENS = [...ADMIN_SCREENS, ...SPONSOR_SCREENS, ...LINE_OA_SCREENS];
 
 /** Get total screen count */
 export function getScreenCount(): {
@@ -42,8 +38,37 @@ export function validateInventoryCount(expectedCount: number): void {
   if (actualCount !== expectedCount) {
     throw new Error(
       `Screen inventory count mismatch: expected ${expectedCount} screens from #142 inventory, found ${actualCount}. ` +
-      `Run /speckit-tasks to regenerate the screen definitions.`
+        `Run /speckit-tasks to regenerate the screen definitions.`,
     );
+  }
+}
+
+/**
+ * Validate that each screen config has a valid Claude artifact ID.
+ * Claude artifact IDs must match the UUID v4 format used by the design system.
+ */
+export function validateArtifactIds(): void {
+  const invalidScreens: Array<{ screen: string; error: string }> = [];
+
+  for (const screen of ALL_SCREENS) {
+    if (!screen.artifactId) {
+      invalidScreens.push({ screen: screen.name, error: "Missing artifact ID" });
+      continue;
+    }
+
+    // Claude artifact IDs are UUID format
+    const artifactIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+    if (!artifactIdPattern.test(screen.artifactId)) {
+      invalidScreens.push({
+        screen: screen.name,
+        error: `Invalid Claude artifact ID format: ${screen.artifactId}`,
+      });
+    }
+  }
+
+  if (invalidScreens.length > 0) {
+    const errors = invalidScreens.map((s) => `  - Screen ${s.screen}: ${s.error}`).join("\n");
+    throw new Error(`Invalid Claude artifact IDs found:\n${errors}`);
   }
 }
 
@@ -54,14 +79,10 @@ export function validateInventoryCount(expectedCount: number): void {
 export function getScreenConfig(
   surface: "line-oa" | "admin" | "sponsor",
   screenName: string,
-  stateName: string
+  _stateName: string,
 ): ScreenDefinition | undefined {
   const screens =
-    surface === "line-oa"
-      ? LINE_OA_SCREENS
-      : surface === "admin"
-      ? ADMIN_SCREENS
-      : SPONSOR_SCREENS;
+    surface === "line-oa" ? LINE_OA_SCREENS : surface === "admin" ? ADMIN_SCREENS : SPONSOR_SCREENS;
 
   return screens.find((s) => s.name === screenName);
 }

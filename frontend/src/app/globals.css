@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* === Colors — teal/navy palette per #142 reference === */
-  --color-primary: #028E91;        /* teal-600 — primary action color */
+  /* === Claude Source Tokens (per specs/010-claude-design-parity) === */
+  --color-primary: #028E91;        /* teal-600 — Claude source primary action */
   --color-primary-container: #E7FCF7; /* teal-50 — light teal for highlights */
   --color-on-primary: #ffffff;
   --color-on-primary-container: #013B45;
 
-  /* === Surface Colors — white/grey palette === */
+  /* === Surface Colors — Claude source white/grey palette === */
   --color-surface: #f0f4f8;
   --color-surface-dim: #d6dade;
   --color-surface-container-lowest: #ffffff;
@@ -21,7 +21,7 @@
   --color-background: #f0f4f8;
   --color-on-background: #171c1f;
 
-  --color-inverse-surface: #061E5C;  /* navy-900 — sidebar bg */
+  --color-inverse-surface: #061E5C;  /* Claude source navy-900 sidebar */
   --color-inverse-on-surface: #ffffff;
   --color-outline: #6c7b6b;
   --color-outline-variant: #bbcbb8;
@@ -44,8 +44,8 @@
   --color-line-green: #06c755;
   --color-line-green-dark: #00a854;
 
-  /* === Typography === */
-  --font-sans: "Plus Jakarta Sans", Sarabun, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* === Typography — Claude source fonts (Fira Sans + Noto Sans Thai) === */
+  --font-sans: "Fira Sans", "Noto Sans Thai", "Fira Mono", -apple-system, BlinkMacSystemFont, sans-serif;
 
   --text-display-lg: 48px;
   --text-headline-lg: 32px;
@@ -86,8 +86,8 @@
   /* === Login Split-Panel Gradients === */
   --gradient-deep: linear-gradient(150deg, #061E5C 0%, #0B2A72 45%, #027276 100%);
 
-  /* === Layout Dimensions (spec 006) === */
-  --sidebar-width: 260px;
+  /* === Layout Dimensions (Claude source spec 010) === */
+  --sidebar-width: 232px; /* Claude source sidebar width */
   --sidebar-collapsed-width: 64px;
   --header-height: 64px;
   --nav-item-height: 40px;
@@ -280,7 +280,7 @@ h3 {
   }
 }
 
-/* === Dashboard Layout — responsive sidebar === */
+/* === Dashboard Layout — responsive sidebar (Claude source 232px) === */
 @media (min-width: 768px) {
   .dashboard-main {
     padding-left: 72px;
@@ -291,10 +291,10 @@ h3 {
 }
 @media (min-width: 1024px) {
   .dashboard-main {
-    padding-left: 260px;
+    padding-left: 232px;
   }
   .dashboard-header {
-    left: 260px;
+    left: 232px;
   }
 }
 
