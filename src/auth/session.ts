@@ -30,7 +30,8 @@ export async function createSessionCookie(
 ): Promise<string> {
   const payload = btoa(JSON.stringify(data));
   const sig = await sign(payload, secret);
-  const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
+  const sameSite = secure ? "None" : "Lax";
+  const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=${maxAge}`;
   return secure ? `${cookie}; Secure` : cookie;
 }
 
