@@ -84,7 +84,7 @@ liffRoutes.get("/", (c) => {
     async function init(){
       try{
         const liffId="${c.env.LIFF_ID || ""}";
-        if(liffId){await liff.init({liffId});uid=(await liff.getProfile()).userId}
+        if(liffId){await liff.init({liffId});const profile=await liff.getProfile();uid=profile.userId}
         else{uid='demo'}
       }catch(e){uid='demo'}
       document.getElementById('loading').style.display='none';
@@ -105,7 +105,7 @@ liffRoutes.get("/", (c) => {
     }
     function sendQ(t){document.getElementById('inp').value=t;send()}
     function add(type,text){const c=document.getElementById('chat'),d=document.createElement('div');d.className='msg '+type;d.textContent=text;c.appendChild(d);c.scrollTop=c.scrollHeight}
-    function showTyping(){const c=document.getElementById('chat'),d=document.createElement('div');d.className='typing';d.id='typing';d.innerHTML='<span></span><span></span><span></span>';c.appendChild(d);c.scrollTop=c.scrollHeight}
+    function showTyping(){const c=document.getElementById('chat'),d=document.createElement('div');d.className='typing';d.id='typing';const s1=document.createElement('span'),s2=document.createElement('span'),s3=document.createElement('span');d.appendChild(s1);d.appendChild(s2);d.appendChild(s3);c.appendChild(d);c.scrollTop=c.scrollHeight}
     function hideTyping(){const e=document.getElementById('typing');if(e)e.remove()}
     document.addEventListener('DOMContentLoaded',()=>{document.getElementById('inp').addEventListener('keypress',e=>{if(e.key==='Enter')send()});init()});
   </script>

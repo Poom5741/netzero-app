@@ -52,45 +52,8 @@ function UploadContent() {
     error: null,
   });
   const [gpsLoading, setGpsLoading] = useState(false);
-  const [showGpsWarning, setShowGpsWarning] = useState(false);
-  const gpsModalRef = useRef<HTMLDivElement>(null);
-
-  const trapFocus = useCallback((modalRef: React.RefObject<HTMLDivElement | null>) => {
-    const modal = modalRef.current;
-    if (!modal) return;
-    const focusable = modal.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    first?.focus();
-    const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
-      } else {
-        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
-      }
-    };
-    modal.addEventListener("keydown", handleTab);
-    return () => modal.removeEventListener("keydown", handleTab);
-  }, []);
-
-  // Escape key + focus trap for GPS warning modal
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && showGpsWarning) {
-        setShowGpsWarning(false);
-      }
-    };
-    if (showGpsWarning) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }
-  }, [showGpsWarning]);
-  useEffect(() => {
-    if (showGpsWarning) return trapFocus(gpsModalRef)?.();
-  }, [showGpsWarning, trapFocus]);
+  // Removed showGpsWarning state since GPS is now required
+  // Removed trapFocus function since GPS warning modal is no longer needed
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -182,9 +145,9 @@ function UploadContent() {
       return;
     }
 
-    // Warn if no GPS but still allow upload
+    // Require GPS data - do not allow upload without it
     if (!photo.gps) {
-      setShowGpsWarning(true);
+      setPhoto((p) => ({ ...p, error: "ต้องมีข้อมูล GPS เพื่ออัปโหลดรูปภาพ กรุณาเปิด GPS และลองใหม่" }));
       return;
     }
 
@@ -213,8 +176,8 @@ function UploadContent() {
         verdictReason: result.reason || null,
         verdictWaterState: result.water_state || null,
       }));
-    } catch {
-      setPhoto((p) => ({ ...p, uploading: false, verdict: "failure" }));
+    } catch (error) {
+      setPhoto((p) => ({ ...p, uploading: false, verdict: "failure", error: "การอัปโหลดล้มเหลว กรุณาลองใหม่" }));
     }
   }
 
@@ -446,39 +409,7 @@ function UploadContent() {
 
       <BottomNav items={navItems} />
 
-      {/* GPS Warning Modal */}
-      {showGpsWarning && (
-        <div
-          ref={gpsModalRef}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="gps-warning-title"
-        >
-          <div className="card bg-surface-container-low p-6 w-[400px] max-w-[90vw] rounded-2xl shadow-xl">
-            <h3 id="gps-warning-title" className="text-headline-md font-bold text-on-surface mb-4">
-              ไม่มีข้อมูล GPS
-            </h3>
-            <p className="text-body-md text-on-surface-variant mb-6">
-              รูปจะไม่มีพิกัด ต้องการอัปโหลดต่อหรือไม่?
-            </p>
-            <div className="flex gap-3 justify-end">
-              <Button variant="ghost" onClick={() => setShowGpsWarning(false)}>
-                ยกเลิก
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setShowGpsWarning(false);
-                  setPhoto((p) => ({ ...p, uploading: true, error: null, verdict: null }));
-                }}
-              >
-                อัปโหลดต่อ
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removed GPS Warning Modal - GPS is now required for uploads */}
     </div>
   );
 }

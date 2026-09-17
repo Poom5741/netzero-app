@@ -16,7 +16,7 @@ describe("session cookie", () => {
     expect(cookie).toContain("nzc_session=");
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("Path=/");
-    expect(cookie).toContain("SameSite=Lax");
+    expect(cookie).toContain("SameSite=None");
     // Secure is the default since the 2026-09-04 security pass (prod is HTTPS-only)
     expect(cookie).toContain("Secure");
     // S10 fix: session cookies must have a Max-Age of 24 hours
