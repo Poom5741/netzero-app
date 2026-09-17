@@ -25,6 +25,7 @@ import { reviewPhoto } from "../admin/review";
 import { getSettings, updateSettings } from "../admin/settings";
 import { getSponsors } from "../admin/sponsors";
 import { requireRole } from "../auth/middleware";
+import { handleFarmerCreate } from "../farmer/create";
 
 type Bindings = {
   DB: D1Database;
@@ -34,6 +35,21 @@ type Bindings = {
 };
 
 export const adminRoutes = new Hono<{ Bindings: Bindings }>();
+
+const farmerCreateRate = new Map<string, { startedAt: number; count: number }>();
+const FARMER_CREATE_WINDOW_MS = 60_000;
+const FARMER_CREATE_LIMIT = 10;
+
+function isFarmerCreateRateLimited(actorId: string): boolean {
+  const now = Date.now();
+  const current = farmerCreateRate.get(actorId);
+  if (!current || now - current.startedAt >= FARMER_CREATE_WINDOW_MS) {
+    farmerCreateRate.set(actorId, { startedAt: now, count: 1 });
+    return false;
+  }
+  current.count += 1;
+  return current.count > FARMER_CREATE_LIMIT;
+}
 
 // Require admin role for all /admin/* and /api/admin/* routes
 adminRoutes.use("/admin/*", async (c, next) => {
@@ -193,6 +209,20 @@ adminRoutes.get("/api/admin/review", async (c) => {
   const queue = await getReviewQueue(db, filter ? { ai_status: filter } : {});
 
   return c.json(queue);
+});
+
+// GET /api/admin/dashboard — Dashboard overview data (JSON API)
+adminRoutes.get("/api/admin/dashboard", async (c) => {
+  const db = c.env.DB;
+  const kpis = await getOverviewKpis(db);
+  const alerts = await getWorkQueueAlerts(db);
+  const chart = await getCreditChart(db);
+
+  return c.json({
+    kpis,
+    alerts,
+    chart,
+  });
 });
 
 // GET /api/admin/precision — Pre-verify precision stat
@@ -429,6 +459,74 @@ adminRoutes.get("/api/admin/farmers", async (c) => {
     .bind()
     .all();
   return c.json(results ?? []);
+});
+
+// POST /api/admin/farmers — Create a new farmer
+adminRoutes.post("/api/admin/farmers", async (c) => {
+  const db = c.env.DB;
+  const session = c.get("session" as never) as { userId?: string } | undefined;
+  let body: {
+    full_name?: string;
+    phone?: string;
+    gender?: "male" | "female" | "unspecified";
+    addr_province?: string;
+    addr_district?: string;
+    addr_subdistrict?: string;
+    addr_village?: string;
+  };
+
+  if (!session?.userId || isFarmerCreateRateLimited(session.userId)) {
+    return c.json({ error: "Too Many Requests", message: "คำขอมากเกินไป กรุณาลองใหม่ภายหลัง" }, 429);
+  }
+
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const result = await handleFarmerCreate(
+    db,
+    {
+      full_name: body.full_name ?? "",
+      phone: body.phone ?? "",
+      gender: body.gender,
+      addr_province: body.addr_province,
+      addr_district: body.addr_district,
+      addr_subdistrict: body.addr_subdistrict,
+      addr_village: body.addr_village,
+    },
+    session?.userId,
+  );
+
+  if (result.success) {
+    const farmer = await db
+      .prepare(
+        `SELECT id, full_name, gender, phone, addr_province, addr_district,
+                addr_subdistrict, addr_village, created_at, updated_at
+         FROM farmers WHERE id = ?`,
+      )
+      .bind(result.farmer_id)
+      .first();
+    return c.json(farmer, 201);
+  }
+
+  if (result.error === "Phone number already exists") {
+    return c.json({ error: "Conflict", message: "เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว" }, 409);
+  }
+  if (result.error === "Phone number must be 10 digits starting with 0") {
+    return c.json(
+      {
+        error: "Invalid phone format",
+        details: {
+          field: "phone",
+          message: "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมีความยาว 10 หลัก)",
+        },
+      },
+      400,
+    );
+  }
+  return c.json({ error: result.error }, 400);
 });
 
 // GET /api/admin/farmers/:id — Farmer detail (5-tab data)

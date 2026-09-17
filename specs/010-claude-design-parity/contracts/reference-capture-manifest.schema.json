@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netzerocarbon.local/schemas/reference-capture-manifest.json",
+  "title": "Claude Design Reference Capture Manifest",
+  "type": "object",
+  "required": ["version", "generatedAt", "references", "captures"],
+  "properties": {
+    "version": { "type": "string", "const": "1" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "outputDir": {
+      "type": "object",
+      "required": ["sourceReference", "implementation", "provenance"],
+      "properties": {
+        "sourceReference": {
+          "type": "string",
+          "const": "tests/visual/captures/reference/"
+        },
+        "implementation": {
+          "type": "string",
+          "const": "tests/visual/captures/implementation/"
+        },
+        "provenance": {
+          "type": "string",
+          "const": "tests/visual/captures/provenance/"
+        }
+      },
+      "additionalProperties": false
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "surface", "pageName", "artifactId", "sourceModule", "status", "states"],
+        "properties": {
+          "label": { "type": "string", "pattern": "^[A-Z0-9-]+$" },
+          "surface": { "enum": ["admin", "sponsor", "line-oa"] },
+          "pageName": { "type": "string", "minLength": 1 },
+          "route": { "type": ["string", "null"] },
+          "artifactId": { "type": "string", "minLength": 1 },
+          "sourceModule": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["implemented", "partial", "deferred", "reference-only"] },
+          "states": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "captures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["captureKind", "referenceLabel", "stateName", "viewport", "imagePath", "sourceHash", "fontState", "assetStatus"],
+        "properties": {
+          "captureKind": { "enum": ["source-reference", "implementation"] },
+          "referenceLabel": { "type": "string", "pattern": "^[A-Z0-9-]+$" },
+          "stateName": { "type": "string", "minLength": 1 },
+          "sourceModule": { "type": "string", "minLength": 1 },
+          "artifactId": { "type": "string", "minLength": 1 },
+          "viewport": {
+            "type": "object",
+            "required": ["width", "height", "deviceScaleFactor"],
+            "properties": {
+              "width": { "type": "integer", "minimum": 1 },
+              "height": { "type": "integer", "minimum": 1 },
+              "deviceScaleFactor": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "additionalProperties": false
+          },
+          "imagePath": {
+            "type": "string",
+            "pattern": "^tests/visual/captures/(reference|implementation)/.+\\.png$"
+          },
+          "sourceHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "fixtureId": { "type": "string", "minLength": 1 },
+          "fontState": { "enum": ["ready", "timeout"] },
+          "assetStatus": { "enum": ["ready", "missing", "blocked"] },
+          "capturedAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

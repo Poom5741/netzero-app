@@ -75,7 +75,11 @@ type FlowContext = {
   liffId?: string; // LIFF app ID for deep-links
   appUrl?: string; // Worker URL for camera links (liff.line.me doesn't forward sub-paths)
   seasonId?: string; // Active season context for deep-links
-  pushFn?: (token: string, userId: string, messages: any[]) => Promise<{ status: number; body: string }>; // Test injection
+  pushFn?: (
+    token: string,
+    userId: string,
+    messages: any[],
+  ) => Promise<{ status: number; body: string }>; // Test injection
 };
 
 type FlowResult = {
@@ -218,9 +222,7 @@ export async function handleFlow(ctx: FlowContext): Promise<void> {
 
   // Update state in DB
   await ctx.db
-    .prepare(
-      "UPDATE line_links SET conversation_state = ?, selected_plot_id = ? WHERE id = ?",
-    )
+    .prepare("UPDATE line_links SET conversation_state = ?, selected_plot_id = ? WHERE id = ?")
     .bind(result.newState, result.selectedPlotId ?? null, ctx.linkId)
     .run();
 }
@@ -856,17 +858,18 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
       ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
       : "";
 
-    const photoCount = plot?.id && season?.season_id
-      ? await ctx.db
-          .prepare(
-            `SELECT COUNT(*) as cnt FROM season_steps
+    const photoCount =
+      plot?.id && season?.season_id
+        ? await ctx.db
+            .prepare(
+              `SELECT COUNT(*) as cnt FROM season_steps
              WHERE season_input_id IN (SELECT id FROM season_inputs WHERE plot_id = ? AND season_id = ?)
              AND step_code IN ('SG-04', 'SG-05', 'SG-07', 'SG-08')
              AND status = 'completed'`,
-          )
-          .bind(plot.id, season.season_id)
-          .first<{ cnt: number }>()
-      : null;
+            )
+            .bind(plot.id, season.season_id)
+            .first<{ cnt: number }>()
+        : null;
 
     const reminderText = composePhotoReminder({
       roundLabel: "WET-1",

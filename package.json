@@ -18,7 +18,10 @@
     "deploy": "npx wrangler deploy",
     "db:init": "npx wrangler d1 execute netzero --local --file=src/db/migrate.sql",
     "db:migrate": "npx wrangler d1 execute netzero --remote --file=src/db/migrate.sql",
-    "seed": "bun run src/db/seed.ts"
+    "seed": "bun run src/db/seed.ts",
+    "export-designs": "tsx scripts/export-designs.ts",
+    "export-framer-designs": "tsx scripts/export-framer-designs.ts",
+    "capture-visual-references": "tsx scripts/capture-visual-references.ts"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^5.20260819.1",

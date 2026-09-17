@@ -71,30 +71,46 @@ function generatePlotCode(province?: string): string {
 export async function handleFarmerCreate(
   db: D1Database,
   input: FarmerCreateInput,
+  createdBy?: string,
 ): Promise<FarmerCreateResult> {
-  // Validate required fields
-  if (!input.full_name?.trim()) {
-    return { success: false, error: "full_name is required" };
-  }
-  if (!input.phone?.trim()) {
-    return { success: false, error: "phone is required" };
-  }
+  const fullName = input.full_name?.trim() ?? "";
+  if (!fullName) return { success: false, error: "full_name is required" };
+  if (fullName.length > 100) return { success: false, error: "full_name is too long" };
 
-  // Normalize phone (strip dashes, spaces)
+  if (!input.phone?.trim()) return { success: false, error: "phone is required" };
   const phone = input.phone.replace(/[-\s]/g, "");
+  if (!/^0\d{9}$/.test(phone)) {
+    return { success: false, error: "Phone number must be 10 digits starting with 0" };
+  }
 
-  // Check phone uniqueness
+  const gender = input.gender ?? "unspecified";
+  if (!["male", "female", "unspecified"].includes(gender)) {
+    return { success: false, error: "gender is invalid" };
+  }
+
+  const address = [
+    ["addr_province", input.addr_province],
+    ["addr_district", input.addr_district],
+    ["addr_subdistrict", input.addr_subdistrict],
+    ["addr_village", input.addr_village],
+  ] as const;
+  const normalizedAddress: Record<string, string | null> = {};
+  for (const [field, value] of address) {
+    const normalized = value?.trim() || null;
+    if (normalized && normalized.length > 50) {
+      return { success: false, error: `${field} is too long` };
+    }
+    normalizedAddress[field] = normalized;
+  }
+
   const existing = await db
     .prepare("SELECT id FROM farmers WHERE phone = ?")
     .bind(phone)
     .first<{ id: string }>();
-  if (existing) {
-    return { success: false, error: "Phone number already exists" };
-  }
+  if (existing) return { success: false, error: "Phone number already exists" };
 
-  // Create farmer
   const farmerId = `farmer_${crypto.randomUUID()}`;
-  await db
+  const farmerInsert = db
     .prepare(
       `INSERT INTO farmers (
         id, full_name, gender, phone,
@@ -104,16 +120,51 @@ export async function handleFarmerCreate(
     )
     .bind(
       farmerId,
-      input.full_name.trim(),
-      input.gender ?? "unspecified",
+      fullName,
+      gender,
       phone,
-      input.addr_province ?? null,
-      input.addr_district ?? null,
-      input.addr_subdistrict ?? null,
-      input.addr_village ?? null,
+      normalizedAddress.addr_province,
+      normalizedAddress.addr_district,
+      normalizedAddress.addr_subdistrict,
+      normalizedAddress.addr_village,
       input.national_id_enc ?? null,
-    )
-    .run();
+    );
+
+  const auditInsert = createdBy
+    ? db
+        .prepare(
+          `INSERT INTO automation_audit_log (
+            id, actor_type, actor_id, action, entity_type, entity_id, created_at
+          ) VALUES (?, 'admin', ?, 'farmer.create', 'farmer', ?, datetime('now'))`,
+        )
+        .bind(`audit_${crypto.randomUUID()}`, createdBy, farmerId)
+    : null;
+
+  try {
+    const dbWithBatch = db as D1Database & {
+      batch?: (statements: D1PreparedStatement[]) => Promise<unknown>;
+    };
+    if (auditInsert && dbWithBatch.batch) {
+      await dbWithBatch.batch([farmerInsert, auditInsert]);
+    } else {
+      await farmerInsert.run();
+      if (auditInsert) {
+        try {
+          await auditInsert.run();
+        } catch (error) {
+          await db.prepare("DELETE FROM farmers WHERE id = ?").bind(farmerId).run();
+          throw error;
+        }
+      }
+    }
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+    if (message.includes("unique") || message.includes("constraint")) {
+      return { success: false, error: "Phone number already exists" };
+    }
+    return { success: false, error: "Farmer creation failed" };
+  }
 
   return { success: true, farmer_id: farmerId };
 }

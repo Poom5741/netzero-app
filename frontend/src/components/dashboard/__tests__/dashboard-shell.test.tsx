@@ -3,6 +3,9 @@ import { describe, it, expect, vi } from "vitest";
 import { DashboardSidebar } from "../dashboard-sidebar";
 import { DashboardHeader } from "../dashboard-header";
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush }) }));
+
 describe("DashboardSidebar", () => {
   const entries = [
     { key: "admin", label: "Review Dashboard", href: "/admin", icon: "fact_check", active: true },
@@ -65,16 +68,12 @@ describe("DashboardHeader", () => {
   it("POSTs to /api/auth/logout and redirects on click", async () => {
     const mockFetch = vi.fn().mockResolvedValue({ ok: true });
     global.fetch = mockFetch;
-    const mockAssign = vi.fn();
-    delete (window as unknown as Record<string, unknown>).location;
-    (window as unknown as Record<string, unknown>).location = { assign: mockAssign };
-
     render(<DashboardHeader userLabel="System Admin" />);
     fireEvent.click(screen.getByLabelText("ออกจากระบบ"));
 
     await vi.waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith("/api/auth/logout", { method: "POST" });
-      expect(mockAssign).toHaveBeenCalledWith("/login");
+      expect(mockPush).toHaveBeenCalledWith("/login");
     });
   });
 });

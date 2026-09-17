@@ -9,7 +9,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(credentials: { email: string; password: string }) {
+  async function handleLogin(credentials: { email: string; password: string; otp?: string; remember?: boolean }) {
     setLoading(true);
     setError("");
 
@@ -17,7 +17,12 @@ export default function AdminLoginPage() {
       const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(credentials),
+        body: new URLSearchParams({
+          email: credentials.email,
+          password: credentials.password,
+          ...(credentials.otp ? { otp: credentials.otp } : {}),
+          ...(credentials.remember ? { remember: "on" } : {}),
+        }),
         redirect: "manual",
         credentials: "include",
       });

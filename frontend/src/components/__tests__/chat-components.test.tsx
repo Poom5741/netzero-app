@@ -72,7 +72,7 @@ describe("BottomNav", () => {
     const items = [{ icon: "chat", label: "แชท", href: "/chat", active: true }];
     render(<BottomNav items={items} />);
     const link = screen.getByText("แชท").closest("a");
-    expect(link).toHaveClass("claymorphic");
+    expect(link).toHaveClass("bg-[#028E91]");
     expect(link).toHaveClass("text-white");
   });
 
@@ -93,22 +93,22 @@ describe("TypingIndicator", () => {
 describe("getQuickActions", () => {
   it("returns consent actions for welcome state", () => {
     const actions = getQuickActions("welcome", () => {}, () => {});
-    expect(actions.map(a => a.label)).toEqual(["ยอมรับเงื่อนไข", "สอบถาม"]);
+    expect(actions.map(a => a.label)).toEqual(["ยอมรับเงื่อนไข", "เริ่มผูกบัญชี", "ติดต่อ / วิธีใช้งาน"]);
   });
 
   it("returns consent actions for phone state", () => {
     const actions = getQuickActions("phone", () => {}, () => {});
-    expect(actions.map(a => a.label)).toEqual(["ยอมรับเงื่อนไข", "สอบถาม"]);
+    expect(actions.map(a => a.label)).toEqual(["ยอมรับเงื่อนไข", "เริ่มผูกบัญชี", "ติดต่อ / วิธีใช้งาน"]);
   });
 
   it("returns navigation actions for chat state", () => {
     const actions = getQuickActions("chat", () => {}, () => {});
-    expect(actions.map(a => a.label)).toEqual(["บันทึกข้อมูล", "ถ่ายรูป", "สอบถาม"]);
+    expect(actions.map(a => a.label)).toEqual(["แดชบอร์ดของฉัน", "แปลงของฉัน", "กล้องบังคับ", "ติดต่อ / วิธีใช้งาน"]);
   });
 
   it("returns navigation actions for confirm_draft state", () => {
     const actions = getQuickActions("confirm_draft", () => {}, () => {});
-    expect(actions.map(a => a.label)).toEqual(["บันทึกข้อมูล", "ถ่ายรูป", "สอบถาม"]);
+    expect(actions.map(a => a.label)).toEqual(["แดชบอร์ดของฉัน", "แปลงของฉัน", "กล้องบังคับ", "ติดต่อ / วิธีใช้งาน"]);
   });
 
   it("consent action sends ยอมรับ text", () => {
@@ -118,11 +118,15 @@ describe("getQuickActions", () => {
     expect(sent).toBe("ยอมรับ");
   });
 
-  it("navigation actions call navigate callback", () => {
+  it("maps dashboard, camera, and help actions to local routes", () => {
     const navigated: string[] = [];
-    const actions = getQuickActions("chat", () => {}, (href) => { navigated.push(href); });
-    actions[0].onClick(); // บันทึกข้อมูล → /summary
-    actions[1].onClick(); // ถ่ายรูป → /upload
-    expect(navigated).toEqual(["/summary", "/upload"]);
+    const sent: string[] = [];
+    const actions = getQuickActions("chat", (text) => { sent.push(text); }, (href) => { navigated.push(href); });
+    actions[0].onClick();
+    actions[1].onClick();
+    actions[2].onClick();
+    actions[3].onClick();
+    expect(navigated).toEqual(["/summary", "/upload", "/contact"]);
+    expect(sent).toEqual(["แปลงของฉัน"]);
   });
 });

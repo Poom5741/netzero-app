@@ -286,6 +286,33 @@ export interface FarmerDetail {
   }>;
 }
 
+export type CreateFarmerInput = {
+  full_name: string;
+  phone: string;
+  gender?: "male" | "female" | "unspecified";
+  addr_province?: string;
+  addr_district?: string;
+  addr_subdistrict?: string;
+  addr_village?: string;
+};
+
+export type CreateFarmerResponse = {
+  id: string;
+  full_name: string;
+  gender: "male" | "female" | "unspecified";
+  phone: string;
+  addr_province: string | null;
+  addr_district: string | null;
+  addr_subdistrict: string | null;
+  addr_village: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function createFarmer(input: CreateFarmerInput): Promise<ApiResult<CreateFarmerResponse | { error?: string; message?: string; details?: { message?: string } }>> {
+  return apiRequest("/api/admin/farmers", { method: "POST", json: input });
+}
+
 export async function getFarmerDetail(id: string): Promise<FarmerDetail> {
   const res = await apiRequest<FarmerDetail>(`/api/admin/farmers/${id}`);
   if (!res.ok) throw new Error(`Farmer detail error: ${res.status}`);

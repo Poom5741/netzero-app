@@ -2,6 +2,8 @@
 
 Part of [#141](https://github.com/netzerocarbon/app/issues/141) · Source-only task, no implementation changes.
 
+> **Complete artifact map:** See [`claude-design-artifact-map.md`](./claude-design-artifact-map.md) for the labeled page/component mapping across all extracted HTML bundles. This inventory describes the source graph; the map describes how to use it as a reference.
+
 **Commit baseline:** `3f61136`
 **Date:** 2026-09-15
 

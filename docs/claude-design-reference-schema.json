@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://netzerocarbon.local/schemas/claude-design-reference.json",
+  "title": "Claude Design Reference Map",
+  "type": "object",
+  "required": ["version", "generatedAt", "references"],
+  "properties": {
+    "version": { "type": "string", "const": "1" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "surface", "pageName", "artifactId", "sourceModule", "status", "states"],
+        "properties": {
+          "label": { "type": "string", "pattern": "^[A-Z0-9-]+$" },
+          "surface": { "enum": ["admin", "sponsor", "line-oa"] },
+          "pageName": { "type": "string", "minLength": 1 },
+          "route": { "type": ["string", "null"] },
+          "artifactId": { "type": "string", "minLength": 1 },
+          "sourceModule": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["implemented", "partial", "deferred", "reference-only"] },
+          "states": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -40,12 +40,14 @@ export function getQuickActions(
   if (state === "welcome" || state === "phone" || state === "pending") {
     return [
       { icon: "check_circle", label: "ยอมรับเงื่อนไข", onClick: () => onSend("ยอมรับ") },
-      { icon: "help", label: "สอบถาม", onClick: () => onSend("ช่วย") },
+      { icon: "link", label: "เริ่มผูกบัญชี", onClick: () => onSend("เริ่มผูกบัญชี") },
+      { icon: "help", label: "ติดต่อ / วิธีใช้งาน", onClick: () => onNavigate("/contact") },
     ];
   }
   return [
-    { icon: "summarize", label: "บันทึกข้อมูล", onClick: () => onNavigate("/summary") },
-    { icon: "add_a_photo", label: "ถ่ายรูป", onClick: () => onNavigate("/upload") },
-    { icon: "help", label: "สอบถาม", onClick: () => onSend("ช่วย") },
+    { icon: "summarize", label: "แดชบอร์ดของฉัน", onClick: () => onNavigate("/summary") },
+    { icon: "landscape", label: "แปลงของฉัน", onClick: () => onSend("แปลงของฉัน") },
+    { icon: "add_a_photo", label: "กล้องบังคับ", onClick: () => onNavigate("/upload") },
+    { icon: "help", label: "ติดต่อ / วิธีใช้งาน", onClick: () => onNavigate("/contact") },
   ];
 }

@@ -12,8 +12,8 @@ export interface LoginFeatureFlags {
 
 export function getLoginFeatureFlags(): LoginFeatureFlags {
   return {
-    otp: process.env.NEXT_PUBLIC_ENABLE_OTP === 'true',
-    rememberDevice: process.env.NEXT_PUBLIC_ENABLE_REMEMBER_DEVICE === 'true',
-    forgotPassword: process.env.NEXT_PUBLIC_ENABLE_FORGOT_PASSWORD === 'true',
+    otp: process.env.NEXT_PUBLIC_ENABLE_OTP !== 'false',
+    rememberDevice: process.env.NEXT_PUBLIC_ENABLE_REMEMBER_DEVICE !== 'false',
+    forgotPassword: process.env.NEXT_PUBLIC_ENABLE_FORGOT_PASSWORD !== 'false',
   };
 }

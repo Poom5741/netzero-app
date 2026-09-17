@@ -66,7 +66,12 @@ describe("All Photo Rounds (US2)", () => {
   ];
 
   it("T011: DRY-1 (SG-05) button has correct step in URL", () => {
-    const bubble = buildCalendarBubble(allPhotoSteps, "https://example.com", "plot-123", "season-456");
+    const bubble = buildCalendarBubble(
+      allPhotoSteps,
+      "https://example.com",
+      "plot-123",
+      "season-456",
+    );
     const action = getPhotoButtonAction(bubble, "SG-05");
 
     expect(action).toBeDefined();
@@ -74,7 +79,12 @@ describe("All Photo Rounds (US2)", () => {
   });
 
   it("T012: WET-2 (SG-07) button has correct step in URL", () => {
-    const bubble = buildCalendarBubble(allPhotoSteps, "https://example.com", "plot-123", "season-456");
+    const bubble = buildCalendarBubble(
+      allPhotoSteps,
+      "https://example.com",
+      "plot-123",
+      "season-456",
+    );
     const action = getPhotoButtonAction(bubble, "SG-07");
 
     expect(action).toBeDefined();
@@ -82,7 +92,12 @@ describe("All Photo Rounds (US2)", () => {
   });
 
   it("T013: DRY-2 (SG-08) button has correct step in URL", () => {
-    const bubble = buildCalendarBubble(allPhotoSteps, "https://example.com", "plot-123", "season-456");
+    const bubble = buildCalendarBubble(
+      allPhotoSteps,
+      "https://example.com",
+      "plot-123",
+      "season-456",
+    );
     const action = getPhotoButtonAction(bubble, "SG-08");
 
     expect(action).toBeDefined();

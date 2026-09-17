@@ -64,7 +64,7 @@ describe("POST /photo/upload — screening verdict", () => {
   });
 
   it("returns verdict 'refused' for wetdry with low confidence; nothing persisted", async () => {
-    const { app, db, r2 } = await createTestApp();
+    const { app, r2 } = await createTestApp();
     const req = makeUploadRequest({
       photo_type: "wetdry",
       __test_classification: JSON.stringify({

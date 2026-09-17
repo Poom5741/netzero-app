@@ -5,7 +5,7 @@ import { useState } from "react";
 
 interface LoginFormProps {
   type: "admin" | "sponsor";
-  onSubmit: (credentials: { email: string; password: string }) => Promise<void>;
+  onSubmit: (credentials: { email: string; password: string; otp?: string; remember?: boolean }) => Promise<void>;
   error?: string;
   loading?: boolean;
 }
@@ -18,11 +18,13 @@ interface LoginFormProps {
 export function LoginForm({ type, onSubmit, error, loading }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [remember, setRemember] = useState(false);
   const features = getLoginFeatureFlags();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ email, password });
+    await onSubmit({ email, password, otp: features.otp ? otp : undefined, remember: features.rememberDevice ? remember : undefined });
   };
 
   return (
@@ -70,6 +72,8 @@ export function LoginForm({ type, onSubmit, error, loading }: LoginFormProps) {
           <input
             id="otp"
             type="text"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
             maxLength={6}
             className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant rounded-lg text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:ring-2 focus:ring-primary"
             style={{ height: 'var(--form-field-height, 44px)' }}
@@ -84,6 +88,8 @@ export function LoginForm({ type, onSubmit, error, loading }: LoginFormProps) {
           <input
             id="remember"
             type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
             className="w-4 h-4 text-primary bg-surface-container-low border-outline-variant rounded focus:ring-primary"
           />
           <label htmlFor="remember" className="ml-2 text-label-md text-on-surface">
@@ -118,12 +124,9 @@ export function LoginForm({ type, onSubmit, error, loading }: LoginFormProps) {
         {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
       </button>
 
-      {/* Audit Notice (Sponsor only) */}
-      {type === "sponsor" && (
-        <p className="text-xs text-on-surface-variant text-center">
-          การเข้าสู่ระบบทั้งหมดจะถูกบันทึกเพื่อการตรวจสอบ
-        </p>
-      )}
+      <p className="text-xs text-on-surface-variant text-center">
+        ทุกการเข้าดูและแก้ไขถูกบันทึกใน audit log (AD-11) พร้อมผู้ใช้ เวลา และค่าก่อน-หลัง
+      </p>
     </form>
   );
 }

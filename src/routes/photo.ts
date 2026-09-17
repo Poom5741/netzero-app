@@ -120,7 +120,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
       .first<{ sow_date: string }>();
 
     if (seasonInput?.sow_date) {
-      let phaseWindows;
+      let phaseWindows: ReturnType<typeof calculatePhaseWindows> | null;
       try {
         phaseWindows = calculatePhaseWindows(seasonInput.sow_date);
       } catch {
@@ -129,65 +129,64 @@ photoRoutes.post("/api/photo/upload", async (c) => {
       }
 
       if (phaseWindows) {
+        // Get EXIF timestamp (or use test override)
+        const exifTimestampStr = formData.get("__exif_timestamp") as string | null;
+        const photoTimestamp = exifTimestampStr ? new Date(exifTimestampStr) : null;
 
-      // Get EXIF timestamp (or use test override)
-      const exifTimestampStr = formData.get("__exif_timestamp") as string | null;
-      const photoTimestamp = exifTimestampStr ? new Date(exifTimestampStr) : null;
-
-      const temporalResult = validateTemporal({
-        photo_timestamp: photoTimestamp,
-        photo_type: photoType,
-        phase_windows: phaseWindows,
-      });
-
-      if (temporalResult.status === "invalid") {
-        return c.json({ error: "Photo taken at wrong time", reason: temporalResult.reason }, 400);
-      }
-
-      if (temporalResult.status === "unknown") {
-        // Missing EXIF → flag for admin review
-        const photoId = `photo_${crypto.randomUUID()}`;
-        const key = `evidence/${photoId}.jpg`;
-        await c.env.R2.put(key, file);
-
-        await c.env.DB.prepare(
-          `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm, step_code)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', 'pending', ?, ?, ?)`,
-        )
-          .bind(
-            photoId,
-            plotId,
-            seasonId,
-            key,
-            gpsLat,
-            gpsLng,
-            gpsAccuracy ?? null,
-            takenAt,
-            photoType,
-            waterDepthCm,
-            stepCode,
-          )
-          .run();
-
-        await writeAuditEntry(c.env.DB, {
-          photoId,
-          actorType: "machine",
-          action: "flagged",
-          confidence: null,
-          reason: temporalResult.reason || "EXIF missing",
+        const temporalResult = validateTemporal({
+          photo_timestamp: photoTimestamp,
+          photo_type: photoType,
+          phase_windows: phaseWindows,
         });
 
-        return c.json(
-          {
-            id: photoId,
-            verdict: "flagged" as Verdict,
-            photo_url: key,
-            photo_type: photoType,
-            reason: temporalResult.reason,
-          },
-          201,
-        );
-      }
+        if (temporalResult.status === "invalid") {
+          return c.json({ error: "Photo taken at wrong time", reason: temporalResult.reason }, 400);
+        }
+
+        if (temporalResult.status === "unknown") {
+          // Missing EXIF → flag for admin review
+          const photoId = `photo_${crypto.randomUUID()}`;
+          const key = `evidence/${photoId}.jpg`;
+          await c.env.R2.put(key, file);
+
+          await c.env.DB.prepare(
+            `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, admin_status, photo_type, water_depth_cm, step_code)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'flag', 'pending', ?, ?, ?)`,
+          )
+            .bind(
+              photoId,
+              plotId,
+              seasonId,
+              key,
+              gpsLat,
+              gpsLng,
+              gpsAccuracy ?? null,
+              takenAt,
+              photoType,
+              waterDepthCm,
+              stepCode,
+            )
+            .run();
+
+          await writeAuditEntry(c.env.DB, {
+            photoId,
+            actorType: "machine",
+            action: "flagged",
+            confidence: null,
+            reason: temporalResult.reason || "EXIF missing",
+          });
+
+          return c.json(
+            {
+              id: photoId,
+              verdict: "flagged" as Verdict,
+              photo_url: key,
+              photo_type: photoType,
+              reason: temporalResult.reason,
+            },
+            201,
+          );
+        }
       } // end if (phaseWindows)
     }
 
@@ -313,7 +312,7 @@ photoRoutes.post("/api/photo/upload", async (c) => {
 
           await c.env.DB.prepare(
             `INSERT INTO photo_evidence (id, plot_id, season_id, photo_url, gps_lat, gps_lng, gps_accuracy, taken_at, ai_status, ai_label, ai_reason, ai_confidence, admin_status, photo_type, water_state, pre_verified, audit_sample, water_depth_cm, step_code)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'verified', ?, ?, 1, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pass', ?, ?, ?, 'verified', ?, ?, 1, ?, ?, ?)`,
           )
             .bind(
               photoId,

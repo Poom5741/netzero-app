@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getFarmerDetail, type FarmerDetail } from "@/lib/api";
+import { createFarmer, getFarmerDetail, type FarmerDetail } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 // ── Farmer List Page ──────────────────────────────────────────────
@@ -23,6 +23,8 @@ export default function FarmersPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const email = sessionStorage.getItem("nzc_admin_email");
@@ -34,32 +36,64 @@ export default function FarmersPage() {
     queueMicrotask(() => setAuthed(true));
   }, []);
 
+  const loadFarmers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/admin/farmers", {
+        headers: {
+          Authorization: "Basic " + btoa(
+            `${sessionStorage.getItem("nzc_admin_email")}:${sessionStorage.getItem("nzc_admin_pass")}`,
+          ),
+        },
+      });
+      if (!response.ok) throw new Error("load failed");
+      const data = await response.json();
+      setFarmers(Array.isArray(data) ? data : []);
+    } catch {
+      setError("ไม่สามารถโหลดข้อมูลได้");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    if (!authed) return;
-    queueMicrotask(() => setLoading(true));
-    fetch("/api/admin/farmers", {
-      headers: {
-        Authorization: "Basic " + btoa(
-          `${sessionStorage.getItem("nzc_admin_email")}:${sessionStorage.getItem("nzc_admin_pass")}`
-        ),
-      },
-    })
-      .then((r) => r.json())
-      .then((data) => { setFarmers(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => { setError("ไม่สามารถโหลดข้อมูลได้"); setLoading(false); });
-  }, [authed]);
+    if (authed) void loadFarmers();
+  }, [authed, loadFarmers]);
+
+  const handleCreated = () => {
+    setShowCreateForm(false);
+    setNotice("เพิ่มเกษตรกรเรียบร้อยแล้ว");
+    void loadFarmers();
+  };
 
   if (authed === null) return null;
 
   return (
     <main className="pt-20 lg:pt-24 px-4 lg:px-10 pb-10">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="font-headline-lg text-headline-lg text-on-surface">เกษตรกร</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-            รายชื่อเกษตรกรในระบบ
-          </p>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface">เกษตรกร</h1>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+              รายชื่อเกษตรกรในระบบ
+            </p>
+          </div>
+          <Button type="button" onClick={() => { setNotice(null); setShowCreateForm(true); }}>
+            <span className="material-symbols-outlined text-[18px]">person_add</span>
+            เพิ่มเกษตรกร
+          </Button>
         </div>
+
+        {notice && (
+          <div role="status" className="mb-4 rounded-xl bg-primary/10 px-4 py-3 text-body-md text-primary">
+            {notice}
+          </div>
+        )}
+
+        {showCreateForm && (
+          <CreateFarmerForm onCancel={() => setShowCreateForm(false)} onCreated={handleCreated} />
+        )}
 
         {loading && (
           <div className="card p-6 text-center rounded-2xl">
@@ -147,6 +181,105 @@ export default function FarmersPage() {
         )}
       </div>
     </main>
+  );
+}
+
+function CreateFarmerForm({ onCancel, onCreated }: { onCancel: () => void; onCreated: () => void }) {
+  const [form, setForm] = useState({
+    full_name: "",
+    phone: "",
+    gender: "unspecified" as "male" | "female" | "unspecified",
+    addr_province: "",
+    addr_district: "",
+    addr_subdistrict: "",
+    addr_village: "",
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const update = (field: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    const phone = form.phone.replace(/[\\s-]/g, "");
+    if (!form.full_name.trim()) {
+      setError("กรุณาระบุชื่อเกษตรกร");
+      return;
+    }
+    if (!/^0\\d{9}$/.test(phone)) {
+      setError("เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมีความยาว 10 หลัก)");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await createFarmer({ ...form, phone });
+      if (!result.ok) {
+        const body = result.data as { message?: string; details?: { message?: string } };
+        if (result.status === 409) {
+          setError("เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว");
+        } else if (result.status === 400) {
+          setError(body.details?.message ?? body.message ?? "ข้อมูลไม่ถูกต้อง");
+        } else {
+          setError("ไม่สามารถเพิ่มเกษตรกรได้ กรุณาลองใหม่");
+        }
+        return;
+      }
+      onCreated();
+    } catch {
+      setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="card mb-6 rounded-2xl p-5" aria-labelledby="create-farmer-title">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h2 id="create-farmer-title" className="text-headline-md font-semibold text-on-surface">เพิ่มเกษตรกร</h2>
+          <p className="mt-1 text-body-sm text-on-surface-variant">กรอกชื่อและเบอร์โทรศัพท์เพื่อให้เกษตรกรผูกบัญชีผ่าน LINE</p>
+        </div>
+        <button type="button" onClick={onCancel} className="rounded-full p-2 text-on-surface-variant hover:bg-surface-container-high" aria-label="ปิดฟอร์ม">
+          <span className="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      {error && <div role="alert" className="mb-4 rounded-xl bg-error/10 px-4 py-3 text-body-sm text-error">{error}</div>}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="text-label-md text-on-surface">
+          ชื่อ-นามสกุล <span aria-hidden="true">*</span>
+          <input value={form.full_name} onChange={update("full_name")} required maxLength={100} className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-3 text-body-md" />
+        </label>
+        <label className="text-label-md text-on-surface">
+          เบอร์โทรศัพท์ <span aria-hidden="true">*</span>
+          <input value={form.phone} onChange={update("phone")} required inputMode="tel" pattern="0[0-9]{9}" maxLength={12} placeholder="0812345678" className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-3 text-body-md" />
+        </label>
+        <label className="text-label-md text-on-surface">
+          เพศ
+          <select value={form.gender} onChange={update("gender")} className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-3 text-body-md">
+            <option value="unspecified">ไม่ระบุ</option>
+            <option value="male">ชาย</option>
+            <option value="female">หญิง</option>
+          </select>
+        </label>
+        {(["addr_province", "addr_district", "addr_subdistrict", "addr_village"] as const).map((field) => (
+          <label key={field} className="text-label-md text-on-surface">
+            {{ addr_province: "จังหวัด", addr_district: "อำเภอ", addr_subdistrict: "ตำบล", addr_village: "หมู่บ้าน" }[field]}
+            <input value={form[field]} onChange={update(field)} maxLength={50} className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-low px-3 py-3 text-body-md" />
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-5 flex flex-wrap justify-end gap-3">
+        <Button type="button" variant="secondary" onClick={onCancel}>ยกเลิก</Button>
+        <Button type="submit" loading={saving}>บันทึกเกษตรกร</Button>
+      </div>
+    </form>
   );
 }
 

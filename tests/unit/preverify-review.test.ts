@@ -30,6 +30,9 @@ function mockD1ForPreVerify(photo: Record<string, unknown>) {
               }),
             };
           }
+          if (sql.includes("SELECT") && sql.includes("line_links")) {
+            return { first: async () => ({ line_user_id: "line-user-1" }) };
+          }
           return { run: async () => ({ success: true }) };
         },
       };
