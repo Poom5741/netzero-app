@@ -56,6 +56,13 @@ app.use(
   }),
 );
 
+// Root-level /register — serve registration form directly (no redirect for LIFF compatibility)
+// MUST be before sub-routers to avoid being caught by them
+app.get("/register", async (c) => {
+  const { renderRegistrationForm } = await import("./routes/liff");
+  return c.html(renderRegistrationForm(c.env.LIFF_ID || ""));
+});
+
 // LIFF chat app — mounted at /liff so the LIFF URL registered in LINE Developer Console works
 app.route("/liff", liffRoutes);
 
@@ -63,14 +70,11 @@ app.route("/liff", liffRoutes);
 app.get("/", (c) => {
   const liffState = c.req.query("liff.state");
   if (liffState === "/register") {
-    return c.redirect("/liff/register");
+    return c.redirect("/register");
   }
   // Default: redirect to LIFF chat app
   return c.redirect("/liff/");
 });
-
-// Root-level /register redirect for direct access
-app.get("/register", (c) => c.redirect("/liff/register"));
 
 // Auth (login/logout)
 app.route("/", authRoutes);

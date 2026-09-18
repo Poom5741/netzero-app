@@ -115,8 +115,8 @@ liffRoutes.get("/", (c) => {
 });
 
 // Registration form — LIFF deep-link target for /register
-liffRoutes.get("/register", (c) => {
-  const html = `<!DOCTYPE html>
+export function renderRegistrationForm(liffId: string): string {
+  return `<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
@@ -249,7 +249,7 @@ liffRoutes.get("/register", (c) => {
     let farmerId = null;
     async function init() {
       try {
-        const liffId = "${c.env.LIFF_ID || ""}";
+        const liffId = "${liffId}";
         if (liffId) {
           await liff.init({ liffId });
           const profile = await liff.getProfile();
@@ -322,7 +322,10 @@ liffRoutes.get("/register", (c) => {
   </script>
 </body>
 </html>`;
-  return c.html(html);
+}
+
+liffRoutes.get("/register", (c) => {
+  return c.html(renderRegistrationForm(c.env.LIFF_ID || ""));
 });
 
 // Camera page — opens device camera for photo evidence
