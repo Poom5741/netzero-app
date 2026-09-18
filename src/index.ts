@@ -59,7 +59,17 @@ app.use(
 // LIFF chat app — mounted at /liff so the LIFF URL registered in LINE Developer Console works
 app.route("/liff", liffRoutes);
 
-// Root-level /register redirect for LIFF deep-link (liff.state=/register)
+// Root-level handler for LIFF deep-links (liff.state parameter)
+app.get("/", (c) => {
+  const liffState = c.req.query("liff.state");
+  if (liffState === "/register") {
+    return c.redirect("/liff/register");
+  }
+  // Default: redirect to LIFF chat app
+  return c.redirect("/liff/");
+});
+
+// Root-level /register redirect for direct access
 app.get("/register", (c) => c.redirect("/liff/register"));
 
 // Auth (login/logout)
