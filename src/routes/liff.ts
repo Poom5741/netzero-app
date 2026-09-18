@@ -703,6 +703,19 @@ liffRoutes.post("/api/register", async (c) => {
         .run();
     }
 
+    // Update conversation state to "documents" after successful registration
+    const link = await db
+      .prepare("SELECT id FROM line_links WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+      .bind(resolvedFarmerId)
+      .first<{ id: string }>();
+
+    if (link) {
+      await db
+        .prepare("UPDATE line_links SET conversation_state = 'documents' WHERE id = ?")
+        .bind(link.id)
+        .run();
+    }
+
     return c.json({ ok: true, farmer_id: resolvedFarmerId });
   } catch (err) {
     console.error("Registration API error:", err);
