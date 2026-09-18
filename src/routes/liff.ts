@@ -114,6 +114,217 @@ liffRoutes.get("/", (c) => {
   return c.html(html);
 });
 
+// Registration form — LIFF deep-link target for /register
+liffRoutes.get("/register", (c) => {
+  const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>สมัครเข้าร่วมโครงการ</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh}
+    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:16px;text-align:center}
+    .header h1{font-size:18px;font-weight:600;margin-bottom:4px}
+    .header p{font-size:13px;opacity:.9}
+    .form-wrap{max-width:500px;margin:0 auto;padding:16px}
+    .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:16px}
+    .card h2{font-size:15px;color:#333;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #06c755}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:13px;color:#555;margin-bottom:6px;font-weight:500}
+    .field input,.field select{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;transition:border .2s}
+    .field input:focus,.field select:focus{border-color:#06c755}
+    .field .hint{font-size:11px;color:#888;margin-top:4px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{width:100%;padding:14px;background:#06c755;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px}
+    .btn:disabled{background:#ccc}
+    .btn:active{background:#05b34c}
+    .success{background:#e8f5e9;border:1px solid #06c755;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px}
+    .success h3{color:#06c755;margin-bottom:8px}
+    .error{background:#ffebee;border:1px solid #f44336;border-radius:8px;padding:12px;margin-bottom:16px;color:#c62828;font-size:13px}
+    #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
+    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    @keyframes sp{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div id="loading"><div class="spin"></div><div>กำลังโหลด...</div></div>
+  <div id="app" style="display:none">
+    <div class="header">
+      <h1>🌱 สมัครเข้าร่วมโครงการ</h1>
+      <p>NetZeroCarbon — โครงการข้าวรักษ์โลก AWD</p>
+    </div>
+    <div class="form-wrap">
+      <div id="errorBox" class="error" style="display:none"></div>
+      <form id="regForm">
+        <div class="card">
+          <h2>ข้อมูลส่วนตัว</h2>
+          <div class="field">
+            <label for="full_name">ชื่อ-นามสกุล *</label>
+            <input type="text" id="full_name" name="full_name" required>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="gender">เพศ *</label>
+              <select id="gender" name="gender" required>
+                <option value="">-- เลือก --</option>
+                <option value="male">ชาย</option>
+                <option value="female">หญิง</option>
+                <option value="other">อื่นๆ</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="phone">เบอร์โทรศัพท์ *</label>
+              <input type="tel" id="phone" name="phone" required pattern="[0-9]{9,10}" placeholder="0812345678">
+            </div>
+          </div>
+          <div class="field">
+            <label for="national_id">เลขบัตรประชาชน *</label>
+            <input type="text" id="national_id" name="national_id" required pattern="[0-9]{13}" placeholder="1234567890123" maxlength="13">
+          </div>
+        </div>
+        <div class="card">
+          <h2>ที่อยู่</h2>
+          <div class="row">
+            <div class="field">
+              <label for="addr_province">จังหวัด *</label>
+              <input type="text" id="addr_province" name="addr_province" required>
+            </div>
+            <div class="field">
+              <label for="addr_district">อำเภอ *</label>
+              <input type="text" id="addr_district" name="addr_district" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="addr_subdistrict">ตำบล *</label>
+              <input type="text" id="addr_subdistrict" name="addr_subdistrict" required>
+            </div>
+            <div class="field">
+              <label for="addr_village">หมู่บ้าน *</label>
+              <input type="text" id="addr_village" name="addr_village" required>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>ข้อมูลที่ดิน</h2>
+          <div class="row">
+            <div class="field">
+              <label for="deed_no">เลขที่โฉนด *</label>
+              <input type="text" id="deed_no" name="deed_no" required>
+            </div>
+            <div class="field">
+              <label for="deed_type">ประเภทโฉนด *</label>
+              <select id="deed_type" name="deed_type" required>
+                <option value="">-- เลือก --</option>
+                <option value="chanote">โฉนดที่ดิน (น.ส. 4)</option>
+                <option value="ns3k">น.ส. 3 ก</option>
+                <option value="spk">ส.ป.ก.</option>
+                <option value="rental">เช่า</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="holding_status">สถานะการถือครอง *</label>
+            <select id="holding_status" name="holding_status" required>
+              <option value="">-- เลือก --</option>
+              <option value="owner">เจ้าของ</option>
+              <option value="tenant">ผู้เช่า</option>
+              <option value="proxy">ตัวแทน</option>
+              <option value="renter">ผู้เช่า</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="area_rai">พื้นที่ (ไร่) *</label>
+            <input type="number" id="area_rai" name="area_rai" required step="0.01" min="0" placeholder="0.00">
+          </div>
+        </div>
+        <button type="submit" class="btn" id="submitBtn">ส่งข้อมูลสมัคร</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    let farmerId = null;
+    async function init() {
+      try {
+        const liffId = "${c.env.LIFF_ID || ""}";
+        if (liffId) {
+          await liff.init({ liffId });
+          const profile = await liff.getProfile();
+          // Try to resolve farmer from LINE userId
+          const res = await fetch('/liff/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: '__resolve_farmer__', userId: profile.userId })
+          });
+          const data = await res.json();
+          if (data.farmerId) farmerId = data.farmerId;
+        }
+      } catch (e) {
+        console.error('LIFF init error:', e);
+      }
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    }
+    document.getElementById('regForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errBox = document.getElementById('errorBox');
+      btn.disabled = true;
+      btn.textContent = 'กำลังส่งข้อมูล...';
+      errBox.style.display = 'none';
+      const form = e.target;
+      const data = {
+        full_name: form.full_name.value.trim(),
+        gender: form.gender.value,
+        phone: form.phone.value.trim(),
+        national_id: form.national_id.value.trim(),
+        addr_province: form.addr_province.value.trim(),
+        addr_district: form.addr_district.value.trim(),
+        addr_subdistrict: form.addr_subdistrict.value.trim(),
+        addr_village: form.addr_village.value.trim(),
+        deed_no: form.deed_no.value.trim(),
+        deed_type: form.deed_type.value,
+        holding_status: form.holding_status.value,
+        area_rai: parseFloat(form.area_rai.value),
+        centroid_lat: 0,
+        centroid_lng: 0
+      };
+      if (farmerId) data.farmer_id = farmerId;
+      try {
+        const res = await fetch('/liff/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          form.innerHTML = '<div class="success"><h3>✅ สมัครสำเร็จ!</h3><p>ขอบคุณที่เข้าร่วมโครงการ NetZeroCarbon</p><p style="margin-top:12px;font-size:13px;color:#666">คุณสามารถเริ่มถ่ายภาพแปลงนาได้ทันที</p></div>';
+          document.querySelector('.form-wrap').insertBefore(form, document.querySelector('.form-wrap').firstChild);
+          document.querySelectorAll('.card').forEach(c => c.remove());
+          btn.remove();
+        } else {
+          errBox.textContent = result.error || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+          errBox.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'ส่งข้อมูลสมัคร';
+        }
+      } catch (err) {
+        errBox.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+        errBox.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'ส่งข้อมูลสมัคร';
+      }
+    });
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>`;
+  return c.html(html);
+});
+
 // Camera page — opens device camera for photo evidence
 liffRoutes.get("/camera", (c) => {
   const html = `<!DOCTYPE html>

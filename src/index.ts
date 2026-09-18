@@ -47,6 +47,7 @@ app.use(
       "https://netzero-frontend.poom-a1d.workers.dev",
       "https://netzero-frontend.pages.dev",
       "https://011-admin-farmer-registratio.netzero-frontend.pages.dev",
+      "https://1484e21b.netzero-frontend.pages.dev",
       "http://localhost:3000",
     ],
     allowMethods: ["GET", "POST", "OPTIONS"],
@@ -57,6 +58,9 @@ app.use(
 
 // LIFF chat app — mounted at /liff so the LIFF URL registered in LINE Developer Console works
 app.route("/liff", liffRoutes);
+
+// Root-level /register redirect for LIFF deep-link (liff.state=/register)
+app.get("/register", (c) => c.redirect("/liff/register"));
 
 // Auth (login/logout)
 app.route("/", authRoutes);
