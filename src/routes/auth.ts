@@ -138,6 +138,7 @@ authRoutes.post("/login", async (c) => {
       c.env.SECRET,
       true,
       maxAge,
+      "Lax",  // Explicitly set Lax for admin/sponsor login compatibility
     );
 
     // T063 — audit log entry for successful sign-in (AD-AUTH-03)

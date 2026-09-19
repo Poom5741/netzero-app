@@ -79,6 +79,9 @@ sponsorRoutes.post("/login", async (c) => {
   const cookie = await createSessionCookie(
     { userId: user.id, role: "sponsor", email: user.email },
     c.env.SECRET,
+    true,
+    86400,
+    "Lax",  // Explicitly set Lax for sponsor login compatibility
   );
   return new Response(null, {
     status: 302,

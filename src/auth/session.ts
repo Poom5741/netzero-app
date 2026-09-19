@@ -27,10 +27,12 @@ export async function createSessionCookie(
   secret: string,
   secure = true,
   maxAge = 86400,
+  sameSiteOverride?: "Lax" | "Strict" | "None",
 ): Promise<string> {
   const payload = btoa(JSON.stringify(data));
   const sig = await sign(payload, secret);
-  const sameSite = secure ? "None" : "Lax";
+  // Default to Lax for better compatibility, but allow override when needed for cross-origin scenarios
+  const sameSite = sameSiteOverride || "Lax";
   const cookie = `${COOKIE_NAME}=${payload}.${sig}; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=${maxAge}`;
   return secure ? `${cookie}; Secure` : cookie;
 }
