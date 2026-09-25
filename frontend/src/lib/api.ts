@@ -1,7 +1,7 @@
-// In development, use relative URLs so Next.js rewrites proxy to localhost:8787.
-// In production (static export), NEXT_PUBLIC_API_BASE must be set at build time.
-const isDev = typeof window !== "undefined" && window.location.hostname === "localhost";
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || (isDev ? "" : "https://netzero-carbon-poc.poom-a1d.workers.dev");
+// All browser→API traffic is same-origin: Next.js rewrites proxy to
+// localhost:8787 in dev; Cloudflare Pages _redirects proxies to the Worker
+// in production (static export). Override only with NEXT_PUBLIC_API_BASE.
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 
 /** Validate URL to prevent SSRF: only allow http/https absolute URLs. */
 function validateApiUrl(url: string): string {
@@ -33,13 +33,6 @@ export function apiRequest<T = unknown>(
     const xhr = new XMLHttpRequest();
     xhr.open(init?.method || "GET", url);
     xhr.withCredentials = true; // send nzc_session cookie cross-origin
-
-    // Add Basic Auth for admin endpoints if credentials exist
-    const email = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("nzc_admin_email") : null;
-    const pass = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("nzc_admin_pass") : null;
-    if (email && pass && (path.includes("/admin") || path.includes("/review"))) {
-      xhr.setRequestHeader("Authorization", "Basic " + btoa(`${email}:${pass}`));
-    }
 
     if (init?.json !== undefined) {
       xhr.setRequestHeader("Content-Type", "application/json");

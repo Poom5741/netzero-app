@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminSessionGate } from "@/lib/use-session-gate";
 import { useState, useEffect } from "react";
 import {
   getOverviewKpis,
@@ -22,19 +23,8 @@ export default function AdminOverviewPage() {
   const [provinces, setProvinces] = useState<ProvinceTableItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const authed = useAdminSessionGate();
   const [seasonFilter, setSeasonFilter] = useState<string>("");
-
-  // Check auth
-  useEffect(() => {
-    const email = sessionStorage.getItem("nzc_admin_email");
-    const pass = sessionStorage.getItem("nzc_admin_pass");
-    if (!email || !pass) {
-      window.location.href = "/admin/login";
-      return;
-    }
-    queueMicrotask(() => setAuthed(true));
-  }, []);
 
   useEffect(() => {
     if (!authed) return;

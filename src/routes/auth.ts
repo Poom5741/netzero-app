@@ -174,6 +174,19 @@ authRoutes.post("/logout", (c) => {
   });
 });
 
+authRoutes.get("/session", async (c) => {
+  const cookieHeader = c.req.header("Cookie") ?? "";
+  const match = cookieHeader.match(/nzc_session=([^;]+)/);
+  if (!match?.[1]) {
+    return c.json({ authenticated: false }, 401);
+  }
+  const session = await parseSessionCookie(match[1], c.env.SECRET);
+  if (!session) {
+    return c.json({ authenticated: false }, 401);
+  }
+  return c.json({ authenticated: true, role: session.role, email: session.email });
+});
+
 authRoutes.get("/redirect", async (c) => {
   const cookieHeader = c.req.header("Cookie") ?? "";
   const match = cookieHeader.match(/nzc_session=([^;]+)/);

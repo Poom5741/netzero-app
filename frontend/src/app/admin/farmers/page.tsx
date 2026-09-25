@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminSessionGate } from "@/lib/use-session-gate";
 import { useState, useEffect, useCallback } from "react";
 import { createFarmer, getFarmers, getFarmerDetail, type FarmerDetail, type FarmerListItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -11,19 +12,9 @@ export default function FarmersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const authed = useAdminSessionGate();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    const email = sessionStorage.getItem("nzc_admin_email");
-    const pass = sessionStorage.getItem("nzc_admin_pass");
-    if (!email || !pass) {
-      window.location.href = "/admin/login";
-      return;
-    }
-    queueMicrotask(() => setAuthed(true));
-  }, []);
 
   const loadFarmers = useCallback(async () => {
     setLoading(true);

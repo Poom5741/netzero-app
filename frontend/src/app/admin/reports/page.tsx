@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminSessionGate } from "@/lib/use-session-gate";
 import { useState, useEffect } from "react";
 import { getReports, downloadReport, type ReportItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -8,18 +9,8 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const authed = useAdminSessionGate();
   const [downloading, setDownloading] = useState<string | null>(null);
-
-  useEffect(() => {
-    const email = sessionStorage.getItem("nzc_admin_email");
-    const pass = sessionStorage.getItem("nzc_admin_pass");
-    if (!email || !pass) {
-      window.location.href = "/admin/login";
-      return;
-    }
-    queueMicrotask(() => setAuthed(true));
-  }, []);
 
   useEffect(() => {
     if (!authed) return;

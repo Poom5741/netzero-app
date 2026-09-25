@@ -4,9 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 
-const API_BASE = "https://netzero-carbon-poc.poom-a1d.workers.dev";
-
 export default function SponsorLoginPage() {
+  useEffect(() => {
+    sessionStorage.removeItem("nzc_admin_email");
+    sessionStorage.removeItem("nzc_admin_pass");
+  }, []);
+
+
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,7 +20,7 @@ export default function SponsorLoginPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE}/sponsor/login`, {
+      const res = await fetch("/sponsor/login", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -30,11 +34,13 @@ export default function SponsorLoginPage() {
       });
 
       if (res.status === 0 || res.status === 302) {
+        // Same-origin 302 (opaque redirect): backend verified credentials
+        // and set the HttpOnly nzc_session cookie. Only then navigate.
         router.push("/sponsor");
       } else if (res.status === 401) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {
-        router.push("/sponsor");
+        setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
       }
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
@@ -108,31 +114,6 @@ export default function SponsorLoginPage() {
             error={error}
             loading={loading}
           />
-
-          {/* Dev bypass */}
-          <div className="mt-6 pt-4 border-t border-[#e4e9ed]">
-            <p className="text-[11px] text-[#3c4a3c]/50 text-center mb-2">Development Only</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  sessionStorage.setItem("nzc_admin_email", "sponsor@netzero.com");
-                  sessionStorage.setItem("nzc_admin_pass", "bypass");
-                  router.push("/sponsor");
-                }}
-                className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
-              >
-                Sponsor (Bypass)
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/admin/login")}
-                className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
-              >
-                Admin Login
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

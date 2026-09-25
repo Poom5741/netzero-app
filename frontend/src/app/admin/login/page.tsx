@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 
-const API_BASE = "https://netzero-carbon-poc.poom-a1d.workers.dev";
-
 export default function AdminLoginPage() {
+  useEffect(() => {
+    sessionStorage.removeItem("nzc_admin_email");
+    sessionStorage.removeItem("nzc_admin_pass");
+  }, []);
+
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -14,7 +18,7 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE}/login`, {
+      const res = await fetch("/login", { signal: AbortSignal.timeout(8000),
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -28,15 +32,14 @@ export default function AdminLoginPage() {
       });
 
       if (res.status === 0 || res.status === 302) {
-        sessionStorage.setItem("nzc_admin_email", credentials.email);
-        sessionStorage.setItem("nzc_admin_pass", credentials.password);
+        // Same-origin 302 (fetch reports status 0 for an opaque redirect):
+        // backend verified the credentials and set the HttpOnly nzc_session
+        // cookie. Only then navigate. Anything else is a visible failure.
         window.location.href = "/admin";
       } else if (res.status === 401) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {
-        sessionStorage.setItem("nzc_admin_email", credentials.email);
-        sessionStorage.setItem("nzc_admin_pass", credentials.password);
-        window.location.href = "/admin";
+        setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
       }
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
@@ -110,31 +113,6 @@ export default function AdminLoginPage() {
             error={error}
             loading={loading}
           />
-
-          {/* Dev bypass */}
-          <div className="mt-6 pt-4 border-t border-[#e4e9ed]">
-            <p className="text-[11px] text-[#3c4a3c]/50 text-center mb-2">Development Only</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-                  sessionStorage.setItem("nzc_admin_pass", "bypass");
-                  window.location.href = "/admin";
-                }}
-                className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
-              >
-                Admin (Bypass)
-              </button>
-              <button
-                type="button"
-                onClick={() => window.location.href = "/sponsor/login"}
-                className="flex-1 py-2 rounded-lg bg-[#f0f4f8] text-[#171c1f] text-sm hover:bg-[#e4e9ed] transition-colors"
-              >
-                Sponsor Login
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

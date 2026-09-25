@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminSessionGate } from "@/lib/use-session-gate";
 import { useState, useEffect } from "react";
 import { getSponsors, type SponsorItem } from "@/lib/api";
 
@@ -7,17 +8,7 @@ export default function SponsorsPage() {
   const [sponsors, setSponsors] = useState<SponsorItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authed, setAuthed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const email = sessionStorage.getItem("nzc_admin_email");
-    const pass = sessionStorage.getItem("nzc_admin_pass");
-    if (!email || !pass) {
-      window.location.href = "/admin/login";
-      return;
-    }
-    queueMicrotask(() => setAuthed(true));
-  }, []);
+  const authed = useAdminSessionGate();
 
   useEffect(() => {
     if (!authed) return;

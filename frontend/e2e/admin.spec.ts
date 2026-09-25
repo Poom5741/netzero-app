@@ -1,10 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 
 async function setupAdminPage(page: Page) {
-  await page.addInitScript(() => {
-    sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-    sessionStorage.setItem("nzc_admin_pass", "password");
-  });
+  await page.route("**/api/auth/session", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ authenticated: true, role: "admin", email: "admin@netzero.com" }) }),
+  );
   await page.route("**/api/admin/overview/kpis**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ totalFarmers: 12, totalPlots: 8, totalAreaRai: 42, pendingReviews: 3, totalCredits: 1.25 }) }),
   );

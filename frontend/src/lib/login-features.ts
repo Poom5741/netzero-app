@@ -14,6 +14,6 @@ export function getLoginFeatureFlags(): LoginFeatureFlags {
   return {
     otp: process.env.NEXT_PUBLIC_ENABLE_OTP !== 'false',
     rememberDevice: process.env.NEXT_PUBLIC_ENABLE_REMEMBER_DEVICE !== 'false',
-    forgotPassword: process.env.NEXT_PUBLIC_ENABLE_FORGOT_PASSWORD !== 'false',
+    forgotPassword: process.env.NEXT_PUBLIC_ENABLE_FORGOT_PASSWORD === 'true', // opt-in only: no /forgot-password route exists yet
   };
 }

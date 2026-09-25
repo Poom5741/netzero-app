@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminSessionGate } from "@/lib/use-session-gate";
 import { useState, useEffect } from "react";
 import { getReviewQueue, reviewPhoto, getPrecisionStat, type PhotoReview, type PrecisionStat } from "@/lib/api";
 import { ReviewCard } from "@/components/admin-review/review-card";
@@ -26,19 +27,9 @@ export default function EvidencePage() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [precision, setPrecision] = useState<PrecisionStat | null>(null);
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const authed = useAdminSessionGate();
 
   // Auth check
-  useEffect(() => {
-    const email = sessionStorage.getItem("nzc_admin_email");
-    const pass = sessionStorage.getItem("nzc_admin_pass");
-    if (!email || !pass) {
-      window.location.href = "/admin/login";
-      return;
-    }
-    queueMicrotask(() => setAuthed(true));
-  }, []);
-
   // Fetch queue + precision stats
   useEffect(() => {
     if (authed !== true) return;

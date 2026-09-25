@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminSessionGate } from "@/lib/use-session-gate";
 import { useState, useEffect } from "react";
 import { getSettings, updateSettings, type SettingsData } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -38,18 +39,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("permissions");
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const authed = useAdminSessionGate();
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const email = sessionStorage.getItem("nzc_admin_email");
-    const pass = sessionStorage.getItem("nzc_admin_pass");
-    if (!email || !pass) {
-      window.location.href = "/admin/login";
-      return;
-    }
-    queueMicrotask(() => setAuthed(true));
-  }, []);
 
   useEffect(() => {
     if (!authed) return;

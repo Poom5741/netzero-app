@@ -278,9 +278,14 @@ test.describe("3. Chat Page (/chat)", () => {
 
 test.describe("4. Admin Review Page (/admin)", () => {
   test.beforeEach(async ({ context }) => {
-    await context.addInitScript(() => {
-      sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-      sessionStorage.setItem("nzc_admin_pass", "password");
+    // Real programmatic login: the nzc_session cookie lands in this
+    // context's cookie jar and is sent on subsequent page/API requests.
+    await context.request.post(`${TARGET}/login`, {
+      form: {
+        email: process.env.ADMIN_EMAIL ?? "admin@netzero.local",
+        password: process.env.ADMIN_PASSWORD ?? "ClawTest2026!",
+      },
+      maxRedirects: 0,
     });
   });
 
@@ -616,14 +621,19 @@ test.describe("9. Responsive Layout Tests", () => {
   });
 
   test("admin at multiple widths", async ({ page }) => {
-    await page.context().addInitScript(() => {
-      sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-      sessionStorage.setItem("nzc_admin_pass", "password");
+    // Real programmatic login: nzc_session cookie joins this context's jar.
+    await page.context().request.post(`${TARGET}/login`, {
+      form: {
+        email: process.env.ADMIN_EMAIL ?? "admin@netzero.local",
+        password: process.env.ADMIN_PASSWORD ?? "ClawTest2026!",
+      },
+      maxRedirects: 0,
     });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
     await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-1440.png", fullPage: true });
+
 
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
@@ -688,11 +698,14 @@ test.describe("10. Font and Icon Loading", () => {
 
 test.describe("11. Empty and Error States", () => {
   test("admin shows meaningful state on API failure", async ({ page }) => {
-    await page.context().addInitScript(() => {
-      sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-      sessionStorage.setItem("nzc_admin_pass", "password");
-    });
-    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
+    // Real programmatic login: nzc_session cookie joins this context's jar.
+    await page.context().request.post(`${TARGET}/login`, {
+      form: {
+        email: process.env.ADMIN_EMAIL ?? "admin@netzero.local",
+        password: process.env.ADMIN_PASSWORD ?? "ClawTest2026!",
+      },
+      maxRedirects: 0,
+    });    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(5000);
     await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-empty-state.png", fullPage: true });
 
@@ -784,11 +797,14 @@ test.describe("14. Keyboard Navigation", () => {
   });
 
   test("filter tabs keyboard navigable", async ({ page }) => {
-    await page.context().addInitScript(() => {
-      sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-      sessionStorage.setItem("nzc_admin_pass", "password");
-    });
-    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
+    // Real programmatic login: nzc_session cookie joins this context's jar.
+    await page.context().request.post(`${TARGET}/login`, {
+      form: {
+        email: process.env.ADMIN_EMAIL ?? "admin@netzero.local",
+        password: process.env.ADMIN_PASSWORD ?? "ClawTest2026!",
+      },
+      maxRedirects: 0,
+    });    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
     await page.locator('[role="tab"]').first().focus();
     await page.keyboard.press("ArrowRight");
@@ -814,11 +830,14 @@ test.describe("15. ARIA and Semantic HTML", () => {
   });
 
   test("review cards have aria-pressed", async ({ page }) => {
-    await page.context().addInitScript(() => {
-      sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-      sessionStorage.setItem("nzc_admin_pass", "password");
-    });
-    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
+    // Real programmatic login: nzc_session cookie joins this context's jar.
+    await page.context().request.post(`${TARGET}/login`, {
+      form: {
+        email: process.env.ADMIN_EMAIL ?? "admin@netzero.local",
+        password: process.env.ADMIN_PASSWORD ?? "ClawTest2026!",
+      },
+      maxRedirects: 0,
+    });    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(3000);
     const cards = page.locator('button[aria-label^="ภาพหลักฐาน"]');
     if ((await cards.count()) > 0) {
@@ -834,11 +853,14 @@ test.describe("15. ARIA and Semantic HTML", () => {
   });
 
   test("filter tabs use tablist", async ({ page }) => {
-    await page.context().addInitScript(() => {
-      sessionStorage.setItem("nzc_admin_email", "admin@netzero.com");
-      sessionStorage.setItem("nzc_admin_pass", "password");
-    });
-    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
+    // Real programmatic login: nzc_session cookie joins this context's jar.
+    await page.context().request.post(`${TARGET}/login`, {
+      form: {
+        email: process.env.ADMIN_EMAIL ?? "admin@netzero.local",
+        password: process.env.ADMIN_PASSWORD ?? "ClawTest2026!",
+      },
+      maxRedirects: 0,
+    });    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await expect(page.locator('[role="tablist"]')).toBeVisible();
     expect(await page.locator('[role="tab"]').count()).toBe(5);
   });
