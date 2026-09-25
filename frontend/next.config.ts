@@ -5,7 +5,21 @@ import type { NextConfig } from "next";
 const isStaticExport = process.env.STATIC_EXPORT === "1";
 
 const nextConfig: NextConfig = isStaticExport
-  ? { output: "export" }
+  ? {
+      output: "export",
+      // Build-time type/lint checks are covered by the repo gates (tsc + biome);
+      // skipped here to fit the 2GB cgroup memory cap on the build machine.
+      typescript: { ignoreBuildErrors: true },
+      eslint: { ignoreDuringBuilds: true },
+      // The build shares a 2GB cgroup with the desktop browser; disable the
+      // memory-heavy build phases and run a single compile worker.
+      experimental: { cpus: 1, webpackMemoryOptimizations: true },
+      webpack: (c) => {
+        c.optimization.minimize = false;
+        c.cache = false;
+        return c;
+      },
+    }
   : {
       async rewrites() {
     return [

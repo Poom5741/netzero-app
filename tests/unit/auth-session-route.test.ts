@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
-import { authRoutes } from "../../src/routes/auth";
 import { createSessionCookie } from "../../src/auth/session";
+import { authRoutes } from "../../src/routes/auth";
 
 /**
  * Tests for GET /session — real session check used by the frontend gate.
@@ -49,11 +49,7 @@ describe("GET /session", () => {
     );
     const raw = cookie.split(";")[0]; // "nzc_session=..."
     expect(raw.startsWith("nzc_session=")).toBe(true);
-    const res = await app.request(
-      "/session",
-      { headers: { Cookie: raw } },
-      bindings() as any,
-    );
+    const res = await app.request("/session", { headers: { Cookie: raw } }, bindings() as any);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { authenticated: boolean; role: string; email: string };
     expect(body.authenticated).toBe(true);

@@ -6,9 +6,7 @@ type Role = "admin" | "sponsor";
 
 const TIMEOUT_MS = 8_000;
 
-function sessionPath(role: Role) {
-  return role === "admin" ? "/api/auth/session" : "/api/auth/session";
-}
+const SESSION_PATH = "/api/auth/session";
 
 function loginPath(role: Role) {
   return role === "admin" ? "/admin/login" : "/sponsor/login";
@@ -30,7 +28,7 @@ export function useSessionGate(expectedRole: Role): boolean | null {
 
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    fetch(sessionPath(expectedRole), { signal: controller.signal })
+    fetch(SESSION_PATH, { signal: controller.signal })
       .then((res) => {
         clearTimeout(timer);
         if (!res.ok) throw new Error(`session check failed: ${res.status}`);

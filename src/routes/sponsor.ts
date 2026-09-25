@@ -81,7 +81,7 @@ sponsorRoutes.post("/login", async (c) => {
     c.env.SECRET,
     true,
     86400,
-    "Lax",  // Explicitly set Lax for sponsor login compatibility
+    "Lax", // Explicitly set Lax for sponsor login compatibility
   );
   return new Response(null, {
     status: 302,
