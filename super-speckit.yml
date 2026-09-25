@@ -1,0 +1,79 @@
+version: 1
+worktrees:
+  root: ../.super-speckit-worktrees
+  feature_prefix: ss/feature/
+  bug_prefix: ss/bug/
+  qa_prefix: ss/qa/
+  retain_failed_qa_worktrees: true
+roles:
+  require_distinct_maker_and_checker: true
+  merge_requires_human: true
+orchestration:
+  entry_command: ask-super-speckit
+  max_parallel_lanes: 3
+  max_heavy_processes: 2
+  max_repair_cycles: 3
+  max_retries_without_new_evidence: 1
+  protected_paths: ["auth/**", "src/auth/**", "src/routes/auth.ts", "payments/**", "migrations/**", "infra/**", ".github/workflows/**", "**/.env*", "**/*secret*", "**/*credential*"]
+  human_approval_for_risk: [high, critical]
+  phase_contract_required: true
+  plan_quality_check_required: true
+  durable_handoff_required_on_pause: true
+  milestone_audit_required: true
+  research_before_high_risk: true
+  tdd_when_feasible: true
+delegation:
+  enabled: false
+  default_transport: codex-cloud
+  codex_cloud_environment_id: ""
+  allowed_roles: [research, maker, bug-fix]
+  forbidden_roles: [release-approver]
+  require_committed_base: true
+  require_redacted_handoff: true
+  require_independent_retest_after_apply: true
+  centillex_desk_command: ""
+design:
+  required_when_paths: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.html", "**/*.css"]
+  output_root: .super-speckit/design
+  design_system_sources: ["DESIGN.md"]
+  optional_adapters: [html, v0, stitch, claude-design]
+  require_decision_before_implementation: true
+  accessibility_baseline: "WCAG 2.2 AA"
+risk:
+  default: medium
+  critical_paths: ["auth/**", "src/auth/**", "src/routes/auth.ts", "payments/**", "migrations/**", "data-deletion/**"]
+  high_requires: ["independent-runtime-qa", "security-review", "human-approval"]
+gates:
+  format: ""
+  lint: "bun run check:lint"
+  unit: "bun test tests/unit/"
+  integration: "bun test tests/integration/"
+  build: "npm run --prefix frontend build"
+  app_start: "npm run dev:all"
+  app_url: "http://localhost:3000"
+  playwright: "npx playwright test"
+  api_assertions: "bun test tests/qa/api-auth.test.ts"
+  db_assertions: ""
+  ocr_review: ""
+qa:
+  clean_environment: true
+  fixture_reset_command: "npm run db:init && bun run seed"
+  isolated_test_namespace: "ss-{{run_id}}"
+  reproduction_attempts: 2
+  exploration_timebox_minutes: 20
+  redact_patterns: ["(?i)authorization:.*", "(?i)password=[^&\\s]+", "(?i)api[_-]?key[=:][^\\s]+"]
+  readiness_checks:
+    - "GET http://localhost:8787/health -> {\"status\":\"ok\"}"
+    - "GET http://localhost:3000 -> 200"
+  correlation_header: "X-Super-Speckit-Run"
+evidence:
+  root: .super-speckit/qa
+  retain_on_pass_days: 14
+  retain_on_failure_days: 90
+  proof_pack_manifest: proof-pack.json
+  require_candidate_sha: true
+  require_environment_receipt: true
+merge:
+  required_gate_status: pass
+  require_ocr_triage_complete: true
+  require_no_open_confirmed_bugs: true

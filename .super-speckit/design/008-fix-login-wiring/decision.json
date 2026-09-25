@@ -1,0 +1,10 @@
+{
+  "feature": "008-fix-login-wiring",
+  "status": "approved",
+  "decided_by": "tech-lead (coordinator)",
+  "date": "2026-09-25",
+  "visual_changes": "none",
+  "rationale": "Behavioral/auth-only change. Existing spec-006 split-panel login layout retained byte-for-byte. UI subtractions are security-required: dev-bypass buttons (R6) and dead forgot-password link (R7 flag default). No new visual elements, no design-system tokens introduced.",
+  "design_system_sources": "repo DESIGN.md / existing tokens unchanged",
+  "accessibility_note": "No changes to interactive semantics; error messages reuse existing visible error container in LoginForm (screen-reader text preserved)."
+}
