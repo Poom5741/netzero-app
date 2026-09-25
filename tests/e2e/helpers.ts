@@ -20,32 +20,28 @@ export const NETWORK_TIMEOUT = 10_000;
 // ─── Auth Helpers ─────────────────────────────────────────────────────
 
 /**
- * Pre-authenticate as admin by setting sessionStorage before navigation.
- * This bypasses the login form (which has a CSS layout bug in production).
+ * Authenticate as admin through the real login form (same-origin POST to
+ * /login, HttpOnly nzc_session cookie). The legacy sessionStorage bypass
+ * was removed with the 008 login fix and must not come back.
  */
 export async function loginAsAdmin(page: Page): Promise<void> {
   await page.goto("/admin/login");
-  await page.evaluate(
-    ({ email, pass }) => {
-      sessionStorage.setItem("nzc_admin_email", email);
-      sessionStorage.setItem("nzc_admin_pass", pass);
-    },
-    { email: ADMIN_EMAIL, pass: ADMIN_PASS },
-  );
+  await page.fill("#email", ADMIN_EMAIL);
+  await page.fill("#password", ADMIN_PASS);
+  await page.click('button[type="submit"]');
+  await page.waitForURL("**/admin");
 }
 
 /**
- * Pre-authenticate as sponsor by setting sessionStorage before navigation.
+ * Authenticate as sponsor through the real login form (same-origin POST to
+ * /sponsor-login proxied to the backend).
  */
 export async function loginAsSponsor(page: Page): Promise<void> {
-  await page.goto("/admin/login");
-  await page.evaluate(
-    ({ email, pass }) => {
-      sessionStorage.setItem("nzc_admin_email", email);
-      sessionStorage.setItem("nzc_admin_pass", pass);
-    },
-    { email: SPONSOR_EMAIL, pass: SPONSOR_PASS },
-  );
+  await page.goto("/sponsor/login");
+  await page.fill("#email", SPONSOR_EMAIL);
+  await page.fill("#password", SPONSOR_PASS);
+  await page.click('button[type="submit"]');
+  await page.waitForURL("**/sponsor");
 }
 
 /**

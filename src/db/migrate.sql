@@ -291,10 +291,14 @@ ALTER TABLE automation_audit_log ADD COLUMN old_value TEXT;
 ALTER TABLE automation_audit_log ADD COLUMN new_value TEXT;
 
 -- Issue #0003: CPA code on farmers table (auto-generated on application approval)
-ALTER TABLE farmers ADD COLUMN cpa_code TEXT UNIQUE;
+-- BUG-008-B2: SQLite rejects UNIQUE in ADD COLUMN; enforce via a unique index
+-- (unique indexes allow multiple NULLs, matching the previous intent).
+ALTER TABLE farmers ADD COLUMN cpa_code TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_farmers_cpa_code ON farmers(cpa_code);
 
 -- Task 02: OTP TOTP secret for admin/sponsor MFA
-ALTER TABLE users ADD COLUMN otp_secret TEXT;
+-- BUG-008-B2: the column is already in CREATE TABLE users; a duplicate
+-- ALTER here aborted fresh-database init (npm run db:init).
 
 -- C2 fix: Recreate automation_audit_log with nullable photo_evidence_id
 -- D1/SQLite does not support ALTER COLUMN, so recreate the table.

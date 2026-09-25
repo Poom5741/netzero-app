@@ -10,7 +10,6 @@ const nextConfig: NextConfig = isStaticExport
       // Build-time type/lint checks are covered by the repo gates (tsc + biome);
       // skipped here to fit the 2GB cgroup memory cap on the build machine.
       typescript: { ignoreBuildErrors: true },
-      eslint: { ignoreDuringBuilds: true },
       // The build shares a 2GB cgroup with the desktop browser; disable the
       // memory-heavy build phases and run a single compile worker.
       experimental: { cpus: 1, webpackMemoryOptimizations: true },
@@ -34,6 +33,13 @@ const nextConfig: NextConfig = isStaticExport
       {
         source: "/login",
         destination: "http://localhost:8787/login",
+      },
+      {
+        // POST target for the sponsor login form. Must NOT collide with the
+        // /sponsor/login page route: Next applies array rewrites only after
+        // page routes match, so a same-path rewrite is shadowed (SUB-F1).
+        source: "/sponsor-login",
+        destination: "http://localhost:8787/sponsor/login",
       },
       {
         source: "/logout",

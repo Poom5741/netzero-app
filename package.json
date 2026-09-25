@@ -11,7 +11,7 @@
     "test:snapshots": "bun test tests/unit/message-snapshot.test.ts",
     "test:snapshots:update": "UPDATE_SNAPSHOTS=1 bun test tests/unit/message-snapshot.test.ts",
     "test:liff": "bun test tests/integration/liff-browser.test.ts",
-    "check": "bun run check:lint && bun run check:type && bun run check:test",
+    "check": "bun run check:lint && bun run check:type && bun run check:type:frontend && bun run check:test",
     "dev": "npx wrangler dev",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:all": "npx concurrently -n backend,frontend -c blue,green \"npm run dev\" \"npm run dev:frontend\"",
@@ -21,7 +21,8 @@
     "seed": "bun run src/db/seed.ts",
     "export-designs": "tsx scripts/export-designs.ts",
     "export-framer-designs": "tsx scripts/export-framer-designs.ts",
-    "capture-visual-references": "tsx scripts/capture-visual-references.ts"
+    "capture-visual-references": "tsx scripts/capture-visual-references.ts",
+    "check:type:frontend": "npm run --prefix frontend typecheck"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^5.20260819.1",

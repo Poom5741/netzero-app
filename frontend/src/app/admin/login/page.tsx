@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 
 export default function AdminLoginPage() {

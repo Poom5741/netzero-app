@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -20,7 +20,7 @@ export default function SponsorLoginPage() {
     setError("");
 
     try {
-      const res = await fetch("/sponsor/login", {
+      const res = await fetch("/sponsor-login", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({

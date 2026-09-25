@@ -49,6 +49,7 @@ gates:
   unit: "bun test tests/unit/"
   integration: "bun test tests/integration/"
   build: "npm run --prefix frontend build"
+  typecheck_frontend: "npm run --prefix frontend typecheck"
   app_start: "npm run dev:all"
   app_url: "http://localhost:3000"
   playwright: "npx playwright test"

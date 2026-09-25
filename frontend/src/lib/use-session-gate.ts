@@ -19,10 +19,12 @@ function loginPath(role: Role) {
  * - Uses AbortSignal.timeout() to avoid hanging on network failures.
  * No credentials stored client-side.
  */
-export function useSessionGate(expectedRole: Role): boolean | null {
+export function useSessionGate(expectedRole: Role, options?: { enabled?: boolean }): boolean | null {
+  const enabled = options?.enabled ?? true;
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     const controller = new AbortController();
 
@@ -51,7 +53,7 @@ export function useSessionGate(expectedRole: Role): boolean | null {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [expectedRole]);
+  }, [expectedRole, enabled]);
 
   return authed;
 }

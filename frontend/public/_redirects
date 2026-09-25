@@ -1,6 +1,7 @@
 /api/auth/*   https://netzero-carbon-poc.poom-a1d.workers.dev/:splat  200
 /api/*        https://netzero-carbon-poc.poom-a1d.workers.dev/api/:splat  200
 /login        https://netzero-carbon-poc.poom-a1d.workers.dev/login  200
+/sponsor-login https://netzero-carbon-poc.poom-a1d.workers.dev/sponsor/login 200
 /logout       https://netzero-carbon-poc.poom-a1d.workers.dev/logout  200
 /redirect     https://netzero-carbon-poc.poom-a1d.workers.dev/redirect  200
 /sponsor/*    https://netzero-carbon-poc.poom-a1d.workers.dev/sponsor/:splat  200
