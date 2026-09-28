@@ -4,17 +4,17 @@
 
 The Claude Design artifacts are complete React component implementations spanning all three product surfaces. They are not single-page references: each extracted source file contains one or more pages, shared components, fixture data, or runtime dependencies.
 
-The extraction is preserved in `visual-qa-screenshots/` and is the authoritative design reference used by `docs/design-inventory.md`.
+The latest artifact shells (2026-09-28, one self-contained `index.html` per surface) are archived in `design-artifacts/2026-09-28/` — see its `README.md`. The earlier `visual-qa-screenshots/` extraction (per-module asset graph) was removed in repository hygiene cleanup; the table below records its original layout.
 
 ## Artifact Sources
 
-| Surface | Artifact HTML | Extracted directory | Source artifact ID |
+| Surface | Artifact HTML (2026-09-28 archive) | Former extracted directory | Source artifact ID |
 |---|---|---|---|
-| Admin Console | `visual-qa-screenshots/admin.html` | `visual-qa-screenshots/admin-extracted/` | `161f2305-35de-42f8-83ed-7c90ab4da5a6` |
-| Sponsor Portal | `visual-qa-screenshots/sponsor.html` | `visual-qa-screenshots/sponsor-extracted/` | `0de23b7a-9fb3-433e-8930-7eff56a39e45` |
-| LINE OA / LIFF | `visual-qa-screenshots/line-oa.html` | `visual-qa-screenshots/line-oa-extracted/` | `19c446b9-e2f5-4e09-a118-fca56ec0c0c8` |
+| Admin Console | `design-artifacts/2026-09-28/admin-console.html` | (removed) `visual-qa-screenshots/admin-extracted/` | `161f2305-35de-42f8-83ed-7c90ab4da5a6` |
+| Sponsor Portal | `design-artifacts/2026-09-28/sponsor-portal.html` | (removed) `visual-qa-screenshots/sponsor-extracted/` | `0de23b7a-9fb3-433e-8930-7eff56a39e45` |
+| LINE OA / LIFF | `design-artifacts/2026-09-28/line-oa-farmer.html` | (removed) `visual-qa-screenshots/line-oa-extracted/` | `19c446b9-e2f5-4e09-a118-fca56ec0c0c8` |
 
-`index.html` in each extracted directory is the artifact entrypoint. The UUID-named files are the asset graph unpacked from that entrypoint.
+Each archived `index.html` is the artifact entrypoint; the module UUIDs referenced in the page maps below came from the former extraction and identify screens within the bundles.
 
 ## What the Extracted Files Are
 

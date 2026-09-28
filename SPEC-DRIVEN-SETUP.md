@@ -194,4 +194,4 @@ npm run test:visual
 - **Specs:** `specs/`
 - **Scripts:** `scripts/`
 - **Visual tests:** `tests/visual/`
-- **Artifacts:** `visual-qa-screenshots/`
+- **Artifacts:** `design-artifacts/`
