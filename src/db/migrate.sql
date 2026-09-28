@@ -300,6 +300,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_farmers_cpa_code ON farmers(cpa_code);
 -- BUG-008-B2: the column is already in CREATE TABLE users; a duplicate
 -- ALTER here aborted fresh-database init (npm run db:init).
 
+
 -- C2 fix: Recreate automation_audit_log with nullable photo_evidence_id
 -- D1/SQLite does not support ALTER COLUMN, so recreate the table.
 -- On fresh databases this is redundant but harmless; on existing databases
@@ -326,3 +327,53 @@ SELECT id, photo_evidence_id, actor_type, NULL as actor_id, action, confidence, 
 FROM automation_audit_log;
 DROP TABLE IF EXISTS automation_audit_log;
 ALTER TABLE automation_audit_log_new RENAME TO automation_audit_log;
+
+-- Migration: Make line_links.farmer_id nullable
+-- D1/SQLite does not support ALTER COLUMN, so recreate the table.
+-- This allows pending LINE links to exist before farmer_id is resolved.
+DROP TABLE IF EXISTS line_links_new;
+CREATE TABLE line_links_new (
+  id TEXT PRIMARY KEY,
+  farmer_id TEXT REFERENCES farmers(id),
+  line_user_id TEXT UNIQUE NOT NULL,
+  status TEXT CHECK(status IN ('pending', 'verified', 'rejected')),
+  conversation_state TEXT DEFAULT 'welcome',
+  selected_plot_id TEXT,
+  verified_by TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+INSERT OR IGNORE INTO line_links_new
+  (id, farmer_id, line_user_id, status, conversation_state, selected_plot_id, verified_by, created_at, updated_at)
+SELECT id, farmer_id, line_user_id, status, conversation_state, selected_plot_id, verified_by, created_at, updated_at
+FROM line_links;
+DROP TABLE IF EXISTS line_links;
+ALTER TABLE line_links_new RENAME TO line_links;
+
+-- FINDING-A fix: Allow recording PDPA consents before a farmer_id is resolved.
+-- New LINE users enter conversation_state=consent with line_links.farmer_id=NULL.
+-- We make consent_log.farmer_id nullable and add a parallel line_user_id
+-- column so consents can be keyed on the LINE user until phone-confirm
+-- resolves the farmer, at which point we backfill farmer_id on those rows.
+-- D1/SQLite cannot ALTER COLUMN, so recreate the table.
+DROP TABLE IF EXISTS consent_log_new;
+CREATE TABLE consent_log_new (
+  id TEXT PRIMARY KEY,
+  farmer_id TEXT REFERENCES farmers(id),
+  line_user_id TEXT,
+  consent_type TEXT NOT NULL CHECK(consent_type IN ('pdpa', 'data_collection', 'photo_sharing', 'carbon_project')),
+  accepted INTEGER NOT NULL DEFAULT 0,
+  ip_address TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  -- Exactly one of (farmer_id, line_user_id) is set; never both null.
+  CHECK (farmer_id IS NOT NULL OR line_user_id IS NOT NULL)
+);
+INSERT OR IGNORE INTO consent_log_new
+  (id, farmer_id, line_user_id, consent_type, accepted, ip_address, created_at)
+SELECT id, farmer_id, NULL as line_user_id, consent_type, accepted, ip_address, created_at
+FROM consent_log;
+DROP TABLE IF EXISTS consent_log;
+ALTER TABLE consent_log_new RENAME TO consent_log;
+
+CREATE INDEX IF NOT EXISTS idx_consent_log_farmer ON consent_log(farmer_id);
+CREATE INDEX IF NOT EXISTS idx_consent_log_line_user ON consent_log(line_user_id);

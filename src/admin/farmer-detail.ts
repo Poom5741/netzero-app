@@ -171,10 +171,14 @@ export async function getFarmerDetail(
 
   if (!farmer) return null;
 
-  // 2) Plots with latest season info
+  // 2) Plots with latest season info.
+  // rice_variety lives on season_inputs (per-season), not on plots — pull the
+  // latest value for each plot via subquery to avoid a missing-column 500.
   const { results: plotRows } = await db
     .prepare(
-      `SELECT p.id, p.plot_code, p.deed_no, p.area_rai, p.rice_variety, p.doc_type,
+      `SELECT p.id, p.plot_code, p.deed_no, p.area_rai, p.doc_type,
+              (SELECT si.rice_variety FROM season_inputs si
+               WHERE si.plot_id = p.id ORDER BY si.created_at DESC LIMIT 1) as rice_variety,
               s.name as season_name,
               (SELECT ce.total_offset_tco2e FROM carbon_estimates ce
                WHERE ce.plot_id = p.id ORDER BY ce.created_at DESC LIMIT 1) as carbon_total

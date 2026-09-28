@@ -497,6 +497,7 @@ export function buildCalendarBubble(
   appUrl: string,
   plotId?: string,
   seasonId?: string,
+  liffId?: string,
 ): LineMessage {
   // Error handling for missing APP_URL (US3)
   if (!appUrl || appUrl.trim() === "" || appUrl === "no-app") {
@@ -540,8 +541,11 @@ export function buildCalendarBubble(
 
     // Photo button row for pending steps that require a photo
     if (step.requiresPhoto && step.status === "pending") {
-      // Construct camera URL with step, plot_id, and season_id (US1, US2)
-      const cameraUrl = new URL(`${appUrl}/liff/camera`);
+      // FINDING-G fix: use liff.line.me deep-link so LINE opens in-app browser
+      const cameraBase = liffId
+        ? `https://liff.line.me/${liffId}/liff/camera`
+        : `${appUrl}/liff/camera`;
+      const cameraUrl = new URL(cameraBase);
       cameraUrl.searchParams.set("step", step.stepCode);
       if (plotId) cameraUrl.searchParams.set("plot_id", plotId);
       if (seasonId) cameraUrl.searchParams.set("season_id", seasonId);

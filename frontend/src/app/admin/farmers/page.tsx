@@ -209,7 +209,7 @@ function CreateFarmerForm({ onCancel, onCreated }: { onCancel: () => void; onCre
   };
 
   return (
-    <form onSubmit={submit} className="card mb-6 rounded-2xl p-5" aria-labelledby="create-farmer-title">
+    <form onSubmit={submit} noValidate className="card mb-6 rounded-2xl p-5" aria-labelledby="create-farmer-title">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 id="create-farmer-title" className="text-headline-md font-semibold text-on-surface">เพิ่มเกษตรกร</h2>

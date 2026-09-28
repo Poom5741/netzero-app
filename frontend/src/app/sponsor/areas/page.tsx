@@ -24,12 +24,15 @@ function validateApiUrl(url: string): string {
 }
 
 function fetchJson<T>(path: string, fallback: T): Promise<T> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+  // Sponsor pages run in the static Pages export — the Worker API lives on a
+  // different origin, so fall back to it when NEXT_PUBLIC_API_BASE is unset.
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
   const endpoint = apiBase ? validateApiUrl(`${apiBase}${path}`) : path;
   return new Promise((resolve) => {
     try {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", endpoint);
+      xhr.withCredentials = true;
       xhr.onload = () => {
         try {
           resolve(xhr.status >= 200 && xhr.status < 300 ? (JSON.parse(xhr.responseText) as T) : fallback);
@@ -46,12 +49,13 @@ function fetchJson<T>(path: string, fallback: T): Promise<T> {
 }
 
 function fetchSponsorData(): Promise<ProvinceGroup[]> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
   const endpoint = apiBase ? validateApiUrl(`${apiBase}/sponsor`) : "/sponsor";
   return new Promise((resolve) => {
     try {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", endpoint);
+      xhr.withCredentials = true;
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const data = JSON.parse(xhr.responseText);

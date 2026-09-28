@@ -74,6 +74,21 @@ export function composeDocumentPrompt(input: DocumentPromptInput): string {
 }
 
 /**
+ * Map document type string to DOC code.
+ *
+ * @param docType - Document type from form (chanote, id_copy, power_of_attorney)
+ * @returns DOC code (DOC-01, DOC-03, DOC-06) or the input if not found
+ */
+export function mapDocTypeToCode(docType: string): string {
+  const docCodeMap: Record<string, string> = {
+    chanote: "DOC-01",
+    id_copy: "DOC-03",
+    power_of_attorney: "DOC-06",
+  };
+  return docCodeMap[docType] || docType;
+}
+
+/**
  * Validate a document submission.
  */
 export function validateDocumentSubmission(input: DocumentSubmissionInput): ValidationResult {

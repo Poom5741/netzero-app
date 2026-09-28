@@ -247,9 +247,9 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
       } else {
         await db
           .prepare(
-            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
+            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, NULL, ?, 'pending', 'welcome')",
           )
-          .bind(`link_${crypto.randomUUID()}`, "farmer-004", event.source.userId)
+          .bind(`link_${crypto.randomUUID()}`, event.source.userId)
           .run();
       }
       break;
@@ -267,7 +267,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         .bind(event.source.userId)
         .first<{
           id: string;
-          farmer_id: string;
+          farmer_id: string | null;
           status: string;
           conversation_state: ConversationState;
           selected_plot_id: string | null;
@@ -278,14 +278,14 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         const linkId = `link_${crypto.randomUUID()}`;
         await db
           .prepare(
-            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
+            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, NULL, ?, 'pending', 'welcome')",
           )
-          .bind(linkId, "farmer-004", event.source.userId)
+          .bind(linkId, event.source.userId)
           .run();
 
         link = {
           id: linkId,
-          farmer_id: "farmer-004",
+          farmer_id: null,
           status: "pending",
           conversation_state: "welcome",
           selected_plot_id: null,
@@ -339,7 +339,7 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         .bind(event.source.userId)
         .first<{
           id: string;
-          farmer_id: string;
+          farmer_id: string | null;
           status: string;
           conversation_state: ConversationState;
           selected_plot_id: string | null;
@@ -350,14 +350,14 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
         const linkId = `link_${crypto.randomUUID()}`;
         await db
           .prepare(
-            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, ?, ?, 'pending', 'welcome')",
+            "INSERT INTO line_links (id, farmer_id, line_user_id, status, conversation_state) VALUES (?, NULL, ?, 'pending', 'welcome')",
           )
-          .bind(linkId, "farmer-004", event.source.userId)
+          .bind(linkId, event.source.userId)
           .run();
 
         link = {
           id: linkId,
-          farmer_id: "farmer-004",
+          farmer_id: null,
           status: "pending",
           conversation_state: "welcome",
           selected_plot_id: null,
@@ -387,6 +387,28 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
   }
 }
 
+// Redirect user-facing routes to Next.js frontend
+app.get("/admin(/*)?", (c) => {
+  const frontendUrl = "https://netzero-frontend.poom-a1d.workers.dev";
+  return c.redirect(`${frontendUrl}${c.req.path}`);
+});
+
+app.get("/sponsor(/*)?", (c) => {
+  const frontendUrl = "https://netzero-frontend.poom-a1d.workers.dev";
+  return c.redirect(`${frontendUrl}${c.req.path}`);
+});
+
+app.get("/login", (c) => {
+  const frontendUrl = "https://netzero-frontend.poom-a1d.workers.dev";
+  return c.redirect(`${frontendUrl}/admin/login`);
+});
+
+app.get("/dashboard", (c) => {
+  const frontendUrl = "https://netzero-frontend.poom-a1d.workers.dev";
+  return c.redirect(`${frontendUrl}/admin`);
+});
+
+// Keep API routes in backend
 // Admin review dashboard
 app.route("/", adminRoutes);
 

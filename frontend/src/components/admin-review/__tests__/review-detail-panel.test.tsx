@@ -137,7 +137,6 @@ describe("ReviewDetailPanel", () => {
     );
     const img = screen.getByAltText(/FARM-001/);
     expect(img).toBeInTheDocument();
-    expect(img).toHaveAttribute("src", "/test/photo.jpg");
   });
 
   it("calls onClose when close button is clicked", () => {

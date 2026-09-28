@@ -29,7 +29,7 @@ function validateApiUrl(url: string): string {
 }
 
 function fetchJson<T>(path: string, fallback: T): Promise<T> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
   const endpoint = apiBase ? validateApiUrl(`${apiBase}${path}`) : path;
   return new Promise((resolve) => {
     try {
@@ -176,7 +176,7 @@ export default function SponsorReportsPage() {
   }, []);
 
   const handleDownload = () => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
     const url = apiBase ? validateApiUrl(`${apiBase}/sponsor/reports/EX-2042/download`) : "/sponsor/reports/EX-2042/download";
     const a = document.createElement("a");
     a.href = url;

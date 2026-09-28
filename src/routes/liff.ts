@@ -3,7 +3,15 @@
  */
 
 import { Hono } from "hono";
-import { REQUIRED_DOCUMENTS, validateDocumentSubmission } from "../liff/documents-api";
+import { extractLiffIdToken, verifyLiffIdToken } from "../auth/liff-jwt";
+import { validateDocumentType, validateDocumentUpload } from "../liff/document-upload-validation";
+import {
+  mapDocTypeToCode,
+  REQUIRED_DOCUMENTS,
+  validateDocumentSubmission,
+} from "../liff/documents-api";
+import { resolveFarmerIdentity } from "../liff/identity-resolver";
+import { generateObjectKey } from "../liff/r2-key-generator";
 import { type RegistrationFormData, validateRegistrationForm } from "../liff/registration-api";
 import { handleFlowApi } from "../line/flow";
 
@@ -23,11 +31,28 @@ export const liffRoutes = new Hono<{ Bindings: Bindings }>();
 
 // Serve the LIFF chat app HTML
 liffRoutes.get("/", (c) => {
+  // FINDING-G fix: redirect liff.state deep-link to the right page so
+  // `https://liff.line.me/{liffId}/liff/documents?farmer_id=…` reaches
+  // the document upload form (instead of the chat interface at /liff/).
+  const liffState = c.req.query("liff.state");
+  if (liffState && liffState !== "/" && liffState !== "") {
+    const queryString = c.req.url.includes("?")
+      ? c.req.url.substring(c.req.url.indexOf("?") + 1)
+      : "";
+    const params = new URLSearchParams(queryString);
+    params.delete("liff.state");
+    const remaining = params.toString();
+    // liff.line.me already passes the path with /liff prefix (because endpoint is
+    // `https://...workers.dev/liff`); just redirect to that exact path on this origin.
+    const target = liffState + (remaining ? `?${remaining}` : "");
+    return c.redirect(target);
+  }
+
   const html = `<!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>NetZeroCarbon</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
@@ -812,4 +837,351 @@ liffRoutes.post("/api/documents/submit", async (c) => {
     console.error("Document submit API error:", err);
     return c.json({ error: "Internal server error" }, 500);
   }
+});
+
+// ---------------------------------------------------------------------------
+// Document file upload API (real file upload with R2 persistence)
+// ---------------------------------------------------------------------------
+
+liffRoutes.post("/api/documents/upload", async (c) => {
+  try {
+    const db = c.env.DB;
+    const r2 = c.env.R2;
+
+    // FINDING-D fix: authenticate the request via the LIFF idToken (JWT).
+    // The form-field farmer_id is no longer trusted — the farmer is
+    // resolved server-side from the verified JWT.
+    //
+    // Authentication runs before any body parsing: an unauthenticated or
+    // malformed request must fail with 401, not surface as a 500 from the
+    // catch block when `formData()` rejects a non-multipart body.
+    //
+    // FINDING-H dev bypass: if ENVIRONMENT=development, accept
+    // `X-Dev-Line-User-Id: <line_user_id>` header instead of JWT. This lets
+    // QA / walk-through tests bypass the LIFF in-app browser requirement
+    // for the parts of the flow that don't depend on JWT validation itself.
+    // The header is rejected if ENVIRONMENT is anything else.
+    const isDev = c.env.ENVIRONMENT === "development";
+    const devLineUserId = isDev ? c.req.raw.headers.get("X-Dev-Line-User-Id") : null;
+    let lineUserId: string | undefined;
+    let formData: FormData;
+
+    if (devLineUserId) {
+      lineUserId = devLineUserId.trim();
+      formData = await c.req.formData();
+    } else {
+      // Peek at the headers only; the body is parsed once the caller is
+      // known to be authenticated.
+      const rawContentType = c.req.raw.headers.get("Content-Type") ?? "";
+      const hasFormBody = rawContentType.includes("multipart/form-data");
+      const idToken = hasFormBody
+        ? extractLiffIdToken(c.req.raw.headers, await c.req.formData())
+        : extractLiffIdToken(c.req.raw.headers, null);
+      if (!idToken) {
+        return c.json({ error: "ต้องระบุ LIFF access token" }, 401);
+      }
+      const verifyResult = await verifyLiffIdToken(idToken, c.env.LIFF_ID);
+      if (!verifyResult.ok || !verifyResult.lineUserId) {
+        return c.json({ error: verifyResult.error || "LIFF access token ไม่ถูกต้อง" }, 401);
+      }
+      lineUserId = verifyResult.lineUserId;
+      formData = hasFormBody ? await c.req.formData() : new FormData();
+    }
+
+    const file = formData.get("file") as File | null;
+    const docType = formData.get("doc_type") as string | null;
+    const farmerIdParam = formData.get("farmer_id") as string | null;
+
+    // Resolve farmer from authenticated LINE user. We ignore the form-field
+    // farmer_id except for the ownership check below — server-side
+    // resolution prevents the client from spoofing farmer_id.
+    const identityResult = await resolveFarmerIdentity(db, lineUserId, null);
+    if (!identityResult.success || !identityResult.farmerId) {
+      return c.json({ error: identityResult.error || "ไม่พบข้อมูลเกษตรกร" }, 401);
+    }
+    const farmerId = identityResult.farmerId;
+
+    // If the form-field farmer_id was supplied, it must match the JWT-derived
+    // farmer. Reject mismatches to defend against a compromised LIFF SDK
+    // (or a non-LIFF client that obtained a valid token for farmer A but
+    // is trying to upload against farmer B).
+    if (farmerIdParam && farmerIdParam !== farmerId) {
+      return c.json({ error: "farmer_id ไม่ตรงกับบัญชีที่ลงชื่อเข้าใช้" }, 403);
+    }
+
+    // Validate document type
+    const docTypeValidation = validateDocumentType(docType);
+    if (!docTypeValidation.valid) {
+      return c.json({ error: docTypeValidation.error }, 400);
+    }
+
+    // Validate file
+    const fileValidation = validateDocumentUpload(file);
+    if (!fileValidation.valid || !file) {
+      return c.json({ error: fileValidation.error }, 400);
+    }
+
+    // Map doc_type to DOC code
+    const docCode = mapDocTypeToCode(docType!);
+
+    // Generate safe R2 object key
+    const r2Key = generateObjectKey(farmerId, docCode, file.name);
+
+    // Upload to R2
+    try {
+      await r2.put(r2Key, file.stream(), {
+        httpMetadata: {
+          contentType: file.type,
+        },
+      });
+    } catch (r2Err) {
+      console.error("R2 upload error:", r2Err);
+      return c.json({ error: "ไม่สามารถอัปโหลดไฟล์ได้" }, 500);
+    }
+
+    // Upsert document record in database
+    const docId = `doc_${crypto.randomUUID()}`;
+    try {
+      await db
+        .prepare(
+          `INSERT INTO application_documents (id, farmer_id, doc_type, r2_key, submitted_at, review_status)
+           VALUES (?, ?, ?, ?, datetime('now'), 'pending')
+           ON CONFLICT(farmer_id, doc_type)
+           DO UPDATE SET r2_key = excluded.r2_key, submitted_at = datetime('now'), review_status = 'pending'`,
+        )
+        .bind(docId, farmerId, docCode, r2Key)
+        .run();
+    } catch (dbErr) {
+      console.error("Database error:", dbErr);
+      return c.json({ error: "ไม่สามารถบันทึกข้อมูลได้" }, 500);
+    }
+
+    // Calculate document count and check if all required documents attached
+    const docs = await db
+      .prepare("SELECT doc_type FROM application_documents WHERE farmer_id = ?")
+      .bind(farmerId)
+      .all<{ doc_type: string }>();
+
+    const submittedTypes = docs.results.map((d) => d.doc_type);
+    const required = REQUIRED_DOCUMENTS.filter((d) => d.required);
+    const allRequiredAttached = required.every((d) => submittedTypes.includes(d.code));
+
+    return c.json({
+      ok: true,
+      doc_type: docCode,
+      r2_key: r2Key,
+      document_count: docs.results.length,
+      all_required_attached: allRequiredAttached,
+    });
+  } catch (err) {
+    console.error("Document upload error:", err);
+    return c.json({ error: "ไม่สามารถอัปโหลดไฟล์ได้" }, 500);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// LIFF Document Upload Form
+// ---------------------------------------------------------------------------
+
+liffRoutes.get("/documents", (c) => {
+  const farmerId = c.req.query("farmer_id") || "";
+  const liffId = c.env.LIFF_ID || "";
+
+  const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>อัปโหลดเอกสาร — NetZeroCarbon</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh}
+    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:16px;text-align:center}
+    .header h1{font-size:18px;font-weight:600;margin-bottom:4px}
+    .header p{font-size:13px;opacity:.9}
+    .form-wrap{max-width:500px;margin:0 auto;padding:16px}
+    .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:16px}
+    .card h2{font-size:15px;color:#333;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #06c755}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:13px;color:#555;margin-bottom:6px;font-weight:500}
+    .field input[type="file"]{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none}
+    .field .hint{font-size:11px;color:#888;margin-top:4px}
+    .field .status{font-size:12px;color:#06c755;margin-top:4px;font-weight:500}
+    .btn{width:100%;padding:14px;background:#06c755;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px}
+    .btn:disabled{background:#ccc}
+    .btn:active{background:#05b34c}
+    .success{background:#e8f5e9;border:1px solid #06c755;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px}
+    .success h3{color:#06c755;margin-bottom:8px}
+    .error{background:#ffebee;border:1px solid #f44336;border-radius:8px;padding:12px;margin-bottom:16px;color:#c62828;font-size:13px}
+    #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
+    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    @keyframes sp{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div id="loading"><div class="spin"></div><div>กำลังโหลด...</div></div>
+  <div id="app" style="display:none">
+    <div class="header">
+      <h1>📄 อัปโหลดเอกสารสิทธิ์</h1>
+      <p>NetZeroCarbon — โครงการข้าวรักษ์โลก AWD</p>
+    </div>
+    <div class="form-wrap">
+      <div id="errorBox" class="error" style="display:none"></div>
+      <div id="successBox" class="success" style="display:none">
+        <h3>✅ อัปโหลดสำเร็จ!</h3>
+        <p>ขอบคุณที่อัปโหลดเอกสาร</p>
+      </div>
+      <form id="uploadForm">
+        <div class="card">
+          <h2>เอกสารสิทธิ์ (อัปโหลดทีละไฟล์)</h2>
+          <div class="field">
+            <label for="chanote">DOC-01: โฉนดที่ดิน *</label>
+            <input type="file" id="chanote" name="chanote" accept=".pdf,.jpg,.jpeg,.png" data-doc-type="chanote">
+            <div class="hint">รองรับ PDF, JPEG, PNG (ไม่เกิน 10MB)</div>
+            <div class="status" id="chanote-status"></div>
+          </div>
+          <div class="field">
+            <label for="id_copy">DOC-03: สำเนาบัตรประชาชน *</label>
+            <input type="file" id="id_copy" name="id_copy" accept=".pdf,.jpg,.jpeg,.png" data-doc-type="id_copy">
+            <div class="hint">รองรับ PDF, JPEG, PNG (ไม่เกิน 10MB)</div>
+            <div class="status" id="id_copy-status"></div>
+          </div>
+          <div class="field">
+            <label for="power_of_attorney">DOC-06: หนังสือมอบอำนาจ (ถ้าไม่ใช่เจ้าของ)</label>
+            <input type="file" id="power_of_attorney" name="power_of_attorney" accept=".pdf,.jpg,.jpeg,.png" data-doc-type="power_of_attorney">
+            <div class="hint">รองรับ PDF, JPEG, PNG (ไม่เกิน 10MB)</div>
+            <div class="status" id="power_of_attorney-status"></div>
+          </div>
+        </div>
+        <button type="submit" class="btn" id="submitBtn">อัปโหลดเอกสาร</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    let farmerId = "${farmerId}";
+    let liffIdToken = null;
+    async function init() {
+      try {
+        const liffId = "${liffId}";
+        if (liffId) {
+          await liff.init({ liffId });
+          const profile = await liff.getProfile();
+          // FINDING-D fix: capture the LIFF idToken so the upload can
+          // authenticate the request server-side. The Worker verifies
+          // the JWT via LINE's verify endpoint and resolves farmer_id
+          // from line_links.line_user_id — never trusting the form field.
+          try {
+            liffIdToken = liff.getIDToken ? liff.getIDToken() : null;
+          } catch (_) { liffIdToken = null; }
+          if (!liffIdToken) {
+            // Fall back to access token for older LIFF SDKs that don't
+            // expose getIDToken (it's still a valid bearer credential).
+            try { liffIdToken = liff.getAccessToken(); } catch (_) {}
+          }
+          if (!liffIdToken) {
+            // Show a clear message instead of the misleading "missing token".
+            // In Orion/Brave/Safari (not LINE in-app), liff.isInClient() is false
+            // and getIDToken() returns null. The user must tap from inside LINE.
+            const inClient = (liff.isInClient && liff.isInClient()) === true;
+            const msg = inClient
+              ? '⚠️ Authentication failed — close this window and reopen from the LINE chat link.'
+              : '⚠️ กรุณาเปิดลิงก์นี้จากแอป LINE (ไม่ใช่เบราว์เซอร์) — แตะลิงก์จากแชท LINE ในแอป LINE';
+            document.getElementById('chanote-status').textContent = msg;
+            document.getElementById('chanote-status').style.color = '#f44336';
+            document.getElementById('id_copy-status').textContent = msg;
+            document.getElementById('id_copy-status').style.color = '#f44336';
+          }
+          // Resolve farmer_id from LINE userId (display only — backend
+          // re-derives this from the JWT)
+          const res = await fetch('/liff/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: '__resolve_farmer__', userId: profile.userId })
+          });
+          const data = await res.json();
+          if (data.farmerId) farmerId = data.farmerId;
+        }
+      } catch (e) {
+        console.error('LIFF init error:', e);
+      }
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errBox = document.getElementById('errorBox');
+      const successBox = document.getElementById('successBox');
+      btn.disabled = true;
+      btn.textContent = 'กำลังอัปโหลด...';
+      errBox.style.display = 'none';
+      successBox.style.display = 'none';
+
+      const files = [
+        { input: document.getElementById('chanote'), docType: 'chanote', status: document.getElementById('chanote-status') },
+        { input: document.getElementById('id_copy'), docType: 'id_copy', status: document.getElementById('id_copy-status') },
+        { input: document.getElementById('power_of_attorney'), docType: 'power_of_attorney', status: document.getElementById('power_of_attorney-status') }
+      ];
+
+      let uploadedCount = 0;
+      let errors = [];
+
+      for (const { input, docType, status } of files) {
+        const file = input.files[0];
+        if (!file) continue;
+
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        formData.append('doc_type', docType);
+        if (farmerId) formData.append('farmer_id', farmerId);
+
+        // FINDING-D fix: include the LIFF bearer token so the backend can
+        // verify the caller before accepting the upload.
+        const headers = {};
+        if (liffIdToken) headers['Authorization'] = 'Bearer ' + liffIdToken;
+
+        try {
+          const res = await fetch('/liff/api/documents/upload', {
+            method: 'POST',
+            headers,
+            body: formData
+          });
+          const result = await res.json();
+          if (res.ok && result.ok) {
+            status.textContent = '✅ อัปโหลดสำเร็จ';
+            status.style.color = '#06c755';
+            uploadedCount++;
+          } else {
+            status.textContent = '❌ ' + (result.error || 'เกิดข้อผิดพลาด');
+            status.style.color = '#f44336';
+            errors.push(docType + ': ' + (result.error || 'เกิดข้อผิดพลาด'));
+          }
+        } catch (err) {
+          status.textContent = '❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+          status.style.color = '#f44336';
+          errors.push(docType + ': ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+        }
+      }
+
+      if (uploadedCount > 0) {
+        successBox.style.display = 'block';
+        successBox.querySelector('p').textContent = 'อัปโหลดสำเร็จ ' + uploadedCount + ' ไฟล์';
+      }
+      if (errors.length > 0) {
+        errBox.textContent = errors.join('\\n');
+        errBox.style.display = 'block';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'อัปโหลดเอกสาร';
+    });
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>`;
+
+  return c.html(html);
 });

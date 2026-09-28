@@ -100,9 +100,9 @@ export function ReviewCard({ review, selected, onSelect, batchMode, batchSelecte
 
         {/* Farm label */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-label-md font-medium text-white">{review.plot_id}</p>
-            <span className="text-[12px] text-white/90 font-mono">{Math.round((review.ai_confidence ?? 0) * 100)}%</span>
+          <div className="flex items-center justify-between mb-1 gap-2 min-w-0">
+            <p className="text-label-md font-medium text-white truncate min-w-0" title={review.plot_id}>{review.plot_id}</p>
+            <span className="text-[12px] text-white/90 font-mono shrink-0">{Math.round((review.ai_confidence ?? 0) * 100)}%</span>
           </div>
           {review.water_state && (
             <p className="text-[12px] text-white/90 mb-0.5">

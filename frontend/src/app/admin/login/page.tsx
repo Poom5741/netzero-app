@@ -20,12 +20,12 @@ export default function AdminLoginPage() {
     try {
       const res = await fetch("/login", { signal: AbortSignal.timeout(8000),
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           email: credentials.email,
           password: credentials.password,
           ...(credentials.otp ? { otp: credentials.otp } : {}),
-          ...(credentials.remember ? { remember: "on" } : {}),
+          ...(credentials.remember ? { remember: true } : {}),
         }),
         redirect: "manual",
         credentials: "include",

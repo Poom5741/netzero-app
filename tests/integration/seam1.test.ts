@@ -104,9 +104,10 @@ describe("Seam 1 — full vertical slice", () => {
         headers: { Cookie: sponsorCookie },
       }),
     );
-    expect(sponsorRes.status).toBe(200);
-    const html = await sponsorRes.text();
-    expect(html).toContain("Sponsor Dashboard");
+    expect(sponsorRes.status).toBe(302);
+    expect(sponsorRes.headers.get("Location")).toBe(
+      "https://netzero-frontend.poom-a1d.workers.dev/sponsor",
+    );
   });
 
   it("404 returned for unknown routes", async () => {

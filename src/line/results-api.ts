@@ -83,11 +83,11 @@ export async function fetchResultsData(
   const photoCount = await db
     .prepare(
       `SELECT
-         COUNT(*) as total,
-         SUM(CASE WHEN admin_status = 'verified' THEN 1 ELSE 0 END) as approved,
-         SUM(CASE WHEN admin_status = 'pending' THEN 1 ELSE 0 END) as pending
+         COUNT(DISTINCT step_code) as total,
+         COUNT(DISTINCT CASE WHEN admin_status = 'verified' THEN step_code END) as approved,
+         COUNT(DISTINCT CASE WHEN admin_status = 'pending' THEN step_code END) as pending
        FROM photo_evidence
-       WHERE plot_id = ?`,
+       WHERE plot_id = ? AND step_code IS NOT NULL`,
     )
     .bind(plotId)
     .first<{ total: number; approved: number; pending: number }>();
@@ -103,21 +103,21 @@ export async function fetchResultsData(
     .bind(plotId)
     .first<{ cnt: number }>();
 
-  const totalPhotos = photoCount?.total ?? 4;
+  // Photo progress is available before a final carbon estimate exists. Keep the
+  // four-round project denominator while preserving every verified photo count.
+  const totalPhotos = Math.max(photoCount?.total ?? 0, 4);
   const approvedPhotos = photoCount?.approved ?? 0;
   const pendingPhotos = photoCount?.pending ?? 0;
   const backfillCount = backfill?.cnt ?? 0;
 
-  const estimateData: EstimateResult | null = estimate
-    ? {
-        total_offset_tco2e: estimate.total_offset_tco2e,
-        sf_w: estimate.sf_w,
-        approvedPhotos,
-        totalPhotos,
-        pendingPhotos,
-        backfillCount,
-      }
-    : null;
+  const estimateData: EstimateResult = {
+    total_offset_tco2e: estimate?.total_offset_tco2e ?? 0,
+    sf_w: estimate?.sf_w ?? 0,
+    approvedPhotos,
+    totalPhotos,
+    pendingPhotos,
+    backfillCount,
+  };
 
   return computeResultsFromEstimate(estimateData, backfillCount);
 }

@@ -87,9 +87,10 @@ describe("Full 3-phase chain", () => {
         headers: { Cookie: sponsorCookie },
       }),
     );
-    expect(sponsorRes.status).toBe(200);
-    const html = await sponsorRes.text();
-    expect(html).toContain("Sponsor Dashboard");
+    expect(sponsorRes.status).toBe(302);
+    expect(sponsorRes.headers.get("Location")).toBe(
+      "https://netzero-frontend.poom-a1d.workers.dev/sponsor",
+    );
   });
 
   it("admin can access admin dashboard", async () => {
@@ -103,9 +104,10 @@ describe("Full 3-phase chain", () => {
         headers: { Cookie: adminCookie },
       }),
     );
-    expect(adminRes.status).toBe(200);
-    const html = await adminRes.text();
-    expect(html).toContain("Admin Dashboard");
+    expect(adminRes.status).toBe(302);
+    expect(adminRes.headers.get("Location")).toBe(
+      "https://netzero-frontend.poom-a1d.workers.dev/admin",
+    );
   });
 
   it("unauthenticated user cannot access dashboards", async () => {

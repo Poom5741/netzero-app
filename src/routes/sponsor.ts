@@ -89,17 +89,74 @@ sponsorRoutes.post("/login", async (c) => {
   });
 });
 
-sponsorRoutes.post(
-  "/logout",
-  (_c) =>
-    new Response(null, {
-      status: 302,
-      headers: {
-        Location: "/sponsor/login",
-        "Set-Cookie": "nzc_session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax",
+sponsorRoutes.post("/login", async (c) => {
+  try {
+    const body = await c.req.json();
+    const email = String(body.email ?? "").trim();
+    const password = String(body.password ?? "");
+    const otp = String(body.otp ?? "");
+
+    if (!email || !password) {
+      return c.json({ error: "Email and password are required" }, 400);
+    }
+
+    const user = await c.env.DB.prepare(
+      "SELECT id, email, password_hash, role, otp_secret, areas FROM users WHERE email = ?",
+    )
+      .bind(email)
+      .first<{
+        id: string;
+        email: string;
+        password_hash: string;
+        role: string;
+        otp_secret: string | null;
+      }>();
+
+    if (user?.role !== "sponsor" || !(await verifyPassword(password, user.password_hash))) {
+      return c.json({ error: "Invalid credentials" }, 401);
+    }
+
+    if (user.otp_secret && !verifyOtp(user.otp_secret, otp)) {
+      return c.json({ error: "Invalid OTP code" }, 401);
+    }
+
+    const cookie = await createSessionCookie(
+      { userId: user.id, role: "sponsor", email: user.email },
+      c.env.SECRET,
+      true,
+      86400,
+      // FINDING-E fix: same as /login — cross-origin Pages <-> Worker
+      // requires SameSite=None; cookie remains HttpOnly + Secure.
+      "None",
+    );
+
+    return c.json(
+      {
+        success: true,
+        user: { id: user.id, email: user.email, role: user.role },
+        message: "Login successful",
       },
-    }),
-);
+      200,
+      {
+        "Set-Cookie": cookie,
+      },
+    );
+  } catch (error) {
+    console.error("Sponsor login error:", error);
+    return c.json(
+      { error: "Login failed", details: error instanceof Error ? error.message : String(error) },
+      500,
+    );
+  }
+});
+
+sponsorRoutes.post("/logout", (c) => {
+  // FINDING-E fix: must mirror the SameSite=None flag of the original cookie
+  // so the browser clears the cross-origin copy.
+  return c.json({ ok: true }, 200, {
+    "Set-Cookie": "nzc_session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=None",
+  });
+});
 
 sponsorRoutes.get("/overview", async (c) => {
   const session = c.get("session" as never) as SessionData;

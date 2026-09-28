@@ -97,6 +97,10 @@ describe("approveApplication", () => {
             if (sql.includes("COUNT(*) as cnt FROM farmers")) {
               return { first: async () => ({ cnt: 10 }) };
             }
+            // Spec 012 approval gate: both required docs (DOC-01, DOC-03) present.
+            if (sql.includes("COUNT(*) as cnt FROM application_documents")) {
+              return { first: async () => ({ cnt: 2 }) };
+            }
             return { first: async () => null, run: async () => ({ success: true, changes: 1 }) };
           },
         };
@@ -126,6 +130,9 @@ describe("approveApplication", () => {
             }
             if (sql.includes("COUNT(*) as cnt FROM farmers")) {
               return { first: async () => ({ cnt: 5 }) };
+            }
+            if (sql.includes("COUNT(*) as cnt FROM application_documents")) {
+              return { first: async () => ({ cnt: 2 }) };
             }
             // Both UPDATE statements return prepared statements for batch
             return {
