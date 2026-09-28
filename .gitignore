@@ -12,6 +12,7 @@ coverage/
 
 # ---- Cloudflare / Wrangler ----
 .wrangler/
+.next/
 .dev.vars
 wrangler.toml.bak
 *secret*

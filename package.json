@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "check:lint": "bunx biome check src/ tests/",
+    "check:repo": "python3 scripts/check-repository-hygiene.py",
     "check:type": "bunx tsc --noEmit",
     "check:test": "bun test --bail tests/unit/ tests/integration/",
     "test:visual": "playwright test --config=tests/visual/playwright.config.ts",
