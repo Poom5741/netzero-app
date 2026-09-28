@@ -120,13 +120,13 @@ export function ReviewDetailPanel({
   return (
     <>
       <aside
-        className="review-detail-panel flex flex-col h-full bg-surface-container-lowest rounded-xl shadow-lg overflow-hidden shrink-0"
+        className="review-detail-panel flex flex-col w-full max-w-[420px] lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] bg-surface-container-lowest rounded-xl shadow-lg overflow-hidden shrink-0"
         aria-label="รายละเอียดการตรวจสอบ"
       >
         {/* Header */}
         <div className="p-6 bg-surface-container-low border-b border-surface-container-highest/50">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-headline-md text-headline-md text-on-surface">{review.plot_id}</h3>
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <h3 className="font-headline-md text-headline-md text-on-surface truncate min-w-0" title={review.plot_id}>{review.plot_id}</h3>
             <div className="flex items-center gap-2">
               {review.ai_status === "flag" && (
                 <div className="bg-error-container text-on-error-container px-2 py-1 rounded text-[12px] font-label-md">

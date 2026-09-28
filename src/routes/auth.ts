@@ -10,7 +10,7 @@ type Bindings = {
 
 export const authRoutes = new Hono<{ Bindings: Bindings }>();
 
-function renderLoginPage(error?: string): string {
+function _renderLoginPage(error?: string): string {
   const errorHtml = error
     ? `<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:8px;margin-bottom:16px">
         <span class="material-symbols-outlined" style="color:#dc2626;font-size:20px">error</span>
@@ -81,18 +81,19 @@ function renderLoginPage(error?: string): string {
 }
 
 authRoutes.get("/login", (c) => {
-  return c.html(renderLoginPage());
+  // Redirect to frontend for login page
+  return c.redirect("https://netzero-frontend.poom-a1d.workers.dev/admin/login");
 });
 
 authRoutes.post("/login", async (c) => {
   try {
-    const form = await c.req.formData();
-    const email = form.get("email") as string | null;
-    const password = form.get("password") as string | null;
-    const otp = form.get("otp") as string | null;
+    const body = await c.req.json();
+    const email = body.email as string | null;
+    const password = body.password as string | null;
+    const otp = body.otp as string | null;
 
     if (!email || !password) {
-      return c.html(renderLoginPage("Email and password are required"), 400);
+      return c.json({ error: "Email and password are required" }, 400);
     }
 
     const user = await c.env.DB.prepare(
@@ -108,29 +109,29 @@ authRoutes.post("/login", async (c) => {
       }>();
 
     if (!user) {
-      return c.html(renderLoginPage("Invalid credentials"), 401);
+      return c.json({ error: "Invalid credentials" }, 401);
     }
 
     // Import verifyPassword dynamically to avoid circular issues
     const { verifyPassword } = await import("../auth/password");
     const valid = await verifyPassword(password, user.password_hash);
     if (!valid) {
-      return c.html(renderLoginPage("Invalid credentials"), 401);
+      return c.json({ error: "Invalid credentials" }, 401);
     }
 
     // OTP verification — required only when user has otp_secret set
     if (user.otp_secret) {
       if (!otp) {
-        return c.html(renderLoginPage("OTP code is required"), 401);
+        return c.json({ error: "OTP code is required" }, 401);
       }
       const { verifyOtp } = await import("../auth/otp");
       if (!verifyOtp(user.otp_secret, otp)) {
-        return c.html(renderLoginPage("Invalid OTP code"), 401);
+        return c.json({ error: "Invalid OTP code" }, 401);
       }
     }
 
     const { createSessionCookie } = await import("../auth/session");
-    const remember = form.get("remember") === "on";
+    const remember = body.remember || false;
     // T090 — extend session to 30 days when "remember device" is checked (AD-AUTH-02)
     const maxAge = remember ? 86400 * 30 : 86400;
     const cookie = await createSessionCookie(
@@ -138,7 +139,11 @@ authRoutes.post("/login", async (c) => {
       c.env.SECRET,
       true,
       maxAge,
-      "Lax", // Explicitly set Lax for admin/sponsor login compatibility
+      // Explicitly set Lax for admin/sponsor login compatibility (retained
+      // from b83c626). SameSite=None is no longer required: the frontend
+      // now POSTs to the same-origin /login, so the session cookie is
+      // first-party and Lax permits it.
+      "Lax",
     );
 
     // T063 — audit log entry for successful sign-in (AD-AUTH-03)
@@ -154,11 +159,18 @@ authRoutes.post("/login", async (c) => {
       console.error("sign-in audit log failed:", err);
     }
 
-    const redirectPath = user.role === "admin" ? "/admin" : "/sponsor";
-    return new Response(null, {
-      status: 302,
-      headers: { Location: redirectPath, "Set-Cookie": cookie },
-    });
+    // Return success response with session cookie
+    return c.json(
+      {
+        success: true,
+        user: { id: user.id, email: user.email, role: user.role },
+        message: "Login successful",
+      },
+      200,
+      {
+        "Set-Cookie": cookie,
+      },
+    );
   } catch (error) {
     console.error("Login error:", error);
     return c.json(
@@ -169,8 +181,11 @@ authRoutes.post("/login", async (c) => {
 });
 
 authRoutes.post("/logout", (c) => {
+  // FINDING-E fix: cookie-clearing header must match the SameSite + Secure
+  // flags of the original Set-Cookie so the browser clears the cross-origin
+  // copy on Pages.
   return c.json({ ok: true }, 200, {
-    "Set-Cookie": "nzc_session=; Max-Age=0; Path=/; HttpOnly",
+    "Set-Cookie": "nzc_session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=None",
   });
 });
 

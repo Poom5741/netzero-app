@@ -160,24 +160,37 @@ export default function EvidencePage() {
           </div>
         )}
 
-        {/* Photo grid */}
+        {/* Photo grid + detail panel: flex row so the panel docks right */}
         {!loading && !error && filtered.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {filtered.map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                selected={selectedId === review.id}
-                onSelect={setSelectedId}
-                batchMode={batchMode}
-                batchSelected={batchSelected.has(review.id)}
+          <div className="flex gap-6 items-start">
+            <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {filtered.map((review) => (
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  selected={selectedId === review.id}
+                  onSelect={setSelectedId}
+                  batchMode={batchMode}
+                  batchSelected={batchSelected.has(review.id)}
+                />
+              ))}
+            </div>
+
+            {/* Detail panel */}
+            {selected && (
+              <ReviewDetailPanel
+                review={selected}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onRetake={handleRetake}
+                onClose={() => setSelectedId(null)}
               />
-            ))}
+            )}
           </div>
         )}
 
-        {/* Detail panel */}
-        {selected && (
+        {/* Empty state (no photos) */}
+        {(!loading && !error && filtered.length === 0) && selected && (
           <ReviewDetailPanel
             review={selected}
             onApprove={handleApprove}

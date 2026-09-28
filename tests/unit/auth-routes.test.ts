@@ -26,15 +26,13 @@ function _cookieFrom(res: Response): string {
 }
 
 describe("GET /login", () => {
-  it("renders login page with form", async () => {
+  it("redirects to the frontend admin login page", async () => {
     const app = makeApp();
     const res = await app.request("/login", {}, { SECRET } as never);
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("<form");
-    expect(html).toContain('name="email"');
-    expect(html).toContain('name="password"');
-    expect(html).toContain('type="submit"');
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe(
+      "https://netzero-frontend.poom-a1d.workers.dev/admin/login",
+    );
   });
 });
 
@@ -107,5 +105,22 @@ describe("POST /logout", () => {
     const setCookie = res.headers.get("Set-Cookie") ?? "";
     expect(setCookie).toContain("nzc_session=;");
     expect(setCookie).toContain("Max-Age=0");
+  });
+});
+
+// FINDING-E (2026-09-19): admin/sponsor login + logout must use
+// SameSite=None so the Pages origin (netzero-frontend.pages.dev) can
+// persist the session cookie for cross-origin XHR against the Worker.
+// The cookie stays HttpOnly + Secure, so SameSite=None only enables
+// storage on the cross-origin request — not cross-site token leakage.
+describe("FINDING-E: SameSite=None on admin/sponsor cookies", () => {
+  it("POST /logout emits SameSite=None;Secure;HttpOnly on the clearing cookie", async () => {
+    const app = makeApp();
+    const res = await app.request("/logout", { method: "POST" });
+    const setCookie = res.headers.get("Set-Cookie") ?? "";
+    expect(setCookie).toContain("SameSite=None");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).not.toContain("SameSite=Lax");
   });
 });

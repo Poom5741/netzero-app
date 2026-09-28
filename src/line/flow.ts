@@ -14,7 +14,7 @@
 import { chatWithAi } from "../chat/ai";
 import { confirmDraft, rejectDraft } from "../chat/state";
 import { handleSeasonCreate } from "../season/create";
-import { hasAllConsents, recordConsent } from "../trust/consent-persist";
+import { attachConsentsToFarmer, hasAllConsents, recordConsent } from "../trust/consent-persist";
 import { fetchCalendarSteps } from "./calendar-api";
 import {
   buildCalendarBubble,
@@ -34,6 +34,7 @@ import {
   composeRegistrationWelcome,
 } from "./flow-registration";
 import { composeResultsMessage, composeTodoMessage } from "./flow-results";
+import { withQuickReply } from "./quick-replies";
 import { pushMessage } from "./reply";
 import { fetchResultsData } from "./results-api";
 
@@ -68,7 +69,7 @@ type FlowContext = {
   apiKey: string;
   userId: string;
   linkId: string;
-  farmerId: string;
+  farmerId: string | null;
   state: ConversationState;
   selectedPlotId: string | null;
   text: string;
@@ -80,6 +81,21 @@ type FlowContext = {
     userId: string,
     messages: any[],
   ) => Promise<{ status: number; body: string }>; // Test injection
+  aiFn?: (
+    apiKey: string,
+    userMessage: string,
+    context: {
+      farmerName?: string;
+      plotCode?: string;
+      seasonId?: string;
+      linkedFarmer?: boolean;
+    },
+  ) => Promise<{
+    type: "reply" | "draft";
+    text: string;
+    category?: string;
+    data?: Record<string, unknown>;
+  }>; // Test injection
 };
 
 type FlowResult = {
@@ -105,13 +121,35 @@ async function safePush(
   }>,
 ): Promise<void> {
   try {
+    // Auto-attach contextual Quick Reply buttons based on current state
+    const enriched = withQuickReply(ctx.state, messages, ctx.liffId, ctx.appUrl);
     const pushFn = ctx.pushFn ?? pushMessage;
-    const r = await pushFn(ctx.token, ctx.userId, messages);
+    const r = await pushFn(ctx.token, ctx.userId, enriched);
     console.log(`[PUSH] status=${r.status} body=${r.body.substring(0, 100)}`);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error(`[PUSH_ERR] ${errMsg}`);
   }
+}
+
+/**
+ * Transition to a new state and send messages with the target state's Quick Replies.
+ * Sets ctx.state so safePush attaches the correct quick reply buttons.
+ */
+async function transitionTo(
+  ctx: FlowContext,
+  newState: ConversationState,
+  messages: Array<{
+    type: string;
+    text?: string;
+    altText?: string;
+    contents?: unknown;
+    quickReply?: unknown;
+  }>,
+): Promise<FlowResult> {
+  ctx.state = newState;
+  await safePush(ctx, messages);
+  return { newState };
 }
 
 /** Build the standard 9-step calendar data for bubble display. */
@@ -241,18 +279,15 @@ async function handleWelcome(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
   if (lower === "start_registration" || lower.includes("ลงทะเบียน") || lower.includes("ผูกบัญชี")) {
-    // Send consent as plain text first (flex may fail validation)
-    await safePush(ctx, [{ type: "text", text: composePdpaConsent() }]);
-    return { newState: "consent" };
+    return transitionTo(ctx, "consent", [{ type: "text", text: composePdpaConsent() }]);
   }
 
   // Show the welcome bubble
   const liffUrl = ctx.liffId ? `https://liff.line.me/${ctx.liffId}` : "";
-  await safePush(ctx, [
+  return transitionTo(ctx, "welcome", [
     { type: "text", text: composeRegistrationWelcome() },
     buildWelcomeBubble(liffUrl || "no-liff"),
   ]);
-  return { newState: "welcome" };
 }
 
 /**
@@ -278,20 +313,26 @@ async function handleConsent(ctx: FlowContext): Promise<FlowResult> {
     lower === "同意"
   ) {
     const consentTypes = ["pdpa", "data_collection", "photo_sharing", "carbon_project"];
+    // FINDING-A fix: when farmerId is null (brand-new LINE user), key the
+    // consents on line_user_id instead. attachConsentsToFarmer() runs on
+    // phone-confirm to migrate them onto the resolved farmer.
+    const consentKey = ctx.farmerId ?? null;
+    const lineKey = ctx.farmerId ? null : ctx.userId;
     for (const ct of consentTypes) {
-      await recordConsent(ctx.db, ctx.farmerId, ct, true);
+      await recordConsent(ctx.db, consentKey, ct, true, lineKey);
     }
 
-    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    const allConsented = await hasAllConsents(ctx.db, consentKey, lineKey);
     if (allConsented) {
-      await safePush(ctx, [
+      return transitionTo(ctx, "phone", [
         textMessage("✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ"),
         textMessage("กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)"),
       ]);
-      return { newState: "phone" };
     }
-    await safePush(ctx, [textMessage("กรุณายอมรับเงื่อนไขครบทั้ง 4 ข้อค่ะ"), buildConsent4Checkbox()]);
-    return { newState: "consent" };
+    return transitionTo(ctx, "consent", [
+      textMessage("กรุณายอมรับเงื่อนไขครบทั้ง 4 ข้อค่ะ"),
+      buildConsent4Checkbox(),
+    ]);
   }
 
   // Individual consent accept
@@ -300,31 +341,32 @@ async function handleConsent(ctx: FlowContext): Promise<FlowResult> {
   );
   if (individualMatch) {
     const consentType = individualMatch[1]!;
-    await recordConsent(ctx.db, ctx.farmerId, consentType, true);
+    const consentKey = ctx.farmerId ?? null;
+    const lineKey = ctx.farmerId ? null : ctx.userId;
+    await recordConsent(ctx.db, consentKey, consentType, true, lineKey);
 
-    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    const allConsented = await hasAllConsents(ctx.db, consentKey, lineKey);
     if (allConsented) {
-      await safePush(ctx, [
+      return transitionTo(ctx, "phone", [
         textMessage("✅ ยอมรับเงื่อนไขครบทั้ง 4 ข้อแล้วค่ะ"),
         textMessage("กรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)"),
       ]);
-      return { newState: "phone" };
     }
-    await safePush(ctx, [
+    return transitionTo(ctx, "consent", [
       textMessage("✅ บันทึกข้อตกลงแล้วค่ะ กรุณาตอบรับข้อที่เหลือ"),
       buildConsent4Checkbox(),
     ]);
-    return { newState: "consent" };
   }
 
   if (lower === "consent_reject" || lower === "ไม่ยินยอม" || lower === "ไม่") {
-    await safePush(ctx, [textMessage("กรุณายอมรับเพื่อใช้งานค่ะ")]);
-    return { newState: "consent" };
+    return transitionTo(ctx, "consent", [textMessage("กรุณายอมรับเพื่อใช้งานค่ะ")]);
   }
 
   // Re-show 4-checkbox consent card
-  await safePush(ctx, [{ type: "text", text: composePdpaConsent() }, buildConsent4Checkbox()]);
-  return { newState: "consent" };
+  return transitionTo(ctx, "consent", [
+    { type: "text", text: composePdpaConsent() },
+    buildConsent4Checkbox(),
+  ]);
 }
 
 /**
@@ -340,10 +382,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
 
   // Validate Thai phone format: starts with 0, followed by 9 digits
   if (!/^0\d{9}$/.test(phone)) {
-    await safePush(ctx, [
+    return transitionTo(ctx, "phone", [
       textMessage("เบอร์โทรศัพท์ไม่ถูกต้อง\nกรุณาพิมพ์เบอร์โทรศัพท์ 10 หลักที่ขึ้นต้นด้วย 0 (เช่น 0812345678)"),
     ]);
-    return { newState: "phone" };
   }
 
   // Look up farmer by phone (prod schema: addr_province / addr_district)
@@ -355,8 +396,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .first<{ id: string; full_name: string; province: string; district: string }>();
 
   if (!farmer) {
-    await safePush(ctx, [textMessage("ไม่พบข้อมูลเกษตรกรในระบบ\nกรุณาติดต่อเจ้าหน้าที่โครงการค่ะ")]);
-    return { newState: "phone" };
+    return transitionTo(ctx, "phone", [
+      textMessage("ไม่พบข้อมูลเกษตรกรในระบบ\nกรุณาติดต่อเจ้าหน้าที่โครงการค่ะ"),
+    ]);
   }
 
   // Check if already linked to another account
@@ -366,8 +408,9 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .first<{ id: string }>();
 
   if (existingLink) {
-    await safePush(ctx, [textMessage("เบอร์นี้ผูกกับบัญชี LINE อื่นอยู่แล้ว\nกรุณาติดต่อเจ้าหน้าที่ค่ะ")]);
-    return { newState: "phone" };
+    return transitionTo(ctx, "phone", [
+      textMessage("เบอร์นี้ผูกกับบัญชี LINE อื่นอยู่แล้ว\nกรุณาติดต่อเจ้าหน้าที่ค่ะ"),
+    ]);
   }
 
   // Update link with farmer info
@@ -378,10 +421,17 @@ async function handlePhone(ctx: FlowContext): Promise<FlowResult> {
     .bind(farmer.id, ctx.linkId)
     .run();
 
-  await safePush(ctx, [
+  // FINDING-A fix: migrate any pre-link consents recorded against the
+  // LINE user onto the newly-resolved farmer.
+  try {
+    await attachConsentsToFarmer(ctx.db, ctx.userId, farmer.id);
+  } catch (err) {
+    console.error("attachConsentsToFarmer failed:", err);
+  }
+
+  return transitionTo(ctx, "identity_confirm", [
     buildIdentityConfirmBubble(farmer.full_name, farmer.district || "—", farmer.province || "—"),
   ]);
-  return { newState: "identity_confirm" };
 }
 
 /**
@@ -401,18 +451,15 @@ async function handleIdentityConfirm(ctx: FlowContext): Promise<FlowResult> {
     lower === "ค่ะ" ||
     lower === "yes"
   ) {
-    await safePush(ctx, [buildConditions3Checkbox()]);
-    return { newState: "conditions" };
+    return transitionTo(ctx, "conditions", [buildConditions3Checkbox()]);
   }
 
   if (lower === "identity_reject" || lower === "ไม่ใช่" || lower === "ไม่") {
-    await safePush(ctx, [textMessage("กรุณาพิมพ์เบอร์โทรศัพท์ใหม่อีกครั้งค่ะ")]);
-    return { newState: "phone" };
+    return transitionTo(ctx, "phone", [textMessage("กรุณาพิมพ์เบอร์โทรศัพท์ใหม่อีกครั้งค่ะ")]);
   }
 
   // Re-show identity confirm prompt
-  await safePush(ctx, [textMessage('ใช่ท่านหรือไม่ครับ\nพิมพ์ "ใช่" หรือ "ไม่ใช่"')]);
-  return { newState: "identity_confirm" };
+  return transitionTo(ctx, "identity_confirm", [textMessage('ใช่ท่านหรือไม่ครับ\nพิมพ์ "ใช่" หรือ "ไม่ใช่"')]);
 }
 
 /**
@@ -433,16 +480,14 @@ async function handleConditions(ctx: FlowContext): Promise<FlowResult> {
     const liffUrl = ctx.liffId ? `https://liff.line.me/${ctx.liffId}` : "";
 
     if (liffUrl) {
-      await safePush(ctx, [buildRegistrationLinkBubble(liffUrl)]);
+      return transitionTo(ctx, "registration", [buildRegistrationLinkBubble(liffUrl)]);
     } else {
-      await safePush(ctx, [textMessage("กรุณาเปิดฟอร์มลงทะเบียนผ่านเมนูค่ะ")]);
+      return transitionTo(ctx, "registration", [textMessage("กรุณาเปิดฟอร์มลงทะเบียนผ่านเมนูค่ะ")]);
     }
-    return { newState: "registration" };
   }
 
   // Re-show conditions
-  await safePush(ctx, [buildConditions3Checkbox()]);
-  return { newState: "conditions" };
+  return transitionTo(ctx, "conditions", [buildConditions3Checkbox()]);
 }
 
 /**
@@ -460,12 +505,11 @@ async function handleRegistration(ctx: FlowContext): Promise<FlowResult> {
     lower.includes("กรอกเสร็จ") ||
     lower.includes("ลงทะเบียนเสร็จ")
   ) {
-    await safePush(ctx, [
+    return transitionTo(ctx, "documents", [
       textMessage("✅ ลงทะเบียนเรียบร้อยแล้วค่ะ"),
       textMessage("ขั้นต่อไป กรุณาอัปโหลดเอกสารสิทธิ์ (สำเนาบัตรประชาชน / สำเนาเอกสารสิทธิ์ที่ดิน)"),
       textMessage('พิมพ์ "อัปโหลด" เมื่อพร้อมอัปโหลดเอกสาร'),
     ]);
-    return { newState: "documents" };
   }
 
   // Remind to fill form
@@ -473,40 +517,88 @@ async function handleRegistration(ctx: FlowContext): Promise<FlowResult> {
   if (ctx.liffId) {
     reminders.push(buildRegistrationLinkBubble(`https://liff.line.me/${ctx.liffId}`));
   }
-  await safePush(ctx, reminders);
-  return { newState: "registration" };
+  return transitionTo(ctx, "registration", reminders);
 }
 
 /**
  * OB-07: DOCUMENTS STATE — Document upload.
  *
- * - User uploads documents -> pending review message, go to pending_review
- * - Any text -> remind to upload, stay in documents
+ * - Check actual document count before advancing to pending_review
+ * - Re-display LIFF upload link when plain text "อัปโหลด" received without sufficient documents
+ * - Show progress message when some documents uploaded but not all
+ * - Only advance to pending_review when all required documents persisted (count >= 2)
  */
 async function handleDocuments(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
-  // Document upload completion signals
+  // Check if user typed upload command or completion signal
   if (
     lower === "documents_complete" ||
     lower.includes("อัปโหลด") ||
     lower.includes("อัพโหลด") ||
     lower.includes("ส่งเอกสาร")
   ) {
-    await safePush(ctx, [
-      textMessage("✅ ได้รับเอกสารแล้วค่ะ"),
-      textMessage("⏳ บัญชีอยู่ระหว่างรอการตรวจสอบจากเจ้าหน้าที่"),
-      textMessage("กรุณารอการยืนยันค่ะ ใช้เวลาประมาณ 1-3 วันทำการ"),
-    ]);
-    return { newState: "pending_review" };
+    // Query actual document count from database
+    const docs = await ctx.db
+      .prepare("SELECT doc_type FROM application_documents WHERE farmer_id = ?")
+      .bind(ctx.farmerId)
+      .all<{ doc_type: string }>();
+
+    const documentCount = docs.results.length;
+    const requiredCount = 2; // chanote (DOC-01) + id_copy (DOC-03)
+
+    // Only advance if all required documents are uploaded
+    if (documentCount >= requiredCount) {
+      return transitionTo(ctx, "pending_review", [
+        textMessage("✅ ได้รับเอกสารแล้วค่ะ"),
+        textMessage("⏳ บัญชีอยู่ระหว่างรอการตรวจสอบจากเจ้าหน้าที่"),
+        textMessage("กรุณารอการยืนยันค่ะ ใช้เวลาประมาณ 1-3 วันทำการ"),
+      ]);
+    }
+
+    // Documents incomplete - show progress and re-display upload link
+    // FINDING-G fix: route through liff.line.me/{liffId}/... so LINE recognizes the
+    // URL as a LIFF entry and opens it in the in-app browser with LIFF SDK active.
+    const uploadUrl = ctx.liffId
+      ? `https://liff.line.me/${ctx.liffId}/liff/documents?farmer_id=${encodeURIComponent(ctx.farmerId || "")}`
+      : ctx.appUrl
+        ? `${ctx.appUrl}/liff/documents?farmer_id=${encodeURIComponent(ctx.farmerId || "")}`
+        : "";
+
+    const progressMsg = `อัปโหลดแล้ว ${documentCount}/${requiredCount} รายการ กรุณาอัปโหลดให้ครบถ้วน`;
+
+    if (uploadUrl) {
+      return transitionTo(ctx, "documents", [
+        textMessage(progressMsg),
+        textMessage(`กรุณาอัปโหลดเอกสารที่ลิงก์นี้:\n${uploadUrl}`),
+      ]);
+    } else {
+      return transitionTo(ctx, "documents", [
+        textMessage(progressMsg),
+        textMessage("กรุณาอัปโหลดเอกสารสิทธิ์ (สำเนาบัตรประชาชน / สำเนาเอกสารสิทธิ์ที่ดิน)"),
+      ]);
+    }
   }
 
-  // Remind to upload
-  await safePush(ctx, [
-    textMessage("กรุณาอัปโหลดเอกสารสิทธิ์ (สำเนาบัตรประชาชน / สำเนาเอกสารสิทธิ์ที่ดิน)"),
-    textMessage('พิมพ์ "อัปโหลด" เมื่ออัปโหลดเอกสารเสร็จแล้ว'),
-  ]);
-  return { newState: "documents" };
+  // Default: show upload link — prefer liff.line.me deep-link so LINE opens
+  // in the in-app browser with LIFF SDK active (required for getIDToken).
+  const uploadUrl = ctx.liffId
+    ? `https://liff.line.me/${ctx.liffId}/liff/documents?farmer_id=${encodeURIComponent(ctx.farmerId || "")}`
+    : ctx.appUrl
+      ? `${ctx.appUrl}/liff/documents?farmer_id=${encodeURIComponent(ctx.farmerId || "")}`
+      : "";
+
+  if (uploadUrl) {
+    return transitionTo(ctx, "documents", [
+      textMessage("กรุณาอัปโหลดเอกสารสิทธิ์ (สำเนาบัตรประชาชน / สำเนาเอกสารสิทธิ์ที่ดิน)"),
+      textMessage(`อัปโหลดเอกสารที่ลิงก์นี้:\n${uploadUrl}`),
+    ]);
+  } else {
+    return transitionTo(ctx, "documents", [
+      textMessage("กรุณาอัปโหลดเอกสารสิทธิ์ (สำเนาบัตรประชาชน / สำเนาเอกสารสิทธิ์ที่ดิน)"),
+      textMessage('พิมพ์ "อัปโหลด" เมื่ออัปโหลดเอกสารเสร็จแล้ว'),
+    ]);
+  }
 }
 
 /**
@@ -515,12 +607,11 @@ async function handleDocuments(ctx: FlowContext): Promise<FlowResult> {
  * Always shows the waiting message. User cannot proceed until activated.
  */
 async function handlePendingReview(ctx: FlowContext): Promise<FlowResult> {
-  await safePush(ctx, [
+  return transitionTo(ctx, "pending_review", [
     textMessage("⏳ บัญชีอยู่ระหว่างรอการยืนยัน"),
     textMessage("เจ้าหน้าที่กำลังตรวจสอบเอกสารของท่านค่ะ"),
     textMessage("กรุณารอการยืนยันค่ะ ใช้เวลาประมาณ 1-3 วันทำการ"),
   ]);
-  return { newState: "pending_review" };
 }
 
 /**
@@ -547,11 +638,10 @@ async function handleActivation(ctx: FlowContext): Promise<FlowResult> {
     areaRai: plot?.area_rai ?? 0,
   });
 
-  await safePush(ctx, [
+  return transitionTo(ctx, "season_setup", [
     textMessage(activationText),
     textMessage('ขั้นต่อไป กรุณาระบุวันหว่านข้าว (เช่น 15/06/2568) หรือพิมพ์ "ข้าม" เพื่อข้าม'),
   ]);
-  return { newState: "season_setup" };
 }
 
 /**
@@ -565,7 +655,7 @@ async function handleActivation(ctx: FlowContext): Promise<FlowResult> {
  */
 async function createSeasonFromTypedDate(
   ctx: FlowContext,
-): Promise<{ displayDate: string } | null> {
+): Promise<{ displayDate: string; plotId?: string; seasonId?: string } | null> {
   const dateMatch = ctx.text.match(/(\d{1,2})[/\\-](\d{1,2})[/\\-](\d{2,4})/);
 
   if (!dateMatch) return null;
@@ -583,6 +673,11 @@ async function createSeasonFromTypedDate(
 
     if (plot) {
       await handleSeasonCreate(ctx.db, { plot_id: plot.id, sow_date: sowDateIso });
+      return {
+        displayDate: `${day}/${month}/${year}`,
+        plotId: plot.id,
+        seasonId: `season_${plot.id}_${sowDateIso}`,
+      };
     }
   } catch (seasonErr) {
     console.error("Failed to create season:", seasonErr);
@@ -602,37 +697,36 @@ async function handleSeasonSetup(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
   if (lower === "ข้าม" || lower === "skip") {
-    await safePush(ctx, [
+    return transitionTo(ctx, "calendar", [
       textMessage("ข้ามการตั้งวันหว่านค่ะ"),
       buildCalendarBubble(
         calendarSteps(),
         ctx.appUrl || "no-app",
         ctx.selectedPlotId ?? undefined,
         ctx.seasonId ?? undefined,
+        ctx.liffId,
       ),
     ]);
-    return { newState: "calendar" };
   }
 
   const created = await createSeasonFromTypedDate(ctx);
   if (created) {
-    await safePush(ctx, [
+    return transitionTo(ctx, "calendar", [
       textMessage(`✅ บันทึกวันหว่าน: ${created.displayDate}`),
       buildCalendarBubble(
         calendarSteps(),
         ctx.appUrl || "no-app",
-        ctx.selectedPlotId ?? undefined,
-        ctx.seasonId ?? undefined,
+        created.plotId ?? ctx.selectedPlotId ?? undefined,
+        created.seasonId ?? ctx.seasonId ?? undefined,
+        ctx.liffId,
       ),
     ]);
-    return { newState: "calendar" };
   }
 
   // Invalid input — re-prompt
-  await safePush(ctx, [
+  return transitionTo(ctx, "season_setup", [
     textMessage('กรุณาระบุวันหว่านในรูปแบบ DD/MM/YYYY (เช่น 15/06/2568) หรือพิมพ์ "ข้าม"'),
   ]);
-  return { newState: "season_setup" };
 }
 
 /**
@@ -667,17 +761,31 @@ async function handleCalendar(ctx: FlowContext): Promise<FlowResult> {
     return await handleResults(ctx);
   }
   if (lower.includes("contact") || lower.includes("ติดต่อ")) {
-    await safePush(ctx, [
+    return transitionTo(ctx, "calendar", [
       textMessage(
         "📞 ติดต่อเจ้าหน้าที่โครงการ\n\nผู้ประสานงาน: โครงการ NetZeroCarbon\nโทรศัพท์: ติดต่อผ่าน LINE Official\nอีเมล: โครงการ NetZeroCarbon\n\nเวลาทำการ: จันทร์-ศุกร์ 8:00-17:00 น.",
       ),
     ]);
-    return { newState: "calendar" };
   }
 
-  // Show calendar with real data from season_steps
+  // Show calendar with real data from season_steps. Re-resolve identifiers
+  // from D1 because webhook turns may not carry selectedPlotId/seasonId.
+  const latestPlot = await ctx.db
+    .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+    .bind(ctx.farmerId)
+    .first<{ id: string }>();
+  const plotId = ctx.selectedPlotId ?? latestPlot?.id;
+  const latestSeason = plotId
+    ? await ctx.db
+        .prepare(
+          "SELECT season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1",
+        )
+        .bind(plotId)
+        .first<{ season_id: string }>()
+    : null;
+  const seasonId = ctx.seasonId ?? latestSeason?.season_id;
+
   let steps: Awaited<ReturnType<typeof fetchCalendarSteps>> | undefined;
-  const plotId = ctx.selectedPlotId;
   if (plotId) {
     steps = await fetchCalendarSteps(ctx.db, plotId);
   }
@@ -687,15 +795,9 @@ async function handleCalendar(ctx: FlowContext): Promise<FlowResult> {
     steps = calendarSteps();
   }
 
-  await safePush(ctx, [
-    buildCalendarBubble(
-      steps,
-      ctx.appUrl || "no-app",
-      ctx.selectedPlotId ?? undefined,
-      ctx.seasonId ?? undefined,
-    ),
+  return transitionTo(ctx, "calendar", [
+    buildCalendarBubble(steps, ctx.appUrl || "no-app", plotId, seasonId, ctx.liffId),
   ]);
-  return { newState: "calendar" };
 }
 
 // ===========================================================================
@@ -854,9 +956,11 @@ async function handlePhotoReport(ctx: FlowContext): Promise<FlowResult> {
           .bind(plot.id)
           .first<{ season_id: string }>()
       : null;
-    const cameraUrl = ctx.appUrl
-      ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
-      : "";
+    const cameraUrl = ctx.liffId
+      ? `https://liff.line.me/${ctx.liffId}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
+      : ctx.appUrl
+        ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
+        : "";
 
     const photoCount =
       plot?.id && season?.season_id
@@ -960,7 +1064,16 @@ async function handleResults(ctx: FlowContext): Promise<FlowResult> {
   }
 
   // Default: show dashboard with real data
-  const plotId = ctx.selectedPlotId;
+  // Re-resolve plotId from D1 if not in context (same fix as calendar handler)
+  let plotId = ctx.selectedPlotId;
+  if (!plotId) {
+    const latestPlot = await ctx.db
+      .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+      .bind(ctx.farmerId)
+      .first<{ id: string }>();
+    plotId = latestPlot?.id;
+  }
+
   const results = plotId
     ? await fetchResultsData(ctx.db, ctx.farmerId, plotId)
     : {
@@ -1113,7 +1226,8 @@ async function handleChat(ctx: FlowContext): Promise<FlowResult> {
     ]);
 
     const aiStart = Date.now();
-    const aiResponse = await chatWithAi(ctx.apiKey, ctx.text, {
+    const aiFn = ctx.aiFn ?? chatWithAi;
+    const aiResponse = await aiFn(ctx.apiKey, ctx.text, {
       farmerName: farmer?.full_name,
       plotCode: plot?.plot_code,
       seasonId: seasonInput?.season_id,
@@ -1242,11 +1356,14 @@ async function handleConsentApi(ctx: FlowContext): Promise<FlowApiResult> {
     lower === "同意"
   ) {
     const consentTypes = ["pdpa", "data_collection", "photo_sharing", "carbon_project"];
+    // FINDING-A fix: when farmerId is null, key on line_user_id.
+    const consentKey = ctx.farmerId ?? null;
+    const lineKey = ctx.farmerId ? null : ctx.userId;
     for (const ct of consentTypes) {
-      await recordConsent(ctx.db, ctx.farmerId, ct, true);
+      await recordConsent(ctx.db, consentKey, ct, true, lineKey);
     }
 
-    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    const allConsented = await hasAllConsents(ctx.db, consentKey, lineKey);
     if (allConsented) {
       return {
         reply: "✅ ยอมรับเงื่อนไขเรียบร้อยแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
@@ -1265,9 +1382,11 @@ async function handleConsentApi(ctx: FlowContext): Promise<FlowApiResult> {
   );
   if (individualMatch) {
     const consentType = individualMatch[1]!;
-    await recordConsent(ctx.db, ctx.farmerId, consentType, true);
+    const consentKey = ctx.farmerId ?? null;
+    const lineKey = ctx.farmerId ? null : ctx.userId;
+    await recordConsent(ctx.db, consentKey, consentType, true, lineKey);
 
-    const allConsented = await hasAllConsents(ctx.db, ctx.farmerId);
+    const allConsented = await hasAllConsents(ctx.db, consentKey, lineKey);
     if (allConsented) {
       return {
         reply: "✅ ยอมรับเงื่อนไขครบทั้ง 4 ข้อแล้วค่ะ\n\nกรุณาพิมพ์เบอร์โทรศัพท์ของท่านเพื่อผูกบัญชี (เช่น 0812345678)",
@@ -1325,6 +1444,14 @@ async function handlePhoneApi(ctx: FlowContext): Promise<FlowApiResult> {
     )
     .bind(farmer.id, ctx.linkId)
     .run();
+
+  // FINDING-A fix: migrate any pre-link consents recorded against the
+  // LINE user onto the newly-resolved farmer.
+  try {
+    await attachConsentsToFarmer(ctx.db, ctx.userId, farmer.id);
+  } catch (err) {
+    console.error("attachConsentsToFarmer failed:", err);
+  }
 
   return {
     reply: composeIdentityConfirmation({
@@ -1546,9 +1673,11 @@ async function handlePhotoReportApi(ctx: FlowContext): Promise<FlowApiResult> {
           .bind(plot.id)
           .first<{ season_id: string }>()
       : null;
-    const cameraUrl = ctx.appUrl
-      ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
-      : "";
+    const cameraUrl = ctx.liffId
+      ? `https://liff.line.me/${ctx.liffId}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
+      : ctx.appUrl
+        ? `${ctx.appUrl}/liff/camera?plot_id=${encodeURIComponent(plot?.id || "plot-001")}&season_id=${encodeURIComponent(season?.season_id || "2568-napi")}&step=SG-04`
+        : "";
     return {
       reply: `📸 เปิดกล้องถ่ายรูปได้ที่ลิงก์นี้:\n${cameraUrl}`,
       newState: "photo_report",
@@ -1601,8 +1730,15 @@ async function handleResultsApi(ctx: FlowContext): Promise<FlowApiResult> {
     return { reply: todoText, newState: "results" };
   }
 
-  // Query real results data
-  const plotId = ctx.selectedPlotId;
+  // Query real results data. Re-resolve plot when webhook context is stale.
+  let plotId = ctx.selectedPlotId;
+  if (!plotId && ctx.farmerId) {
+    const latestPlot = await ctx.db
+      .prepare("SELECT id FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1")
+      .bind(ctx.farmerId)
+      .first<{ id: string }>();
+    plotId = latestPlot?.id;
+  }
   let farmerName = "—";
   let plotName = "แปลงของท่าน";
 

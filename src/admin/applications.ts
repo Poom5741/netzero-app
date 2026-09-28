@@ -171,7 +171,23 @@ export async function approveApplication(db: D1Database, linkId: string): Promis
     return { success: false, error: "Application not found" };
   }
 
-  // 2) Generate CPA code with retry to handle concurrent approvals (C3 fix).
+  // 2) Spec 012 gate (FINDING-F fix): require both required documents (DOC-01 chanote,
+  //    DOC-03 id_copy) before approval. The PDF power-of-attorney (DOC-06) is optional.
+  const docCount = await db
+    .prepare(
+      "SELECT COUNT(*) as cnt FROM application_documents WHERE farmer_id = ? AND doc_type IN ('DOC-01', 'DOC-03')",
+    )
+    .bind(link.farmer_id)
+    .first<{ cnt: number }>();
+  const requiredDocsPresent = (docCount?.cnt ?? 0) >= 2;
+  if (!requiredDocsPresent) {
+    return {
+      success: false,
+      error: `Cannot approve: farmer has not uploaded both required documents (${docCount?.cnt ?? 0}/2). Need DOC-01 (chanote) + DOC-03 (id_copy).`,
+    };
+  }
+
+  // 3) Generate CPA code with retry to handle concurrent approvals (C3 fix).
   //    Use D1 batch to atomically assign CPA code + update line_link status.
   const MAX_RETRIES = 3;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -189,7 +205,7 @@ export async function approveApplication(db: D1Database, linkId: string): Promis
         .bind(cpaCode, link.farmer_id);
       const linkStmt = db
         .prepare(
-          "UPDATE line_links SET status = 'verified', verified_by = 'admin', updated_at = datetime('now') WHERE id = ?",
+          "UPDATE line_links SET status = 'verified', conversation_state = 'activation', verified_by = 'admin', updated_at = datetime('now') WHERE id = ?",
         )
         .bind(linkId);
 

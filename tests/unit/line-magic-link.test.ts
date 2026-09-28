@@ -42,7 +42,7 @@ describe("createMagicLinkService", () => {
       linkRow: null,
       farmerRow: { id: "demo-farmer-1", full_name: "Demo" },
     });
-    const service = createMagicLinkService(db);
+    const service = createMagicLinkService(db, "test-secret");
     const result = await service.generate("demo-farmer-1", "U222");
 
     expect(result.token).toBeDefined();
@@ -55,7 +55,7 @@ describe("createMagicLinkService", () => {
       linkRow: { id: "link-1", line_user_id: "U222", status: "verified" },
       farmerRow: { id: "demo-farmer-1", full_name: "Demo" },
     });
-    const service = createMagicLinkService(db);
+    const service = createMagicLinkService(db, "test-secret");
     const result = await service.generate("demo-farmer-1", "U222");
 
     expect(result.status).toBe("already_linked");
@@ -64,7 +64,7 @@ describe("createMagicLinkService", () => {
 
   it("returns not_found for unknown farmer", async () => {
     const db = mockD1({ linkRow: null, farmerRow: null });
-    const service = createMagicLinkService(db);
+    const service = createMagicLinkService(db, "test-secret");
     const result = await service.generate("unknown-farmer", "U333");
 
     expect(result.status).toBe("not_found");
@@ -76,7 +76,7 @@ describe("createMagicLinkService", () => {
       linkRow: null,
       farmerRow: { id: "demo-farmer-1", full_name: "Demo" },
     });
-    const service = createMagicLinkService(db);
+    const service = createMagicLinkService(db, "test-secret");
     const genResult = await service.generate("demo-farmer-1", "U444");
 
     expect(genResult.token).toBeDefined();
@@ -88,7 +88,7 @@ describe("createMagicLinkService", () => {
 
   it("verify rejects expired token", async () => {
     const db = mockD1({ linkRow: null, farmerRow: null });
-    const service = createMagicLinkService(db);
+    const service = createMagicLinkService(db, "test-secret");
 
     const verifyResult = await service.verify("garbage-token");
     expect(verifyResult.status).toBe("expired");
@@ -99,7 +99,7 @@ describe("createMagicLinkService", () => {
       linkRow: null,
       farmerRow: { id: "demo-farmer-1", full_name: "Demo" },
     });
-    const service = createMagicLinkService(db);
+    const service = createMagicLinkService(db, "test-secret");
     const genResult = await service.generate("demo-farmer-1", "U555");
     expect(genResult.token).toBeDefined();
 

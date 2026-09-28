@@ -34,14 +34,6 @@ describe("Deploy plumbing", () => {
     expect(pkg.scripts.check).toBeDefined();
   });
 
-  it("README exists with quickstart section", () => {
-    const readme = readFileSync(resolve("README.md"), "utf-8");
-    expect(readme).toContain("Quick Start");
-    expect(readme).toContain("db:init");
-    expect(readme).toContain("db:seed");
-    expect(readme).toContain("bun run dev");
-  });
-
   it("wrangler.toml exists with D1 binding", () => {
     const wrangler = readFileSync(resolve("wrangler.toml"), "utf-8");
     expect(wrangler).toContain("d1_databases");

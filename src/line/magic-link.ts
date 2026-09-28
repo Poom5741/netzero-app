@@ -17,28 +17,27 @@ type VerifyResult = {
 };
 
 const TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
-const SECRET = "magic-link-secret";
 
 /**
  * Encode a token payload as a signed base64 string.
  */
-function encodeToken(payload: TokenPayload): string {
+function encodeToken(payload: TokenPayload, secret: string): string {
   const json = JSON.stringify(payload);
   const data = Buffer.from(json).toString("base64url");
-  const sig = createHmac("sha256", SECRET).update(data).digest("hex");
+  const sig = createHmac("sha256", secret).update(data).digest("hex");
   return `${data}.${sig}`;
 }
 
 /**
  * Decode and verify a token, returning null if invalid/expired.
  */
-function decodeToken(token: string): TokenPayload | null {
+function decodeToken(token: string, secret: string): TokenPayload | null {
   const dotIdx = token.lastIndexOf(".");
   if (dotIdx < 0) return null;
 
   const data = token.slice(0, dotIdx);
   const sig = token.slice(dotIdx + 1);
-  const expected = createHmac("sha256", SECRET).update(data).digest("hex");
+  const expected = createHmac("sha256", secret).update(data).digest("hex");
   if (sig !== expected) return null;
 
   try {
@@ -54,7 +53,7 @@ function decodeToken(token: string): TokenPayload | null {
 /**
  * Create a magic link service for test-farmer binding.
  */
-export function createMagicLinkService(db: D1Database) {
+export function createMagicLinkService(db: D1Database, secret: string) {
   const usedTokens = new Set<string>();
 
   return {
@@ -77,7 +76,7 @@ export function createMagicLinkService(db: D1Database) {
         lineUserId,
         expiresAt: Date.now() + TOKEN_TTL_MS,
       };
-      const token = encodeToken(payload);
+      const token = encodeToken(payload, secret);
 
       await db
         .prepare(
@@ -92,7 +91,7 @@ export function createMagicLinkService(db: D1Database) {
     async verify(token: string): Promise<VerifyResult> {
       if (usedTokens.has(token)) return { status: "already_used" };
 
-      const payload = decodeToken(token);
+      const payload = decodeToken(token, secret);
       if (!payload) return { status: "expired" };
 
       usedTokens.add(token);

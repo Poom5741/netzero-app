@@ -114,3 +114,21 @@ describe("GET /sponsor", () => {
     expect(delRes.status).toBe(404);
   });
 });
+
+// FINDING-E (2026-09-19): sponsor logout must mirror SameSite=None so the
+// browser clears the cross-origin Pages copy.
+describe("FINDING-E: sponsor logout SameSite=None", () => {
+  it("POST /sponsor/logout emits SameSite=None;Secure;HttpOnly", async () => {
+    const db = mockD1([]) as unknown as D1Database;
+    const app = buildApp(db);
+    const res = await app.request("/sponsor/logout", {
+      method: "POST",
+      headers: await sponsorCookie(),
+    });
+    const setCookie = res.headers.get("Set-Cookie") ?? "";
+    expect(setCookie).toContain("SameSite=None");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).not.toContain("SameSite=Lax");
+  });
+});

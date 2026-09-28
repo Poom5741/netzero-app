@@ -50,7 +50,7 @@ const EMPTY_SUMMARY: SponsorSummary = {
 };
 
 function fetchJson<T>(path: string, fallback: T): Promise<T> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
   const endpoint = apiBase ? validateApiUrl(`${apiBase}${path}`) : path;
   return new Promise((resolve) => {
     try {
@@ -72,7 +72,7 @@ function fetchJson<T>(path: string, fallback: T): Promise<T> {
 }
 
 function fetchSponsorData(): Promise<ProvinceGroupType[]> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
   const endpoint = apiBase ? validateApiUrl(`${apiBase}/sponsor`) : "/sponsor";
   return new Promise((resolve) => {
     try {

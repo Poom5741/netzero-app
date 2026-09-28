@@ -21,14 +21,13 @@ async function cookieHeader(role: "admin" | "sponsor") {
 }
 
 describe("GET /admin", () => {
-  it("returns 200 with admin dashboard HTML for admin session", async () => {
+  it("redirects an admin session to the frontend admin console", async () => {
     const app = makeApp();
     const res = await app.request("/admin", { headers: await cookieHeader("admin") }, {
       SECRET,
     } as never);
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("Admin Dashboard");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("https://netzero-frontend.poom-a1d.workers.dev/admin");
   });
 
   it("blocks unauthenticated requests", async () => {
@@ -47,14 +46,15 @@ describe("GET /admin", () => {
 });
 
 describe("GET /sponsor", () => {
-  it("returns 200 with sponsor dashboard HTML for sponsor session", async () => {
+  it("redirects a sponsor session to the frontend sponsor dashboard", async () => {
     const app = makeApp();
     const res = await app.request("/sponsor", { headers: await cookieHeader("sponsor") }, {
       SECRET,
     } as never);
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("Sponsor Dashboard");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe(
+      "https://netzero-frontend.poom-a1d.workers.dev/sponsor",
+    );
   });
 
   it("blocks unauthenticated requests", async () => {
