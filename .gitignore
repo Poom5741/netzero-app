@@ -45,6 +45,14 @@ npm-debug.log*
 .mimosa/
 .playwright-mcp/
 
+# ---- Removed local artifacts (2026-09-29 cleanup) ----
+# Transient/generated output removed from tracking; ignore so it cannot
+# creep back in. `tests/test-results/` and `frontend/test-results/` are
+# separate paths owned by their own .gitignore files.
+.super-speckit/
+visual-qa-screenshots/
+/test-results/
+
 # ---- Visual QA output (keep .gitkeep placeholders) ----
 tests/visual/captures/reference/
 tests/visual/captures/provenance/

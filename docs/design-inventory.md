@@ -15,9 +15,12 @@ Part of [#141](https://github.com/netzerocarbon/app/issues/141) · Source-only t
 
 | Surface | Artifact ID | URL | Extracted tree |
 |---------|------------|-----|----------------|
-| LINE OA | `19c446b9-e2f5-4e09-a118-fca56ec0c0c8` | [claude.ai/code/artifact/19c446b9…](https://claude.ai/code/artifact/19c446b9-e2f5-4e09-a118-fca56ec0c0c8) | `visual-qa-screenshots/line-oa-extracted/` |
-| Admin Console | `161f2305-35de-42f8-83ed-7c90ab4da5a6` | [claude.ai/code/artifact/161f2305…](https://claude.ai/code/artifact/161f2305-35de-42f8-83ed-7c90ab4da5a6) | `visual-qa-screenshots/admin-extracted/` |
-| Sponsor Dashboard | `0de23b7a-9fb3-433e-8930-7eff56a39e45` | [claude.ai/code/artifact/0de23b7a…](https://claude.ai/code/artifact/0de23b7a-9fb3-433e-8930-7eff56a39e45) | `visual-qa-screenshots/sponsor-extracted/` |
+| LINE OA | `19c446b9-e2f5-4e09-a118-fca56ec0c0c8` | [claude.ai/code/artifact/19c446b9…](https://claude.ai/code/artifact/19c446b9-e2f5-4e09-a118-fca56ec0c0c8) | `design-artifacts/2026-09-28/line-oa-farmer.html` |
+| Admin Console | `161f2305-35de-42f8-83ed-7c90ab4da5a6` | [claude.ai/code/artifact/161f2305…](https://claude.ai/code/artifact/161f2305-35de-42f8-83ed-7c90ab4da5a6) | `design-artifacts/2026-09-28/admin-console.html` |
+| Sponsor Dashboard | `0de23b7a-9fb3-433e-8930-7eff56a39e45` | [claude.ai/code/artifact/0de23b7a…](https://claude.ai/code/artifact/0de23b7a-9fb3-433e-8930-7eff56a39e45) | `design-artifacts/2026-09-28/sponsor-portal.html` |
+
+The original per-module extraction under `visual-qa-screenshots/` was removed in repository
+hygiene cleanup; the archived self-contained artifact shells above are now the local reference.
 
 ### File Manifest (app-specific JS only)
 
