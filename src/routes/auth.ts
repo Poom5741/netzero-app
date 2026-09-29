@@ -87,10 +87,32 @@ authRoutes.get("/login", (c) => {
 
 authRoutes.post("/login", async (c) => {
   try {
-    const body = await c.req.json();
-    const email = body.email as string | null;
-    const password = body.password as string | null;
-    const otp = body.otp as string | null;
+    // BUG-017-B2 b8: accept JSON AND form encodings. The live login form was
+    // observed sending form-encoded credentials (DevTools 'Form data'), which
+    // c.req.json() rejected -> 500 -> 'cannot connect' for every admin login.
+    const contentType = (c.req.header("content-type") || "").toLowerCase();
+    let email: string | null = null;
+    let password: string | null = null;
+    let otp: string | null = null;
+    let remember = false;
+    if (contentType.includes("application/json")) {
+      const body = await c.req.json<{
+        email?: string;
+        password?: string;
+        otp?: string;
+        remember?: boolean;
+      }>();
+      email = body.email ?? null;
+      password = body.password ?? null;
+      otp = body.otp ?? null;
+      remember = !!body.remember;
+    } else {
+      const form = await c.req.parseBody();
+      email = typeof form.email === "string" ? form.email : null;
+      password = typeof form.password === "string" ? form.password : null;
+      otp = typeof form.otp === "string" ? form.otp : null;
+      remember = form.remember === "true" || form.remember === "on";
+    }
 
     if (!email || !password) {
       return c.json({ error: "Email and password are required" }, 400);
@@ -131,7 +153,6 @@ authRoutes.post("/login", async (c) => {
     }
 
     const { createSessionCookie } = await import("../auth/session");
-    const remember = body.remember || false;
     // T090 — extend session to 30 days when "remember device" is checked (AD-AUTH-02)
     const maxAge = remember ? 86400 * 30 : 86400;
     const cookie = await createSessionCookie(
