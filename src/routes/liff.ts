@@ -56,32 +56,41 @@ liffRoutes.get("/", (c) => {
   <title>NetZeroCarbon</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
+    /* Artifact tokens — design-artifacts/2026-09-28/line-oa-farmer.html
+       (module c087a24f-4179-4a49-849a-6c05aafd7d3a.js, --line-* block).
+       This is the page farmers reach from the bot's deep link, so it is the
+       surface that must match the artifact, not the Next.js app. */
+    :root{
+      --line-green:#06C755;--line-green-dark:#04A344;--line-chat-bg:#8FAAD0;
+      --line-chat-ink:#16202C;--line-bubble-me:#A9E86B;--line-bubble-you:#FFFFFF;
+      --line-hairline:#EEF2F6;--line-qr-border:#D6DFE9;--line-muted:#94A2B2;
+    }
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;height:100vh;display:flex;flex-direction:column}
-    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--line-chat-bg);height:100vh;display:flex;flex-direction:column}
+    .header{background:linear-gradient(135deg,var(--line-green) 0%,var(--line-green-dark) 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
     .header-icon{font-size:24px}
     .header-title{font-size:16px;font-weight:600}
     .header-sub{font-size:11px;opacity:.85}
-    .chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
-    .msg{max-width:80%;padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
-    .msg.bot{align-self:flex-start;background:#fff;color:#333;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1)}
-    .msg.user{align-self:flex-end;background:#06c755;color:#fff;border-bottom-right-radius:4px}
-    .msg.sys{align-self:center;background:rgba(0,0,0,.06);color:#666;font-size:12px;padding:6px 12px;border-radius:12px}
-    .typing{align-self:flex-start;display:flex;gap:4px;padding:12px 16px;background:#fff;border-radius:18px;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1)}
-    .typing span{width:8px;height:8px;background:#ccc;border-radius:50%;animation:bounce 1.4s infinite ease-in-out}
+    .chat{flex:1;overflow-y:auto;padding:14px 12px 16px;display:flex;flex-direction:column;gap:11px}
+    .msg{max-width:232px;padding:9px 12px;border-radius:13px;font-size:13px;line-height:1.55;word-wrap:break-word;white-space:pre-wrap}
+    .msg.bot{align-self:flex-start;background:var(--line-bubble-you);color:var(--line-chat-ink);border-bottom-left-radius:4px;box-shadow:0 1px 1px rgba(0,0,0,.06)}
+    .msg.user{align-self:flex-end;background:var(--line-bubble-me);color:var(--line-chat-ink);border-bottom-right-radius:4px;box-shadow:0 1px 1px rgba(0,0,0,.06)}
+    .msg.sys{align-self:center;background:rgba(0,0,0,0.22);color:#fff;font-size:11px;padding:3px 12px;border-radius:999px}
+    .typing{align-self:flex-start;display:flex;gap:4px;padding:9px 12px;background:var(--line-bubble-you);border-radius:13px;border-bottom-left-radius:4px;box-shadow:0 1px 1px rgba(0,0,0,.06)}
+    .typing span{width:8px;height:8px;background:var(--line-muted);border-radius:50%;animation:bounce 1.4s infinite ease-in-out}
     .typing span:nth-child(2){animation-delay:-.16s}
     .typing span:nth-child(3){animation-delay:-.32s}
     @keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
-    .input-wrap{background:#fff;padding:8px 12px;display:flex;gap:8px;border-top:1px solid #e0e0e0;flex-shrink:0}
-    .input-wrap input{flex:1;border:1px solid #ddd;border-radius:20px;padding:10px 16px;font-size:15px;outline:none}
-    .input-wrap input:focus{border-color:#06c755}
-    .input-wrap button{background:#06c755;color:#fff;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-    .input-wrap button:disabled{background:#ccc}
+    .input-wrap{background:#fff;padding:8px 12px;display:flex;gap:8px;border-top:1px solid var(--line-hairline);flex-shrink:0}
+    .input-wrap input{flex:1;border:1px solid var(--line-qr-border);border-radius:999px;padding:6px 12px;font-size:12px;outline:none}
+    .input-wrap input:focus{border-color:var(--line-green)}
+    .input-wrap button{background:var(--line-green);color:#fff;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .input-wrap button:disabled{background:var(--line-muted)}
     .quick{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;flex-shrink:0}
-    .quick button{white-space:nowrap;background:#fff;border:1px solid #06c755;color:#06c755;border-radius:16px;padding:6px 14px;font-size:13px;cursor:pointer}
-    .quick button:active{background:#e8f5e9}
+    .quick button{white-space:nowrap;background:#fff;border:1px solid var(--line-qr-border);color:var(--line-green-dark);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer}
+    .quick button:active{background:var(--line-chat-ink)}
     #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
-    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    #loading .spin{width:40px;height:40px;border:3px solid var(--line-hairline);border-top-color:var(--line-green);border-radius:50%;animation:sp .8s linear infinite}
     @keyframes sp{to{transform:rotate(360deg)}}
   </style>
 </head>
