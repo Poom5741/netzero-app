@@ -17,7 +17,6 @@ import { handleSeasonCreate } from "../season/create";
 import { attachConsentsToFarmer, hasAllConsents, recordConsent } from "../trust/consent-persist";
 import { fetchCalendarSteps } from "./calendar-api";
 import {
-  buildActivationBubble,
   buildCalendarBubble,
   buildConditions3Checkbox,
   buildConsent4Checkbox,
@@ -727,20 +726,10 @@ async function handlePendingReview(ctx: FlowContext): Promise<FlowResult> {
  * Show activation success and ask for sow date, transition to season_setup.
  */
 async function handleActivation(ctx: FlowContext): Promise<FlowResult> {
-  const _farmer = await ctx.db
-    .prepare("SELECT full_name FROM farmers WHERE id = ?")
-    .bind(ctx.farmerId)
-    .first<{ full_name: string }>();
-
-  const farmer = await ctx.db
-    .prepare("SELECT cpa_code FROM farmers WHERE id = ?")
-    .bind(ctx.farmerId)
-    .first<{ cpa_code: string | null }>();
-
-  const activationCard = buildActivationBubble(farmer?.cpa_code || ctx.farmerId);
-
+  // BUG-017-B4: no OB-11 card here. Admin approval already pushed it (single
+  // sender) and the farmer is tapping เริ่มใช้งาน ON that card — re-sending
+  // duplicated it (live finding). Just move the flow to the sow-date prompt.
   return transitionTo(ctx, "season_setup", [
-    activationCard,
     textMessage('ขั้นต่อไป กรุณาระบุวันหว่านข้าว (เช่น 15/06/2568) หรือพิมพ์ "ข้าม" เพื่อข้าม'),
   ]);
 }
