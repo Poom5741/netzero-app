@@ -1032,6 +1032,22 @@ liffRoutes.post("/api/documents/upload", async (c) => {
     const required = REQUIRED_DOCUMENTS.filter((d) => d.required);
     const allRequiredAttached = required.every((d) => submittedTypes.includes(d.code));
 
+    if (allRequiredAttached) {
+      // BUG-017-B2: all required documents are in — move to pending_review and
+      // show the OB-10 grey card (same as the typed "อัปโหลด" path).
+      await db
+        .prepare("UPDATE line_links SET conversation_state = 'pending_review' WHERE farmer_id = ?")
+        .bind(farmerId)
+        .run();
+      const baselineUploadUrl = c.env.LIFF_ID
+        ? `https://liff.line.me/${c.env.LIFF_ID}/liff/baseline?plot_id=`
+        : `${c.env.APP_URL}/liff/baseline?plot_id=`;
+      await pushToFarmer(db, c.env, farmerId, [
+        { type: "text", text: "✅ ได้รับเอกสารแล้วครับ" },
+        buildPendingReviewBubble(baselineUploadUrl),
+      ]);
+    }
+
     return c.json({
       ok: true,
       doc_type: docCode,
