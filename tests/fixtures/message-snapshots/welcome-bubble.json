@@ -6,38 +6,44 @@
     "hero": {
       "type": "box",
       "layout": "vertical",
-      "backgroundColor": "#028D8A",
-      "minHeight": "56px",
-      "paddingAll": "9px",
-      "paddingHorizontal": "12px",
-      "justifyContent": "flex-end",
       "contents": [
         {
           "type": "box",
           "layout": "vertical",
-          "backgroundColor": "rgba(0, 0, 0, 0.34)",
-          "cornerRadius": "999px",
-          "paddingAll": "2px",
-          "paddingHorizontal": "8px",
-          "margin": "md",
-          "alignItems": "flex-start",
+          "backgroundColor": "#028D8A",
+          "minHeight": "56px",
+          "paddingAll": "9px",
+          "paddingHorizontal": "12px",
+          "justifyContent": "flex-end",
           "contents": [
             {
+              "type": "box",
+              "layout": "vertical",
+              "backgroundColor": "rgba(0, 0, 0, 0.34)",
+              "cornerRadius": "999px",
+              "paddingAll": "2px",
+              "paddingHorizontal": "8px",
+              "margin": "md",
+              "alignItems": "flex-start",
+              "contents": [
+                {
+                  "type": "text",
+                  "text": "ยินดีต้อนรับ",
+                  "size": "xs",
+                  "weight": "bold",
+                  "color": "#FFFFFF"
+                }
+              ]
+            },
+            {
               "type": "text",
-              "text": "ยินดีต้อนรับ",
+              "text": "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)",
               "size": "xs",
               "weight": "bold",
-              "color": "#FFFFFF"
+              "color": "#FFFFFF",
+              "wrap": true
             }
           ]
-        },
-        {
-          "type": "text",
-          "text": "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)",
-          "size": "xs",
-          "weight": "bold",
-          "color": "#FFFFFF",
-          "wrap": true
         }
       ]
     },

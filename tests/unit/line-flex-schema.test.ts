@@ -164,6 +164,25 @@ function walk(node: unknown, path: string, errs: string[]): void {
 }
 
 describe("LINE Flex schema guard — every emittable card must be LINE-valid", () => {
+  // The bubble HERO slot accepts a RESTRICTED box: LINE 400s on any styling
+  // property there (observed live: /hero/color, /hero/minHeight). Styling must
+  // live on an inner component box. Body/footer slots accept box padding.
+  const HERO_SLOT_ALLOWED = new Set([
+    "type",
+    "layout",
+    "backgroundColor",
+    "contents",
+    "flex",
+    "margin",
+    "position",
+    "offsetTop",
+    "offsetBottom",
+    "offsetLeft",
+    "offsetRight",
+    "offsetStart",
+    "offsetEnd",
+  ]);
+
   const built = INVENTORY.map(([node, build]) => {
     let msg: unknown;
     try {
@@ -172,6 +191,14 @@ describe("LINE Flex schema guard — every emittable card must be LINE-valid", (
       throw new Error(`builder for ${node} threw: ${(err as Error).message}`);
     }
     return [node, msg] as const;
+  });
+
+  it.each(built)("%s — hero slot carries no styling properties", (_node, msg) => {
+    const bubble = (msg as AnyRec).contents as AnyRec;
+    const hero = bubble.hero as AnyRec | undefined;
+    if (!hero) return;
+    const illegal = Object.keys(hero).filter((k) => !HERO_SLOT_ALLOWED.has(k));
+    expect(illegal, `hero slot has non-whitelisted keys: ${illegal.join(", ")}`).toEqual([]);
   });
 
   it.each(built)("%s — passes the LINE Flex field rules", (_node, msg) => {

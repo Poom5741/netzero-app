@@ -91,7 +91,10 @@ export interface ArtifactCard {
  * through this so the cards cannot drift apart again.
  */
 export function buildArtifactCard(card: ArtifactCard): LineMessage {
-  const hero: Record<string, unknown> = {
+  // The bubble HERO slot accepts a RESTRICTED box — LINE rejects the whole push
+  // on styling properties there (BUG-017-B1: /hero/color, /hero/minHeight).
+  // The slot carries only the tone; all styling lives on this inner band box.
+  const heroBand: Record<string, unknown> = {
     type: "box",
     layout: "vertical",
     backgroundColor: HERO_SOLID[card.tone],
@@ -111,7 +114,7 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
     ],
   };
   if (card.badge) {
-    hero.contents = [
+    heroBand.contents = [
       {
         type: "box",
         layout: "vertical",
@@ -123,9 +126,14 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
         alignItems: "flex-start",
         contents: [{ type: "text", text: card.badge, size: "xs", weight: "bold", color: COLOR_BG }],
       } as never,
-      ...(hero.contents as unknown[]),
+      ...(heroBand.contents as unknown[]),
     ];
   }
+  const hero: Record<string, unknown> = {
+    type: "box",
+    layout: "vertical",
+    contents: [heroBand],
+  };
 
   const bodyContents: unknown[] = [
     {
