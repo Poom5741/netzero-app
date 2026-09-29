@@ -103,7 +103,8 @@ describe("artifact token parity — Flex action row", () => {
     expect(actionBlocks.length).toBeGreaterThan(0);
     for (const block of actionBlocks) {
       expect(block.paddingAll).toBe(ARTIFACT.actionPadV);
-      expect(block.paddingHorizontal).toBe(ARTIFACT.actionPadH);
+      expect(block.paddingStart).toBe(ARTIFACT.actionPadH);
+      expect(block.paddingEnd).toBe(ARTIFACT.actionPadH);
     }
   });
 
@@ -126,7 +127,8 @@ describe("artifact token parity — system divider", () => {
     expect(d.backgroundColor).toBe(ARTIFACT.dividerBg);
     expect(d.cornerRadius).toBe(ARTIFACT.dividerRadius);
     expect(d.paddingAll).toBe("3px");
-    expect(d.paddingHorizontal).toBe("12px");
+    expect(d.paddingStart).toBe("12px");
+    expect(d.paddingEnd).toBe("12px");
     expect(JSON.stringify(d)).toContain("เพิ่ม NetZeroCarbon เป็นเพื่อนแล้ว");
   });
 });

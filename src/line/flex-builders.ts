@@ -36,7 +36,7 @@ const COLOR_BG = "#FFFFFF"; // --line-bubble-you
 // Flex API has no bubble-level radius, so it is deliberately not declared here.
 const RADIUS_ACTION = "4px";
 const PADDING_ACTION_V = "9px"; // action row: vertical padding
-const PADDING_ACTION_H = "4px"; // action row: horizontal padding
+const PADDING_ACTION_H = "4px"; // action row: horizontal padding (Start/End)
 
 // ---------------------------------------------------------------------------
 // Artifact card (specs/016-flow-parity/node-design-spec.md §1)
@@ -94,13 +94,16 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
   // The bubble HERO slot accepts a RESTRICTED box — LINE rejects the whole push
   // on styling properties there (BUG-017-B1: /hero/color, /hero/minHeight).
   // The slot carries only the tone; all styling lives on this inner band box.
+  // LINE Flex has no minHeight — the artifact's 56px hero band is approximated
+  // with generous vertical padding (documented in BUG-017-B1).
   const heroBand: Record<string, unknown> = {
     type: "box",
     layout: "vertical",
     backgroundColor: HERO_SOLID[card.tone],
-    minHeight: "56px",
-    paddingAll: "9px",
-    paddingHorizontal: "12px",
+    paddingTop: "16px",
+    paddingBottom: "16px",
+    paddingStart: "12px",
+    paddingEnd: "12px",
     justifyContent: "flex-end",
     contents: [
       {
@@ -121,7 +124,8 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
         backgroundColor: COLOR_BADGE_BG,
         cornerRadius: "999px",
         paddingAll: "2px",
-        paddingHorizontal: "8px",
+        paddingStart: "8px",
+        paddingEnd: "8px",
         margin: "md",
         alignItems: "flex-start",
         contents: [{ type: "text", text: card.badge, size: "xs", weight: "bold", color: COLOR_BG }],
@@ -193,7 +197,8 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
       type: "box",
       layout: "vertical",
       paddingAll: "11px",
-      paddingHorizontal: "12px",
+      paddingStart: "12px",
+      paddingEnd: "12px",
       contents: bodyContents,
     },
   };
@@ -205,7 +210,8 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
         type: "box",
         layout: "horizontal",
         paddingAll: PADDING_ACTION_V,
-        paddingHorizontal: PADDING_ACTION_H,
+        paddingStart: PADDING_ACTION_H,
+        paddingEnd: PADDING_ACTION_H,
         backgroundColor: a.primary ? COLOR_PRIMARY : COLOR_BG,
         cornerRadius: RADIUS_ACTION,
         contents: [
@@ -242,7 +248,8 @@ export function chatDivider(text = "เพิ่ม NetZeroCarbon เป็น�
     type: "box",
     layout: "vertical",
     paddingAll: "3px",
-    paddingHorizontal: "12px",
+    paddingStart: "12px",
+    paddingEnd: "12px",
     backgroundColor: "rgba(0, 0, 0, 0.22)",
     cornerRadius: "999px",
     contents: [
@@ -389,7 +396,8 @@ export function buildConditionsBubble(): LineMessage {
               },
             ],
             paddingAll: PADDING_ACTION_V,
-            paddingHorizontal: PADDING_ACTION_H,
+            paddingStart: PADDING_ACTION_H,
+            paddingEnd: PADDING_ACTION_H,
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: RADIUS_ACTION,
             flex: 1,
@@ -414,7 +422,8 @@ export function buildConditionsBubble(): LineMessage {
               },
             ],
             paddingAll: PADDING_ACTION_V,
-            paddingHorizontal: PADDING_ACTION_H,
+            paddingStart: PADDING_ACTION_H,
+            paddingEnd: PADDING_ACTION_H,
             backgroundColor: COLOR_ERROR,
             cornerRadius: RADIUS_ACTION,
             flex: 1,
@@ -608,7 +617,8 @@ export function buildConsent4Checkbox(): LineMessage {
               },
             ],
             paddingAll: PADDING_ACTION_V,
-            paddingHorizontal: PADDING_ACTION_H,
+            paddingStart: PADDING_ACTION_H,
+            paddingEnd: PADDING_ACTION_H,
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: RADIUS_ACTION,
             flex: 1,

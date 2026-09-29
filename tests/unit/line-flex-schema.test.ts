@@ -1,21 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 /**
- * LINE Flex Message schema guard (hotfix 017).
+ * LINE Flex Message schema guard (BUG-017-B1).
  *
  * LINE's Messaging API validates outgoing Flex payloads strictly and rejects
- * the WHOLE push with HTTP 400 on any unknown field or malformed value
- * (found live 2026-09-29: `/hero/color` → every redesigned card failed to
- * send, the farmer saw silence).
+ * the WHOLE push with HTTP 400 on any unknown field (found live 2026-09-29:
+ * /hero/color, /hero/minHeight, /hero/contents/0/minHeight — every redesigned
+ * card failed to send; farmers saw silence).
  *
- * These assertions encode the LINE Flex field rules the builders must obey:
- *   1. `color` is a TEXT-component field — boxes carry `backgroundColor`.
- *   2. Padding/margin/size props take ONE value (no CSS shorthand "9px 4px").
- *   3. Colours are `#RGB/#RGBA/#RRGGBB/#RRGGBBAA` or `rgba(r,g,b,a)`.
- *   4. Every flex message carries a non-empty `altText`.
- *
- * Driven by the same node inventory as flow-design-parity.test.ts so every
- * card the bot can emit is covered by adding it to INVENTORY.
+ * Whitelists below are copied from LINE's official OpenAPI schema
+ * (github.com/line/line-openapi · messaging-api.yml · components/schemas/
+ * FlexBox, FlexText, FlexButton, FlexSeparator, FlexImage, FlexIcon,
+ * FlexSpan, FlexFiller, FlexVideo). Notably:
+ *   - boxes have NO `color` (text-only field) and NO `minHeight`/`minWidth`
+ *   - padding is paddingAll/Top/Bottom/Start/End — no CSS shorthand and no
+ *     Horizontal/Vertical variants
+ *   - the bubble HERO slot accepts a box but LINE still rejects styling props
+ *     on it and its direct children, so styling must sit on an inner band box.
  */
 
 import {
@@ -106,16 +107,101 @@ const INVENTORY: Array<[string, () => unknown]> = [
   ],
 ];
 
-const SINGLE_VALUE_PROPS = [
+// --- LINE OpenAPI component whitelists (see file header) --------------------
+
+const OFFSET = ["offsetTop", "offsetBottom", "offsetStart", "offsetEnd"];
+
+const FLEX_KEYS: Record<string, Set<string>> = {
+  box: new Set([
+    "layout",
+    "flex",
+    "contents",
+    "spacing",
+    "margin",
+    "position",
+    ...OFFSET,
+    "backgroundColor",
+    "borderColor",
+    "borderWidth",
+    "cornerRadius",
+    "width",
+    "maxWidth",
+    "height",
+    "maxHeight",
+    "paddingAll",
+    "paddingTop",
+    "paddingBottom",
+    "paddingStart",
+    "paddingEnd",
+    "action",
+    "justifyContent",
+    "alignItems",
+    "background",
+  ]),
+  text: new Set([
+    "text",
+    "action",
+    "flex",
+    "margin",
+    "position",
+    ...OFFSET,
+    "gravity",
+    "align",
+    "adjustMode",
+    "color",
+    "contents",
+    "decoration",
+    "lineSpacing",
+    "maxLines",
+    "scaling",
+    "size",
+    "style",
+    "weight",
+    "wrap",
+  ]),
+  button: new Set([
+    "action",
+    "style",
+    "color",
+    "height",
+    "flex",
+    "margin",
+    "position",
+    ...OFFSET,
+    "gravity",
+    "adjustMode",
+    "scaling",
+  ]),
+  separator: new Set(["margin", "color"]),
+  image: new Set([
+    "url",
+    "action",
+    "align",
+    "animated",
+    "aspectMode",
+    "aspectRatio",
+    "backgroundColor",
+    "flex",
+    "gravity",
+    "margin",
+    "position",
+    ...OFFSET,
+    "scaling",
+    "size",
+  ]),
+  icon: new Set(["url", "aspectRatio", "margin", "position", ...OFFSET, "scaling", "size"]),
+  span: new Set(["text", "color", "decoration", "size", "style", "weight"]),
+  filler: new Set(["flex"]),
+  video: new Set(["url", "previewUrl", "altContent", "aspectRatio", "action"]),
+};
+
+// Value props that must carry a SINGLE value (no CSS shorthand "9px 4px").
+const SINGLE_VALUE_PROPS = new Set([
   "paddingAll",
   "paddingTop",
   "paddingBottom",
-  "paddingLeft",
-  "paddingRight",
   "paddingStart",
   "paddingEnd",
-  "paddingHorizontal",
-  "paddingVertical",
   "margin",
   "spacing",
   "cornerRadius",
@@ -123,18 +209,23 @@ const SINGLE_VALUE_PROPS = [
   "width",
   "maxWidth",
   "height",
-  "minHeight",
   "maxHeight",
-  "offsetTop",
-  "offsetBottom",
-  "offsetLeft",
-  "offsetRight",
-  "offsetStart",
-  "offsetEnd",
-];
+  ...OFFSET,
+]);
 
 const COLOR_RE =
   /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/i;
+
+// The bubble hero slot: LINE rejects styling properties here (live-verified).
+const HERO_SLOT_ALLOWED = new Set([
+  "type",
+  "layout",
+  "contents",
+  "flex",
+  "margin",
+  "position",
+  ...OFFSET,
+]);
 
 function walk(node: unknown, path: string, errs: string[]): void {
   if (node === null || typeof node !== "object") return;
@@ -145,44 +236,32 @@ function walk(node: unknown, path: string, errs: string[]): void {
     return;
   }
   const rec = node as AnyRec;
+  const type = typeof rec.type === "string" ? rec.type : undefined;
 
-  if (rec.type === "box" && "color" in rec) {
-    errs.push(`${path}.color — box has no "color" field (use backgroundColor)`);
-  }
-  for (const prop of SINGLE_VALUE_PROPS) {
-    const v = rec[prop];
-    if (typeof v === "string" && v.trim().length > 0 && /\s/.test(v.trim())) {
-      errs.push(`${path}.${prop}="${v}" — CSS shorthand not allowed (single value only)`);
+  if (type && FLEX_KEYS[type]) {
+    const allowed = FLEX_KEYS[type];
+    const unknown = Object.keys(rec).filter((k) => k !== "type" && !allowed.has(k));
+    if (unknown.length > 0) {
+      errs.push(`${path} (${type}) unknown fields: ${unknown.join(", ")}`);
+    }
+    for (const prop of SINGLE_VALUE_PROPS) {
+      const v = rec[prop];
+      if (typeof v === "string" && v.trim().length > 0 && /\s/.test(v.trim())) {
+        errs.push(`${path}.${prop}="${v}" — CSS shorthand not allowed (single value only)`);
+      }
+    }
+    for (const [k, v] of Object.entries(rec)) {
+      if (/color$/i.test(k) && typeof v === "string" && !COLOR_RE.test(v.trim())) {
+        errs.push(`${path}.${k}="${v}" — not a LINE colour format`);
+      }
     }
   }
   for (const [k, v] of Object.entries(rec)) {
-    if (/color$/i.test(k) && typeof v === "string" && !COLOR_RE.test(v.trim())) {
-      errs.push(`${path}.${k}="${v}" — not a LINE colour format`);
-    }
     walk(v, `${path}.${k}`, errs);
   }
 }
 
 describe("LINE Flex schema guard — every emittable card must be LINE-valid", () => {
-  // The bubble HERO slot accepts a RESTRICTED box: LINE 400s on any styling
-  // property there (observed live: /hero/color, /hero/minHeight). Styling must
-  // live on an inner component box. Body/footer slots accept box padding.
-  const HERO_SLOT_ALLOWED = new Set([
-    "type",
-    "layout",
-    "backgroundColor",
-    "contents",
-    "flex",
-    "margin",
-    "position",
-    "offsetTop",
-    "offsetBottom",
-    "offsetLeft",
-    "offsetRight",
-    "offsetStart",
-    "offsetEnd",
-  ]);
-
   const built = INVENTORY.map(([node, build]) => {
     let msg: unknown;
     try {

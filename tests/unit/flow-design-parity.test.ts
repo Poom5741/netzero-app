@@ -91,13 +91,18 @@ function flatten(msg: unknown): { text: string[]; heroBg?: string; actionLabels:
   const text: string[] = [];
   const actionLabels: string[] = [];
   let heroBg: string | undefined;
+  // BUG-017-B1: the hero slot rejects styling props, so the band (tone colour +
+  // 56px-height approximation via vertical padding) is the slot's first child.
+  const heroBand = (
+    (msg as Record<string, unknown>)?.contents as Record<string, unknown> | undefined
+  )?.hero as Record<string, unknown> | undefined;
+  const heroBandBg = ((heroBand?.contents as Array<Record<string, unknown>> | undefined)?.[0] ??
+    heroBand) as Record<string, unknown> | undefined;
+  if (typeof heroBandBg?.backgroundColor === "string") heroBg = heroBandBg.backgroundColor;
   const walk = (n: unknown, inFooter = false): void => {
     if (!n || typeof n !== "object") return;
     const o = n as Record<string, unknown>;
     if (typeof o.text === "string" && !inFooter) text.push(o.text);
-    if (typeof o.backgroundColor === "string" && o.type === "box" && o.minHeight === "56px") {
-      heroBg = o.backgroundColor;
-    }
     if (o.type === "postback" || o.type === "uri") actionLabels.push(o.label as string);
     for (const v of Object.values(o)) {
       if (Array.isArray(v)) {
@@ -230,9 +235,17 @@ describe("the shared card builder", () => {
     expect(raw).toContain("#04A344");
   });
 
-  it("emits a hero box of the artifact's 56px minimum height", () => {
-    const msg = buildArtifactCard({ tone: "grey", hero: "H", title: "T" });
-    expect(JSON.stringify(msg)).toContain('"minHeight":"56px"');
+  it("emits the artifact hero band (56px height approximated by 16px vertical padding — LINE Flex has no minHeight, BUG-017-B1)", () => {
+    const welcome = buildWelcomeBubble("liff-test") as Record<string, unknown>;
+    const contents = welcome.contents as Record<string, unknown> | undefined;
+    const hero = contents?.hero as Record<string, unknown> | undefined;
+    expect(hero?.type).toBe("box");
+    const band = (hero?.contents as Array<Record<string, unknown>> | undefined)?.[0];
+    expect(band?.type).toBe("box");
+    expect(band?.paddingTop).toBe("16px");
+    expect(band?.paddingBottom).toBe("16px");
+    // Tone colour lives on the band (slot is styling-free).
+    expect(band?.backgroundColor).toBe("#028D8A");
   });
 });
 

@@ -11,9 +11,10 @@
           "type": "box",
           "layout": "vertical",
           "backgroundColor": "#028D8A",
-          "minHeight": "56px",
-          "paddingAll": "9px",
-          "paddingHorizontal": "12px",
+          "paddingTop": "16px",
+          "paddingBottom": "16px",
+          "paddingStart": "12px",
+          "paddingEnd": "12px",
           "justifyContent": "flex-end",
           "contents": [
             {
@@ -22,7 +23,8 @@
               "backgroundColor": "rgba(0, 0, 0, 0.34)",
               "cornerRadius": "999px",
               "paddingAll": "2px",
-              "paddingHorizontal": "8px",
+              "paddingStart": "8px",
+              "paddingEnd": "8px",
               "margin": "md",
               "alignItems": "flex-start",
               "contents": [
@@ -51,7 +53,8 @@
       "type": "box",
       "layout": "vertical",
       "paddingAll": "11px",
-      "paddingHorizontal": "12px",
+      "paddingStart": "12px",
+      "paddingEnd": "12px",
       "contents": [
         {
           "type": "text",
@@ -79,7 +82,8 @@
           "type": "box",
           "layout": "horizontal",
           "paddingAll": "9px",
-          "paddingHorizontal": "4px",
+          "paddingStart": "4px",
+          "paddingEnd": "4px",
           "backgroundColor": "#06C755",
           "cornerRadius": "4px",
           "contents": [
