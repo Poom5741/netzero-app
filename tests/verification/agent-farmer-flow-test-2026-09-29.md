@@ -198,6 +198,13 @@ endpoint and confusing when hit directly).
    enforcement, wet/dry vision, PJ-06/07/08/09 renders). Everything before the
    camera and the SY-03 rejection is verified green on desktop.
 
+**Decision 2026-09-29 (product owner):** condition 1 is met (b14 + verified live
+302 /admin with session cookie on pages.dev). Condition 2 is **waived for now** —
+agent-driven testing through the real LINE desktop app is accepted as the
+sufficient bar; the phone pass stays on the backlog as future hardening, and the
+two desktop-only render quirks (PJ-13 badge pill, refusal text not displaying)
+remain documented known issues. **Verdict with this decision: GO.**
+
 Farmer-facing chat is otherwise in the best state it has been: every artifact card
 now renders, all buttons act, the full J1→J9→J11 loop walked live on a real LINE
 account, and a schema guard now prevents this class of silent card failure from
