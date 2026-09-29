@@ -207,3 +207,52 @@ shipping again.
 events (rayIds in session log), D1 rows (`season_plot-happy-1_2026-07-01`,
 `automation_audit_log` sign-ins, `application_documents` 3/3), commits
 `aa62238..054228d` local on `main` (push pending user approval).*
+---
+
+## Addendum — session 2, 2026-09-29 ~11:15–11:55 UTC (no phone available)
+
+User could not use the local device; the remaining dev-only items were done
+and two of them verified live on the desktop LINE client.
+
+1. **J5 gate shipped + LIVE-VERIFIED (was the only F-fail)** — commit `7142d09`
+   (b12), deployed to the test Worker (sha `5cc227f4…`). The OB-05 card now
+   renders one ☐/☑ toggle per condition (postback `conditions_tick_1..3`);
+   ticks persist append-only in a new `flow_scratch` table (migration applied
+   to D1 `netzero`); ยอมรับ/conditions_accept is refused until all 3 are
+   ticked. Live walk on the real account: tick 1 → ☑ renders, tick 2 → typed
+   ยอมรับ refused at 2/3 (state stayed `conditions`, D1 confirms), tick 3 →
+   ยอมรับทั้ง 3 ข้อ advanced to the LF-01 registration card (state
+   `registration` in D1). Tick rows are dated (11:34:39 / 11:34:57 / 11:38:47)
+   — the audit the card copy promises. Link state restored to `results` after
+   the walk. Suite 985→987/987, `bun run check` fully green.
+2. **OB-11 duplicate card fixed** — commit `50e10ef` (b13), deployed (sha
+   `edd29796…`). Admin approval already pushes the card; handleActivation no
+   longer re-sends it on เริ่มใช้งาน (single sender). Not re-walked live (the
+   activation step would need a second admin approve); covered by 2 new tests.
+3. **pages.dev login RELEASE BLOCKER FIXED end-to-end** — commit `720ed5c`
+   (b14) + project settings change. Root cause confirmed: Pages `_redirects`
+   are GET-only, so POST /login 405'd. Fix: Pages advanced-mode
+   `frontend/functions/_worker.js` — 1:1 port of the workers.dev proxy
+   (assets via `env.ASSETS`, API paths via the new `BACKEND` service binding
+   → `netzero-carbon-poc`). Deployed via the Pages direct-upload API
+   (blake3 manifest of the 145 existing assets matched exactly — 0 uploads;
+   gotchas: the `_worker.bundle` part must be a multipart FILE part with a
+   filename, and the /pages/assets/* endpoints are host-level with a
+   wrangler-style UA). Verified live on pages.dev: `POST /login` →
+   **302 /admin**, `POST /sponsor-login` → **302 /sponsor**,
+   `GET /admin/login` → 200.
+4. **RP-03 "ภาพ 1/4" was correct, not a nit** — the 1 approved photo is the
+   evidence I flipped via the review API during J12. No change.
+5. Pre-existing `check:type` debt from b9/b11 cleared (`liff.ts` Bindings
+   APP_URL, `pushToFarmer` typing) + stale `/chat` integration checks removed
+   (route was removed in `a3bef31`) — commit `cc7ab4b`.
+
+New live finding (documented, needs mobile render check): in the refusal
+push, the TEXT message ("กรุณาติ๊กยอมรับให้ครบทั้ง 3 ข้อ… (ติ๊กแล้ว 2/3 ข้อ)")
+did not display on the desktop LINE client while the re-rendered card right
+after it did. Unit tests prove both messages are in the same push payload;
+server accepted it (card rendered). Same class as the PJ-13 badge quirk.
+
+*Commits this session: `7142d09`, `cc7ab4b`, `f8bbe6c`, `50e10ef`, `720ed5c`
+— all local on `main`; push still awaits user approval. Rollback snapshots:
+`_deploy/rollback-netzero-carbon-poc-20260929-pre-b12.js`, `…-pre-b13.js`.*
