@@ -1127,6 +1127,15 @@ async function handleResults(ctx: FlowContext): Promise<FlowResult> {
         .first<{ plot_code: string }>()
     : null;
 
+  // BUG-017-B2 b11: เปิดแดชบอร์ดของฉัน must open the summary LIFF with the
+  // farmer/plot context, not the bare app root (JSON 404 live).
+  const summaryUrl =
+    ctx.liffId && plotId
+      ? `https://liff.line.me/${ctx.liffId}/liff/summary?plot_id=${encodeURIComponent(plotId)}&farmer_id=${encodeURIComponent(ctx.farmerId)}`
+      : plotId
+        ? `${ctx.appUrl}/liff/summary?plot_id=${encodeURIComponent(plotId)}&farmer_id=${encodeURIComponent(ctx.farmerId)}`
+        : ctx.appUrl;
+
   await safePush(ctx, [
     buildDashboardBubble({
       farmerName: farmer?.full_name || "—",
@@ -1136,7 +1145,7 @@ async function handleResults(ctx: FlowContext): Promise<FlowResult> {
       approvedPhotos: results.approvedPhotos,
       totalPhotos: results.totalPhotos,
       pendingTasks: results.pendingTasks,
-      appUrl: ctx.appUrl,
+      appUrl: summaryUrl,
     }),
   ]);
   return { newState: "results" };
