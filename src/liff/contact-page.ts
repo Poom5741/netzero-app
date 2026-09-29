@@ -6,15 +6,11 @@
 const LIFF_STUB = `<script>\n  window.liff = window.liff || {};\n  window.liff.init = window.liff.init || function(cb) { cb(); };\n</script>`;
 
 /**
- * Compose the contact page HTML for LIFF.
- * Shows coordinator info, project name, and offline queue status.
+ * Compose the contact page body (coordinator info + offline queue status).
+ * Used both by composeContactPage() and the /liff/contact LiffShell screen.
  */
-export function composeContactPage(): string {
-  return `<!DOCTYPE html>
-<html lang="th">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:16px;background:#f5f5f5;">
-<div style="max-width:400px;margin:0 auto;">
+export function composeContactBody(): string {
+  return `<div style="max-width:400px;margin:0 auto;">
   <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.1);">
     <h1 style="margin:0 0 12px 0;font-size:20px;color:#333;">📞 ติดต่อเจ้าหน้าที่</h1>
     <p style="margin:0 0 8px 0;color:#666;font-size:14px;">โครงการ NetZeroCarbon</p>
@@ -47,7 +43,18 @@ export function composeContactPage(): string {
       <span style="font-size:13px;color:#333;">ระบบพร้อมใช้งาน</span>
     </div>
   </div>
-</div>
+</div>`;
+}
+
+/**
+ * Compose the full standalone contact page HTML for LIFF.
+ */
+export function composeContactPage(): string {
+  return `<!DOCTYPE html>
+<html lang="th">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:16px;background:#f5f5f5;">
+${composeContactBody()}
 ${LIFF_STUB}
 </body>
 </html>`;

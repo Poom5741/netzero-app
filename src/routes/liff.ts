@@ -4,6 +4,9 @@
 
 import { Hono } from "hono";
 import { extractLiffIdToken, verifyLiffIdToken } from "../auth/liff-jwt";
+import { composeBackfillPrompt, validateBackfillEntry } from "../liff/backfill-api";
+import { type CalendarStep, handleLiffCalendar } from "../liff/calendar-api";
+import { composeContactBody } from "../liff/contact-page";
 import { validateDocumentType, validateDocumentUpload } from "../liff/document-upload-validation";
 import {
   mapDocTypeToCode,
@@ -14,6 +17,7 @@ import { resolveFarmerIdentity } from "../liff/identity-resolver";
 import { generateObjectKey } from "../liff/r2-key-generator";
 import { type RegistrationFormData, validateRegistrationForm } from "../liff/registration-api";
 import { handleFlowApi } from "../line/flow";
+import { fetchResultsData } from "../line/results-api";
 
 type Bindings = {
   DB: D1Database;
@@ -1193,4 +1197,893 @@ liffRoutes.get("/documents", (c) => {
 </html>`;
 
   return c.html(html);
+});
+
+// ---------------------------------------------------------------------------
+// Artifact LIFF screens — LiffShell + calendar/summary/fields/contact/baseline/docs
+//
+// Design source: design-artifacts/2026-09-28/line-oa-farmer.html, module
+// 30fbaadd-d95b-4dad-b1c1-fa2494ac1677.js (LiffShell + LiffCalendar +
+// LiffSummary + LiffFields + LiffContact + LiffBaseline + LiffDocs) and
+// specs/016-flow-parity/node-design-spec.md. Tokens are the artifact's
+// :root block; layout mirrors the decoded React components.
+//
+// These pages render the shell immediately (no eternal spinner): LIFF init
+// only wires the close button and optional identity resolution, so the page
+// works outside the LINE client too.
+// ---------------------------------------------------------------------------
+
+/** JSON safe for embedding inside a <script> block. */
+function safeJson(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+interface LiffScreenInput {
+  title: string;
+  subtitle?: string;
+  body: string;
+  footer?: string;
+  /** Query param the client should resolve via __context__ when missing. */
+  resolveParam?: string;
+  /** Path the client relocates to after resolving resolveParam. */
+  resolvePath?: string;
+  liffId: string;
+}
+
+function liffScreenHtml(input: LiffScreenInput): string {
+  const subtitle = input.subtitle ? `<span class="shell-subtitle">${input.subtitle}</span>` : "";
+  const footer = input.footer ? `<div class="shell-footer">${input.footer}</div>` : "";
+  const boot = {
+    liffId: input.liffId,
+    resolveParam: input.resolveParam || "",
+    resolvePath: input.resolvePath || "",
+  };
+  return `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>${input.title} — NetZeroCarbon</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root{
+      --line-green:#06C755;--line-green-dark:#04A344;--line-chat-bg:#8FAAD0;--line-chat-ink:#16202C;
+      --line-bubble-me:#A9E86B;--line-bubble-you:#FFFFFF;--line-hairline:#EEF2F6;--line-qr-border:#D6DFE9;
+      --line-input-pill:#F1F4F8;--line-muted:#94A2B2;
+      --gradient-deep:linear-gradient(150deg,#061E5C 0%,#0B2A72 45%,#027276 100%);
+      --teal-50:#E7FCF7;--teal-200:#8FF3DE;--teal-300:#52ECCA;--teal-600:#028E91;--teal-700:#027276;--teal-800:#01565F;
+      --status-success:#0AA8A3;--status-success-soft:#E7FCF7;--status-warning:#E2A33C;--status-warning-soft:#FCF2E0;
+      --status-danger:#C8464F;--status-danger-soft:#FBECEC;
+      --navy-50:#EEF2FB;--navy-700:#123787;--navy-900:#061E5C;
+      --grey-50:#F2F2F2;--grey-100:#EDEFF3;--grey-200:#DDE1E8;--grey-300:#C2C8D2;--grey-400:#9AA3B2;
+      --grey-500:#737E91;--grey-600:#566277;--grey-700:#3C4A5C;--grey-800:#273343;
+      --text-heading:#061E5C;--text-body:#273343;--text-muted:#566277;--text-subtle:#737E91;
+      --border-subtle:#DDE1E8;--border-default:#C2C8D2;--border-accent:#028E91;
+      --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-pill:999px;
+      --weight-light:300;--weight-semibold:600;--weight-bold:700;
+      --shadow-xs:0 1px 2px rgba(6,30,92,.06);
+      --tracking-eyebrow:.14em;
+      --font-mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans Thai',sans-serif;background:#fff;color:var(--text-body)}
+    .shell{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column}
+    .shell-header{background:var(--gradient-deep);color:#fff;padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+    .shell-logo{width:26px;height:26px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;font-size:13px;line-height:1}
+    .shell-titles{min-width:0;flex:1}
+    .shell-title{display:block;font-size:14px;font-weight:var(--weight-bold);line-height:1.25}
+    .shell-subtitle{display:block;font-size:10.5px;opacity:.82;margin-top:2px}
+    .shell-close{background:none;border:none;color:#fff;font-size:17px;cursor:pointer;line-height:1;padding:0}
+    .shell-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;background:var(--grey-50)}
+    .shell-footer{border-top:1px solid var(--border-subtle);background:#fff;padding:10px 14px}
+    .panel{background:#fff;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:12px 13px;display:flex;flex-direction:column;gap:9px}
+    .panel.warn{background:var(--status-warning-soft);border-color:#F2DDB4}
+    .panel-title{font-size:13px;font-weight:var(--weight-semibold);color:var(--text-heading)}
+    .panel-hint{font-size:11px;color:var(--text-subtle);line-height:1.55;margin-top:-4px}
+    .btn{background:var(--teal-600);color:#fff;border:none;border-radius:var(--radius-pill);padding:9px 14px;font-size:12.5px;font-weight:var(--weight-semibold);cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;text-align:center}
+    .btn:active{background:var(--teal-800)}
+    .btn.outline{background:#fff;color:var(--teal-700);border:1px solid var(--border-default)}
+    .btn.sm{padding:6px 12px;font-size:11.5px}
+    .btn.full{width:100%}
+    .btn:disabled{background:var(--grey-200);color:var(--grey-500);border:none;cursor:default}
+    .badge{display:inline-block;padding:3px 9px;border-radius:var(--radius-pill);font-size:10px;font-weight:var(--weight-semibold);white-space:nowrap}
+    .badge.success{background:var(--status-success-soft);color:var(--teal-800)}
+    .badge.warning{background:var(--status-warning-soft);color:#8A5B10}
+    .badge.danger{background:var(--status-danger-soft);color:var(--status-danger)}
+    .tag{display:inline-block;padding:4px 10px;border-radius:var(--radius-pill);font-size:10.5px;font-weight:var(--weight-semibold)}
+    .tag.neutral{background:var(--grey-100);color:var(--grey-700)}
+    .tag.teal{background:var(--teal-50);color:var(--teal-800)}
+    .mono{font-family:var(--font-mono)}
+    .progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px}
+    .progress-track{height:6px;background:var(--grey-100);border-radius:var(--radius-pill);overflow:hidden}
+    .progress-fill{height:100%;background:var(--teal-600);border-radius:var(--radius-pill)}
+    .empty{background:#fff;border:1px dashed var(--border-default);border-radius:var(--radius-md);padding:18px 14px;text-align:center;font-size:12px;color:var(--text-subtle);line-height:1.6}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="shell-header">
+      <span class="shell-logo">🌱</span>
+      <span class="shell-titles">
+        <span class="shell-title">${input.title}</span>
+        ${subtitle}
+      </span>
+      <button class="shell-close" id="shellClose" aria-label="ปิด">✕</button>
+    </div>
+    <div class="shell-body">
+${input.body}
+    </div>
+${footer}
+  </div>
+  <script>window.__BOOT__ = ${safeJson(boot)};</script>
+  <script>
+    (function(){
+      var boot = window.__BOOT__ || {};
+      var liffId = boot.liffId || "";
+      var state = { ready: false };
+      function initLiff(){
+        if(!liffId || !window.liff) return Promise.resolve(false);
+        return window.liff.init({ liffId: liffId }).then(function(){ return true; }).catch(function(){ return false; });
+      }
+      initLiff().then(function(ok){
+        state.ready = ok;
+        if (window.__onLiffReady) window.__onLiffReady(ok);
+      });
+      var closeBtn = document.getElementById('shellClose');
+      if (closeBtn) closeBtn.addEventListener('click', function(){
+        if (state.ready && window.liff && window.liff.closeWindow) { window.liff.closeWindow(); }
+        else { history.back(); }
+      });
+      window.__nzc = {
+        ready: function(){ return state.ready; },
+        profile: function(){
+          if (!state.ready || !window.liff || !window.liff.getProfile) return Promise.reject(new Error('no-liff'));
+          return window.liff.getProfile();
+        },
+        // Resolve the farmer's working context and reload this screen with it.
+        resolveAndGo: function(){
+          if (!boot.resolveParam) return Promise.resolve(false);
+          return window.__nzc.profile().then(function(p){
+            return fetch('/liff/api/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: '__context__', userId: p.userId })
+            });
+          }).then(function(r){ return r.json(); }).then(function(d){
+            var v = d && d[boot.resolveParam];
+            if (v) { location.replace(boot.resolvePath + '?' + boot.resolveParam + '=' + encodeURIComponent(v)); return true; }
+            return false;
+          }).catch(function(){ return false; });
+        }
+      };
+    })();
+  </script>
+</body>
+</html>`;
+}
+
+// -- /liff/calendar — PJ-13 · ปฏิทินฤดูนี้ 9 ขั้นตอน -------------------------
+
+const CALENDAR_PHOTO_STEPS: Record<string, string> = {
+  "SG-04": "เปียก 1",
+  "SG-05": "แห้ง 1",
+  "SG-07": "เปียก 2",
+  "SG-08": "แห้ง 2",
+};
+
+function calendarRowHtml(
+  step: CalendarStep,
+  mark: "done" | "now" | "next" | "lock",
+  cameraQuery: string,
+): string {
+  const marks = {
+    done: ["✓", "var(--teal-600)", "#fff"],
+    now: ["●", "var(--status-warning)", "#fff"],
+    next: ["○", "#fff", "var(--text-subtle)"],
+    lock: ["🔒", "var(--grey-100)", "var(--grey-500)"],
+  } as const;
+  const [glyph, bg, fg] = marks[mark];
+  const border = mark === "next" ? "border:1px solid var(--border-default);" : "";
+  const rowBg = mark === "now" ? "var(--status-warning-soft)" : "#fff";
+  const phase = CALENDAR_PHOTO_STEPS[step.step_code]
+    ? step.step_code === "SG-04" || step.step_code === "SG-07"
+      ? " · 📷 น้ำเต็มท่อ"
+      : " · 📷 น้ำต่ำกว่าผิวดิน"
+    : "";
+  const due = step.due_date ? ` · ${step.due_date}` : "";
+  const action =
+    mark === "now" && CALENDAR_PHOTO_STEPS[step.step_code]
+      ? `<a class="btn sm" href="/liff/camera?${cameraQuery}">บันทึก</a>`
+      : "";
+  return `<div style="display:flex;gap:11px;align-items:center;padding:11px 13px;background:${rowBg};border-bottom:1px solid var(--grey-100);">
+        <span style="width:24px;height:24px;flex:none;border-radius:50%;background:${bg};color:${fg};${border}display:grid;place-items:center;font-size:11px;">${glyph}</span>
+        <span style="flex:1;min-width:0;">
+          <span style="display:block;font-size:12.5px;font-weight:var(--weight-semibold);color:var(--text-heading);">${step.step_name}</span>
+          <span style="display:block;font-size:10.5px;color:var(--text-subtle);">${step.step_code} · วันที่ ${step.due_day}${due}${phase}</span>
+        </span>
+        ${action}
+      </div>`;
+}
+
+liffRoutes.get("/calendar", async (c) => {
+  const liffId = c.env.LIFF_ID || "";
+  const db = c.env.DB;
+  const seasonInputId = c.req.query("season_input_id") || "";
+  const plotId = c.req.query("plot_id") || "";
+  try {
+    let inputId = seasonInputId;
+    let plotCode = "";
+    let seasonKey = "";
+    if (!inputId && plotId) {
+      const row = await db
+        .prepare(
+          "SELECT id, season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1",
+        )
+        .bind(plotId)
+        .first<{ id: string; season_id: string }>();
+      if (row) {
+        inputId = row.id;
+        seasonKey = row.season_id;
+      }
+    }
+    if (plotId) {
+      const plot = await db
+        .prepare("SELECT plot_code FROM plots WHERE id = ?")
+        .bind(plotId)
+        .first<{ plot_code: string }>();
+      plotCode = plot?.plot_code || "";
+    }
+
+    const steps = inputId ? (await handleLiffCalendar(db, inputId)).steps : [];
+    const doneCount = steps.filter((s) => s.status === "completed").length;
+    const nowIdx = steps.findIndex((s) => s.status !== "completed");
+
+    const cameraParams = new URLSearchParams();
+    if (nowIdx >= 0) cameraParams.set("step", steps[nowIdx].step_code);
+    if (plotId) cameraParams.set("plot_id", plotId);
+    if (seasonKey) cameraParams.set("season_id", seasonKey);
+    const cameraQuery = cameraParams.toString();
+
+    const chips = Object.entries(CALENDAR_PHOTO_STEPS)
+      .map(([code, label]) => {
+        const ok = steps.some((s) => s.step_code === code && s.status === "completed");
+        const bg = ok ? "var(--teal-600)" : "#fff";
+        const fg = ok ? "#fff" : "var(--text-subtle)";
+        const border = ok ? "1px solid var(--teal-600)" : "1px solid var(--border-default)";
+        return `<span style="flex:1;text-align:center;padding:7px 4px;border-radius:var(--radius-sm);font-size:11px;font-weight:var(--weight-semibold);background:${bg};color:${fg};border:${border};">${label}</span>`;
+      })
+      .join("\n        ");
+
+    const rows = steps
+      .map((s, i) => {
+        const mark =
+          i < nowIdx || nowIdx < 0
+            ? "done"
+            : i === nowIdx
+              ? "now"
+              : i === nowIdx + 1
+                ? "next"
+                : "lock";
+        return calendarRowHtml(s, mark, cameraQuery);
+      })
+      .join("\n        ");
+
+    const body = steps.length
+      ? `<div class="panel">
+        <div class="panel-title">ความคืบหน้า ${doneCount}/9 ขั้นตอน</div>
+        <div class="panel-hint">กำหนดของแต่ละขั้นคำนวณจากวันหว่านบวกอายุของพันธุ์ข้าว (120 วัน)</div>
+        <div class="progress-track"><div class="progress-fill" style="width:${Math.round((doneCount / 9) * 100)}%;"></div></div>
+      </div>
+      <div class="panel warn">
+        <div class="panel-title">ภาพท่อวัดระดับน้ำ 4 รอบต่อครอป</div>
+        <div class="panel-hint">เปียก 2 ครั้ง แห้ง 2 ครั้ง สลับกัน — ต้องครบทั้ง 4 ภาพ เครดิตจึงคิดได้เต็ม ถ้าไม่ครบระบบจะคิดให้ต่ำลงโดยอัตโนมัติ</div>
+        <div style="display:flex;gap:6px;">
+        ${chips}
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;">
+        ${rows}
+      </div>`
+      : `<div class="empty">ยังไม่มีปฏิทินฤดูให้แสดง<br>เริ่มฤดูจากแชท LINE โดยพิมพ์ "เริ่มปลูก" หรือแตะลิงก์จากบอตอีกครั้ง</div>`;
+
+    const subtitle = plotCode
+      ? `${plotCode} · ${seasonKey || "ฤดูโครงการ"} · 9 ขั้นตอน`
+      : "ฤดูโครงการ · 9 ขั้นตอน";
+
+    const nowStep = nowIdx >= 0 ? steps[nowIdx] : null;
+    const footer =
+      nowStep && CALENDAR_PHOTO_STEPS[nowStep.step_code]
+        ? `<a class="btn full" href="/liff/camera?${cameraQuery}">ถ่ายภาพ · ${nowStep.step_name} (${nowStep.step_code})</a>`
+        : "";
+
+    return c.html(
+      liffScreenHtml({
+        title: "ปฏิทินฤดูนี้",
+        subtitle,
+        body,
+        footer,
+        resolveParam: steps.length || plotId || seasonInputId ? undefined : "plot_id",
+        resolvePath: "/liff/calendar",
+        liffId,
+      }),
+    );
+  } catch (err) {
+    console.error("LIFF calendar page error:", err);
+    return c.html(
+      liffScreenHtml({
+        title: "ปฏิทินฤดูนี้",
+        subtitle: "ฤดูโครงการ · 9 ขั้นตอน",
+        body: `<div class="empty">โหลดปฏิทินไม่สำเร็จ — ปิดหน้านี้แล้วแตะลิงก์จากแชทอีกครั้ง</div>`,
+        liffId,
+      }),
+    );
+  }
+});
+
+// -- /liff/summary — RP-05 · แดชบอร์ดของฉัน ----------------------------------
+
+function summaryTabHtml(tab: string, active: boolean): string {
+  const bg = active ? "#fff" : "transparent";
+  const color = active ? "var(--teal-700)" : "var(--text-muted)";
+  const shadow = active ? "var(--shadow-xs)" : "none";
+  return `<button type="button" data-tab="${tab}" style="flex:1;border:none;border-radius:var(--radius-pill);padding:7px 4px;font-family:inherit;font-size:12px;font-weight:var(--weight-semibold);cursor:pointer;background:${bg};color:${color};box-shadow:${shadow};">${tab}</button>`;
+}
+
+liffRoutes.get("/summary", async (c) => {
+  const liffId = c.env.LIFF_ID || "";
+  const db = c.env.DB;
+  const plotId = c.req.query("plot_id") || "";
+  const farmerId = c.req.query("farmer_id") || "";
+  try {
+    let plotCode = "";
+    let seasonKey = "";
+    if (plotId) {
+      const plot = await db
+        .prepare("SELECT plot_code FROM plots WHERE id = ?")
+        .bind(plotId)
+        .first<{ plot_code: string }>();
+      plotCode = plot?.plot_code || "";
+      const season = await db
+        .prepare(
+          "SELECT season_id FROM season_inputs WHERE plot_id = ? ORDER BY created_at DESC LIMIT 1",
+        )
+        .bind(plotId)
+        .first<{ season_id: string }>();
+      seasonKey = season?.season_id || "";
+    }
+
+    const results = plotId ? await fetchResultsData(db, farmerId, plotId) : null;
+
+    const subtitle = plotCode ? `${plotCode} · นาปี ${seasonKey || "ปัจจุบัน"}` : "แดชบอร์ดความคืบหน้า";
+
+    let body: string;
+    if (!results) {
+      body = `<div class="empty">ยังไม่มีข้อมูลผลให้แสดง<br>เปิดหน้านี้จากลิงก์ในแชท LINE เพื่อดูแดชบอร์ดของแปลงคุณ</div>`;
+    } else {
+      const sfNote =
+        results.sfW < 0.6
+          ? `ภาพไม่ครบ ระบบคำนวณต่ำลง (SF_w = ${results.sfW})`
+          : "ถ้าส่งภาพครบ 4 รอบจะได้เต็มค่านี้";
+      const tasks: string[] = [];
+      if (results.pendingPhotos > 0) tasks.push(`ถ่ายภาพอีก ${results.pendingPhotos} ภาพ`);
+      if (results.backfillCount > 0) tasks.push(`กรอกข้อมูลย้อนหลังอีก ${results.backfillCount} ฤดู`);
+      const taskRows = tasks.length
+        ? tasks
+            .map(
+              (t) =>
+                `<div style="display:flex;gap:8px;font-size:12px;color:var(--text-body);"><span>⏱</span><span>${t}</span></div>`,
+            )
+            .join("\n          ")
+        : `<div style="display:flex;gap:8px;font-size:12px;color:var(--text-body);"><span>🎉</span><span>ครบทุกรายการแล้วครับ</span></div>`;
+      const photoPct = results.totalPhotos
+        ? Math.round((results.approvedPhotos / results.totalPhotos) * 100)
+        : 0;
+      const tiles = ["เปียก 1", "แห้ง 1", "เปียก 2", "แห้ง 2"]
+        .map((label, i) => {
+          const passed = i < results.approvedPhotos;
+          const st = passed ? "ผ่าน" : "ยังไม่ส่ง";
+          const stColor = passed ? "#8FF3DE" : "#FFE29A";
+          return `<div style="position:relative;border-radius:var(--radius-sm);overflow:hidden;aspect-ratio:1/1;background:linear-gradient(180deg,#9FC7E8,#8FA95C);">
+            <span style="position:absolute;left:50%;top:24%;transform:translateX(-50%);width:9px;height:34px;background:#E7EDF2;border-radius:2px;"></span>
+            <span style="position:absolute;inset:auto 0 0 0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 4px;display:flex;justify-content:space-between;">
+              <span>${label}</span><span style="color:${stColor};">${st}</span>
+            </span>
+          </div>`;
+        })
+        .join("\n          ");
+
+      body = `<div style="display:flex;gap:4px;background:var(--grey-100);padding:3px;border-radius:var(--radius-pill);">
+        ${summaryTabHtml("ผล", true)}
+        ${summaryTabHtml("เครดิต", false)}
+        ${summaryTabHtml("ภาพ", false)}
+      </div>
+      <div data-tab-page="ผล" style="display:flex;flex-direction:column;gap:14px;">
+        <div style="background:var(--gradient-deep);color:#fff;border-radius:var(--radius-md);padding:15px 14px;">
+          <div style="font-size:11px;letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--teal-300);font-weight:var(--weight-semibold);">คาร์บอนที่ลดได้ (ประมาณการ)</div>
+          <div style="display:flex;align-items:baseline;gap:7px;margin-top:5px;">
+            <span style="font-size:38px;font-weight:var(--weight-light);line-height:1;">${results.totalOffset.toFixed(2)}</span>
+            <span style="font-size:13px;opacity:.8;">tCO₂eq</span>
+          </div>
+          <div style="font-size:10.5px;opacity:.72;margin-top:6px;line-height:1.5;">ประมาณการก่อนทวนสอบ · ${sfNote}</div>
+        </div>
+        <div class="panel warn">
+          <div class="panel-title">สิ่งที่ต้องทำต่อไป</div>
+          ${taskRows}
+        </div>
+        <div class="panel">
+          <div class="panel-title">ภาพหลักฐานครอปนี้ ${results.approvedPhotos} จาก ${results.totalPhotos} ภาพ</div>
+          <div class="panel-hint">เปียก 2 ครั้ง แห้ง 2 ครั้ง สลับกัน</div>
+          <div>
+            <div class="progress-label"><span>ภาพที่อนุมัติแล้ว</span><span>${results.approvedPhotos}/${results.totalPhotos}</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${photoPct}%;"></div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+            <span>ข้อมูลย้อนหลังที่ยังไม่กรอก</span><span>${results.backfillCount} ฤดู</span>
+          </div>
+        </div>
+      </div>
+      <div data-tab-page="เครดิต" style="display:none;flex-direction:column;gap:14px;">
+        <div class="panel">
+          <div class="panel-title">เครดิตของคุณมาจากไหน</div>
+          <div class="panel-hint">เกือบทั้งหมดมาจากมีเทนในนาข้าวที่ลดลงเพราะปล่อยแห้งสลับเปียก</div>
+          <div style="font-size:11.5px;color:var(--text-muted);line-height:1.6;">
+            โครงการ<b style="color:var(--text-heading);">ไม่ได้ขอให้ลดปุ๋ย</b> — ยอดปุ๋ยของคุณจะถูกบันทึกเท่าเดิมทั้งก่อนและระหว่างโครงการ แต่ยังต้องกรอกให้ครบ เพราะปุ๋ยเข้าสมการอีกก๊าซหนึ่ง (N₂O)
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">ภาพครบ 4 รอบ = เครดิตเต็ม</div>
+          <div class="panel-hint">ถ้าภาพไม่ครบ ระบบจะถือว่าปล่อยแห้งได้แค่ 1 ครั้ง ทำให้เครดิตลดลง</div>
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:7px 9px;border-radius:var(--radius-sm);background:var(--teal-50);">
+            <span style="color:var(--teal-800);">ตัวคูณน้ำ (SF_w) ตอนนี้</span>
+            <b class="mono" style="color:var(--teal-800);">${results.sfW}</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:7px 9px;border-radius:var(--radius-sm);background:var(--grey-100);">
+            <span style="color:var(--text-muted);">ภาพที่อนุมัติแล้ว</span>
+            <b class="mono" style="color:var(--text-muted);">${results.approvedPhotos}/${results.totalPhotos}</b>
+          </div>
+        </div>
+      </div>
+      <div data-tab-page="ภาพ" style="display:none;flex-direction:column;gap:14px;">
+        <div class="panel">
+          <div class="panel-title">ภาพท่อวัดระดับน้ำ 4 รอบของครอปนี้</div>
+          <div class="panel-hint">ภาพที่ตีกลับต้องถ่ายใหม่ — ดูสถานะได้จากแชท</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+          ${tiles}
+          </div>
+        </div>
+      </div>
+      <script>
+        (function(){
+          var buttons = document.querySelectorAll('[data-tab]');
+          for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', function(){
+              var tab = this.getAttribute('data-tab');
+              for (var j = 0; j < buttons.length; j++) {
+                var on = buttons[j] === this;
+                buttons[j].style.background = on ? '#fff' : 'transparent';
+                buttons[j].style.color = on ? 'var(--teal-700)' : 'var(--text-muted)';
+                buttons[j].style.boxShadow = on ? 'var(--shadow-xs)' : 'none';
+              }
+              var pages = document.querySelectorAll('[data-tab-page]');
+              for (var k = 0; k < pages.length; k++) {
+                pages[k].style.display = pages[k].getAttribute('data-tab-page') === tab ? 'flex' : 'none';
+              }
+            });
+          }
+        })();
+      </script>`;
+    }
+
+    return c.html(
+      liffScreenHtml({
+        title: "แดชบอร์ดของฉัน",
+        subtitle,
+        body,
+        resolveParam: results ? undefined : "plot_id",
+        resolvePath: "/liff/summary",
+        liffId,
+      }),
+    );
+  } catch (err) {
+    console.error("LIFF summary page error:", err);
+    return c.html(
+      liffScreenHtml({
+        title: "แดชบอร์ดของฉัน",
+        subtitle: "แดชบอร์ดความคืบหน้า",
+        body: `<div class="empty">โหลดแดชบอร์ดไม่สำเร็จ — ปิดหน้านี้แล้วแตะลิงก์จากแชทอีกครั้ง</div>`,
+        liffId,
+      }),
+    );
+  }
+});
+
+// -- /liff/fields — RP-02 · แปลงของฉัน ---------------------------------------
+
+const TENURE_LABELS: Record<string, string> = {
+  owner: "เจ้าของ",
+  tenant: "ผู้เช่า",
+  proxy: "ผู้รับมอบอำนาจ",
+};
+
+liffRoutes.get("/fields", async (c) => {
+  const liffId = c.env.LIFF_ID || "";
+  const db = c.env.DB;
+  const farmerId = c.req.query("farmer_id") || "";
+  try {
+    let body: string;
+    let plotCount = 0;
+
+    if (farmerId) {
+      const { results: plots } = await db
+        .prepare(
+          "SELECT id, plot_code, deed_no, area_rai, tenure FROM plots WHERE farmer_id = ? ORDER BY created_at ASC",
+        )
+        .bind(farmerId)
+        .all<{
+          id: string;
+          plot_code: string;
+          deed_no: string;
+          area_rai: number;
+          tenure: string | null;
+        }>();
+      plotCount = plots.length;
+
+      const varietyByPlot = new Map<string, string>();
+      const photoByPlot = new Map<string, { approved: number; total: number }>();
+      if (plots.length > 0) {
+        const ids = plots.map((p) => p.id);
+        const placeholders = ids.map(() => "?").join(",");
+        const { results: seasons } = await db
+          .prepare(
+            `SELECT plot_id, rice_variety FROM season_inputs WHERE plot_id IN (${placeholders}) ORDER BY created_at DESC`,
+          )
+          .bind(...ids)
+          .all<{ plot_id: string; rice_variety: string | null }>();
+        for (const s of seasons) {
+          if (!varietyByPlot.has(s.plot_id) && s.rice_variety)
+            varietyByPlot.set(s.plot_id, s.rice_variety);
+        }
+        const { results: photos } = await db
+          .prepare(
+            `SELECT plot_id,
+                    COUNT(DISTINCT CASE WHEN admin_status = 'verified' THEN step_code END) AS approved,
+                    COUNT(DISTINCT step_code) AS total
+             FROM photo_evidence WHERE plot_id IN (${placeholders}) GROUP BY plot_id`,
+          )
+          .bind(...ids)
+          .all<{ plot_id: string; approved: number; total: number }>();
+        for (const p of photos)
+          photoByPlot.set(p.plot_id, { approved: p.approved, total: p.total });
+      }
+
+      body = plots.length
+        ? plots
+            .map((p) => {
+              const photos = photoByPlot.get(p.id);
+              const approved = photos?.approved ?? 0;
+              const total = photos?.total ?? 0;
+              const badge =
+                total > 0 && approved >= 4
+                  ? `<span class="badge success">ภาพครบ 4/4</span>`
+                  : approved > 0
+                    ? `<span class="badge warning">ภาพ ${approved}/4 ครอปนี้</span>`
+                    : "";
+              const tenure = p.tenure ? TENURE_LABELS[p.tenure] : "";
+              const variety = varietyByPlot.get(p.id);
+              return `<div style="background:#fff;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:12px 13px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <span style="min-width:0;">
+              <span style="display:block;font-size:13px;font-weight:var(--weight-semibold);color:var(--text-heading);">${p.plot_code}</span>
+              <span class="mono" style="display:block;font-size:10px;color:var(--text-subtle);">${p.deed_no}</span>
+            </span>
+            ${badge}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="tag neutral">${p.area_rai} ไร่</span>
+            ${variety ? `<span class="tag teal">${variety}</span>` : ""}
+            ${tenure ? `<span class="tag neutral">${tenure}</span>` : ""}
+          </div>
+          <a class="btn outline sm full" href="/liff/calendar?plot_id=${encodeURIComponent(p.id)}">เลือกแปลงนี้</a>
+        </div>`;
+            })
+            .join("\n        ")
+        : `<div class="empty">ยังไม่มีแปลงในระบบ<br>เปิดหน้านี้จากแชท LINE หลังลงทะเบียนแปลงแล้ว</div>`;
+    } else {
+      body = `<div class="empty">กำลังหาแปลงของคุณ…<br>ถ้าหน้านี้ไม่เปลี่ยน ให้เปิดลิงก์จากแชท LINE ในแอป LINE</div>`;
+    }
+
+    return c.html(
+      liffScreenHtml({
+        title: "แปลงของฉัน",
+        subtitle: plotCount ? `${plotCount} แปลง · เลือกแปลงที่จะทำงานด้วย` : "เลือกแปลงที่จะทำงานด้วย",
+        body,
+        resolveParam: farmerId ? undefined : "farmer_id",
+        resolvePath: "/liff/fields",
+        liffId,
+      }),
+    );
+  } catch (err) {
+    console.error("LIFF fields page error:", err);
+    return c.html(
+      liffScreenHtml({
+        title: "แปลงของฉัน",
+        subtitle: "เลือกแปลงที่จะทำงานด้วย",
+        body: `<div class="empty">โหลดรายการแปลงไม่สำเร็จ — ปิดหน้านี้แล้วแตะลิงก์จากแชทอีกครั้ง</div>`,
+        liffId,
+      }),
+    );
+  }
+});
+
+// -- /liff/contact — RP-04 · ติดต่อเจ้าหน้าที่ -------------------------------
+
+liffRoutes.get("/contact", (c) => {
+  return c.html(
+    liffScreenHtml({
+      title: "ติดต่อเจ้าหน้าที่",
+      subtitle: "จันทร์-ศุกร์ 8:00-17:00 น.",
+      body: composeContactBody(),
+      liffId: c.env.LIFF_ID || "",
+    }),
+  );
+});
+
+// -- /liff/baseline — BL · ข้อมูลย้อนหลัง 3 ปี --------------------------------
+
+const BACKFILL_YEARS = ["2567", "2568", "2569"];
+
+liffRoutes.get("/baseline", (c) => {
+  const liffId = c.env.LIFF_ID || "";
+  const plotId = c.req.query("plot_id") || "";
+  const intro = composeBackfillPrompt({
+    plotName: "แปลงของคุณ",
+    missingSeasons: BACKFILL_YEARS.length,
+    availableYears: BACKFILL_YEARS,
+  });
+
+  const rows = BACKFILL_YEARS.map((year) => {
+    const opts = [
+      `<option value="">— เลือก —</option>`,
+      `<option>เปียกสลับแห้ง</option>`,
+      `<option>น้ำขังตลอด</option>`,
+    ].join("");
+    return `<div class="panel">
+        <div class="panel-title">ปี ${year}</div>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--text-muted);">วันหว่าน
+          <input type="date" id="sow-${year}" style="border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:8px 10px;font-size:12.5px;font-family:inherit;background:var(--line-input-pill);">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--text-muted);">การจัดการน้ำ
+          <select id="wm-${year}" style="border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:8px 10px;font-size:12.5px;font-family:inherit;background:var(--line-input-pill);">${opts}</select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--text-muted);">ผลผลิต (กก./ไร่)
+          <input type="number" min="0" inputmode="decimal" id="yield-${year}" placeholder="ถ้าทราบ" style="border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:8px 10px;font-size:12.5px;font-family:inherit;background:var(--line-input-pill);">
+        </label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button type="button" class="btn sm" data-season="${year}">บันทึก</button>
+          <span id="st-${year}" style="font-size:11px;"></span>
+        </div>
+      </div>`;
+  }).join("\n      ");
+
+  const body = `<div class="panel">
+        <div class="panel-title">ข้อมูลย้อนหลัง 3 ปี</div>
+        <div class="panel-hint" style="white-space:pre-wrap;margin-top:0;">${intro}</div>
+      </div>
+      ${rows}
+      <script>
+        (function(){
+          var errorText = {
+            'sow_date is required': '❌ กรุณากรอกวันหว่าน',
+            'water_management is required': '❌ กรุณาเลือกการจัดการน้ำ'
+          };
+          var buttons = document.querySelectorAll('button[data-season]');
+          for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', function(){
+              var b = this;
+              var y = b.getAttribute('data-season');
+              var status = document.getElementById('st-' + y);
+              var payload = {
+                plot_id: new URLSearchParams(location.search).get('plot_id') || '',
+                season_name: 'นาปี ' + y,
+                sow_date: document.getElementById('sow-' + y).value,
+                water_management: document.getElementById('wm-' + y).value,
+                yield_kg_per_rai: parseFloat(document.getElementById('yield-' + y).value) || undefined
+              };
+              b.disabled = true;
+              status.textContent = 'กำลังตรวจ…';
+              fetch('/liff/api/backfill/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              }).then(function(r){ return r.json(); }).then(function(d){
+                if (d.valid) {
+                  status.textContent = '✓ ข้อมูลครบ — พร้อมส่งให้เจ้าหน้าที่ยืนยัน';
+                  status.style.color = 'var(--status-success)';
+                } else {
+                  status.textContent = errorText[d.error] || ('❌ ' + (d.error || 'ข้อมูลไม่ครบ'));
+                  status.style.color = 'var(--status-danger)';
+                }
+              }).catch(function(){
+                status.textContent = '❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
+                status.style.color = 'var(--status-danger)';
+              }).finally(function(){ b.disabled = false; });
+            });
+          }
+        })();
+      </script>`;
+
+  return c.html(
+    liffScreenHtml({
+      title: "ข้อมูลย้อนหลัง 3 ปี",
+      subtitle: "กรอกย้อนหลังได้ 3 ฤดู · ทำให้คำนวณเครดิตแม่นขึ้น",
+      body,
+      resolveParam: plotId ? undefined : "plot_id",
+      resolvePath: "/liff/baseline",
+      liffId,
+    }),
+  );
+});
+
+liffRoutes.post("/api/backfill/validate", async (c) => {
+  try {
+    const body = await c.req.json<{
+      plot_id?: string;
+      season_name?: string;
+      sow_date?: string;
+      water_management?: string;
+      yield_kg_per_rai?: number;
+      straw_management?: string;
+      fuel_liters_per_rai?: number;
+      electricity_kwh_per_rai?: number;
+    }>();
+    return c.json(
+      validateBackfillEntry({
+        plot_id: body.plot_id ?? "",
+        season_name: body.season_name ?? "",
+        sow_date: body.sow_date ?? "",
+        water_management: body.water_management ?? "",
+        yield_kg_per_rai: body.yield_kg_per_rai,
+        straw_management: body.straw_management,
+        fuel_liters_per_rai: body.fuel_liters_per_rai,
+        electricity_kwh_per_rai: body.electricity_kwh_per_rai,
+      }),
+    );
+  } catch (err) {
+    console.error("Backfill validate error:", err);
+    return c.json({ valid: false, error: "Internal server error" }, 500);
+  }
+});
+
+// -- /liff/docs — OB-13 · แนบเอกสารสิทธิ์ (same upload API as /documents) ----
+
+const DOCS_PAGE_ITEMS = [
+  { docType: "chanote", code: "DOC-01", name: "โฉนดที่ดิน หน้า-หลัง", by: "เกษตรกร", required: true },
+  { docType: "id_copy", code: "DOC-03", name: "สำเนาบัตรประชาชน", by: "เกษตรกร", required: true },
+  {
+    docType: "power_of_attorney",
+    code: "DOC-06",
+    name: "หนังสือมอบอำนาจ",
+    by: "บริษัทมีแบบฟอร์มให้",
+    required: false,
+  },
+];
+
+liffRoutes.get("/docs", (c) => {
+  const liffId = c.env.LIFF_ID || "";
+
+  const rows = DOCS_PAGE_ITEMS.map((d) => {
+    const requiredMark = d.required ? " *" : "";
+    return `<div style="background:#fff;border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:12px 13px;display:flex;gap:11px;align-items:center;">
+          <span id="thumb-${d.docType}" style="width:44px;height:56px;border-radius:4px;flex:none;background:var(--grey-100);border:1px solid var(--border-subtle);display:grid;place-items:center;color:var(--grey-400);font-size:19px;">＋</span>
+          <span style="flex:1;min-width:0;">
+            <span class="mono" style="display:block;font-size:10px;color:var(--text-subtle);">${d.code}${requiredMark}</span>
+            <span style="display:block;font-size:13px;font-weight:var(--weight-semibold);color:var(--text-heading);">${d.name}</span>
+            <span style="display:block;font-size:10.5px;color:var(--text-subtle);">${d.by}</span>
+            <span id="status-${d.docType}" style="display:block;font-size:10.5px;margin-top:2px;"></span>
+          </span>
+          <input type="file" id="file-${d.docType}" accept=".pdf,.jpg,.jpeg,.png" data-doc-type="${d.docType}" style="display:none;">
+          <button type="button" class="btn sm" id="btn-${d.docType}" onclick="document.getElementById('file-${d.docType}').click()">แนบไฟล์</button>
+        </div>`;
+  }).join("\n        ");
+
+  const body = `<div class="panel warn">
+        <div class="panel-title">เอกสารไม่ครบ = ส่งใบสมัครไม่ได้</div>
+        <div class="panel-hint">ทุกฉบับต้องเซ็นรับรองสำเนาถูกต้อง และระบุว่าใช้สำหรับโครงการบริษัทเนทซีโรคาร์บอน จำกัด · รองรับ PDF, JPEG, PNG (ไม่เกิน 10MB)</div>
+      </div>
+      ${rows}
+      <script>
+        (function(){
+          var items = ${safeJson(DOCS_PAGE_ITEMS)};
+          var boot = window.__BOOT__ || {};
+          var token = null;
+          var farmerId = boot.farmerId || "";
+
+          window.__onLiffReady = function(ok){
+            if (!ok) return;
+            try { token = window.liff.getIDToken ? window.liff.getIDToken() : null; } catch (e) { token = null; }
+            if (!token) { try { token = window.liff.getAccessToken(); } catch (e2) { token = null; } }
+          };
+
+          function setDone(item){
+            var thumb = document.getElementById('thumb-' + item.docType);
+            thumb.textContent = '✓';
+            thumb.style.background = 'linear-gradient(160deg,#E7FCF7,#8FF3DE)';
+            thumb.style.color = 'var(--teal-700)';
+            var btn = document.getElementById('btn-' + item.docType);
+            btn.textContent = 'แนบแล้ว';
+            btn.disabled = true;
+            document.getElementById('status-' + item.docType).textContent = '✅ อัปโหลดสำเร็จ';
+            document.getElementById('status-' + item.docType).style.color = 'var(--status-success)';
+          }
+
+          function refreshFooter(){
+            var footer = document.getElementById('docsFooter');
+            var missing = 0;
+            for (var i = 0; i < items.length; i++) {
+              if (items[i].required && !document.getElementById('btn-' + items[i].docType).disabled) missing++;
+            }
+            if (missing === 0) {
+              footer.textContent = '✓ แนบครบเอกสารบังคับ — รอเจ้าหน้าที่ตรวจเอกสาร';
+              footer.style.color = 'var(--teal-700)';
+            } else {
+              footer.textContent = 'ยังต้องแนบอีก ' + missing + ' รายการ (DOC-01 · DOC-03 บังคับ)';
+            }
+          }
+
+          for (var i = 0; i < items.length; i++) {
+            (function(item){
+              var input = document.getElementById('file-' + item.docType);
+              input.addEventListener('change', function(){
+                var file = input.files[0];
+                if (!file) return;
+                var status = document.getElementById('status-' + item.docType);
+                var btn = document.getElementById('btn-' + item.docType);
+                btn.disabled = true;
+                status.textContent = 'กำลังอัปโหลด…';
+                status.style.color = 'var(--text-muted)';
+                var form = new FormData();
+                form.append('file', file, file.name);
+                form.append('doc_type', item.docType);
+                if (farmerId) form.append('farmer_id', farmerId);
+                var headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                fetch('/liff/api/documents/upload', { method: 'POST', headers: headers, body: form })
+                  .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, data: d }; }); })
+                  .then(function(res){
+                    if (res.ok && res.data.ok) {
+                      setDone(item);
+                    } else {
+                      status.textContent = '❌ ' + (res.data.error || 'อัปโหลดไม่สำเร็จ');
+                      status.style.color = 'var(--status-danger)';
+                    }
+                  })
+                  .catch(function(){
+                    status.textContent = '❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+                    status.style.color = 'var(--status-danger)';
+                  })
+                  .finally(function(){
+                    if (!document.getElementById('btn-' + item.docType).disabled) btn.disabled = false;
+                    refreshFooter();
+                  });
+              });
+            })(items[i]);
+          }
+          refreshFooter();
+        })();
+      </script>`;
+
+  return c.html(
+    liffScreenHtml({
+      title: "แนบเอกสารสิทธิ์",
+      subtitle: "DOC-01 · DOC-03 · DOC-06 — แนบให้ครบตามรายการ",
+      body,
+      footer: `<span id="docsFooter" style="font-size:12px;color:var(--text-muted);"></span>`,
+      liffId,
+    }),
+  );
 });
