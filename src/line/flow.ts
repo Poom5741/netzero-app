@@ -23,7 +23,9 @@ import {
   buildConsent4Checkbox,
   buildConsentBubble,
   buildDashboardBubble,
+  buildDocumentsPromptBubble,
   buildIdentityConfirmBubble,
+  buildPendingReviewBubble,
   buildRegistrationLinkBubble,
   buildWelcomeBubble,
   textMessage,
@@ -478,7 +480,7 @@ async function handleConditions(ctx: FlowContext): Promise<FlowResult> {
     lower === "accept" ||
     lower === "ตกลง"
   ) {
-    const liffUrl = ctx.liffId ? `https://liff.line.me/${ctx.liffId}` : "";
+    const liffUrl = ctx.liffId ? `https://liff.line.me/${ctx.liffId}/liff/register` : "";
 
     if (liffUrl) {
       return transitionTo(ctx, "registration", [buildRegistrationLinkBubble(liffUrl)]);
@@ -506,9 +508,13 @@ async function handleRegistration(ctx: FlowContext): Promise<FlowResult> {
     lower.includes("กรอกเสร็จ") ||
     lower.includes("ลงทะเบียนเสร็จ")
   ) {
+    const documentsUrl = ctx.liffId
+      ? `https://liff.line.me/${ctx.liffId}/liff/documents?farmer_id=${encodeURIComponent(ctx.farmerId || "")}`
+      : ctx.appUrl
+        ? `${ctx.appUrl}/liff/documents?farmer_id=${encodeURIComponent(ctx.farmerId || "")}`
+        : "";
     return transitionTo(ctx, "documents", [
-      textMessage("✅ ลงทะเบียนเรียบร้อยแล้วค่ะ"),
-      textMessage("ขั้นต่อไป กรุณาอัปโหลดเอกสารสิทธิ์ (สำเนาบัตรประชาชน / สำเนาเอกสารสิทธิ์ที่ดิน)"),
+      buildDocumentsPromptBubble(documentsUrl),
       textMessage('พิมพ์ "อัปโหลด" เมื่อพร้อมอัปโหลดเอกสาร'),
     ]);
   }
@@ -516,7 +522,7 @@ async function handleRegistration(ctx: FlowContext): Promise<FlowResult> {
   // Remind to fill form
   const reminders = [textMessage("กรุณาเปิดฟอร์มลงทะเบียนและกรอกข้อมูลให้เรียบร้อยค่ะ")];
   if (ctx.liffId) {
-    reminders.push(buildRegistrationLinkBubble(`https://liff.line.me/${ctx.liffId}`));
+    reminders.push(buildRegistrationLinkBubble(`https://liff.line.me/${ctx.liffId}/liff/register`));
   }
   return transitionTo(ctx, "registration", reminders);
 }
@@ -550,10 +556,14 @@ async function handleDocuments(ctx: FlowContext): Promise<FlowResult> {
 
     // Only advance if all required documents are uploaded
     if (documentCount >= requiredCount) {
+      const backfillUrl = ctx.liffId
+        ? `https://liff.line.me/${ctx.liffId}/liff/baseline`
+        : ctx.appUrl
+          ? `${ctx.appUrl}/liff/baseline`
+          : undefined;
       return transitionTo(ctx, "pending_review", [
         textMessage("✅ ได้รับเอกสารแล้วค่ะ"),
-        textMessage("⏳ บัญชีอยู่ระหว่างรอการตรวจสอบจากเจ้าหน้าที่"),
-        textMessage("กรุณารอการยืนยันค่ะ ใช้เวลาประมาณ 1-3 วันทำการ"),
+        buildPendingReviewBubble(backfillUrl),
       ]);
     }
 
@@ -608,11 +618,12 @@ async function handleDocuments(ctx: FlowContext): Promise<FlowResult> {
  * Always shows the waiting message. User cannot proceed until activated.
  */
 async function handlePendingReview(ctx: FlowContext): Promise<FlowResult> {
-  return transitionTo(ctx, "pending_review", [
-    textMessage("⏳ บัญชีอยู่ระหว่างรอการยืนยัน"),
-    textMessage("เจ้าหน้าที่กำลังตรวจสอบเอกสารของท่านค่ะ"),
-    textMessage("กรุณารอการยืนยันค่ะ ใช้เวลาประมาณ 1-3 วันทำการ"),
-  ]);
+  const backfillUrl = ctx.liffId
+    ? `https://liff.line.me/${ctx.liffId}/liff/baseline`
+    : ctx.appUrl
+      ? `${ctx.appUrl}/liff/baseline`
+      : undefined;
+  return transitionTo(ctx, "pending_review", [buildPendingReviewBubble(backfillUrl)]);
 }
 
 /**
@@ -1490,7 +1501,9 @@ async function handleConditionsApi(ctx: FlowContext): Promise<FlowApiResult> {
     lower === "accept" ||
     lower === "ตกลง"
   ) {
-    const liffUrl = ctx.liffId ? `https://liff.line.me/${ctx.liffId}` : "(กรุณาเปิดฟอร์มลงทะเบียน)";
+    const liffUrl = ctx.liffId
+      ? `https://liff.line.me/${ctx.liffId}/liff/register`
+      : "(กรุณาเปิดฟอร์มลงทะเบียน)";
     return {
       reply: `ลงทะเบียน — กรอกฟอร์มลงทะเบียนให้เรียบร้อยค่ะ\n\nเปิดฟอร์ม: ${liffUrl}`,
       newState: "registration",
