@@ -23,7 +23,7 @@ steps:
 
   - user_sends: "ใช่"
     expect_state: conditions
-    expect_reply_contains: "เงื่อนไข"
+    expect_reply_contains: "ต้องติ๊กครบทุกข้อ"
 
   - user_sends: "ยอมรับ"
     expect_state: registration

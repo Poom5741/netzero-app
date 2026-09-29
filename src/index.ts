@@ -256,6 +256,33 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
     }
 
     case "message": {
+      // SY-03: a photo sent through the chat cannot serve as evidence — LINE
+      // strips the camera's coordinates and capture time, so the AWD verifier
+      // would have nothing to validate. Redirect to the system camera instead
+      // of silently dropping the message.
+      if (event.message?.type === "image" || event.message?.type === "video") {
+        const cameraUrl = env.LIFF_ID
+          ? `https://liff.line.me/${env.LIFF_ID}/liff/camera`
+          : env.APP_URL
+            ? `${env.APP_URL}/liff/camera`
+            : "";
+
+        // Only offer the camera link when we can build one; a uri action with an
+        // empty target is rejected by LINE and would drop the whole message.
+        const message: { type: string; text: string; quickReply?: unknown } = {
+          type: "text",
+          text: "ภาพที่ส่งทางแชตใช้เป็นหลักฐานไม่ได้ครับ (ระบบจะไม่เห็นพิกัดและเวลาถ่าย)\nกดปุ่มนี้เพื่อถ่ายผ่านหน้ากล้องของระบบแทนนะครับ",
+        };
+        if (cameraUrl) {
+          message.quickReply = {
+            items: [{ action: { type: "uri", label: "ถ่ายภาพผ่านระบบ", uri: cameraUrl } }],
+          };
+        }
+
+        await pushMessage(token, event.source.userId, [message]);
+        break;
+      }
+
       if (event.message?.type !== "text") break;
       const text = event.message.text.trim();
 

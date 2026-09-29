@@ -20,7 +20,7 @@ export const farmerRegistration: ConversationScenario = {
       expect_state: "identity_confirm",
       expect_reply_contains: "Somchai Jaidee",
     },
-    { user_sends: "ใช่", expect_state: "conditions", expect_reply_contains: "เงื่อนไข" },
+    { user_sends: "ใช่", expect_state: "conditions", expect_reply_contains: "ต้องติ๊กครบทุกข้อ" },
     { user_sends: "ยอมรับ", expect_state: "registration", expect_reply_contains: "ฟอร์มสมัคร" },
     { user_sends: "กรอกเสร็จ", expect_state: "documents", expect_reply_contains: "อัปโหลด" },
     {

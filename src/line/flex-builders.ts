@@ -79,7 +79,16 @@ export function buildWelcomeBubble(liffId: string): LineMessage {
           { type: "separator", margin: "lg" },
           {
             type: "text",
-            text: "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)\n\nสวัสดีครับ 🌾 นี่คือ LINE ของ NetZeroCarbon\nใช้ส่งภาพและกรอกข้อมูลแปลงนา เพื่อคิดคาร์บอนเครดิตให้พี่น้องเกษตรกรครับ",
+            text: "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)",
+            size: "sm",
+            color: COLOR_TEXT,
+            wrap: true,
+            margin: "lg",
+          },
+          {
+            type: "text",
+            // OB-01, verbatim from the artifact script.
+            text: "สวัสดีครับ 🌾 นี่คือ LINE ของ NetZeroCarbon\nใช้ส่งภาพและกรอกข้อมูลแปลงนา เพื่อคิดคาร์บอนเครดิตให้พี่น้องเกษตรกรครับ\nใช้เวลาตอนสมัครประมาณ 10 นาที หลังจากนั้นเดือนละไม่กี่ครั้ง",
             size: "sm",
             color: COLOR_TEXT,
             wrap: true,
@@ -97,7 +106,8 @@ export function buildWelcomeBubble(liffId: string): LineMessage {
             contents: [
               {
                 type: "text",
-                text: "🔗 เริ่มผูกบัญชี",
+                // OB-01 primary action, verbatim.
+                text: "ผูกบัญชีของฉัน",
                 size: "sm",
                 color: COLOR_BG,
                 align: "center",
@@ -110,7 +120,7 @@ export function buildWelcomeBubble(liffId: string): LineMessage {
             cornerRadius: RADIUS_ACTION,
             action: {
               type: "postback",
-              label: "🔗 เริ่มผูกบัญชี",
+              label: "ผูกบัญชีของฉัน",
               data: `action=start_registration&liffId=${liffId}`.slice(0, 300),
             },
           },
@@ -748,7 +758,14 @@ export function buildConditions3Checkbox(): LineMessage {
         type: "box",
         layout: "vertical",
         contents: [
-          { type: "text", text: "เงื่อนไขโครงการ", weight: "bold", size: "lg", color: COLOR_TEXT },
+          {
+            type: "text",
+            // OB-05, verbatim from the artifact script.
+            text: "ต้องติ๊กครบทุกข้อจึงจะไปต่อได้",
+            weight: "bold",
+            size: "lg",
+            color: COLOR_TEXT,
+          },
           { type: "separator", margin: "md" },
           {
             type: "box",
