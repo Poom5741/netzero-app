@@ -218,7 +218,7 @@
           "action": {
             "type": "uri",
             "label": "ดูทั้งปฏิทิน",
-            "uri": "https://example.com"
+            "uri": "https://example.com/liff/calendar?plot_id=plot-001&season_id=season-001"
           }
         }
       ]

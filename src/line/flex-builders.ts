@@ -557,7 +557,16 @@ export function buildCalendarBubble(
             uri: cameraUrl.toString(),
           };
         }),
-      { label: "ดูทั้งปฏิทิน", primary: true, uri: appUrl },
+      (() => {
+        // BUG-017-B2 b9: ดูทั้งปฏิทิน opened the bare app URL (JSON 404) —
+        // deep-link the calendar LIFF with plot/season context instead.
+        const calendarUrl = new URL(
+          liffId ? `https://liff.line.me/${liffId}/liff/calendar` : `${appUrl}/liff/calendar`,
+        );
+        if (plotId) calendarUrl.searchParams.set("plot_id", plotId);
+        if (seasonId) calendarUrl.searchParams.set("season_id", seasonId);
+        return { label: "ดูทั้งปฏิทิน", primary: true, uri: calendarUrl.toString() };
+      })(),
     ],
   });
   return card;
