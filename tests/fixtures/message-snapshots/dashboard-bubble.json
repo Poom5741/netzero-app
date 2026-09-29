@@ -1,92 +1,207 @@
 {
   "type": "flex",
-  "altText": "แดชบอร์ดของฉัน",
+  "altText": "แปลงนา A",
   "contents": {
     "type": "bubble",
+    "hero": {
+      "type": "box",
+      "layout": "vertical",
+      "backgroundColor": "#028D8A",
+      "color": "#FFFFFF",
+      "minHeight": "56px",
+      "paddingAll": "9px",
+      "paddingHorizontal": "12px",
+      "justifyContent": "flex-end",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "vertical",
+          "backgroundColor": "rgba(0, 0, 0, 0.34)",
+          "cornerRadius": "999px",
+          "paddingAll": "2px",
+          "paddingHorizontal": "8px",
+          "margin": "md",
+          "alignItems": "flex-start",
+          "contents": [
+            {
+              "type": "text",
+              "text": "นาปี 2569",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#FFFFFF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "สรุปผลของฉัน",
+          "size": "xs",
+          "weight": "bold",
+          "color": "#FFFFFF",
+          "wrap": true
+        }
+      ]
+    },
     "body": {
       "type": "box",
       "layout": "vertical",
+      "paddingAll": "11px",
+      "paddingHorizontal": "12px",
       "contents": [
         {
           "type": "text",
-          "text": "แดชบอร์ดของฉัน",
+          "text": "แปลงนา A",
           "weight": "bold",
-          "size": "lg",
-          "color": "#16202C"
-        },
-        {
-          "type": "separator",
-          "margin": "md"
-        },
-        {
-          "type": "text",
-          "text": "สมชาย ใจดี · แปลงนา A",
           "size": "sm",
           "color": "#16202C",
-          "weight": "bold",
-          "wrap": true,
-          "margin": "md"
+          "wrap": true
         },
         {
           "type": "text",
-          "text": "คาร์บอนเครดิต: 9.42 tCO₂eq\nSF_w: 0.55\nภาพถ่าย: 3/4\nงานค้าง: 2",
+          "text": "สมชาย ใจดี",
           "size": "xs",
-          "color": "#16202C",
+          "color": "#8A9BAA",
           "wrap": true,
-          "margin": "md"
+          "margin": "sm"
+        },
+        {
+          "type": "box",
+          "layout": "baseline",
+          "margin": "sm",
+          "contents": [
+            {
+              "type": "text",
+              "text": "คาร์บอนลดได้",
+              "size": "xs",
+              "color": "#8A9BAA",
+              "flex": 0
+            },
+            {
+              "type": "text",
+              "text": "9.42 tCO₂e",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#0AA8A3",
+              "align": "end"
+            }
+          ]
+        },
+        {
+          "type": "box",
+          "layout": "baseline",
+          "margin": "sm",
+          "contents": [
+            {
+              "type": "text",
+              "text": "SF-W",
+              "size": "xs",
+              "color": "#8A9BAA",
+              "flex": 0
+            },
+            {
+              "type": "text",
+              "text": "0.55",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#16202C",
+              "align": "end"
+            }
+          ]
+        },
+        {
+          "type": "box",
+          "layout": "baseline",
+          "margin": "sm",
+          "contents": [
+            {
+              "type": "text",
+              "text": "ภาพ",
+              "size": "xs",
+              "color": "#8A9BAA",
+              "flex": 0
+            },
+            {
+              "type": "text",
+              "text": "3/4",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#16202C",
+              "align": "end"
+            }
+          ]
+        },
+        {
+          "type": "box",
+          "layout": "baseline",
+          "margin": "sm",
+          "contents": [
+            {
+              "type": "text",
+              "text": "งานค้าง",
+              "size": "xs",
+              "color": "#8A9BAA",
+              "flex": 0
+            },
+            {
+              "type": "text",
+              "text": "2",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#E2A33C",
+              "align": "end"
+            }
+          ]
         }
       ]
     },
     "footer": {
       "type": "box",
-      "layout": "horizontal",
+      "layout": "vertical",
       "contents": [
         {
           "type": "box",
           "layout": "horizontal",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#FFFFFF",
+          "cornerRadius": "4px",
           "contents": [
             {
               "type": "text",
-              "text": "📊 ดูปฏิทิน",
+              "text": "ดูประวัติการส่ง",
               "size": "xs",
-              "color": "#FFFFFF",
+              "weight": "bold",
+              "color": "#04A344",
               "align": "center",
-              "weight": "bold"
+              "gravity": "center"
             }
           ],
-          "paddingAll": "9px 4px",
-          "backgroundColor": "#06C755",
-          "cornerRadius": "4px",
-          "flex": 1,
-          "margin": "md",
           "action": {
-            "type": "postback",
-            "label": "📊 ดูปฏิทิน",
-            "data": "action=show_calendar"
+            "type": "uri",
+            "label": "ดูประวัติการส่ง",
+            "uri": "https://example.com"
           }
         },
         {
           "type": "box",
           "layout": "horizontal",
-          "contents": [
-            {
-              "type": "text",
-              "text": "📷 ส่งภาพ",
-              "size": "xs",
-              "color": "#FFFFFF",
-              "align": "center",
-              "weight": "bold"
-            }
-          ],
           "paddingAll": "9px 4px",
           "backgroundColor": "#06C755",
           "cornerRadius": "4px",
-          "flex": 1,
-          "margin": "md",
+          "contents": [
+            {
+              "type": "text",
+              "text": "เปิดแดชบอร์ดของฉัน",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#FFFFFF",
+              "align": "center",
+              "gravity": "center"
+            }
+          ],
           "action": {
             "type": "uri",
-            "label": "📷 ส่งภาพ",
-            "uri": "https://example.com/liff/camera"
+            "label": "เปิดแดชบอร์ดของฉัน",
+            "uri": "https://example.com"
           }
         }
       ]

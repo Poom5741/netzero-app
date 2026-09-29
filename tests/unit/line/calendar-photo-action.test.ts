@@ -11,21 +11,32 @@ import { describe, expect, it } from "vitest";
 import { buildCalendarBubble } from "../../../src/line/flex-builders";
 
 // Helper to extract the photo button action from the bubble
-function getPhotoButtonAction(bubble: any, stepCode: string) {
-  const body = bubble.contents.body;
-  for (const content of body.contents) {
-    if (content.type === "box" && content.layout === "horizontal") {
-      // Check if this is the photo button row
-      const firstBox = content.contents?.[0];
-      if (
-        firstBox?.contents?.[0]?.text?.includes("ถ่ายรูป") &&
-        firstBox.action?.label?.includes(stepCode)
-      ) {
-        return firstBox.action;
+function getPhotoButtonAction(bubble: unknown, stepCode: string) {
+  // Walk the whole message and return the first uri action whose label names
+  // the step. Structure-agnostic: the card layout is owned by buildArtifactCard,
+  // so this must not assume where the action sits.
+  const found: Array<{ type: string; label: string; uri?: string }> = [];
+  const walk = (n: unknown): void => {
+    if (!n || typeof n !== "object") return;
+    if (
+      n &&
+      typeof n === "object" &&
+      "type" in n &&
+      (n.type === "uri" || n.type === "postback") &&
+      typeof n.label === "string"
+    ) {
+      if (n.label.includes(stepCode)) found.push(n);
+    }
+    for (const v of Object.values(n)) {
+      if (Array.isArray(v)) {
+        for (const x of v) walk(x);
+      } else if (v && typeof v === "object") {
+        walk(v);
       }
     }
-  }
-  return null;
+  };
+  walk(bubble);
+  return found.find((a) => a.type === "uri") ?? null;
 }
 
 describe("Calendar Photo Button Action (US1)", () => {

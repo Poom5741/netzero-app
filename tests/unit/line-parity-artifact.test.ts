@@ -16,6 +16,7 @@ import {
   buildConsentBubble,
   buildDashboardBubble,
   buildWelcomeBubble,
+  chatDivider,
 } from "../../src/line/flex-builders";
 import { buildRichMenu, getRichMenuItems } from "../../src/line/rich-menu";
 
@@ -61,11 +62,19 @@ describe("artifact token parity — Flex text ink", () => {
       expect(textColors.length).toBeGreaterThan(0);
       // The legacy grey must be gone from body text.
       expect(textColors).not.toContain("#333333");
-      // Every body text colour must be an artifact colour.
+      // Every body text colour must be an artifact colour (the card adds
+      // --line-chat-ink-3 for subtitles and --status-success/-warning for rows).
       for (const color of textColors) {
-        expect([ARTIFACT.ink, ARTIFACT.green, ARTIFACT.greenDark, ARTIFACT.bubbleYou]).toContain(
-          color,
-        );
+        expect([
+          ARTIFACT.ink,
+          ARTIFACT.green,
+          ARTIFACT.greenDark,
+          ARTIFACT.bubbleYou,
+          "#8A9BAA", // --line-chat-ink-3
+          "#0AA8A3", // --status-success
+          "#E2A33C", // --status-warning
+          "#FFFFFF",
+        ]).toContain(color);
       }
     }
   });
@@ -108,16 +117,14 @@ describe("artifact token parity — Flex action row", () => {
 });
 
 describe("artifact token parity — system divider", () => {
-  it("emits a ChatDivider-equivalent pill with translucent black and pill radius", () => {
-    const welcome = buildWelcomeBubble("liff-test");
-    const dividers = [...walk(welcome)].filter(
-      (n) =>
-        (typeof n.backgroundColor === "string" && n.backgroundColor.includes("0.22")) ||
-        (n.borderRadius === ARTIFACT.dividerRadius &&
-          typeof n.backgroundColor === "string" &&
-          n.backgroundColor.startsWith("rgba")),
-    );
-    expect(dividers.length).toBeGreaterThan(0);
+  it("chatDivider emits a ChatDivider-equivalent pill with translucent black and pill radius", () => {
+    // The divider is a standalone message now (it appears between messages in
+    // the artifact's flow), not a box inside the welcome card.
+    const d = chatDivider() as AnyObj;
+    expect(d.backgroundColor).toBe(ARTIFACT.dividerBg);
+    expect(d.cornerRadius).toBe(ARTIFACT.dividerRadius);
+    expect(d.paddingAll).toBe("3px 12px");
+    expect(JSON.stringify(d)).toContain("เพิ่ม NetZeroCarbon เป็นเพื่อนแล้ว");
   });
 });
 

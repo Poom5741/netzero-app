@@ -26,6 +26,7 @@ type LineMessage = {
 // ---------------------------------------------------------------------------
 
 const COLOR_PRIMARY = "#06C755"; // --line-green
+const COLOR_PRIMARY_DARK = "#04A344"; // --line-green-dark
 const COLOR_TEXT = "#16202C"; // --line-chat-ink
 const COLOR_SUBTLE = "#888888";
 const COLOR_ERROR = "#C8464F"; // --status-danger (replaces Bootstrap #dc3545)
@@ -35,6 +36,193 @@ const COLOR_BG = "#FFFFFF"; // --line-bubble-you
 // Flex API has no bubble-level radius, so it is deliberately not declared here.
 const RADIUS_ACTION = "4px";
 const PADDING_ACTION = "9px 4px";
+
+// ---------------------------------------------------------------------------
+// Artifact card (specs/016-flow-parity/node-design-spec.md §1)
+// ---------------------------------------------------------------------------
+
+/** Hero tones from the artifact. LINE Flex has no gradients, so each tone uses
+ *  its gradient's midpoint — the closest expressible solid colour. */
+export type HeroTone = "teal" | "navy" | "green" | "amber" | "grey";
+
+const HERO_SOLID: Record<HeroTone, string> = {
+  teal: "#028D8A", // 120deg #027276 -> #02A99E
+  navy: "#11337D", // 120deg #061E5C -> #1C489F
+  green: "#05B54C", // 120deg #04A344 -> #06C755
+  amber: "#B17E15", // 120deg #8A5A10 -> #D9A21B
+  grey: "#53616F", // 120deg #3B4753 -> #6B7B8C
+};
+
+const COLOR_INK_SUBTLE = "#8A9BAA"; // --line-chat-ink-3 approximation
+const COLOR_BADGE_BG = "rgba(0, 0, 0, 0.34)";
+
+export interface ArtifactAction {
+  label: string;
+  /** The primary action is solid LINE green; the rest are white with green text. */
+  primary?: boolean;
+  postback?: { type: string; data: string };
+  uri?: string;
+}
+
+export interface ArtifactRow {
+  label: string;
+  value: string;
+  tone?: "good" | "warn" | "neutral";
+}
+
+export interface ArtifactCard {
+  tone: HeroTone;
+  badge?: string;
+  hero: string;
+  title: string;
+  subtitle?: string;
+  body?: string;
+  rows?: ArtifactRow[];
+  actions?: ArtifactAction[];
+}
+
+/**
+ * One artifact `FlexMessage` card: hero band with a status badge, title,
+ * optional subtitle/rows/body, and an equal-width action row.
+ *
+ * Geometry and colours come from `components/line/FlexMessage.jsx` in the
+ * artifact's design system (module c087a24f). Every node builder should go
+ * through this so the cards cannot drift apart again.
+ */
+export function buildArtifactCard(card: ArtifactCard): LineMessage {
+  const hero: Record<string, unknown> = {
+    type: "box",
+    layout: "vertical",
+    backgroundColor: HERO_SOLID[card.tone],
+    color: COLOR_BG,
+    minHeight: "56px",
+    paddingAll: "9px",
+    paddingHorizontal: "12px",
+    justifyContent: "flex-end",
+    contents: [
+      {
+        type: "text",
+        text: card.hero,
+        size: "xs",
+        weight: "bold",
+        color: COLOR_BG,
+        wrap: true,
+      },
+    ],
+  };
+  if (card.badge) {
+    hero.contents = [
+      {
+        type: "box",
+        layout: "vertical",
+        backgroundColor: COLOR_BADGE_BG,
+        cornerRadius: "999px",
+        paddingAll: "2px",
+        paddingHorizontal: "8px",
+        margin: "md",
+        alignItems: "flex-start",
+        contents: [{ type: "text", text: card.badge, size: "xs", weight: "bold", color: COLOR_BG }],
+      } as never,
+      ...(hero.contents as unknown[]),
+    ];
+  }
+
+  const bodyContents: unknown[] = [
+    {
+      type: "text",
+      text: card.title,
+      weight: "bold",
+      size: "sm",
+      color: COLOR_TEXT,
+      wrap: true,
+    },
+  ];
+  if (card.subtitle) {
+    bodyContents.push({
+      type: "text",
+      text: card.subtitle,
+      size: "xs",
+      color: COLOR_INK_SUBTLE,
+      wrap: true,
+      margin: "sm",
+    });
+  }
+  for (const row of card.rows ?? []) {
+    const valueColor =
+      row.tone === "good" ? "#0AA8A3" : row.tone === "warn" ? "#E2A33C" : COLOR_TEXT;
+    bodyContents.push({
+      type: "box",
+      layout: "baseline",
+      margin: "sm",
+      contents: [
+        { type: "text", text: row.label, size: "xs", color: COLOR_INK_SUBTLE, flex: 0 },
+        {
+          type: "text",
+          text: row.value,
+          size: "xs",
+          weight: "bold",
+          color: valueColor,
+          align: "end",
+        },
+      ],
+    });
+  }
+  if (card.body) {
+    bodyContents.push({
+      type: "text",
+      text: card.body,
+      size: "xs",
+      color: COLOR_TEXT,
+      wrap: true,
+      margin: "md",
+    });
+  }
+
+  const bubble: Record<string, unknown> = {
+    type: "bubble",
+    hero: hero as unknown,
+    body: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "11px",
+      paddingHorizontal: "12px",
+      contents: bodyContents,
+    },
+  };
+  if (card.actions?.length) {
+    bubble.footer = {
+      type: "box",
+      layout: "vertical",
+      contents: card.actions.map((a) => ({
+        type: "box",
+        layout: "horizontal",
+        paddingAll: PADDING_ACTION,
+        backgroundColor: a.primary ? COLOR_PRIMARY : COLOR_BG,
+        cornerRadius: RADIUS_ACTION,
+        contents: [
+          {
+            type: "text",
+            text: a.label,
+            size: "xs",
+            weight: "bold",
+            color: a.primary ? COLOR_BG : COLOR_PRIMARY_DARK,
+            align: "center",
+            gravity: "center",
+          },
+        ],
+        action: a.uri
+          ? { type: "uri", label: a.label, uri: a.uri }
+          : { type: "postback", label: a.label, data: a.postback?.data ?? `action=${a.label}` },
+      })),
+    };
+  }
+
+  return {
+    type: "flex",
+    altText: card.title,
+    contents: bubble,
+  };
+}
 
 /**
  * System divider — artifact `ChatDivider`: a centred translucent-black pill
@@ -65,69 +253,24 @@ export function chatDivider(text = "เพิ่ม NetZeroCarbon เป็น�
  * @returns A `LineMessage` with type "flex".
  */
 export function buildWelcomeBubble(liffId: string): LineMessage {
-  return {
-    type: "flex",
-    altText: "ยินดีต้อนรับสู่ NetZeroCarbon",
-    contents: {
-      type: "bubble",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          chatDivider(),
-          { type: "text", text: "🌱 NetZeroCarbon", weight: "bold", size: "xl", color: COLOR_TEXT },
-          { type: "separator", margin: "lg" },
-          {
-            type: "text",
-            text: "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)",
-            size: "sm",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "lg",
-          },
-          {
-            type: "text",
-            // OB-01, verbatim from the artifact script.
-            text: "สวัสดีครับ 🌾 นี่คือ LINE ของ NetZeroCarbon\nใช้ส่งภาพและกรอกข้อมูลแปลงนา เพื่อคิดคาร์บอนเครดิตให้พี่น้องเกษตรกรครับ\nใช้เวลาตอนสมัครประมาณ 10 นาที หลังจากนั้นเดือนละไม่กี่ครั้ง",
-            size: "sm",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "lg",
-          },
-        ],
+  // OB-01 — artifact card: teal hero, welcome badge, single primary action.
+  return buildArtifactCard({
+    tone: "teal",
+    badge: "ยินดีต้อนรับ",
+    hero: "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)",
+    title: "สวัสดีครับ 🌾 นี่คือ LINE ของ NetZeroCarbon",
+    body: "ใช้ส่งภาพและกรอกข้อมูลแปลงนา เพื่อคิดคาร์บอนเครดิตให้พี่น้องเกษตรกรครับ\nใช้เวลาตอนสมัครประมาณ 10 นาที หลังจากนั้นเดือนละไม่กี่ครั้ง",
+    actions: [
+      {
+        label: "ผูกบัญชีของฉัน",
+        primary: true,
+        postback: {
+          type: "postback",
+          data: `action=start_registration&liffId=${liffId}`.slice(0, 300),
+        },
       },
-      footer: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                // OB-01 primary action, verbatim.
-                text: "ผูกบัญชีของฉัน",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-                flex: 0,
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            action: {
-              type: "postback",
-              label: "ผูกบัญชีของฉัน",
-              data: `action=start_registration&liffId=${liffId}`.slice(0, 300),
-            },
-          },
-        ],
-      },
-    },
-  };
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -142,91 +285,14 @@ export function buildWelcomeBubble(liffId: string): LineMessage {
  * @returns A `LineMessage` with type "flex".
  */
 export function buildConsentBubble(): LineMessage {
-  return {
-    type: "flex",
-    altText: "CS-01 · PDPA — ความยินยอมเก็บและใช้ข้อมูลส่วนบุคคล",
-    contents: {
-      type: "bubble",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          { type: "text", text: "CS-01 · PDPA", weight: "bold", size: "lg", color: COLOR_TEXT },
-          { type: "separator", margin: "md" },
-          {
-            type: "text",
-            text: "ความยินยอมเก็บและใช้ข้อมูลส่วนบุคคล",
-            size: "sm",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "md",
-          },
-          {
-            type: "text",
-            text: "เก็บอะไร\nชื่อ · เพศ · เบอร์โทร · ที่อยู่ · เลขบัตร ปชช.\n\nใช้ทำอะไร\nขึ้นทะเบียนโครงการคาร์บอนเครดิต\n\nถอนความยินยอม\nทำได้ทุกเมื่อ แจ้งผู้ประสานงาน",
-            size: "xs",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "md",
-          },
-        ],
-      },
-      footer: {
-        type: "box",
-        layout: "horizontal",
-        contents: [
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "✅ ยินยอม",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "postback",
-              label: "✅ ยินยอม",
-              data: "action=consent_accept",
-            },
-          },
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "❌ ไม่ยินยอม",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_ERROR,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "postback",
-              label: "❌ ไม่ยินยอม",
-              data: "action=consent_reject",
-            },
-          },
-        ],
-      },
-    },
-  };
+  // OB-15 — artifact card: navy hero, PDPA badge, read + consent actions.
+  return buildArtifactCard({
+    tone: "navy",
+    badge: "CS-01 · PDPA",
+    hero: "ความยินยอมเก็บและใช้ข้อมูลส่วนบุคคล",
+    title: "ก่อนจะถามอะไรต่อ ขออนุญาตเรื่องข้อมูลส่วนตัวก่อนนะครับ",
+    actions: [{ label: "อ่านข้อความเต็ม" }, { label: "ยินยอม", primary: true }],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -247,100 +313,16 @@ export function buildIdentityConfirmBubble(
   district: string,
   province: string,
 ): LineMessage {
-  return {
-    type: "flex",
-    altText: "ยืนยันตัวตน",
-    contents: {
-      type: "bubble",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          { type: "text", text: "ยืนยันตัวตน", weight: "bold", size: "lg", color: COLOR_TEXT },
-          { type: "separator", margin: "md" },
-          {
-            type: "text",
-            text: "พบเบอร์นี้ในทะเบียนแล้ว",
-            size: "sm",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "md",
-          },
-          {
-            type: "text",
-            text: `${farmerName}\nอ.${district} จ.${province}`,
-            size: "md",
-            color: COLOR_TEXT,
-            wrap: true,
-            weight: "bold",
-            margin: "md",
-          },
-          {
-            type: "text",
-            text: "ใช่ท่านหรือไม่ครับ",
-            size: "sm",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "md",
-          },
-        ],
-      },
-      footer: {
-        type: "box",
-        layout: "horizontal",
-        contents: [
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "✅ ใช่",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "postback",
-              label: "✅ ใช่",
-              data: "action=identity_confirm",
-            },
-          },
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "❌ ไม่ใช่",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_ERROR,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "postback",
-              label: "❌ ไม่ใช่",
-              data: "action=identity_reject",
-            },
-          },
-        ],
-      },
-    },
-  };
+  // OB-03 — artifact card: teal hero, identity badge, name + location rows.
+  return buildArtifactCard({
+    tone: "teal",
+    badge: "ยืนยันตัวตน",
+    hero: "พบเบอร์นี้ในทะเบียนแล้ว",
+    title: farmerName,
+    subtitle: [district, province].filter(Boolean).join(" "),
+    body: "ใช่ท่านหรือไม่ครับ",
+    actions: [{ label: "ไม่ใช่" }, { label: "ใช่ ผมเอง", primary: true }],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -449,71 +431,20 @@ export function buildConditionsBubble(): LineMessage {
  * @returns A `LineMessage` with type "flex".
  */
 export function buildRegistrationLinkBubble(liffUrl: string): LineMessage {
-  return {
-    type: "flex",
-    altText: "ฟอร์มสมัคร (LF-01)",
-    contents: {
-      type: "bubble",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          { type: "text", text: "ฟอร์มสมัคร (LF-01)", weight: "bold", size: "lg", color: COLOR_TEXT },
-          { type: "separator", margin: "md" },
-          {
-            type: "text",
-            text: "กรอกข้อมูลส่วนตัว ข้อมูลแปลงนา และเอกสารสิทธิ์ในฟอร์มนี้",
-            size: "sm",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "md",
-          },
-        ],
-      },
-      footer: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "📝 เปิดฟอร์มสมัคร",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            action: {
-              type: "uri",
-              label: "📝 เปิดฟอร์มสมัคร",
-              uri: `${liffUrl}/register`,
-            },
-          },
-        ],
-      },
-    },
-  };
+  // LF-01 — artifact card: teal hero, step badge, opens the registration form.
+  return buildArtifactCard({
+    tone: "teal",
+    badge: "1 จาก 2",
+    hero: "ข้อมูลของท่านและทะเบียนโฉนด",
+    title: "ฟอร์มสมัครเข้าร่วมโครงการ",
+    subtitle: "ใช้เวลาประมาณ 5 นาทีต่อโฉนด 1 ใบ",
+    actions: [{ label: "กรอกข้อมูล", primary: true, uri: liffUrl }],
+  });
 }
 
 // ---------------------------------------------------------------------------
 // 6. buildCalendarBubble
 // ---------------------------------------------------------------------------
-
-/**
- * Status icon for a calendar step.
- */
-function stepStatusIcon(status: string): string {
-  if (status === "completed") return "✅";
-  if (status === "overdue") return "❌";
-  return "⏳";
-}
 
 /**
  * Build the 9-step calendar Flex Message bubble.
@@ -539,108 +470,51 @@ export function buildCalendarBubble(
   seasonId?: string,
   liffId?: string,
 ): LineMessage {
-  // Error handling for missing APP_URL (US3)
-  if (!appUrl || appUrl.trim() === "" || appUrl === "no-app") {
+  // Guard: without an app URL there is nowhere to deep-link the camera, so a
+  // flex card would render a button that goes nowhere.
+  if (!appUrl) {
     return {
       type: "text",
       text: " กล้องถ่ายรูปยังไม่พร้อมใช้งาน กรุณาติดต่อเจ้าหน้าที่",
     };
   }
 
-  const stepRows: Array<Record<string, unknown>> = [];
+  // PJ-13 — artifact card: teal hero, SG-01..SG-09 badge, 9-step calendar.
+  // Each photo step keeps its own camera deep link; the step, plot and season
+  // travel in the URL so the camera page knows what it is shooting.
+  const cameraBase = liffId
+    ? `https://liff.line.me/${liffId}/liff/camera`
+    : `${appUrl}/liff/camera`;
 
-  for (const step of steps) {
-    const icon = stepStatusIcon(step.status);
-
-    // Main row: code, name, due day
-    stepRows.push({
-      type: "box",
-      layout: "horizontal",
-      contents: [
-        {
-          type: "text",
-          text: `${icon} ${step.stepCode}`,
-          size: "xs",
-          color: COLOR_TEXT,
-          weight: "bold",
-          flex: 2,
-        },
-        { type: "text", text: step.stepName, size: "xs", color: COLOR_TEXT, wrap: false, flex: 3 },
-        {
-          type: "text",
-          text: `วันที่ ${step.dueDay}`,
-          size: "xs",
-          color: COLOR_SUBTLE,
-          flex: 1,
-          align: "end",
-        },
-      ],
-      spacing: "sm",
-      margin: stepRows.length > 0 ? "xs" : "none",
-    });
-
-    // Photo button row for pending steps that require a photo
-    if (step.requiresPhoto && step.status === "pending") {
-      // FINDING-G fix: use liff.line.me deep-link so LINE opens in-app browser
-      const cameraBase = liffId
-        ? `https://liff.line.me/${liffId}/liff/camera`
-        : `${appUrl}/liff/camera`;
-      const cameraUrl = new URL(cameraBase);
-      cameraUrl.searchParams.set("step", step.stepCode);
-      if (plotId) cameraUrl.searchParams.set("plot_id", plotId);
-      if (seasonId) cameraUrl.searchParams.set("season_id", seasonId);
-
-      stepRows.push({
-        type: "box",
-        layout: "horizontal",
-        contents: [
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "📸 ถ่ายรูป",
-                size: "xs",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-                flex: 0,
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            margin: "md",
-            action: {
-              type: "uri",
-              label: `📸 ถ่ายรูป ${step.stepCode}`,
-              uri: cameraUrl.toString(),
-            },
-          },
-        ],
-        margin: "xs",
-      });
-    }
-  }
-
-  return {
-    type: "flex",
-    altText: "ปฏิทิน 9 ขั้น",
-    contents: {
-      type: "bubble",
-      size: "mega",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          { type: "text", text: "ปฏิทิน 9 ขั้น", weight: "bold", size: "lg", color: COLOR_TEXT },
-          { type: "separator", margin: "md" },
-          ...stepRows,
-        ],
-      },
-    },
-  };
+  const card = buildArtifactCard({
+    tone: "teal",
+    badge: "SG-01 ถึง SG-09",
+    hero: "ปฏิทินฤดูนี้ 9 ขั้นตอน",
+    title: "ฤดูนี้มี 9 ขั้นตอนที่ต้องบันทึกครับ",
+    subtitle: "ขั้นที่ยังไม่ถึงกำหนดจะกดบันทึกไม่ได้",
+    rows: steps.map((st) => ({
+      label: st.stepCode,
+      value: st.stepName,
+      tone: st.status === "done" ? ("good" as const) : ("neutral" as const),
+    })),
+    actions: [
+      ...steps
+        .filter((st) => st.requiresPhoto)
+        .map((st) => {
+          const cameraUrl = new URL(cameraBase);
+          cameraUrl.searchParams.set("step", st.stepCode);
+          if (plotId) cameraUrl.searchParams.set("plot_id", plotId);
+          if (seasonId) cameraUrl.searchParams.set("season_id", seasonId);
+          return {
+            label: `📸 ถ่ายรูป ${st.stepCode}`,
+            primary: false,
+            uri: cameraUrl.toString(),
+          };
+        }),
+      { label: "ดูทั้งปฏิทิน", primary: true, uri: appUrl },
+    ],
+  });
+  return card;
 }
 
 // ---------------------------------------------------------------------------
@@ -749,124 +623,23 @@ export function buildConsent4Checkbox(): LineMessage {
  * @returns A `LineMessage` with type "flex".
  */
 export function buildConditions3Checkbox(): LineMessage {
-  return {
-    type: "flex",
-    altText: "เงื่อนไขโครงการ",
-    contents: {
-      type: "bubble",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "text",
-            // OB-05, verbatim from the artifact script.
-            text: "ต้องติ๊กครบทุกข้อจึงจะไปต่อได้",
-            weight: "bold",
-            size: "lg",
-            color: COLOR_TEXT,
-          },
-          { type: "separator", margin: "md" },
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "[ ] 1. ส่งภาพหลักฐานตามปฏิทิน 4 รอบต่อครอป",
-                size: "sm",
-                wrap: true,
-                color: COLOR_TEXT,
-                flex: 1,
-              },
-            ],
-          },
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "[ ] 2. ให้ข้อมูลแปลงนาตามจริง",
-                size: "sm",
-                wrap: true,
-                color: COLOR_TEXT,
-                flex: 1,
-              },
-            ],
-          },
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "[ ] 3. ยินยอมให้ตรวจสอบแปลง",
-                size: "sm",
-                wrap: true,
-                color: COLOR_TEXT,
-                flex: 1,
-              },
-            ],
-          },
-        ],
+  // OB-05 — artifact card: navy hero, 3-item badge, tick-to-continue.
+  return buildArtifactCard({
+    tone: "navy",
+    badge: "3 ข้อ",
+    hero: "เงื่อนไขการเข้าร่วมโครงการ",
+    title: "ต้องติ๊กครบทุกข้อจึงจะไปต่อได้",
+    subtitle: "ระบบเก็บวันเวลาและเวอร์ชันของข้อความไว้เป็นหลักฐาน",
+    body: "1. ส่งภาพหลักฐานตามปฏิทิน 4 รอบต่อครอป\n2. ให้ข้อมูลแปลงนาตามจริง\n3. ยินยอมให้ตรวจสอบแปลง",
+    actions: [
+      { label: "อ่านข้อความเต็ม" },
+      {
+        label: "ยอมรับทั้ง 3 ข้อ",
+        primary: true,
+        postback: { type: "postback", data: "action=conditions_accept" },
       },
-      footer: {
-        type: "box",
-        layout: "horizontal",
-        contents: [
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "✅ ยอมรับ",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "postback",
-              label: "✅ ยอมรับ",
-              data: "action=conditions_accept",
-            },
-          },
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "❌ ไม่ยอมรับ",
-                size: "sm",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_ERROR,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "postback",
-              label: "❌ ไม่ยอมรับ",
-              data: "action=conditions_reject",
-            },
-          },
-        ],
-      },
-    },
-  };
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -891,97 +664,28 @@ export function buildDashboardBubble(data: {
   pendingTasks: number;
   appUrl?: string;
 }): LineMessage {
-  return {
-    type: "flex",
-    altText: "แดชบอร์ดของฉัน",
-    contents: {
-      type: "bubble",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          { type: "text", text: "แดชบอร์ดของฉัน", weight: "bold", size: "lg", color: COLOR_TEXT },
-          { type: "separator", margin: "md" },
-          {
-            type: "text",
-            text: `${data.farmerName} · ${data.plotName}`,
-            size: "sm",
-            color: COLOR_TEXT,
-            weight: "bold",
-            wrap: true,
-            margin: "md",
-          },
-          {
-            type: "text",
-            text: [
-              `คาร์บอนเครดิต: ${data.totalOffset.toFixed(2)} tCO₂eq`,
-              `SF_w: ${data.sfW.toFixed(2)}`,
-              `ภาพถ่าย: ${data.approvedPhotos}/${data.totalPhotos}`,
-              `งานค้าง: ${data.pendingTasks}`,
-            ].join("\n"),
-            size: "xs",
-            color: COLOR_TEXT,
-            wrap: true,
-            margin: "md",
-          },
-        ],
+  // RP-03 — artifact card: teal hero, season badge, results + history actions.
+  return buildArtifactCard({
+    tone: "teal",
+    badge: "นาปี 2569",
+    hero: "สรุปผลของฉัน",
+    title: `${data.plotName}`,
+    subtitle: data.farmerName,
+    rows: [
+      { label: "คาร์บอนลดได้", value: `${data.totalOffset} tCO₂e`, tone: "good" },
+      { label: "SF-W", value: `${data.sfW}` },
+      { label: "ภาพ", value: `${data.approvedPhotos}/${data.totalPhotos}` },
+      {
+        label: "งานค้าง",
+        value: `${data.pendingTasks}`,
+        tone: data.pendingTasks ? "warn" : "neutral",
       },
-      footer: {
-        type: "box",
-        layout: "horizontal",
-        contents: [
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "📊 ดูปฏิทิน",
-                size: "xs",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "postback",
-              label: "📊 ดูปฏิทิน",
-              data: "action=show_calendar",
-            },
-          },
-          {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-              {
-                type: "text",
-                text: "📷 ส่งภาพ",
-                size: "xs",
-                color: COLOR_BG,
-                align: "center",
-                weight: "bold",
-              },
-            ],
-            paddingAll: PADDING_ACTION,
-            backgroundColor: COLOR_PRIMARY,
-            cornerRadius: RADIUS_ACTION,
-            flex: 1,
-            margin: "md",
-            action: {
-              type: "uri",
-              label: "📷 ส่งภาพ",
-              uri: data.appUrl ? `${data.appUrl}/liff/camera` : "",
-            },
-          },
-        ],
-      },
-    },
-  };
+    ],
+    actions: [
+      { label: "ดูประวัติการส่ง", uri: data.appUrl },
+      { label: "เปิดแดชบอร์ดของฉัน", primary: true, uri: data.appUrl },
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------

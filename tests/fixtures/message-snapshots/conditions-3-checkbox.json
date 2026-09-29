@@ -1,117 +1,127 @@
 {
   "type": "flex",
-  "altText": "เงื่อนไขโครงการ",
+  "altText": "ต้องติ๊กครบทุกข้อจึงจะไปต่อได้",
   "contents": {
     "type": "bubble",
+    "hero": {
+      "type": "box",
+      "layout": "vertical",
+      "backgroundColor": "#11337D",
+      "color": "#FFFFFF",
+      "minHeight": "56px",
+      "paddingAll": "9px",
+      "paddingHorizontal": "12px",
+      "justifyContent": "flex-end",
+      "contents": [
+        {
+          "type": "box",
+          "layout": "vertical",
+          "backgroundColor": "rgba(0, 0, 0, 0.34)",
+          "cornerRadius": "999px",
+          "paddingAll": "2px",
+          "paddingHorizontal": "8px",
+          "margin": "md",
+          "alignItems": "flex-start",
+          "contents": [
+            {
+              "type": "text",
+              "text": "3 ข้อ",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#FFFFFF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "เงื่อนไขการเข้าร่วมโครงการ",
+          "size": "xs",
+          "weight": "bold",
+          "color": "#FFFFFF",
+          "wrap": true
+        }
+      ]
+    },
     "body": {
       "type": "box",
       "layout": "vertical",
+      "paddingAll": "11px",
+      "paddingHorizontal": "12px",
       "contents": [
         {
           "type": "text",
           "text": "ต้องติ๊กครบทุกข้อจึงจะไปต่อได้",
           "weight": "bold",
-          "size": "lg",
-          "color": "#16202C"
+          "size": "sm",
+          "color": "#16202C",
+          "wrap": true
         },
         {
-          "type": "separator",
+          "type": "text",
+          "text": "ระบบเก็บวันเวลาและเวอร์ชันของข้อความไว้เป็นหลักฐาน",
+          "size": "xs",
+          "color": "#8A9BAA",
+          "wrap": true,
+          "margin": "sm"
+        },
+        {
+          "type": "text",
+          "text": "1. ส่งภาพหลักฐานตามปฏิทิน 4 รอบต่อครอป\n2. ให้ข้อมูลแปลงนาตามจริง\n3. ยินยอมให้ตรวจสอบแปลง",
+          "size": "xs",
+          "color": "#16202C",
+          "wrap": true,
           "margin": "md"
-        },
-        {
-          "type": "box",
-          "layout": "horizontal",
-          "contents": [
-            {
-              "type": "text",
-              "text": "[ ] 1. ส่งภาพหลักฐานตามปฏิทิน 4 รอบต่อครอป",
-              "size": "sm",
-              "wrap": true,
-              "color": "#16202C",
-              "flex": 1
-            }
-          ]
-        },
-        {
-          "type": "box",
-          "layout": "horizontal",
-          "contents": [
-            {
-              "type": "text",
-              "text": "[ ] 2. ให้ข้อมูลแปลงนาตามจริง",
-              "size": "sm",
-              "wrap": true,
-              "color": "#16202C",
-              "flex": 1
-            }
-          ]
-        },
-        {
-          "type": "box",
-          "layout": "horizontal",
-          "contents": [
-            {
-              "type": "text",
-              "text": "[ ] 3. ยินยอมให้ตรวจสอบแปลง",
-              "size": "sm",
-              "wrap": true,
-              "color": "#16202C",
-              "flex": 1
-            }
-          ]
         }
       ]
     },
     "footer": {
       "type": "box",
-      "layout": "horizontal",
+      "layout": "vertical",
       "contents": [
         {
           "type": "box",
           "layout": "horizontal",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#FFFFFF",
+          "cornerRadius": "4px",
           "contents": [
             {
               "type": "text",
-              "text": "✅ ยอมรับ",
-              "size": "sm",
-              "color": "#FFFFFF",
+              "text": "อ่านข้อความเต็ม",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#04A344",
               "align": "center",
-              "weight": "bold"
+              "gravity": "center"
             }
           ],
-          "paddingAll": "9px 4px",
-          "backgroundColor": "#06C755",
-          "cornerRadius": "4px",
-          "flex": 1,
-          "margin": "md",
           "action": {
             "type": "postback",
-            "label": "✅ ยอมรับ",
-            "data": "action=conditions_accept"
+            "label": "อ่านข้อความเต็ม",
+            "data": "action=อ่านข้อความเต็ม"
           }
         },
         {
           "type": "box",
           "layout": "horizontal",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#06C755",
+          "cornerRadius": "4px",
           "contents": [
             {
               "type": "text",
-              "text": "❌ ไม่ยอมรับ",
-              "size": "sm",
+              "text": "ยอมรับทั้ง 3 ข้อ",
+              "size": "xs",
+              "weight": "bold",
               "color": "#FFFFFF",
               "align": "center",
-              "weight": "bold"
+              "gravity": "center"
             }
           ],
-          "paddingAll": "9px 4px",
-          "backgroundColor": "#C8464F",
-          "cornerRadius": "4px",
-          "flex": 1,
-          "margin": "md",
           "action": {
             "type": "postback",
-            "label": "❌ ไม่ยอมรับ",
-            "data": "action=conditions_reject"
+            "label": "ยอมรับทั้ง 3 ข้อ",
+            "data": "action=conditions_accept"
           }
         }
       ]
