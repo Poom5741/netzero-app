@@ -9,8 +9,14 @@ import { afterEach, describe, expect, it } from "vitest";
  * `fetch` is stubbed by direct assignment: bun's `vi` shim has no `stubGlobal`.
  */
 
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { buildRichMenu } from "../../src/line/rich-menu";
-import { createRichMenu, setDefaultRichMenu } from "../../src/line/rich-menu-client";
+import {
+  createRichMenu,
+  setDefaultRichMenu,
+  uploadRichMenuImage,
+} from "../../src/line/rich-menu-client";
 
 const realFetch = globalThis.fetch;
 
@@ -93,5 +99,53 @@ describe("setDefaultRichMenu", () => {
     const calls = captureFetch({ status: 200, statusText: "OK", body: "{}" });
     await setDefaultRichMenu("t", "rm/../evil");
     expect(calls[0].url).toBe("https://api.line.me/v2/bot/user/all/richmenu/rm%2F..%2Fevil");
+  });
+});
+
+describe("uploadRichMenuImage", () => {
+  it("POSTs raw PNG bytes to the content endpoint", async () => {
+    const calls = captureFetch({ status: 200, statusText: "OK", body: "{}" });
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]).buffer;
+
+    const res = await uploadRichMenuImage("token-abc", "rm-1", png);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("https://api.line.me/v2/bot/richmenu/rm-1/content");
+    expect(calls[0].method).toBe("POST");
+    expect(calls[0].headers["Content-Type"]).toBe("image/png");
+    expect(calls[0].headers.Authorization).toBe("Bearer token-abc");
+    expect(res.status).toBe(200);
+  });
+
+  it("does not JSON-encode the image", async () => {
+    const calls = captureFetch({ status: 200, statusText: "OK", body: "{}" });
+    await uploadRichMenuImage("t", "rm-1", new Uint8Array([1, 2, 3]).buffer);
+    // A stringified payload would be a quoted/base64 string, not the raw bytes.
+    expect(calls[0].body).toBe(String(new Uint8Array([1, 2, 3]).buffer));
+  });
+
+  it("url-encodes the rich menu id", async () => {
+    const calls = captureFetch({ status: 200, statusText: "OK", body: "{}" });
+    await uploadRichMenuImage("t", "rm/../evil", new Uint8Array([0]).buffer);
+    expect(calls[0].url).toBe("https://api.line.me/v2/bot/richmenu/rm%2F..%2Fevil/content");
+  });
+});
+
+describe("rich menu image asset", () => {
+  const asset = join(process.cwd(), "assets", "richmenu", "richmenu-2500x843.png");
+
+  it("exists", () => {
+    expect(existsSync(asset)).toBe(true);
+  });
+
+  it("is exactly 2500x843, the only size LINE accepts", () => {
+    const buf = readFileSync(asset);
+    expect(buf.subarray(1, 4).toString("ascii")).toBe("PNG");
+    expect(buf.readUInt32BE(16)).toBe(2500);
+    expect(buf.readUInt32BE(20)).toBe(843);
+  });
+
+  it("matches the size declared in buildRichMenu()", () => {
+    expect(buildRichMenu().size).toEqual({ width: 2500, height: 843 });
   });
 });

@@ -3,13 +3,12 @@
  *
  * `rich-menu.ts` builds a correct, artifact-matching rich menu configuration, but
  * building it is not enough: the menu only reaches farmers once it is created through
- * the Messaging API and attached as the default. This module provides that transport,
- * mirroring `reply.ts`.
+ * the Messaging API, given its image, and attached as the default. This module
+ * provides that transport, mirroring `reply.ts`.
  *
- * Not wired into the webhook. A rich menu needs a 2500x843 image uploaded to
- * `POST /v2/bot/richmenu/{id}/content`, and no such asset exists in the repo; LINE
- * rejects a menu without content, so calling this on a live `follow` event would break
- * the welcome flow. Wire it only once the asset is in place.
+ * Still not wired into the webhook. `uploadRichMenuImage` needs the PNG fetched from
+ * R2 or bundled as an asset, and doing it on a live `follow` event would put a network
+ * round trip in the welcome path. Wire it behind a deliberate call site.
  */
 
 import { buildRichMenu, type RichMenuConfig } from "./rich-menu";
@@ -46,4 +45,29 @@ export function createRichMenu(
 /** Attach a rich menu as the default menu for every user who has not set their own. */
 export function setDefaultRichMenu(accessToken: string, richMenuId: string): Promise<LineResponse> {
   return post(accessToken, `/user/all/richmenu/${encodeURIComponent(richMenuId)}`);
+}
+
+/**
+ * Upload the 2500x843 PNG that LINE renders behind the menu. Without this the menu
+ * is blank, so it must succeed before `setDefaultRichMenu`.
+ *
+ * @param image - Raw PNG bytes, 2500x843.
+ */
+export async function uploadRichMenuImage(
+  accessToken: string,
+  richMenuId: string,
+  image: ArrayBuffer,
+): Promise<LineResponse> {
+  const res = await fetch(`${API_BASE}/richmenu/${encodeURIComponent(richMenuId)}/content`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "image/png",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: image,
+  });
+
+  const text = await res.text();
+  console.log(`LINE richmenu content: status=${res.status} body=${text.substring(0, 200)}`);
+  return { status: res.status, statusText: res.statusText, body: text };
 }
