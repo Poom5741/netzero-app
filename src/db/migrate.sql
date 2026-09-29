@@ -377,3 +377,18 @@ ALTER TABLE consent_log_new RENAME TO consent_log;
 
 CREATE INDEX IF NOT EXISTS idx_consent_log_farmer ON consent_log(farmer_id);
 CREATE INDEX IF NOT EXISTS idx_consent_log_line_user ON consent_log(line_user_id);
+
+-- BUG-017-B3 (J5 gate): per-link scratch state for multi-tap Flex interactions.
+-- Append-only: a tick/untick INSERTs a new row with accepted=1/0; readers take
+-- the accepted=1 rows. created_at doubles as the "when did the farmer tick"
+-- evidence that the OB-05 card copy promises ("ระบบเก็บวันเวลา...ไว้เป็นหลักฐาน").
+CREATE TABLE IF NOT EXISTS flow_scratch (
+  id TEXT PRIMARY KEY,
+  link_id TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  accepted INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_flow_scratch_link ON flow_scratch(link_id, key);

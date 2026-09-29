@@ -454,7 +454,10 @@ async function handleIdentityConfirm(ctx: FlowContext): Promise<FlowResult> {
     lower === "ค่ะ" ||
     lower === "yes"
   ) {
-    return transitionTo(ctx, "conditions", [buildConditions3Checkbox()]);
+    return transitionTo(ctx, "conditions", [
+      textMessage("ขอให้อ่านและติ๊กยอมรับอีก 3 ข้อครับ"),
+      buildConditions3Checkbox(),
+    ]);
   }
 
   if (lower === "identity_reject" || lower === "ไม่ใช่" || lower === "ไม่") {
@@ -471,8 +474,68 @@ async function handleIdentityConfirm(ctx: FlowContext): Promise<FlowResult> {
  * - "conditions_accept" / "ยอมรับ" -> registration link bubble, go to registration
  * - Otherwise -> re-show conditions, stay in conditions
  */
+// ---------------------------------------------------------------------------
+// J5 gate (BUG-017-B3) — persisted condition ticks
+//
+// One flow_scratch row per tick EVENT (append-only): accepted=1 ticks on,
+// accepted=0 ticks back off. Readers take the accepted=1 rows, so the table
+// doubles as the dated evidence the OB-05 copy promises. Keyed by link, not
+// farmer, because ticks happen before registration resolves the farmer.
+// ---------------------------------------------------------------------------
+
+const CONDITIONS_TICK_KEY = "conditions_tick";
+const CONDITION_COUNT = 3;
+
+async function getConditionTicks(db: D1Database, linkId: string): Promise<string[]> {
+  const res = await db
+    .prepare("SELECT value FROM flow_scratch WHERE link_id = ? AND key = ? AND accepted = ?")
+    .bind(linkId, CONDITIONS_TICK_KEY, 1)
+    .all<{ value: string }>();
+  return [...new Set(res.results.map((r) => String(r.value)))].sort();
+}
+
+async function recordConditionTick(
+  db: D1Database,
+  linkId: string,
+  item: string,
+  accepted: boolean,
+): Promise<void> {
+  if (accepted) {
+    await db
+      .prepare(
+        "INSERT INTO flow_scratch (id, link_id, key, value, accepted) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind(`tick_${crypto.randomUUID()}`, linkId, CONDITIONS_TICK_KEY, item, 1)
+      .run();
+    return;
+  }
+  // Untick flips the item's live accepted=1 row to 0 (dated audit trail:
+  // on(1) -> off(0) -> on(1) leaves one flipped row plus a fresh accepted=1
+  // row; reads stay "accepted = 1").
+  const live = await db
+    .prepare(
+      "SELECT id FROM flow_scratch WHERE link_id = ? AND key = ? AND value = ? AND accepted = ?",
+    )
+    .bind(linkId, CONDITIONS_TICK_KEY, item, 1)
+    .first<{ id: string }>();
+  if (live?.id) {
+    await db.prepare("UPDATE flow_scratch SET accepted = ? WHERE id = ?").bind(0, live.id).run();
+  }
+}
+
 async function handleConditions(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
+
+  // Tick toggles — postback conditions_tick_1..3 (label ☐/☑ on the card)
+  const tick = lower.match(/^conditions_tick_([123])$/);
+  if (tick?.[1]) {
+    const item = tick[1];
+    const current = await getConditionTicks(ctx.db, ctx.linkId);
+    await recordConditionTick(ctx.db, ctx.linkId, item, !current.includes(item));
+    return transitionTo(ctx, "conditions", [
+      buildConditions3Checkbox(await getConditionTicks(ctx.db, ctx.linkId)),
+    ]);
+  }
 
   if (
     lower === "conditions_accept" ||
@@ -480,6 +543,14 @@ async function handleConditions(ctx: FlowContext): Promise<FlowResult> {
     lower === "accept" ||
     lower === "ตกลง"
   ) {
+    // J5 gate: "ต้องติ๊กครบทุกข้อจึงจะไปต่อได้" — refuse until all 3 ticked.
+    const ticks = await getConditionTicks(ctx.db, ctx.linkId);
+    if (ticks.length < CONDITION_COUNT) {
+      return transitionTo(ctx, "conditions", [
+        textMessage(`กรุณาติ๊กยอมรับให้ครบทั้ง 3 ข้อก่อนนะครับ (ติ๊กแล้ว ${ticks.length}/3 ข้อ)`),
+        buildConditions3Checkbox(ticks),
+      ]);
+    }
     const liffUrl = ctx.liffId ? `https://liff.line.me/${ctx.liffId}/liff/register` : "";
 
     if (liffUrl) {
@@ -489,8 +560,10 @@ async function handleConditions(ctx: FlowContext): Promise<FlowResult> {
     }
   }
 
-  // Re-show conditions
-  return transitionTo(ctx, "conditions", [buildConditions3Checkbox()]);
+  // Re-show conditions with current tick state
+  return transitionTo(ctx, "conditions", [
+    buildConditions3Checkbox(await getConditionTicks(ctx.db, ctx.linkId)),
+  ]);
 }
 
 /**

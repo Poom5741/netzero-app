@@ -680,9 +680,9 @@ export function buildConsent4Checkbox(): LineMessage {
  *
  * @returns A `LineMessage` with type "flex".
  */
-export function buildConditions3Checkbox(): LineMessage {
+export function buildConditions3Checkbox(ticks: string[] = []): LineMessage {
   // OB-05 — artifact card: navy hero, 3-item badge, tick-to-continue.
-  return buildArtifactCard({
+  const msg = buildArtifactCard({
     tone: "navy",
     badge: "3 ข้อ",
     hero: "เงื่อนไขการเข้าร่วมโครงการ",
@@ -698,6 +698,43 @@ export function buildConditions3Checkbox(): LineMessage {
       },
     ],
   });
+
+  // J5 gate (BUG-017-B3): one ☐/☑ toggle per condition, injected between the
+  // conditions text and the footer. Same box grammar as the footer buttons
+  // (box + text + action), so it stays inside the schema-guard whitelist.
+  // Each tap sends conditions_tick_N; the state machine toggles and re-renders.
+  const bubble = msg.contents as Record<string, unknown>;
+  const body = bubble.body as { contents: unknown[] };
+  for (const n of [1, 2, 3]) {
+    const on = ticks.includes(String(n));
+    body.contents.push({
+      type: "box",
+      layout: "horizontal",
+      margin: "sm",
+      paddingAll: PADDING_ACTION_V,
+      paddingStart: "8px",
+      paddingEnd: "8px",
+      backgroundColor: on ? COLOR_PRIMARY_DARK : COLOR_BG,
+      cornerRadius: RADIUS_ACTION,
+      contents: [
+        {
+          type: "text",
+          text: `${on ? "☑" : "☐"} ข้อ ${n}`,
+          size: "xs",
+          weight: "bold",
+          color: on ? COLOR_BG : COLOR_INK_SUBTLE,
+          align: "center",
+          gravity: "center",
+        },
+      ],
+      action: {
+        type: "postback",
+        label: `ยอมรับข้อ ${n}`,
+        data: `action=conditions_tick_${n}`,
+      },
+    });
+  }
+  return msg;
 }
 
 // ---------------------------------------------------------------------------

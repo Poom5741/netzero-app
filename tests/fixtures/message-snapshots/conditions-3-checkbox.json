@@ -83,6 +83,84 @@
           "color": "#16202C",
           "wrap": true,
           "margin": "md"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "margin": "sm",
+          "paddingAll": "9px",
+          "paddingStart": "8px",
+          "paddingEnd": "8px",
+          "backgroundColor": "#FFFFFF",
+          "cornerRadius": "4px",
+          "contents": [
+            {
+              "type": "text",
+              "text": "☐ ข้อ 1",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#8A9BAA",
+              "align": "center",
+              "gravity": "center"
+            }
+          ],
+          "action": {
+            "type": "postback",
+            "label": "ยอมรับข้อ 1",
+            "data": "action=conditions_tick_1"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "margin": "sm",
+          "paddingAll": "9px",
+          "paddingStart": "8px",
+          "paddingEnd": "8px",
+          "backgroundColor": "#FFFFFF",
+          "cornerRadius": "4px",
+          "contents": [
+            {
+              "type": "text",
+              "text": "☐ ข้อ 2",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#8A9BAA",
+              "align": "center",
+              "gravity": "center"
+            }
+          ],
+          "action": {
+            "type": "postback",
+            "label": "ยอมรับข้อ 2",
+            "data": "action=conditions_tick_2"
+          }
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "margin": "sm",
+          "paddingAll": "9px",
+          "paddingStart": "8px",
+          "paddingEnd": "8px",
+          "backgroundColor": "#FFFFFF",
+          "cornerRadius": "4px",
+          "contents": [
+            {
+              "type": "text",
+              "text": "☐ ข้อ 3",
+              "size": "xs",
+              "weight": "bold",
+              "color": "#8A9BAA",
+              "align": "center",
+              "gravity": "center"
+            }
+          ],
+          "action": {
+            "type": "postback",
+            "label": "ยอมรับข้อ 3",
+            "data": "action=conditions_tick_3"
+          }
         }
       ]
     },

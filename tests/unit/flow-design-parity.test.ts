@@ -129,6 +129,10 @@ describe("every artifact card node matches the script's design", () => {
   // The card keeps "ดูทั้งปฏิทิน" verbatim. Containment, not equality.
   const ACTIONS_CONTAIN: Record<string, string[]> = {
     "PJ-13": ["ดูทั้งปฏิทิน"],
+    // BUG-017-B3 (J5): the artifact's interactive ☐/☑ tick buttons ship as
+    // additional postback actions (ยอมรับข้อ 1..3); the script's actions
+    // column lists only the two labelled CTAs.
+    "OB-05": ["อ่านข้อความเต็ม", "ยอมรับทั้ง 3 ข้อ"],
   };
 
   for (const [node, build] of Object.entries(INVENTORY)) {
