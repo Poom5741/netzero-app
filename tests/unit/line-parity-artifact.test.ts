@@ -13,9 +13,9 @@ import { describe, expect, it } from "vitest";
  */
 
 import {
-  buildWelcomeBubble,
   buildConsentBubble,
   buildDashboardBubble,
+  buildWelcomeBubble,
 } from "../../src/line/flex-builders";
 import { buildRichMenu, getRichMenuItems } from "../../src/line/rich-menu";
 
@@ -63,7 +63,9 @@ describe("artifact token parity — Flex text ink", () => {
       expect(textColors).not.toContain("#333333");
       // Every body text colour must be an artifact colour.
       for (const color of textColors) {
-        expect([ARTIFACT.ink, ARTIFACT.green, ARTIFACT.greenDark, ARTIFACT.bubbleYou]).toContain(color);
+        expect([ARTIFACT.ink, ARTIFACT.green, ARTIFACT.greenDark, ARTIFACT.bubbleYou]).toContain(
+          color,
+        );
       }
     }
   });

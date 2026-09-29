@@ -26,13 +26,13 @@ type LineMessage = {
 // ---------------------------------------------------------------------------
 
 const COLOR_PRIMARY = "#06C755"; // --line-green
-const COLOR_PRIMARY_DARK = "#04A344"; // --line-green-dark
 const COLOR_TEXT = "#16202C"; // --line-chat-ink
 const COLOR_SUBTLE = "#888888";
 const COLOR_ERROR = "#C8464F"; // --status-danger (replaces Bootstrap #dc3545)
 const COLOR_BG = "#FFFFFF"; // --line-bubble-you
 
-const RADIUS_BUBBLE = "13px";
+// Action rows only. The bubble's own 13px radius is drawn by LINE's client — the
+// Flex API has no bubble-level radius, so it is deliberately not declared here.
 const RADIUS_ACTION = "4px";
 const PADDING_ACTION = "9px 4px";
 

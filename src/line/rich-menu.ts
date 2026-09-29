@@ -53,11 +53,8 @@ export function getRichMenuItems(): RichMenuItem[] {
   ];
 }
 
-/**
- * Build the rich menu configuration object.
- * Returns a JSON-serializable structure for the LINE Messaging API.
- */
-export function buildRichMenu(): {
+/** JSON-serializable rich menu configuration for the LINE Messaging API. */
+export interface RichMenuConfig {
   type: string;
   size: { width: number; height: number };
   selected: boolean;
@@ -67,7 +64,13 @@ export function buildRichMenu(): {
     bounds: { x: number; y: number; width: number; height: number };
     action: { type: string; label: string; data: string };
   }>;
-} {
+}
+
+/**
+ * Build the rich menu configuration object.
+ * Returns a JSON-serializable structure for the LINE Messaging API.
+ */
+export function buildRichMenu(): RichMenuConfig {
   const items = getRichMenuItems();
 
   // 3 columns x 2 rows grid
