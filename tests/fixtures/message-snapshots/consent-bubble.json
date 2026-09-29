@@ -7,7 +7,6 @@
       "type": "box",
       "layout": "vertical",
       "backgroundColor": "#11337D",
-      "color": "#FFFFFF",
       "minHeight": "56px",
       "paddingAll": "9px",
       "paddingHorizontal": "12px",
@@ -65,7 +64,8 @@
         {
           "type": "box",
           "layout": "horizontal",
-          "paddingAll": "9px 4px",
+          "paddingAll": "9px",
+          "paddingHorizontal": "4px",
           "backgroundColor": "#FFFFFF",
           "cornerRadius": "4px",
           "contents": [
@@ -88,7 +88,8 @@
         {
           "type": "box",
           "layout": "horizontal",
-          "paddingAll": "9px 4px",
+          "paddingAll": "9px",
+          "paddingHorizontal": "4px",
           "backgroundColor": "#06C755",
           "cornerRadius": "4px",
           "contents": [

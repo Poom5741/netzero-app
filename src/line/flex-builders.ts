@@ -35,7 +35,8 @@ const COLOR_BG = "#FFFFFF"; // --line-bubble-you
 // Action rows only. The bubble's own 13px radius is drawn by LINE's client — the
 // Flex API has no bubble-level radius, so it is deliberately not declared here.
 const RADIUS_ACTION = "4px";
-const PADDING_ACTION = "9px 4px";
+const PADDING_ACTION_V = "9px"; // action row: vertical padding
+const PADDING_ACTION_H = "4px"; // action row: horizontal padding
 
 // ---------------------------------------------------------------------------
 // Artifact card (specs/016-flow-parity/node-design-spec.md §1)
@@ -94,7 +95,6 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
     type: "box",
     layout: "vertical",
     backgroundColor: HERO_SOLID[card.tone],
-    color: COLOR_BG,
     minHeight: "56px",
     paddingAll: "9px",
     paddingHorizontal: "12px",
@@ -196,7 +196,8 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
       contents: card.actions.map((a) => ({
         type: "box",
         layout: "horizontal",
-        paddingAll: PADDING_ACTION,
+        paddingAll: PADDING_ACTION_V,
+        paddingHorizontal: PADDING_ACTION_H,
         backgroundColor: a.primary ? COLOR_PRIMARY : COLOR_BG,
         cornerRadius: RADIUS_ACTION,
         contents: [
@@ -232,7 +233,8 @@ export function chatDivider(text = "เพิ่ม NetZeroCarbon เป็น�
   return {
     type: "box",
     layout: "vertical",
-    paddingAll: "3px 12px",
+    paddingAll: "3px",
+    paddingHorizontal: "12px",
     backgroundColor: "rgba(0, 0, 0, 0.22)",
     cornerRadius: "999px",
     contents: [
@@ -378,7 +380,8 @@ export function buildConditionsBubble(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: PADDING_ACTION,
+            paddingAll: PADDING_ACTION_V,
+            paddingHorizontal: PADDING_ACTION_H,
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: RADIUS_ACTION,
             flex: 1,
@@ -402,7 +405,8 @@ export function buildConditionsBubble(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: PADDING_ACTION,
+            paddingAll: PADDING_ACTION_V,
+            paddingHorizontal: PADDING_ACTION_H,
             backgroundColor: COLOR_ERROR,
             cornerRadius: RADIUS_ACTION,
             flex: 1,
@@ -595,7 +599,8 @@ export function buildConsent4Checkbox(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: PADDING_ACTION,
+            paddingAll: PADDING_ACTION_V,
+            paddingHorizontal: PADDING_ACTION_H,
             backgroundColor: COLOR_PRIMARY,
             cornerRadius: RADIUS_ACTION,
             flex: 1,

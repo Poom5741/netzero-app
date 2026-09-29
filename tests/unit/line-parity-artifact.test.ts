@@ -31,7 +31,8 @@ const ARTIFACT = {
   danger: "#C8464F", // --status-danger
   dividerBg: "rgba(0, 0, 0, 0.22)",
   dividerRadius: "999px",
-  actionPad: "9px 4px",
+  actionPadV: "9px", // artifact 9px 4px — Flex padding takes one value per key
+  actionPadH: "4px",
   actionRadius: "4px",
 } as const;
 
@@ -92,7 +93,7 @@ describe("artifact token parity — bubble geometry", () => {
 });
 
 describe("artifact token parity — Flex action row", () => {
-  it("uses artifact padding 9px 4px, not 10px", () => {
+  it("uses artifact action padding 9px/4px in Flex single-value encoding", () => {
     const welcome = buildWelcomeBubble("liff-test");
     // Flex action rows are box blocks carrying `action`, styled with Flex's own
     // `paddingAll`/`cornerRadius` keys — not CSS `style.padding`.
@@ -101,7 +102,8 @@ describe("artifact token parity — Flex action row", () => {
     );
     expect(actionBlocks.length).toBeGreaterThan(0);
     for (const block of actionBlocks) {
-      expect(block.paddingAll).toBe(ARTIFACT.actionPad);
+      expect(block.paddingAll).toBe(ARTIFACT.actionPadV);
+      expect(block.paddingHorizontal).toBe(ARTIFACT.actionPadH);
     }
   });
 
@@ -123,7 +125,8 @@ describe("artifact token parity — system divider", () => {
     const d = chatDivider() as AnyObj;
     expect(d.backgroundColor).toBe(ARTIFACT.dividerBg);
     expect(d.cornerRadius).toBe(ARTIFACT.dividerRadius);
-    expect(d.paddingAll).toBe("3px 12px");
+    expect(d.paddingAll).toBe("3px");
+    expect(d.paddingHorizontal).toBe("12px");
     expect(JSON.stringify(d)).toContain("เพิ่ม NetZeroCarbon เป็นเพื่อนแล้ว");
   });
 });

@@ -45,7 +45,8 @@
               "weight": "bold"
             }
           ],
-          "paddingAll": "9px 4px",
+          "paddingAll": "9px",
+          "paddingHorizontal": "4px",
           "backgroundColor": "#06C755",
           "cornerRadius": "4px",
           "flex": 1,
@@ -69,7 +70,8 @@
               "weight": "bold"
             }
           ],
-          "paddingAll": "9px 4px",
+          "paddingAll": "9px",
+          "paddingHorizontal": "4px",
           "backgroundColor": "#C8464F",
           "cornerRadius": "4px",
           "flex": 1,
