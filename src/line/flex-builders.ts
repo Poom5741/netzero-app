@@ -55,7 +55,7 @@ const HERO_SOLID: Record<HeroTone, string> = {
 };
 
 const COLOR_INK_SUBTLE = "#8A9BAA"; // --line-chat-ink-3 approximation
-const COLOR_BADGE_BG = "rgba(0, 0, 0, 0.34)";
+const COLOR_BADGE_BG = "#00000057"; // rgba(0,0,0,.34) as hex8 — LINE rejects rgba() strings with spaces
 
 export interface ArtifactAction {
   label: string;
@@ -250,7 +250,7 @@ export function chatDivider(text = "เพิ่ม NetZeroCarbon เป็น�
     paddingAll: "3px",
     paddingStart: "12px",
     paddingEnd: "12px",
-    backgroundColor: "rgba(0, 0, 0, 0.22)",
+    backgroundColor: "#00000038", // rgba(0,0,0,.22) as hex8
     cornerRadius: "999px",
     contents: [
       { type: "text", text, size: "xs", color: COLOR_BG, align: "center", weight: "regular" },

@@ -20,7 +20,7 @@
             {
               "type": "box",
               "layout": "vertical",
-              "backgroundColor": "rgba(0, 0, 0, 0.34)",
+              "backgroundColor": "#00000057",
               "cornerRadius": "999px",
               "paddingAll": "2px",
               "paddingStart": "8px",

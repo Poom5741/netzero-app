@@ -29,7 +29,7 @@ const ARTIFACT = {
   hairline: "#EEF2F6",
   bubbleRadius: "13px",
   danger: "#C8464F", // --status-danger
-  dividerBg: "rgba(0, 0, 0, 0.22)",
+  dividerBg: "#00000038",
   dividerRadius: "999px",
   actionPadV: "9px", // artifact 9px 4px — Flex padding takes one value per key
   actionPadH: "4px",
@@ -124,7 +124,7 @@ describe("artifact token parity — system divider", () => {
     // The divider is a standalone message now (it appears between messages in
     // the artifact's flow), not a box inside the welcome card.
     const d = chatDivider() as AnyObj;
-    expect(d.backgroundColor).toBe(ARTIFACT.dividerBg);
+    expect(d.backgroundColor).toBe(ARTIFACT.dividerBg); // hex8 form of rgba(0,0,0,.22)
     expect(d.cornerRadius).toBe(ARTIFACT.dividerRadius);
     expect(d.paddingAll).toBe("3px");
     expect(d.paddingStart).toBe("12px");

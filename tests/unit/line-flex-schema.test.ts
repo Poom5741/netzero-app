@@ -15,6 +15,8 @@ import { describe, expect, it } from "vitest";
  *   - boxes have NO `color` (text-only field) and NO `minHeight`/`minWidth`
  *   - padding is paddingAll/Top/Bottom/Start/End — no CSS shorthand and no
  *     Horizontal/Vertical variants
+ *   - colour strings must be hex (LINE rejects rgba() with spaces, live:
+ *     "invalid property" /hero/contents/0/contents/0/backgroundColor)
  *   - the bubble HERO slot accepts a box but LINE still rejects styling props
  *     on it and its direct children, so styling must sit on an inner band box.
  */
@@ -213,8 +215,7 @@ const SINGLE_VALUE_PROPS = new Set([
   ...OFFSET,
 ]);
 
-const COLOR_RE =
-  /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)$/i;
+const COLOR_RE = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 // The bubble hero slot: LINE rejects styling properties here (live-verified).
 const HERO_SLOT_ALLOWED = new Set([
