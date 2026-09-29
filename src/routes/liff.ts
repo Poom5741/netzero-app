@@ -16,7 +16,9 @@ import {
 import { resolveFarmerIdentity } from "../liff/identity-resolver";
 import { generateObjectKey } from "../liff/r2-key-generator";
 import { type RegistrationFormData, validateRegistrationForm } from "../liff/registration-api";
+import { buildDocumentsPromptBubble, buildPendingReviewBubble } from "../line/flex-builders";
 import { handleFlowApi } from "../line/flow";
+import { pushMessage } from "../line/reply";
 import { fetchResultsData } from "../line/results-api";
 
 type Bindings = {
@@ -32,6 +34,31 @@ type Bindings = {
 };
 
 export const liffRoutes = new Hono<{ Bindings: Bindings }>();
+
+/**
+ * BUG-017-B2: LIFF screens update D1 but the farmer only sees progress in the
+ * chat if we push it. Resolve the farmer's LINE user from line_links and push.
+ * Best-effort: a push failure must not fail the LIFF submission.
+ */
+async function pushToFarmer(
+  db: D1Database,
+  env: { LINE_CHANNEL_ACCESS_TOKEN?: string },
+  farmerId: string,
+  messages: Array<Record<string, unknown>>,
+): Promise<void> {
+  try {
+    const link = await db
+      .prepare(
+        "SELECT line_user_id FROM line_links WHERE farmer_id = ? AND line_user_id IS NOT NULL ORDER BY updated_at DESC LIMIT 1",
+      )
+      .bind(farmerId)
+      .first<{ line_user_id: string | null }>();
+    if (!link?.line_user_id || !env.LINE_CHANNEL_ACCESS_TOKEN) return;
+    await pushMessage(env.LINE_CHANNEL_ACCESS_TOKEN, link.line_user_id, messages);
+  } catch (err) {
+    console.error("pushToFarmer failed:", err);
+  }
+}
 
 // Serve the LIFF chat app HTML
 liffRoutes.get("/", (c) => {
@@ -754,6 +781,16 @@ liffRoutes.post("/api/register", async (c) => {
         .run();
     }
 
+    // BUG-017-B2: tell the farmer in the chat (OB-13) — the state flip alone is
+    // invisible to them.
+    const documentsUrl = c.env.LIFF_ID
+      ? `https://liff.line.me/${c.env.LIFF_ID}/liff/documents?farmer_id=${encodeURIComponent(resolvedFarmerId)}`
+      : `${c.env.APP_URL}/liff/documents?farmer_id=${encodeURIComponent(resolvedFarmerId)}`;
+    await pushToFarmer(db, c.env, resolvedFarmerId, [
+      buildDocumentsPromptBubble(documentsUrl),
+      { type: "text", text: 'พิมพ์ "อัปโหลด" เมื่ออัปโหลดเอกสารครบแล้วครับ' },
+    ]);
+
     return c.json({ ok: true, farmer_id: resolvedFarmerId });
   } catch (err) {
     console.error("Registration API error:", err);
@@ -840,6 +877,22 @@ liffRoutes.post("/api/documents/submit", async (c) => {
     const submittedTypes = docs.results.map((d) => d.doc_type);
     const required = REQUIRED_DOCUMENTS.filter((d) => d.required);
     const allRequiredAttached = required.every((d) => submittedTypes.includes(d.code));
+
+    if (allRequiredAttached) {
+      // BUG-017-B2: all required documents are in — move to pending_review and
+      // show the OB-10 grey card (same as the typed "อัปโหลด" path).
+      await db
+        .prepare("UPDATE line_links SET conversation_state = 'pending_review' WHERE farmer_id = ?")
+        .bind(body.farmer_id)
+        .run();
+      const baselineUrl = c.env.LIFF_ID
+        ? `https://liff.line.me/${c.env.LIFF_ID}/liff/baseline?plot_id=`
+        : `${c.env.APP_URL}/liff/baseline?plot_id=`;
+      await pushToFarmer(db, c.env, body.farmer_id, [
+        { type: "text", text: "✅ ได้รับเอกสารแล้วครับ" },
+        buildPendingReviewBubble(baselineUrl),
+      ]);
+    }
 
     return c.json({
       ok: true,
