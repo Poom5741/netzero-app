@@ -159,8 +159,8 @@ export function renderRegistrationForm(liffId: string): string {
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh}
-    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:16px;text-align:center}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F2F2F2;min-height:100vh}
+    .header{background:linear-gradient(135deg,#06C755 0%,#04A344 100%);color:#fff;padding:16px;text-align:center}
     .header h1{font-size:18px;font-weight:600;margin-bottom:4px}
     .header p{font-size:13px;opacity:.9}
     .form-wrap{max-width:500px;margin:0 auto;padding:16px}
@@ -168,18 +168,18 @@ export function renderRegistrationForm(liffId: string): string {
     .card h2{font-size:15px;color:#333;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #06c755}
     .field{margin-bottom:14px}
     .field label{display:block;font-size:13px;color:#555;margin-bottom:6px;font-weight:500}
-    .field input,.field select{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;transition:border .2s}
+    .field input,.field select{width:100%;padding:10px 12px;border:1px solid #D6DFE9;border-radius:8px;font-size:14px;outline:none;transition:border .2s}
     .field input:focus,.field select:focus{border-color:#06c755}
     .field .hint{font-size:11px;color:#888;margin-top:4px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .btn{width:100%;padding:14px;background:#06c755;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px}
     .btn:disabled{background:#ccc}
     .btn:active{background:#05b34c}
-    .success{background:#e8f5e9;border:1px solid #06c755;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px}
+    .success{background:#E7FCF7;border:1px solid #0AA8A3;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px}
     .success h3{color:#06c755;margin-bottom:8px}
-    .error{background:#ffebee;border:1px solid #f44336;border-radius:8px;padding:12px;margin-bottom:16px;color:#c62828;font-size:13px}
+    .error{background:#FDEBEB;border:1px solid #C8464F;border-radius:8px;padding:12px;margin-bottom:16px;color:#C8464F;font-size:13px}
     #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
-    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    #loading .spin{width:40px;height:40px;border:3px solid #EEF2F6;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
     @keyframes sp{to{transform:rotate(360deg)}}
   </style>
 </head>
@@ -373,8 +373,8 @@ liffRoutes.get("/camera", (c) => {
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;height:100vh;display:flex;flex-direction:column}
-    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F2F2F2;height:100vh;display:flex;flex-direction:column}
+    .header{background:linear-gradient(135deg,#06C755 0%,#04A344 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
     .header-icon{font-size:24px}
     .header-title{font-size:16px;font-weight:600}
     .header-sub{font-size:11px;opacity:.85}
@@ -384,11 +384,11 @@ liffRoutes.get("/camera", (c) => {
     .btn-row{display:flex;gap:12px}
     .btn{padding:14px 28px;border:none;border-radius:24px;font-size:16px;font-weight:600;cursor:pointer}
     .btn-primary{background:#06c755;color:#fff}
-    .btn-secondary{background:#fff;color:#333;border:1px solid #ddd}
+    .btn-secondary{background:#fff;color:#333;border:1px solid #D6DFE9}
     .preview{width:100%;max-width:400px;border-radius:16px;margin-top:8px}
     .status{font-size:14px;color:#666;text-align:center}
     #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
-    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    #loading .spin{width:40px;height:40px;border:3px solid #EEF2F6;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
     @keyframes sp{to{transform:rotate(360deg)}}
   </style>
 </head>
@@ -1005,8 +1005,8 @@ liffRoutes.get("/documents", (c) => {
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh}
-    .header{background:linear-gradient(135deg,#06c755 0%,#00a854 100%);color:#fff;padding:16px;text-align:center}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F2F2F2;min-height:100vh}
+    .header{background:linear-gradient(135deg,#06C755 0%,#04A344 100%);color:#fff;padding:16px;text-align:center}
     .header h1{font-size:18px;font-weight:600;margin-bottom:4px}
     .header p{font-size:13px;opacity:.9}
     .form-wrap{max-width:500px;margin:0 auto;padding:16px}
@@ -1014,17 +1014,17 @@ liffRoutes.get("/documents", (c) => {
     .card h2{font-size:15px;color:#333;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #06c755}
     .field{margin-bottom:14px}
     .field label{display:block;font-size:13px;color:#555;margin-bottom:6px;font-weight:500}
-    .field input[type="file"]{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none}
+    .field input[type="file"]{width:100%;padding:10px 12px;border:1px solid #D6DFE9;border-radius:8px;font-size:14px;outline:none}
     .field .hint{font-size:11px;color:#888;margin-top:4px}
     .field .status{font-size:12px;color:#06c755;margin-top:4px;font-weight:500}
     .btn{width:100%;padding:14px;background:#06c755;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px}
     .btn:disabled{background:#ccc}
     .btn:active{background:#05b34c}
-    .success{background:#e8f5e9;border:1px solid #06c755;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px}
+    .success{background:#E7FCF7;border:1px solid #0AA8A3;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px}
     .success h3{color:#06c755;margin-bottom:8px}
-    .error{background:#ffebee;border:1px solid #f44336;border-radius:8px;padding:12px;margin-bottom:16px;color:#c62828;font-size:13px}
+    .error{background:#FDEBEB;border:1px solid #C8464F;border-radius:8px;padding:12px;margin-bottom:16px;color:#C8464F;font-size:13px}
     #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
-    #loading .spin{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
+    #loading .spin{width:40px;height:40px;border:3px solid #EEF2F6;border-top-color:#06c755;border-radius:50%;animation:sp .8s linear infinite}
     @keyframes sp{to{transform:rotate(360deg)}}
   </style>
 </head>
@@ -1097,9 +1097,9 @@ liffRoutes.get("/documents", (c) => {
               ? '⚠️ Authentication failed — close this window and reopen from the LINE chat link.'
               : '⚠️ กรุณาเปิดลิงก์นี้จากแอป LINE (ไม่ใช่เบราว์เซอร์) — แตะลิงก์จากแชท LINE ในแอป LINE';
             document.getElementById('chanote-status').textContent = msg;
-            document.getElementById('chanote-status').style.color = '#f44336';
+            document.getElementById('chanote-status').style.color = '#C8464F';
             document.getElementById('id_copy-status').textContent = msg;
-            document.getElementById('id_copy-status').style.color = '#f44336';
+            document.getElementById('id_copy-status').style.color = '#C8464F';
           }
           // Resolve farmer_id from LINE userId (display only — backend
           // re-derives this from the JWT)
@@ -1164,12 +1164,12 @@ liffRoutes.get("/documents", (c) => {
             uploadedCount++;
           } else {
             status.textContent = '❌ ' + (result.error || 'เกิดข้อผิดพลาด');
-            status.style.color = '#f44336';
+            status.style.color = '#C8464F';
             errors.push(docType + ': ' + (result.error || 'เกิดข้อผิดพลาด'));
           }
         } catch (err) {
           status.textContent = '❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-          status.style.color = '#f44336';
+          status.style.color = '#C8464F';
           errors.push(docType + ': ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
         }
       }
