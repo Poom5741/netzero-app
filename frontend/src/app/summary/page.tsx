@@ -151,7 +151,6 @@ function SummaryContent() {
   }
 
   const navItems = [
-    { icon: "chat", label: "แชท", href: "/chat" },
     { icon: "photo_camera", label: "อัปโหลด", href: "/upload" },
     { icon: "bar_chart", label: "สรุปผล", href: "/summary", active: true },
   ];

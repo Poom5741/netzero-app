@@ -40,9 +40,15 @@
   --color-error-container: #ffdad6;
   --color-on-error: #ffffff;
 
-  /* LINE Green accent */
-  --color-line-green: #06c755;
-  --color-line-green-dark: #00a854;
+  /* === LINE chat surface — verbatim from Claude Design artifact
+     design-artifacts/2026-09-28/line-oa-farmer.html (module
+     c087a24f-4179-4a49-849a-6c05aafd7d3a.js, --line-* token block).
+
+     The farmer chat renders inside LINE, not this app, so most of the
+     artifact's --line-* ramp has no consumer here. Only the green-dark
+     accent is still used (summary progress bar). The chat surface itself
+     is ported in src/line/flex-builders.ts against the same artifact. === */
+  --color-line-green-dark: #04a344;
 
   /* === Typography — Claude source fonts (Fira Sans + Noto Sans Thai) === */
   --font-sans: "Fira Sans", "Noto Sans Thai", "Fira Mono", -apple-system, BlinkMacSystemFont, sans-serif;
