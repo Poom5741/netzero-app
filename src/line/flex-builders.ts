@@ -127,9 +127,10 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
           {
             type: "box",
             layout: "horizontal",
-            // LINE rejects width:auto in the hero subtree (live 400); a maxWidth
-            // cap gives the same compact-chip look for our short badges.
-            maxWidth: "140px",
+            // NOTE: no maxWidth here — LINE's engine collapsed a maxWidth-capped
+            // pill to zero-width on some renders (live 07:54, PJ-13). An
+            // occasionally stretched pill beats an invisible one; the wrapper
+            // keeps it left-aligned either way.
             backgroundColor: COLOR_BADGE_BG,
             cornerRadius: "999px",
             paddingAll: "2px",
