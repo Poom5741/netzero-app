@@ -17,9 +17,11 @@ import { handleSeasonCreate } from "../season/create";
 import { attachConsentsToFarmer, hasAllConsents, recordConsent } from "../trust/consent-persist";
 import { fetchCalendarSteps } from "./calendar-api";
 import {
+  buildActivationBubble,
   buildCalendarBubble,
   buildConditions3Checkbox,
   buildConsent4Checkbox,
+  buildConsentBubble,
   buildDashboardBubble,
   buildIdentityConfirmBubble,
   buildRegistrationLinkBubble,
@@ -279,7 +281,7 @@ async function handleWelcome(ctx: FlowContext): Promise<FlowResult> {
   const lower = ctx.text.toLowerCase().trim();
 
   if (lower === "start_registration" || lower.includes("ลงทะเบียน") || lower.includes("ผูกบัญชี")) {
-    return transitionTo(ctx, "consent", [{ type: "text", text: composePdpaConsent() }]);
+    return transitionTo(ctx, "consent", [buildConsentBubble()]);
   }
 
   // Show the welcome bubble
@@ -307,6 +309,7 @@ async function handleConsent(ctx: FlowContext): Promise<FlowResult> {
   if (
     lower === "consent_accept_all" ||
     lower === "consent_accept" ||
+    lower === "ยินยอม" ||
     lower === "ยอมรับ" ||
     lower === "accept" ||
     lower === "ตกลง" ||
@@ -362,11 +365,8 @@ async function handleConsent(ctx: FlowContext): Promise<FlowResult> {
     return transitionTo(ctx, "consent", [textMessage("กรุณายอมรับเพื่อใช้งานค่ะ")]);
   }
 
-  // Re-show 4-checkbox consent card
-  return transitionTo(ctx, "consent", [
-    { type: "text", text: composePdpaConsent() },
-    buildConsent4Checkbox(),
-  ]);
+  // Re-show the OB-15 consent card
+  return transitionTo(ctx, "consent", [buildConsentBubble()]);
 }
 
 /**
@@ -447,6 +447,7 @@ async function handleIdentityConfirm(ctx: FlowContext): Promise<FlowResult> {
   if (
     lower === "identity_confirm" ||
     lower === "ใช่" ||
+    lower === "ใช่ ผมเอง" ||
     lower === "ครับ" ||
     lower === "ค่ะ" ||
     lower === "yes"
@@ -625,21 +626,15 @@ async function handleActivation(ctx: FlowContext): Promise<FlowResult> {
     .bind(ctx.farmerId)
     .first<{ full_name: string }>();
 
-  const plot = await ctx.db
-    .prepare(
-      "SELECT plot_code, area_rai FROM plots WHERE farmer_id = ? ORDER BY created_at DESC LIMIT 1",
-    )
+  const farmer = await ctx.db
+    .prepare("SELECT cpa_code FROM farmers WHERE id = ?")
     .bind(ctx.farmerId)
-    .first<{ plot_code: string; area_rai: number }>();
+    .first<{ cpa_code: string | null }>();
 
-  const activationText = composeActivationSuccess({
-    farmerCode: ctx.farmerId, // farmers table has no farmer_code column — use the id
-    plotName: plot?.plot_code || "—",
-    areaRai: plot?.area_rai ?? 0,
-  });
+  const activationCard = buildActivationBubble(farmer?.cpa_code || ctx.farmerId);
 
   return transitionTo(ctx, "season_setup", [
-    textMessage(activationText),
+    activationCard,
     textMessage('ขั้นต่อไป กรุณาระบุวันหว่านข้าว (เช่น 15/06/2568) หรือพิมพ์ "ข้าม" เพื่อข้าม'),
   ]);
 }

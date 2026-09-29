@@ -117,18 +117,26 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
     ],
   };
   if (card.badge) {
+    // Wrap in a horizontal box: children of a vertical box stretch full width,
+    // which made the badge a wide bar instead of the artifact's compact pill.
     heroBand.contents = [
       {
         type: "box",
-        layout: "vertical",
-        backgroundColor: COLOR_BADGE_BG,
-        cornerRadius: "999px",
-        paddingAll: "2px",
-        paddingStart: "8px",
-        paddingEnd: "8px",
-        margin: "md",
-        alignItems: "flex-start",
-        contents: [{ type: "text", text: card.badge, size: "xs", weight: "bold", color: COLOR_BG }],
+        layout: "horizontal",
+        contents: [
+          {
+            type: "box",
+            layout: "horizontal",
+            backgroundColor: COLOR_BADGE_BG,
+            cornerRadius: "999px",
+            paddingAll: "2px",
+            paddingStart: "8px",
+            paddingEnd: "8px",
+            contents: [
+              { type: "text", text: card.badge, size: "xs", weight: "bold", color: COLOR_BG },
+            ],
+          } as never,
+        ],
       } as never,
       ...(heroBand.contents as unknown[]),
     ];
@@ -308,7 +316,14 @@ export function buildConsentBubble(): LineMessage {
     badge: "CS-01 · PDPA",
     hero: "ความยินยอมเก็บและใช้ข้อมูลส่วนบุคคล",
     title: "ก่อนจะถามอะไรต่อ ขออนุญาตเรื่องข้อมูลส่วนตัวก่อนนะครับ",
-    actions: [{ label: "อ่านข้อความเต็ม" }, { label: "ยินยอม", primary: true }],
+    actions: [
+      { label: "อ่านข้อความเต็ม" },
+      {
+        label: "ยินยอม",
+        primary: true,
+        postback: { type: "postback", data: "action=consent_accept_all" },
+      },
+    ],
   });
 }
 
@@ -338,7 +353,14 @@ export function buildIdentityConfirmBubble(
     title: farmerName,
     subtitle: [district, province].filter(Boolean).join(" "),
     body: "ใช่ท่านหรือไม่ครับ",
-    actions: [{ label: "ไม่ใช่" }, { label: "ใช่ ผมเอง", primary: true }],
+    actions: [
+      { label: "ไม่ใช่", postback: { type: "postback", data: "action=identity_reject" } },
+      {
+        label: "ใช่ ผมเอง",
+        primary: true,
+        postback: { type: "postback", data: "action=identity_confirm" },
+      },
+    ],
   });
 }
 
@@ -803,7 +825,13 @@ export function buildActivationBubble(farmerCode: string): LineMessage {
     hero: "บัญชีของคุณเปิดใช้งานแล้ว 🎉",
     title: `รหัสเกษตรกร ${farmerCode}`,
     subtitle: "ผู้ประสานงานยืนยันตัวตนเรียบร้อย",
-    actions: [{ label: "เริ่มใช้งาน", primary: true }],
+    actions: [
+      {
+        label: "เริ่มใช้งาน",
+        primary: true,
+        postback: { type: "postback", data: "action=activation" },
+      },
+    ],
   });
 }
 

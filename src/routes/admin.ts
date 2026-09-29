@@ -403,6 +403,22 @@ adminRoutes.post("/api/admin/applications/:id/approve", async (c) => {
   const linkId = c.req.param("id");
   const result = await approveApplication(db, linkId);
   if (result.success) {
+    // OB-11 — announce activation to the farmer with the artifact card.
+    try {
+      const link = await db
+        .prepare("SELECT line_user_id FROM line_links WHERE id = ?")
+        .bind(linkId)
+        .first<{ line_user_id: string | null }>();
+      if (link?.line_user_id && c.env.LINE_CHANNEL_ACCESS_TOKEN) {
+        const { pushMessage } = await import("../line/reply");
+        const { buildActivationBubble } = await import("../line/flex-builders");
+        await pushMessage(c.env.LINE_CHANNEL_ACCESS_TOKEN, link.line_user_id, [
+          buildActivationBubble(result.cpa_code ?? ""),
+        ]);
+      }
+    } catch (err) {
+      console.error("Failed to push OB-11 activation card:", err);
+    }
     return c.json({ ok: true, cpa_code: result.cpa_code });
   }
   return c.json({ error: result.error }, 400);
