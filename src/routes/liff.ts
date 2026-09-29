@@ -31,6 +31,7 @@ type Bindings = {
   LINE_CHANNEL_SECRET: string;
   OPENROUTER_API_KEY: string;
   LIFF_ID?: string;
+  APP_URL: string;
 };
 
 export const liffRoutes = new Hono<{ Bindings: Bindings }>();
@@ -44,7 +45,8 @@ async function pushToFarmer(
   db: D1Database,
   env: { LINE_CHANNEL_ACCESS_TOKEN?: string },
   farmerId: string,
-  messages: Array<Record<string, unknown>>,
+  // Match pushMessage's own message type (LineMessage is private to reply.ts).
+  messages: Parameters<typeof pushMessage>[2],
 ): Promise<void> {
   try {
     const link = await db

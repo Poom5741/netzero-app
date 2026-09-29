@@ -23,7 +23,7 @@
     "export-designs": "tsx scripts/export-designs.ts",
     "export-framer-designs": "tsx scripts/export-framer-designs.ts",
     "capture-visual-references": "tsx scripts/capture-visual-references.ts",
-    "check:type:frontend": "npm run --prefix frontend typecheck"
+    "check:type:frontend": "cd frontend && bunx tsc --noEmit"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^5.20260819.1",

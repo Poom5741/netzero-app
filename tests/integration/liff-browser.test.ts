@@ -18,11 +18,7 @@ interface PageCheck {
 }
 
 const LIFF_PAGES: PageCheck[] = [
-  {
-    path: "/chat",
-    expectedTitle: "แชท — NetZeroCarbon",
-    expectedThaiText: ["กำลังเชื่อมต่อ"],
-  },
+  // /chat was removed in a3bef31 (OA chat is the chat surface) — no page check.
   {
     path: "/summary",
     expectedTitle: "สรุปฤดูกาล — NetZeroCarbon",
