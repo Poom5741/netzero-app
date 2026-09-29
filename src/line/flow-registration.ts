@@ -19,20 +19,35 @@ export interface RegistrationStep {
   code: string;
   name: string;
   description: string;
+  /**
+   * The code the artifact's script uses for the same step. The two schemes
+   * diverged and OB-10/OB-11 collide (artifact: application received / farmer
+   * code; legacy: sow date / calendar), so specs and logs must be able to say
+   * which scheme they mean. See specs/016-flow-parity/node-design-spec.md §3.
+   */
+  legacyCode?: string;
 }
 
+/**
+ * Registration steps in artifact script numbering (OB-01…OB-13, LF-01).
+ * `legacyCode` preserves the old identifier for existing logs.
+ */
 export const REGISTRATION_STEPS: RegistrationStep[] = [
   { code: "OB-01", name: "ยินดีต้อนรับ", description: "Welcome message" },
-  { code: "OB-02", name: "PDPA", description: "Personal data consent" },
-  { code: "OB-03", name: "แชร์เบอร์", description: "Phone number sharing" },
-  { code: "OB-04", name: "ยืนยันตัวตน", description: "Identity matching" },
+  { code: "OB-15", name: "PDPA", description: "Personal data consent", legacyCode: "OB-02" },
+  { code: "OB-02", name: "แชร์เบอร์", description: "Phone number sharing", legacyCode: "OB-03" },
+  { code: "OB-03", name: "ยืนยันตัวตน", description: "Identity matching", legacyCode: "OB-04" },
   { code: "OB-05", name: "เงื่อนไข", description: "Project conditions (3 items)" },
-  { code: "OB-06", name: "ฟอร์มสมัคร", description: "Registration form (LIFF)" },
-  { code: "OB-07", name: "เอกสารสิทธิ์", description: "Document upload" },
-  { code: "OB-08", name: "รอตรวจสอบ", description: "Pending review" },
-  { code: "OB-09", name: "เปิดใช้งาน", description: "Account activation" },
-  { code: "OB-10", name: "วันหว่าน", description: "Season setup" },
-  { code: "OB-11", name: "ปฏิทิน", description: "First calendar display" },
+  { code: "OB-12", name: "ฟอร์มสมัคร", description: "Registration form prompt", legacyCode: "OB-06" },
+  {
+    code: "LF-01",
+    name: "ฟอร์มสมัคร (LIFF)",
+    description: "Registration form (LIFF)",
+    legacyCode: "OB-06",
+  },
+  { code: "OB-13", name: "เอกสารสิทธิ์", description: "Document upload", legacyCode: "OB-07" },
+  { code: "OB-10", name: "รอตรวจสอบ", description: "Pending review", legacyCode: "OB-08" },
+  { code: "OB-11", name: "เปิดใช้งาน", description: "Account activation", legacyCode: "OB-09" },
 ];
 
 /**

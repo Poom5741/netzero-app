@@ -48,9 +48,10 @@ describe("Registration flow integration", () => {
 
   it("registration steps are ordered correctly", async () => {
     const { REGISTRATION_STEPS } = await import("../../src/line/flow-registration");
-    expect(REGISTRATION_STEPS).toHaveLength(11);
+    // Artifact script numbering (specs/016-flow-parity/node-design-spec.md §3).
+    expect(REGISTRATION_STEPS).toHaveLength(10);
     expect(REGISTRATION_STEPS[0].code).toBe("OB-01");
-    expect(REGISTRATION_STEPS[10].code).toBe("OB-11");
+    expect(REGISTRATION_STEPS.at(-1)?.code).toBe("OB-11");
   });
 });
 

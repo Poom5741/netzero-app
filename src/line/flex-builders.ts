@@ -735,3 +735,129 @@ export function textMessage(
   }
   return msg;
 }
+
+// ---------------------------------------------------------------------------
+// 13. Nodes with no builder before this spec (node-design-spec.md §6)
+//     Each is data-only; the card layout is buildArtifactCard's.
+// ---------------------------------------------------------------------------
+
+/** OB-13 — documents the plot must attach (amber, step 2 of 2). */
+export function buildDocumentsPromptBubble(liffUrl: string): LineMessage {
+  return buildArtifactCard({
+    tone: "amber",
+    badge: "2 จาก 2",
+    hero: "เอกสารสิทธิ์ของแปลง 12345-01",
+    title: "แปลงนี้ต้องแนบเอกสาร 3 รายการครับ",
+    subtitle: "ถ่ายจากของจริงได้เลย ให้เห็นครบทั้งใบนะครับ",
+    actions: [{ label: "ดาวน์โหลดแบบฟอร์ม" }, { label: "ถ่ายเอกสาร", primary: true, uri: liffUrl }],
+  });
+}
+
+/** OB-10 — application received, review pending (grey). Backfill is the only
+ *  activity allowed until review completes. */
+export function buildPendingReviewBubble(backfillUrl?: string): LineMessage {
+  return buildArtifactCard({
+    tone: "grey",
+    badge: "pending_review",
+    hero: "รอเจ้าหน้าที่ตรวจเอกสาร",
+    title: "รับใบสมัครแล้วครับ ✅",
+    subtitle: "สมชาย ใจดี · แปลงนาหลังบ้าน · 14.0 ไร่",
+    body: "ระหว่างนี้ยังส่งภาพกิจกรรมไม่ได้ แต่กรอกข้อมูลย้อนหลังไว้ก่อนได้เลยครับ",
+    actions: [
+      { label: "แก้ไขใบสมัคร" },
+      ...(backfillUrl
+        ? [{ label: "กรอกข้อมูลย้อนหลัง", primary: true, uri: backfillUrl } as ArtifactAction]
+        : [{ label: "กรอกข้อมูลย้อนหลัง", primary: true } as ArtifactAction]),
+    ],
+  });
+}
+
+/** OB-11 — account activated, carrying the farmer's registration code (teal). */
+export function buildActivationBubble(farmerCode: string): LineMessage {
+  return buildArtifactCard({
+    tone: "teal",
+    badge: "active",
+    hero: "บัญชีของคุณเปิดใช้งานแล้ว 🎉",
+    title: `รหัสเกษตรกร ${farmerCode}`,
+    subtitle: "ผู้ประสานงานยืนยันตัวตนเรียบร้อย",
+    actions: [{ label: "เริ่มใช้งาน", primary: true }],
+  });
+}
+
+/** PJ-02 — a photo round is due. Wet rounds get a navy hero, dry rounds amber,
+ *  matching the artifact's two variants. */
+export function buildPhotoReminderBubble(input: {
+  roundLabel: string;
+  stepCode: string;
+  /** 1-based round number; the artifact hero reads "รอบที่ 1 · ช่วงเปียก". */
+  roundNumber: number;
+  isWet: boolean;
+  plotName: string;
+  dayAfterSow: number;
+  cameraUrl: string;
+}): LineMessage {
+  return buildArtifactCard({
+    tone: input.isWet ? "navy" : "amber",
+    badge: `${input.roundLabel} · ${input.stepCode}`,
+    hero: `รอบที่ ${input.roundNumber} · ช่วง${input.isWet ? "เปียก" : "แห้ง"}`,
+    title: input.isWet ? "ถึงเวลารายงานแล้วครับ 🌾" : "ปล่อยน้ำแห้งรอบแรกได้แล้วครับ",
+    subtitle: `${input.plotName} · วันที่ ${input.dayAfterSow} หลังหว่าน`,
+    actions: [
+      { label: input.isWet ? "ยังไม่ได้ทำ" : "ขอดูวิธีถ่าย" },
+      { label: "ถ่ายภาพส่งเลย", primary: true, uri: input.cameraUrl },
+    ],
+  });
+}
+
+/** PJ-06 — confirm before sending (grey, "before send"). */
+export function buildConfirmBeforeSendBubble(input: {
+  plotName: string;
+  roundLabel: string;
+  stepCode: string;
+  cameraUrl: string;
+}): LineMessage {
+  return buildArtifactCard({
+    tone: "grey",
+    badge: "ก่อนส่ง",
+    hero: "ตรวจดูอีกครั้งนะครับ",
+    title: `${input.plotName} · ${input.roundLabel} (${input.stepCode})`,
+    actions: [
+      { label: "ถ่ายภาพใหม่", uri: input.cameraUrl },
+      { label: "ส่งข้อมูล", primary: true },
+    ],
+  });
+}
+
+/** PJ-08 — a photo passed review, with crop progress (teal). */
+export function buildPhotoAcceptedBubble(input: {
+  roundLabel: string;
+  approved: number;
+  total: number;
+  summaryUrl?: string;
+}): LineMessage {
+  return buildArtifactCard({
+    tone: "teal",
+    badge: input.roundLabel,
+    hero: "ภาพผ่านการตรวจแล้ว ✅",
+    title: `ครอปนี้ส่งแล้ว ${input.approved} จาก ${input.total} ภาพ`,
+    actions: [
+      ...(input.summaryUrl
+        ? [{ label: "ดูสรุปแปลง", primary: true, uri: input.summaryUrl } as ArtifactAction]
+        : [{ label: "ดูสรุปแปลง", primary: true } as ArtifactAction]),
+    ],
+  });
+}
+
+/** RP-01 — outstanding tasks (navy, TODO). */
+export function buildTodoBubble(input: { remaining: number; backfillUrl?: string }): LineMessage {
+  return buildArtifactCard({
+    tone: "navy",
+    badge: "TODO",
+    hero: "งานค้างของคุณ",
+    title: `เหลือ ${input.remaining} เรื่องที่ต้องทำครับ`,
+    actions: [
+      { label: "กรอกย้อนหลัง", ...(input.backfillUrl ? { uri: input.backfillUrl } : {}) },
+      { label: "บันทึกกิจกรรม", primary: true },
+    ],
+  });
+}

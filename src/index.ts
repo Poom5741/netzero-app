@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { buildWelcomeBubble } from "./line/flex-builders";
 import { type ConversationState, handleFlow } from "./line/flow";
 import { pushMessage, replyMessage } from "./line/reply";
 import { adminRoutes } from "./routes/admin";
@@ -184,47 +185,10 @@ async function handleEvent(env: Bindings, event: WebhookEvent): Promise<void> {
     case "follow": {
       const liffUrl = `https://liff.line.me/${env.LIFF_ID || ""}`;
 
-      // Send welcome with LIFF button
-      const welcomeFlex = {
-        type: "flex" as const,
-        altText: "ยินดีต้อนรับสู่ NetZeroCarbon",
-        contents: {
-          type: "bubble",
-          contents: [
-            { type: "text", text: "🌱 NetZeroCarbon", weight: "bold", size: "xl" },
-            {
-              type: "text",
-              text: "ผู้ช่วยเกษตรกรโครงการคาร์บอนเครดิต AWD",
-              size: "sm",
-              wrap: true,
-              margin: "md",
-            },
-            { type: "text", text: "─", separator: true, margin: "md" },
-            {
-              type: "text",
-              text: "เปิดแอปเพื่อกรอกข้อมูลการทำนา ถ่ายรูปหลักฐาน และดูคาร์บอนเครดิตของท่าน",
-              size: "md",
-              wrap: true,
-              margin: "md",
-            },
-            {
-              type: "button",
-              action: { type: "uri", label: "เปิดแอป NetZeroCarbon", uri: liffUrl },
-              style: "primary",
-              color: "#06c755",
-              margin: "lg",
-            },
-            { type: "text", text: "─", separator: true, margin: "md" },
-            {
-              type: "text",
-              text: "หรือพิมพ์เบอร์โทรศัพท์เพื่อผูกบัญชีในแชทนี้",
-              size: "xs",
-              wrap: true,
-              margin: "sm",
-            },
-          ],
-        },
-      };
+      // OB-01 — the first message a farmer ever receives. Uses the artifact
+      // card so the welcome matches the script (this used to be a third,
+      // divergent inline copy).
+      const welcomeFlex = buildWelcomeBubble(liffUrl);
 
       await replyMessage(token, event.replyToken, [welcomeFlex]);
 

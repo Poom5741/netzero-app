@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
+import {
+  composePdpaConsent,
+  composeRegistrationWelcome,
+  REGISTRATION_STEPS,
+} from "../../src/line/flow-registration";
 
 /**
- * Tests for OB-01 to OB-11 registration chat flow.
+ * Tests for the registration chat flow (OB-01…OB-13, LF-01 in artifact numbering).
  * Handles: friend addition → PDPA → phone match → identity → form → docs → activation
  */
 
 describe("composeRegistrationWelcome", () => {
-  it("composes welcome message", async () => {
-    const { composeRegistrationWelcome } = await import("../../src/line/flow-registration");
+  it("composes welcome message", () => {
     const msg = composeRegistrationWelcome();
     expect(msg).toContain("ยินดีต้อนรับ");
     expect(msg).toContain("NetZeroCarbon");
@@ -15,7 +19,6 @@ describe("composeRegistrationWelcome", () => {
   });
 
   it("includes registration instructions", async () => {
-    const { composeRegistrationWelcome } = await import("../../src/line/flow-registration");
     const msg = composeRegistrationWelcome();
     expect(msg).toContain("10 นาที");
     expect(msg).toContain("คาร์บอนเครดิต");
@@ -23,23 +26,20 @@ describe("composeRegistrationWelcome", () => {
 });
 
 describe("composePdpaConsent", () => {
-  it("composes PDPA consent message", async () => {
-    const { composePdpaConsent } = await import("../../src/line/flow-registration");
+  it("composes PDPA consent message", () => {
     const msg = composePdpaConsent();
     expect(msg).toContain("PDPA");
     expect(msg).toContain("ข้อมูลส่วนบุคคล");
   });
 
-  it("lists what data is collected", async () => {
-    const { composePdpaConsent } = await import("../../src/line/flow-registration");
+  it("lists what data is collected", () => {
     const msg = composePdpaConsent();
     expect(msg).toContain("ชื่อ");
     expect(msg).toContain("เบอร์โทร");
     expect(msg).toContain("เลขบัตร");
   });
 
-  it("mentions withdrawal right", async () => {
-    const { composePdpaConsent } = await import("../../src/line/flow-registration");
+  it("mentions withdrawal right", () => {
     const msg = composePdpaConsent();
     expect(msg).toContain("ถอนความยินยอม");
   });
@@ -95,14 +95,25 @@ describe("composeActivationSuccess", () => {
 });
 
 describe("REGISTRATION_STEPS", () => {
-  it("defines 11 registration steps", async () => {
-    const { REGISTRATION_STEPS } = await import("../../src/line/flow-registration");
-    expect(REGISTRATION_STEPS).toHaveLength(11);
+  it("defines 10 registration steps", () => {
+    expect(REGISTRATION_STEPS).toHaveLength(10);
   });
 
-  it("starts with welcome and ends with activation", async () => {
-    const { REGISTRATION_STEPS } = await import("../../src/line/flow-registration");
+  it("starts with welcome and ends with activation", () => {
+    // Artifact script numbering (specs/016-flow-parity/node-design-spec.md §3).
     expect(REGISTRATION_STEPS[0].code).toBe("OB-01");
-    expect(REGISTRATION_STEPS[10].code).toBe("OB-11");
+    expect(REGISTRATION_STEPS.at(-1)?.code).toBe("OB-11");
+  });
+
+  it("carries the legacy code for every step whose identifier changed", () => {
+    const renamed = REGISTRATION_STEPS.filter((s) => s.legacyCode);
+    expect(renamed.length).toBeGreaterThan(0);
+    // The schemes collide on OB-10/OB-11: legacy OB-08 (pending review) is
+    // artifact OB-10, and legacy OB-09 (activation) is artifact OB-11. The
+    // legacy code is what disambiguates old logs.
+    const pending = renamed.find((s) => s.code === "OB-10");
+    expect(pending?.legacyCode).toBe("OB-08");
+    const activation = renamed.find((s) => s.code === "OB-11");
+    expect(activation?.legacyCode).toBe("OB-09");
   });
 });

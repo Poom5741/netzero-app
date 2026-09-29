@@ -13,13 +13,20 @@ import { describe, expect, it } from "vitest";
  */
 
 import {
+  buildActivationBubble,
   buildArtifactCard,
   buildCalendarBubble,
   buildConditions3Checkbox,
+  buildConfirmBeforeSendBubble,
   buildConsentBubble,
   buildDashboardBubble,
+  buildDocumentsPromptBubble,
   buildIdentityConfirmBubble,
+  buildPendingReviewBubble,
+  buildPhotoAcceptedBubble,
+  buildPhotoReminderBubble,
   buildRegistrationLinkBubble,
+  buildTodoBubble,
   buildWelcomeBubble,
 } from "../../src/line/flex-builders";
 
@@ -28,7 +35,7 @@ const SCRIPT = JSON.parse(
 ) as Array<Record<string, any>>;
 
 const INVENTORY: Record<string, () => unknown> = {
-  "OB-01": () => buildWelcomeBubble("liff-test"),
+  "OB-01": () => buildWelcomeBubble("https://liff.line.me/test"),
   "OB-15": () => buildConsentBubble(),
   "OB-03": () => buildIdentityConfirmBubble("สมชาย ใจดี", "อ.สามชุก", "จ.สุพรรณบุรี"),
   "OB-05": () => buildConditions3Checkbox(),
@@ -45,6 +52,35 @@ const INVENTORY: Record<string, () => unknown> = {
       pendingTasks: 3,
       appUrl: "https://app.test",
     }),
+  // --- added by node-design-spec.md §6 (previously had no builder) ---
+  "OB-13": () => buildDocumentsPromptBubble("https://liff.line.me/test"),
+  "OB-10": () => buildPendingReviewBubble("https://app.test"),
+  "OB-11": () => buildActivationBubble("SPB-0142"),
+  "PJ-02": () =>
+    buildPhotoReminderBubble({
+      roundLabel: "WET-1",
+      stepCode: "SG-04",
+      roundNumber: 1,
+      isWet: true,
+      plotName: "แปลงนาหลังบ้าน",
+      dayAfterSow: 28,
+      cameraUrl: "https://liff.line.me/test/liff/camera",
+    }),
+  "PJ-06": () =>
+    buildConfirmBeforeSendBubble({
+      plotName: "แปลงนาหลังบ้าน",
+      roundLabel: "DRY-1",
+      stepCode: "SG-05",
+      cameraUrl: "https://liff.line.me/test/liff/camera",
+    }),
+  "PJ-08": () =>
+    buildPhotoAcceptedBubble({
+      roundLabel: "DRY-1",
+      approved: 2,
+      total: 4,
+      summaryUrl: "https://app.test",
+    }),
+  "RP-01": () => buildTodoBubble({ remaining: 3, backfillUrl: "https://app.test" }),
 };
 
 const byNode = (node: string, type = "flex") =>
@@ -123,6 +159,49 @@ describe("every artifact card node matches the script's design", () => {
       }
     });
   }
+
+  it("PJ-02 has the artifact's two variants — navy/wet and amber/dry", () => {
+    const wet = flatten(
+      buildPhotoReminderBubble({
+        roundLabel: "WET-1",
+        stepCode: "SG-04",
+        roundNumber: 1,
+        isWet: true,
+        plotName: "แปลงนาหลังบ้าน",
+        dayAfterSow: 28,
+        cameraUrl: "https://liff.line.me/test/liff/camera",
+      }),
+    );
+    const dry = flatten(
+      buildPhotoReminderBubble({
+        roundLabel: "DRY-1",
+        stepCode: "SG-05",
+        roundNumber: 1,
+        isWet: false,
+        plotName: "แปลงนาหลังบ้าน",
+        dayAfterSow: 42,
+        cameraUrl: "https://liff.line.me/test/liff/camera",
+      }),
+    );
+
+    expect(wet.heroBg).toBe(expectHeroColour("navy"));
+    expect(wet.heroBg).toBe("#11337D");
+    expect(dry.heroBg).toBe(expectHeroColour("amber"));
+    expect(dry.heroBg).toBe("#B17E15");
+
+    const wetSpec = byNode("PJ-02");
+    const joined = wet.text.join(" | ");
+    expect(joined).toContain(wetSpec!.hero);
+    expect(joined).toContain(wetSpec!.title);
+    expect(wet.actionLabels).toEqual((wetSpec!.actions ?? []).map((a) => a.label));
+
+    // The dry variant's copy comes from the script's second PJ-02 entry.
+    const dryEntries = SCRIPT.filter((s) => s.node === "PJ-02" && s.type === "flex");
+    const drySpec = dryEntries.find((s) => s.heroTone === "amber") ?? dryEntries[1] ?? wetSpec;
+    expect(dry.text.join(" | ")).toContain(drySpec.hero);
+    expect(dry.text.join(" | ")).toContain(drySpec.title);
+    expect(dry.actionLabels).toEqual((drySpec.actions ?? []).map((a) => a.label));
+  });
 });
 
 /** Gradient midpoints — see node-design-spec.md §1. */
