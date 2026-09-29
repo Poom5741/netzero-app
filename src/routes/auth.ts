@@ -159,18 +159,17 @@ authRoutes.post("/login", async (c) => {
       console.error("sign-in audit log failed:", err);
     }
 
-    // Return success response with session cookie
-    return c.json(
-      {
-        success: true,
-        user: { id: user.id, email: user.email, role: user.role },
-        message: "Login successful",
-      },
-      200,
-      {
+    // Return a 302 to /admin with the session cookie. The login form posts
+    // with redirect:"manual" and treats opaque-0/302 as success (page.tsx);
+    // a 200 JSON here made the UI show a false "cannot connect" error even
+    // though the session cookie was set (BUG-017-B2 b7, found live).
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: user.role === "sponsor" ? "/sponsor" : "/admin",
         "Set-Cookie": cookie,
       },
-    );
+    });
   } catch (error) {
     console.error("Login error:", error);
     return c.json(
