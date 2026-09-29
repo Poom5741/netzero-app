@@ -1,11 +1,17 @@
-# Handoff — Agent Manual Test: Farmer Design Update + Full Functionality
+# Handoff — Agent Manual Test: Farmer User Journey (Design + Functionality)
 
 **Date:** 2026-09-29
 **For:** An autonomous testing agent (e.g. Grok bot) with its own computer and full access to:
 the NetZeroCarbon web app, the real LINE app (mobile or desktop), and the public web.
-**Mission:** Verify the farmer-facing redesign (LINE OA chat cards + six LIFF screens) against
-the Claude design artifact, and walk the entire farmer journey end-to-end through the **real
-LINE app** — not the web demo chat.
+**Mission:** Walk the **entire farmer user journey end-to-end through the real LINE app** —
+from add-friend to results — and at **every step verify BOTH tracks**:
+1. **Functionality** — does the step work? (bot replies, data is correct, buttons do what
+   their labels say, the flow advances)
+2. **Design** — does the step look like the Claude design artifact? (card anatomy, hero
+   tone, badge, exact Thai copy, LIFF shell)
+
+A step is only `pass` when **both** tracks pass. Do not split the work into "a design pass"
+and "a functional pass" — one journey, two checks per step.
 **Deploy under test:** Worker `bf7dd54f-1305-4e85-9bf6-aed477663cd1` · Pages `74d93a45`
 (commit `c1950e9`, pushed to `origin/main` on 2026-09-29).
 
@@ -72,12 +78,12 @@ Farmer identity = **phone number**, no password. Seeded farmers in production D1
 |---|---|---|
 | สมชาย มั่นคง (`farmer-happy`) | `0812345679` | registered, 1 plot (`PLOT-001`) |
 | มานี มีใจ (`farmer-edge`) | `0899999999` | registered, no plot |
-| ภูมิ ทดสอบ | `0822222222` | registered, 1 plot |
+| ภูมิ ทดสอบ | `0822222222` | registered, 1 plot (`SPB-5887`) |
 | ทดสอบ ระบบ | `0833333333` | registered, no plot |
 
 Current D1 state (verified 2026-09-29): 4 farmers, 2 plots, **0 seasons**, 6 photo evidences,
 6 LINE links. There is **no active season** — the tester creates one through the flow itself
-(step PJ-00, §5).
+(step J8, §5).
 
 ## 4. Required setup
 
@@ -91,77 +97,118 @@ Current D1 state (verified 2026-09-29): 4 farmers, 2 plots, **0 seasons**, 6 pho
 4. The farmer's document photos (any 3 clear images of the application forms suffice) and, for
    photo rounds, a photo of a field/water pipe — content just needs to be a plausible JPEG.
 
-## 5. Part A — Full functional journey (walk this first)
+## 5. The user journey — one pass, two checks per step
 
-Drive everything from the real LINE chat with the OA. Expected behavior per stage:
+Drive everything from the real LINE chat with the OA. For each step below, record **two
+verdicts**: F (functionality) and D (design). The **[D]** line names what the design must look
+like; full anatomy rules are in §6, exact copy authority in
+`specs/016-flow-parity/node-design-spec.md` §2.
 
-1. **Add friend** → bot sends welcome card **OB-01** (teal hero "โครงการทำนาลดโลกร้อน
-   (เปียกสลับแห้ง)", badge ยินดีต้อนรับ, action ผูกบัญชีของฉัน).
-2. **PDPA consent OB-15** (navy hero, badge CS-01 · PDPA, actions อ่านข้อความเต็ม / ยินยอม ★).
-   Tapping ยินยอม must register consent; replying the text ยินยอม also works.
-3. **Phone share OB-02** — the bot asks for the phone via LINE's share-phone keyboard.
-4. **Identity confirm OB-03** (teal hero "พบเบอร์นี้ในทะเบียนแล้ว", shows the registered name).
-   - With phone `0812345679` → expect "สมชาย มั่นคง — ใช่ท่านหรือไม่"; tapping ใช่ ผมเอง
-     trusts immediately (phone is identity, no extra verification).
-   - With an unknown number → the flow routes to new registration instead.
-5. **Terms OB-05** (navy, badge 3 ข้อ) — all 3 checkboxes required; ยอมรับทั้ง 3 ข้อ only
-   proceeds when all are ticked.
-6. **Registration LF-01** (teal, badge 1 จาก 2) → กรอกข้อมูล opens the LIFF register form
-   inside LINE. Fill it, submit; chat replies กรอกข้อมูลเรียบร้อย then card **OB-13**
-   (amber, badge 2 จาก 2) requiring 3 documents → ถ่ายเอกสาร opens `/liff/documents`.
-   Upload the 3 documents there.
-7. **Pending review OB-10** (grey hero, badge pending_review) — while the application is
-   under review the bot must **refuse photo submission** (ระหว่างนี้ยังส่งภาพกิจกรรมไม่ได้)
-   and offer backfill (กรอกข้อมูลย้อนหลัง) instead.
-8. **Admin approval** — in the web admin (`/admin`, login above) open Applications, approve
-   the application and the 3 documents. Back in LINE, card **OB-11** (teal, badge active)
-   announces activation with the farmer code (SPB-xxxx) → เริ่มใช้งาน.
-9. **Season setup PJ-00** — bot asks if ready to start the season; reply a start date
-   (e.g. `1 ก.ค. 2569`). Then card **PJ-13** (teal, badge SG-01 ถึง SG-09) presents the
-   9-step calendar → ดูทั้งปฏิทิน opens `/liff/calendar?plot_id=…`.
-10. **Photo rounds WET-1 → DRY-1 → WET-2 → DRY-2** (alternating wet/dry per the flow spec):
-    - From the calendar screen, open a step's camera deep link (carries step/plot/season).
-      Capture **in the LIFF camera** — GPS + timestamp are mandatory evidence.
-    - WET rounds expect water visible in the pipe; DRY rounds expect drained.
-    - After each accepted photo the bot confirms with how many photos remain
-      (PJ-07: "เหลืออีก 3 ภาพ").
-    - **Negative paths that MUST be tested:**
-      - Send a photo picked from the phone gallery instead of the LIFF camera → expect the
-        gallery-rejection message (artifact node SY-03: no GPS/time evidence). *(Flagged in
-        the gap analysis as "to verify" — this is the single most important open check.)*
-      - Submit a dry-looking photo for a WET round → expect the mismatch rejection **PJ-09**
-        (amber, badge WET-2 · ตีกลับ) with ถ่ายใหม่ action.
-11. **Results** — after 4/4 photos, the summary card **RP-03** (teal, badge นาปี 2569) shows
-    the plot summary; เปิดแดชบอร์ดของฉัน opens `/liff/summary`. Verify the results reflect
-    the verified photos (not 0/4 — this was FINDING-J, since fixed).
-12. **Cross-check in admin** — photos submitted in step 10 appear in the admin evidence
-    queue; approving them there updates the farmer's verified counts in `/liff/fields`
-    and `/liff/summary`.
+### J1 · Add friend → welcome
+- **[F]** Bot immediately sends welcome card **OB-01** without any tap.
+- **[D]** Teal hero `#028D8A`, badge ยินดีต้อนรับ, title สวัสดีครับ 🌾 …, primary action
+  ผูกบัญชีของฉัน rendered as a green filled button.
 
-## 6. Part B — Design verification (the redesign under test)
+### J2 · PDPA consent (OB-15)
+- **[F]** Tapping ยินยอม registers consent and advances; replying the text ยินยอม also works.
+- **[D]** Navy hero `#11337D`, badge CS-01 · PDPA, actions อ่านข้อความเต็ม (secondary) /
+  ยินยอม ★ (primary).
 
-While walking §5, verify each card against the design spec. Per card check:
+### J3 · Phone share (OB-02)
+- **[F]** Bot asks for the phone and LINE's native share-phone keyboard appears; tapping it
+  delivers the number.
 
-- **Anatomy:** white card, ~14px radius, colored hero strip (min 56px) with a small dark
-  translucent **badge** pill top-left, bold title, optional dashed data rows, action bar with
-  green **filled primary** + white **outlined secondary**.
-- **Hero tones** (the five allowed colors — LINE Flex can't do gradients, so each artifact
-  gradient ships as its midpoint solid; this approximation is intentional, do not report it):
-  teal `#028D8A` · navy `#11337D` · green `#05B54C` · amber `#B17E15` · grey `#53616F`.
-- **Copy** must match the artifact exactly — authority is the node table in
-  `specs/016-flow-parity/node-design-spec.md` §2 (17 cards) and the step order in
-  `flow-spec.md`.
-- **Dividers:** 7 grey divider bubbles appear between scenes (ขั้นตอนสมัคร, ฤดูโครงการ,
-  photo-round markers, งานที่ต้องทำ).
-- **Thai text rendering:** no tofu boxes, no truncated buttons, all primary actions tappable
-  and doing what their label says.
+### J4 · Identity confirm (OB-03)
+- **[F]** With phone `0812345679` the bot shows the registered name สมชาย มั่นคง and ใช่
+  ผมเอง trusts immediately (phone is identity — no extra verification). An unknown number
+  routes to new registration instead.
+- **[D]** Teal hero, badge ยืนยันตัวตน, hero line พบเบอร์นี้ในทะเบียนแล้ว.
 
-LIFF shell (all six screens): gradient-deep header with roundel + bold 14px title + 10.5px
+### J5 · Terms (OB-05)
+- **[F]** All 3 condition checkboxes are individually togglable; ยอมรับทั้ง 3 ข้อ proceeds
+  **only** when all are ticked (try tapping it with one unticked — it must not advance).
+- **[D]** Navy hero, badge 3 ข้อ, secondary action อ่านข้อความเต็ม.
+
+### J6 · Registration form (LF-01) → documents (OB-13)
+- **[F]** กรอกข้อมูล opens `/liff/register` inside LINE. Submitting the form advances the
+  chat (กรอกข้อมูลเรียบร้อย), then card OB-13 requires 3 documents; ถ่ายเอกสาร opens
+  `/liff/documents`; uploading 3 documents succeeds and status updates.
+- **[D]** LF-01 teal hero, badge 1 จาก 2; OB-13 amber hero `#B17E15`, badge 2 จาก 2.
+  The register LIFF and documents LIFF both follow the shared shell (§6).
+
+### J7 · Pending-review gate (OB-10)
+- **[F]** While the application is under review the bot must **refuse photo submission**
+  (ระหว่างนี้ยังส่งภาพกิจกรรมไม่ได้) and offer backfill (กรอกข้อมูลย้อนหลัง) instead. Try
+  sending a photo now — it must be declined.
+- **[D]** Grey hero `#53616F`, badge pending_review, hero line รอเจ้าหน้าที่ตรวจเอกสาร.
+
+### J8 · Admin approval → activation (OB-11)
+- **[F]** In the web admin (`/admin`, login above) approve the application and 3 documents.
+  Back in LINE, the bot announces activation with the farmer code (SPB-xxxx) and เริ่มใช้งาน
+  advances. (Admin-side design is out of scope for this handoff — function only.)
+- **[D]** Teal hero, badge active, hero บัญชีของคุณเปิดใช้งานแล้ว 🎉.
+
+### J9 · Season setup (PJ-00 → PJ-13)
+- **[F]** Bot asks if ready to start the season; reply a start date (e.g. `1 ก.ค. 2569`).
+  A season is created and the PJ-13 card lists 9 steps; ดูทั้งปฏิทิน opens
+  `/liff/calendar?plot_id=…` showing all 9 steps with per-step status markers and working
+  camera deep links (each carries step/plot/season).
+- **[D]** PJ-13 teal hero, badge SG-01 ถึง SG-09; the calendar LIFF follows the shared shell,
+  no horizontal scroll at phone width.
+
+### J10 · Photo rounds WET-1 → DRY-1 → WET-2 → DRY-2
+- **[F]** Open a step's camera deep link from the calendar, capture **in the LIFF camera**
+  (GPS + timestamp are mandatory evidence), submit. Each accepted photo gets a bot
+  confirmation with remaining count (PJ-07: "เหลืออีก 3 ภาพ"). Wet rounds expect water in
+  the pipe, dry rounds drained.
+  **Negative paths that MUST be tested:**
+  - Send a photo picked from the phone gallery instead of the LIFF camera → expect the
+    gallery-rejection message (artifact node SY-03: no GPS/time evidence). *(Flagged in the
+    gap analysis as "to verify" — the single most important open check in this handoff.)*
+  - Submit a dry-looking photo for a WET round → expect mismatch rejection **PJ-09** with
+    ถ่ายใหม่ action, and the retake then succeeds.
+- **[D]** PJ-02 wet card navy hero (badge WET-1 · SG-04), dry card amber hero (badge
+  DRY-1 · SG-05); PJ-06 grey confirm card (badge ก่อนส่ง) with dashed data rows; PJ-09
+  amber, badge WET-2 · ตีกลับ; PJ-08 teal progress card (ครอปนี้ส่งแล้ว N จาก 4 ภาพ).
+
+### J11 · Results (RP-03) + dashboard LIFF
+- **[F]** After 4/4 photos the summary card shows the plot summary; เปิดแดชบอร์ดของฉัน opens
+  `/liff/summary` and the numbers reflect the verified photos (not 0/4 — this was FINDING-J,
+  since fixed). `/liff/fields` shows the plot with verified photo counts.
+- **[D]** RP-03 teal hero, badge นาปี 2569; summary/fields LIFF screens follow the shared
+  shell; figures render in proper Thai numerals/units without overflow.
+
+### J12 · Cross-surface closure
+- **[F]** Photos from J10 appear in the admin evidence queue; approving one there updates
+  the farmer's verified counts in `/liff/fields` and `/liff/summary`.
+- **[D]** (Admin visuals out of scope; check only that the farmer LIFF numbers change.)
+
+## 6. Design rules — applied at every step above
+
+**Card anatomy (every flex card):** white card, ~14px radius, colored hero strip (min 56px)
+with a small dark translucent **badge** pill top-left, bold title, optional dashed data rows,
+action bar with green **filled primary** + white **outlined secondary**.
+
+**The five hero tones** (LINE Flex can't do gradients, so each artifact gradient ships as its
+midpoint solid; this approximation is intentional, do not report it):
+teal `#028D8A` · navy `#11337D` · green `#05B54C` · amber `#B17E15` · grey `#53616F`.
+
+**Copy** must match the artifact exactly — authority is the node table in
+`specs/016-flow-parity/node-design-spec.md` §2 (17 cards) and the step order in
+`specs/016-flow-parity/flow-spec.md` (43 steps).
+
+**Dividers:** 7 grey divider bubbles appear between scenes (ขั้นตอนสมัคร, ฤดูโครงการ,
+photo-round markers, งานที่ต้องทำ).
+
+**Thai text rendering:** no tofu boxes, no truncated buttons, all primary actions tappable
+and doing what their label says.
+
+**LIFF shell (all six screens):** gradient-deep header with roundel + bold 14px title + 10.5px
 subtitle + close button; grey-50 body; content scrolls; footer buttons (when present) don't
-overlap content. Check each screen on a phone-width viewport (~390×844): no horizontal
-scrollbar, no text overflowing its row, roundel and close button vertically centered.
+overlap content. Check each screen at phone width (~390×844): no horizontal scrollbar, no
+text overflowing its row, roundel and close button vertically centered.
 
-## 7. Part C — Regression spots worth one look each
+## 7. Regression spots worth one look each
 
 - `/liff/register` and `/liff/camera` (pre-existing routes) still work after the redesign —
   they share the same Worker.
@@ -188,13 +235,16 @@ scrollbar, no text overflowing its row, roundel and close button vertically cent
 
 ## 9. How to report
 
-Write findings to `tests/verification/agent-farmer-flow-test-2026-09-29.md` with, per item:
+Write findings to `tests/verification/agent-farmer-flow-test-2026-09-29.md` with, per step:
 
-- **ID** (F-01, F-02, …), the **step** of §5 it occurred at, **expected vs actual**,
-  **evidence** (screenshot path or exact bot reply text), and a verdict class:
-  `pass` / `fail` / `blocked` (couldn't attempt — say why) / `deferred` (possible but skipped).
-- Preserve these distinctions — a claim of "verified" without evidence will be rejected.
+- **Step ID** (J1…J12) plus, when relevant, the artifact node (OB-15, PJ-09, …).
+- **Two verdicts per step:** `F: pass/fail/blocked` (functionality) and
+  `D: pass/fail/blocked` (design) — a blocked step explains what prevented the attempt.
+- For each fail: **expected vs actual** and **evidence** (screenshot path or exact bot reply
+  text).
+- Preserve the distinctions — a claim of "verified" without evidence will be rejected.
   Known-limitation items (§8) reported as findings will be rejected too.
-- Finish with an overall **GO / NO-GO** for the farmer redesign release.
+- Finish with an overall **GO / NO-GO** for the farmer redesign release, covering both
+  tracks.
 
 Good hunting.
