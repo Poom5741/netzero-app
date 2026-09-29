@@ -1042,9 +1042,20 @@ liffRoutes.post("/api/documents/upload", async (c) => {
       const baselineUploadUrl = c.env.LIFF_ID
         ? `https://liff.line.me/${c.env.LIFF_ID}/liff/baseline?plot_id=`
         : `${c.env.APP_URL}/liff/baseline?plot_id=`;
+      const info = await db
+        .prepare(
+          `SELECT f.full_name AS farmerName, p.plot_code AS plotCode, p.area_rai AS areaRai
+           FROM farmers f LEFT JOIN plots p ON p.farmer_id = f.id
+           WHERE f.id = ? ORDER BY p.created_at DESC LIMIT 1`,
+        )
+        .bind(farmerId)
+        .first<{ farmerName: string | null; plotCode: string | null; areaRai: number | null }>();
+      const subtitle = info?.farmerName
+        ? `${info.farmerName} · ${info.plotCode ?? "—"} · ${info.areaRai ?? "—"} ไร่`
+        : undefined;
       await pushToFarmer(db, c.env, farmerId, [
         { type: "text", text: "✅ ได้รับเอกสารแล้วครับ" },
-        buildPendingReviewBubble(baselineUploadUrl),
+        buildPendingReviewBubble(baselineUploadUrl, subtitle),
       ]);
     }
 

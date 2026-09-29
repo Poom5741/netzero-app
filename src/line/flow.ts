@@ -561,9 +561,20 @@ async function handleDocuments(ctx: FlowContext): Promise<FlowResult> {
         : ctx.appUrl
           ? `${ctx.appUrl}/liff/baseline`
           : undefined;
+      const info = await ctx.db
+        .prepare(
+          `SELECT f.full_name AS farmerName, p.plot_code AS plotCode, p.area_rai AS areaRai
+           FROM farmers f LEFT JOIN plots p ON p.farmer_id = f.id
+           WHERE f.id = ? ORDER BY p.created_at DESC LIMIT 1`,
+        )
+        .bind(ctx.farmerId)
+        .first<{ farmerName: string | null; plotCode: string | null; areaRai: number | null }>();
+      const subtitle = info?.farmerName
+        ? `${info.farmerName} · ${info.plotCode ?? "—"} · ${info.areaRai ?? "—"} ไร่`
+        : undefined;
       return transitionTo(ctx, "pending_review", [
         textMessage("✅ ได้รับเอกสารแล้วค่ะ"),
-        buildPendingReviewBubble(backfillUrl),
+        buildPendingReviewBubble(backfillUrl, subtitle),
       ]);
     }
 
@@ -623,7 +634,18 @@ async function handlePendingReview(ctx: FlowContext): Promise<FlowResult> {
     : ctx.appUrl
       ? `${ctx.appUrl}/liff/baseline`
       : undefined;
-  return transitionTo(ctx, "pending_review", [buildPendingReviewBubble(backfillUrl)]);
+  const info = await ctx.db
+    .prepare(
+      `SELECT f.full_name AS farmerName, p.plot_code AS plotCode, p.area_rai AS areaRai
+       FROM farmers f LEFT JOIN plots p ON p.farmer_id = f.id
+       WHERE f.id = ? ORDER BY p.created_at DESC LIMIT 1`,
+    )
+    .bind(ctx.farmerId)
+    .first<{ farmerName: string | null; plotCode: string | null; areaRai: number | null }>();
+  const subtitle = info?.farmerName
+    ? `${info.farmerName} · ${info.plotCode ?? "—"} · ${info.areaRai ?? "—"} ไร่`
+    : undefined;
+  return transitionTo(ctx, "pending_review", [buildPendingReviewBubble(backfillUrl, subtitle)]);
 }
 
 /**

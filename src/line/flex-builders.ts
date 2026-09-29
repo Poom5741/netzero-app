@@ -127,6 +127,7 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
           {
             type: "box",
             layout: "horizontal",
+            width: "auto",
             backgroundColor: COLOR_BADGE_BG,
             cornerRadius: "999px",
             paddingAll: "2px",
@@ -800,13 +801,13 @@ export function buildDocumentsPromptBubble(liffUrl: string): LineMessage {
 
 /** OB-10 — application received, review pending (grey). Backfill is the only
  *  activity allowed until review completes. */
-export function buildPendingReviewBubble(backfillUrl?: string): LineMessage {
+export function buildPendingReviewBubble(backfillUrl?: string, subtitle?: string): LineMessage {
   return buildArtifactCard({
     tone: "grey",
     badge: "pending_review",
     hero: "รอเจ้าหน้าที่ตรวจเอกสาร",
     title: "รับใบสมัครแล้วครับ ✅",
-    subtitle: "สมชาย ใจดี · แปลงนาหลังบ้าน · 14.0 ไร่",
+    subtitle: subtitle ?? "—",
     body: "ระหว่างนี้ยังส่งภาพกิจกรรมไม่ได้ แต่กรอกข้อมูลย้อนหลังไว้ก่อนได้เลยครับ",
     actions: [
       { label: "แก้ไขใบสมัคร" },
