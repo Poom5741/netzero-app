@@ -2,8 +2,15 @@
  * LINE Flex Message bubble builders for the NetZeroCarbon chatbot.
  *
  * Each builder returns a `LineMessage` object compatible with the
- * type defined in `src/line/reply.ts`. Color scheme follows LINE
- * guidelines: primary green #06c755, white background, dark text.
+ * type defined in `src/line/reply.ts`.
+ *
+ * Colors and geometry are ported from the Claude Design artifact
+ * `design-artifacts/2026-09-28/line-oa-farmer.html` (artifact 19c446b9,
+ * decoded module c087a24f-4179-4a49-849a-6c05aafd7d3a.js). The artifact is
+ * the visual source of truth; do not substitute ad-hoc values.
+ *
+ * Note: the chat bubbles, header bar, and quick-reply chips are drawn by LINE's
+ * own client. Only the documents emitted here are under our control.
  */
 
 type LineMessage = {
@@ -15,14 +22,36 @@ type LineMessage = {
 };
 
 // ---------------------------------------------------------------------------
-// Constants
+// Artifact tokens and geometry
 // ---------------------------------------------------------------------------
 
-const COLOR_PRIMARY = "#06c755";
-const COLOR_TEXT = "#333333";
+const COLOR_PRIMARY = "#06C755"; // --line-green
+const COLOR_PRIMARY_DARK = "#04A344"; // --line-green-dark
+const COLOR_TEXT = "#16202C"; // --line-chat-ink
 const COLOR_SUBTLE = "#888888";
-const COLOR_ERROR = "#dc3545";
-const COLOR_BG = "#FFFFFF";
+const COLOR_ERROR = "#C8464F"; // --status-danger (replaces Bootstrap #dc3545)
+const COLOR_BG = "#FFFFFF"; // --line-bubble-you
+
+const RADIUS_BUBBLE = "13px";
+const RADIUS_ACTION = "4px";
+const PADDING_ACTION = "9px 4px";
+
+/**
+ * System divider — artifact `ChatDivider`: a centred translucent-black pill
+ * carrying the "added as friend" label.
+ */
+export function chatDivider(text = "เพิ่ม NetZeroCarbon เป็นเพื่อนแล้ว") {
+  return {
+    type: "box",
+    layout: "vertical",
+    paddingAll: "3px 12px",
+    backgroundColor: "rgba(0, 0, 0, 0.22)",
+    cornerRadius: "999px",
+    contents: [
+      { type: "text", text, size: "xs", color: COLOR_BG, align: "center", weight: "regular" },
+    ],
+  } as const;
+}
 
 // ---------------------------------------------------------------------------
 // 1. buildWelcomeBubble
@@ -45,6 +74,7 @@ export function buildWelcomeBubble(liffId: string): LineMessage {
         type: "box",
         layout: "vertical",
         contents: [
+          chatDivider(),
           { type: "text", text: "🌱 NetZeroCarbon", weight: "bold", size: "xl", color: COLOR_TEXT },
           { type: "separator", margin: "lg" },
           {
@@ -75,9 +105,9 @@ export function buildWelcomeBubble(liffId: string): LineMessage {
                 flex: 0,
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             action: {
               type: "postback",
               label: "🔗 เริ่มผูกบัญชี",
@@ -148,9 +178,9 @@ export function buildConsentBubble(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -172,9 +202,9 @@ export function buildConsentBubble(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_ERROR,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -262,9 +292,9 @@ export function buildIdentityConfirmBubble(
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -286,9 +316,9 @@ export function buildIdentityConfirmBubble(
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_ERROR,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -356,9 +386,9 @@ export function buildConditionsBubble(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -380,9 +410,9 @@ export function buildConditionsBubble(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_ERROR,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -447,9 +477,9 @@ export function buildRegistrationLinkBubble(liffUrl: string): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             action: {
               type: "uri",
               label: "📝 เปิดฟอร์มสมัคร",
@@ -568,9 +598,9 @@ export function buildCalendarBubble(
                 flex: 0,
               },
             ],
-            paddingAll: "6px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "4px",
+            cornerRadius: RADIUS_ACTION,
             margin: "md",
             action: {
               type: "uri",
@@ -681,9 +711,9 @@ export function buildConsent4Checkbox(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -781,9 +811,9 @@ export function buildConditions3Checkbox(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -805,9 +835,9 @@ export function buildConditions3Checkbox(): LineMessage {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_ERROR,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -896,9 +926,9 @@ export function buildDashboardBubble(data: {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {
@@ -920,9 +950,9 @@ export function buildDashboardBubble(data: {
                 weight: "bold",
               },
             ],
-            paddingAll: "10px",
+            paddingAll: PADDING_ACTION,
             backgroundColor: COLOR_PRIMARY,
-            cornerRadius: "6px",
+            cornerRadius: RADIUS_ACTION,
             flex: 1,
             margin: "md",
             action: {

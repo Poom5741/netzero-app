@@ -12,7 +12,7 @@
           "text": "เงื่อนไขโครงการ",
           "weight": "bold",
           "size": "lg",
-          "color": "#333333"
+          "color": "#16202C"
         },
         {
           "type": "separator",
@@ -22,7 +22,7 @@
           "type": "text",
           "text": "1. ส่งภาพหลักฐานตามปฏิทิน 4 รอบต่อครอป\n2. ให้ข้อมูลแปลงนาตามจริง\n3. ยินยอมให้ตรวจสอบแปลง",
           "size": "sm",
-          "color": "#333333",
+          "color": "#16202C",
           "wrap": true,
           "margin": "md"
         }
@@ -45,9 +45,9 @@
               "weight": "bold"
             }
           ],
-          "paddingAll": "10px",
-          "backgroundColor": "#06c755",
-          "cornerRadius": "6px",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#06C755",
+          "cornerRadius": "4px",
           "flex": 1,
           "margin": "md",
           "action": {
@@ -69,9 +69,9 @@
               "weight": "bold"
             }
           ],
-          "paddingAll": "10px",
-          "backgroundColor": "#dc3545",
-          "cornerRadius": "6px",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#C8464F",
+          "cornerRadius": "4px",
           "flex": 1,
           "margin": "md",
           "action": {

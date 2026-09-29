@@ -26,7 +26,7 @@ export function composeRetakeMessage(
       type: "bubble",
       contents: [
         { type: "text", text: "📸 ภาพถ่ายถูกปฏิเสธ", weight: "bold", size: "lg" },
-        { type: "text", text: `เหตุผล: ${reason}`, size: "sm", wrap: true, color: "#dc3545" },
+        { type: "text", text: `เหตุผล: ${reason}`, size: "sm", wrap: true, color: "#C8464F" },
         { type: "text", text: `ประเภทภาพ: ${photoType}`, size: "sm", wrap: true },
         {
           type: "text",

@@ -8,11 +8,28 @@
       "layout": "vertical",
       "contents": [
         {
+          "type": "box",
+          "layout": "vertical",
+          "paddingAll": "3px 12px",
+          "backgroundColor": "rgba(0, 0, 0, 0.22)",
+          "cornerRadius": "999px",
+          "contents": [
+            {
+              "type": "text",
+              "text": "เพิ่ม NetZeroCarbon เป็นเพื่อนแล้ว",
+              "size": "xs",
+              "color": "#FFFFFF",
+              "align": "center",
+              "weight": "regular"
+            }
+          ]
+        },
+        {
           "type": "text",
           "text": "🌱 NetZeroCarbon",
           "weight": "bold",
           "size": "xl",
-          "color": "#333333"
+          "color": "#16202C"
         },
         {
           "type": "separator",
@@ -22,7 +39,7 @@
           "type": "text",
           "text": "โครงการทำนาลดโลกร้อน (เปียกสลับแห้ง)\n\nสวัสดีครับ 🌾 นี่คือ LINE ของ NetZeroCarbon\nใช้ส่งภาพและกรอกข้อมูลแปลงนา เพื่อคิดคาร์บอนเครดิตให้พี่น้องเกษตรกรครับ",
           "size": "sm",
-          "color": "#333333",
+          "color": "#16202C",
           "wrap": true,
           "margin": "lg"
         }
@@ -46,9 +63,9 @@
               "flex": 0
             }
           ],
-          "paddingAll": "10px",
-          "backgroundColor": "#06c755",
-          "cornerRadius": "6px",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#06C755",
+          "cornerRadius": "4px",
           "action": {
             "type": "postback",
             "label": "🔗 เริ่มผูกบัญชี",

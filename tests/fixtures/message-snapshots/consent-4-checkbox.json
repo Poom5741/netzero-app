@@ -12,7 +12,7 @@
           "text": "เงื่อนไขการใช้งาน",
           "weight": "bold",
           "size": "lg",
-          "color": "#333333"
+          "color": "#16202C"
         },
         {
           "type": "separator",
@@ -27,7 +27,7 @@
               "text": "[ ] CS-01 · 同意 PDPA คุ้มครองข้อมูลส่วนบุคคล",
               "size": "sm",
               "wrap": true,
-              "color": "#333333",
+              "color": "#16202C",
               "flex": 1
             }
           ],
@@ -46,7 +46,7 @@
               "text": "[ ] CS-02 · ยอมรับการเก็บข้อมูลการเกษตร",
               "size": "sm",
               "wrap": true,
-              "color": "#333333",
+              "color": "#16202C",
               "flex": 1
             }
           ],
@@ -65,7 +65,7 @@
               "text": "[ ] CS-03 · ยอมรับการแชร์รูปถ่ายหลักฐาน",
               "size": "sm",
               "wrap": true,
-              "color": "#333333",
+              "color": "#16202C",
               "flex": 1
             }
           ],
@@ -84,7 +84,7 @@
               "text": "[ ] CS-04 · เข้าร่วมโครงการคาร์บอนเครดิต",
               "size": "sm",
               "wrap": true,
-              "color": "#333333",
+              "color": "#16202C",
               "flex": 1
             }
           ],
@@ -125,9 +125,9 @@
               "weight": "bold"
             }
           ],
-          "paddingAll": "10px",
-          "backgroundColor": "#06c755",
-          "cornerRadius": "6px",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#06C755",
+          "cornerRadius": "4px",
           "flex": 1,
           "margin": "md",
           "action": {

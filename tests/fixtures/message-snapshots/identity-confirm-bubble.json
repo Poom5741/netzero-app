@@ -12,7 +12,7 @@
           "text": "ยืนยันตัวตน",
           "weight": "bold",
           "size": "lg",
-          "color": "#333333"
+          "color": "#16202C"
         },
         {
           "type": "separator",
@@ -22,7 +22,7 @@
           "type": "text",
           "text": "พบเบอร์นี้ในทะเบียนแล้ว",
           "size": "sm",
-          "color": "#333333",
+          "color": "#16202C",
           "wrap": true,
           "margin": "md"
         },
@@ -30,7 +30,7 @@
           "type": "text",
           "text": "สมชาย ใจดี\nอ.เมือง จ.เชียงใหม่",
           "size": "md",
-          "color": "#333333",
+          "color": "#16202C",
           "wrap": true,
           "weight": "bold",
           "margin": "md"
@@ -39,7 +39,7 @@
           "type": "text",
           "text": "ใช่ท่านหรือไม่ครับ",
           "size": "sm",
-          "color": "#333333",
+          "color": "#16202C",
           "wrap": true,
           "margin": "md"
         }
@@ -62,9 +62,9 @@
               "weight": "bold"
             }
           ],
-          "paddingAll": "10px",
-          "backgroundColor": "#06c755",
-          "cornerRadius": "6px",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#06C755",
+          "cornerRadius": "4px",
           "flex": 1,
           "margin": "md",
           "action": {
@@ -86,9 +86,9 @@
               "weight": "bold"
             }
           ],
-          "paddingAll": "10px",
-          "backgroundColor": "#dc3545",
-          "cornerRadius": "6px",
+          "paddingAll": "9px 4px",
+          "backgroundColor": "#C8464F",
+          "cornerRadius": "4px",
           "flex": 1,
           "margin": "md",
           "action": {

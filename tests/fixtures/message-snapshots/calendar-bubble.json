@@ -13,7 +13,7 @@
           "text": "ปฏิทิน 9 ขั้น",
           "weight": "bold",
           "size": "lg",
-          "color": "#333333"
+          "color": "#16202C"
         },
         {
           "type": "separator",
@@ -27,7 +27,7 @@
               "type": "text",
               "text": "✅ SG-01",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "weight": "bold",
               "flex": 2
             },
@@ -35,7 +35,7 @@
               "type": "text",
               "text": "เตรียมแปลง",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "wrap": false,
               "flex": 3
             },
@@ -59,7 +59,7 @@
               "type": "text",
               "text": "✅ SG-02",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "weight": "bold",
               "flex": 2
             },
@@ -67,7 +67,7 @@
               "type": "text",
               "text": "หว่านข้าว",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "wrap": false,
               "flex": 3
             },
@@ -91,7 +91,7 @@
               "type": "text",
               "text": "⏳ SG-03",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "weight": "bold",
               "flex": 2
             },
@@ -99,7 +99,7 @@
               "type": "text",
               "text": "ใส่ปุ๋ยครั้งที่ 1",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "wrap": false,
               "flex": 3
             },
@@ -123,7 +123,7 @@
               "type": "text",
               "text": "⏳ SG-04",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "weight": "bold",
               "flex": 2
             },
@@ -131,7 +131,7 @@
               "type": "text",
               "text": "WET-1",
               "size": "xs",
-              "color": "#333333",
+              "color": "#16202C",
               "wrap": false,
               "flex": 3
             },
@@ -165,8 +165,8 @@
                   "flex": 0
                 }
               ],
-              "paddingAll": "6px",
-              "backgroundColor": "#06c755",
+              "paddingAll": "9px 4px",
+              "backgroundColor": "#06C755",
               "cornerRadius": "4px",
               "margin": "md",
               "action": {
