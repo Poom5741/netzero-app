@@ -127,7 +127,9 @@ export function buildArtifactCard(card: ArtifactCard): LineMessage {
           {
             type: "box",
             layout: "horizontal",
-            width: "auto",
+            // LINE rejects width:auto in the hero subtree (live 400); a maxWidth
+            // cap gives the same compact-chip look for our short badges.
+            maxWidth: "140px",
             backgroundColor: COLOR_BADGE_BG,
             cornerRadius: "999px",
             paddingAll: "2px",

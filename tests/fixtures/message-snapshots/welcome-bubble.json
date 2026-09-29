@@ -24,7 +24,7 @@
                 {
                   "type": "box",
                   "layout": "horizontal",
-                  "width": "auto",
+                  "maxWidth": "140px",
                   "backgroundColor": "#00000057",
                   "cornerRadius": "999px",
                   "paddingAll": "2px",
