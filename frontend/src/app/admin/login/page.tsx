@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
      * existing icon pipeline — no logo asset gap invention per R-027),
      * eyebrow "Admin Console" (--teal-300), Thai headline verbatim,
      * GradientRule 120px, description, footer. RIGHT: white form panel
-     * (artifact layout string "white bg" = --surface-page #FFFFFF,
+     * (artifact layout string "white bg" = --surface-page, white
      * admin-artifact.json:329) with the form centred at 392px max-width
      * (artifact :329; page-local override — the shared spec-006 token
      * --login-form-max-width: 420px in globals.css:109 stays untouched
