@@ -11,7 +11,7 @@ export function LiveCalc({ liveValue, techniques }: LiveCalcProps) {
   return (
     <div className="mb-8">
       <h3 className="text-headline-md text-on-surface mb-4">การคำนวณแบบเรียลไทม์</h3>
-      <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden">
+      <div className="rounded-[var(--radius-card)] p-6 bg-[var(--surface-card)] border border-[var(--border-subtle)] relative overflow-hidden">
         {/* Real-time counter display */}
         <div className="bg-white/60 backdrop-blur-sm p-5 rounded-xl mb-5 flex flex-col items-center justify-center h-36 relative overflow-hidden border border-primary/10">
           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent animate-pulse" style={{ animationDuration: "3s" }} />

@@ -44,9 +44,13 @@ describe("LiveCalc", () => {
     expect(pulseDot).toBeInTheDocument();
   });
 
-  it("applies neumorphic styling to the panel", () => {
+  it("renders the panel with the artifact card chrome: surface-card, border-subtle, radius-card (R-031)", () => {
     const { container } = render(<LiveCalc liveValue={14520} techniques={techniques} />);
-    const panel = container.querySelector(".neumorphic");
-    expect(panel).toBeInTheDocument();
+    const panel = Array.from(container.querySelectorAll("div")).find((d) =>
+      d.className.includes("bg-[var(--surface-card)]"),
+    );
+    expect(panel).toBeDefined();
+    expect(panel?.className).toContain("border-[var(--border-subtle)]");
+    expect(panel?.className).toContain("rounded-[var(--radius-card)]");
   });
 });
