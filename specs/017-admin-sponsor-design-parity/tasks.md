@@ -24,116 +24,116 @@ artifact — never re-add dead CSS. → R-031.
 
 ## Phase 0 — Gate work (before any UI code)
 
-- [ ] **T-000** Run design-first: brief + prototype + `decision.json` status `decided`;
+- [x] **T-000** Run design-first: brief + prototype + `decision.json` status `decided`;
       resolve open point O-2 (icon strategy: inline-SVG lucide subset vs `lucide-react`
       dependency). Blocked on nothing; gates all implementation tasks. → R-033.
-- [ ] **T-000b** Record baseline outputs above verbatim into the run evidence folder
+- [x] **T-000b** Record baseline outputs above verbatim into the run evidence folder
       `.super-speckit/qa/<run-id>/`. → R-032.
 
 ## Phase 1 — Tokens + Tier-1 suites (TDD red first)
 
-- [ ] **T-101** Land Map C alias tokens in `frontend/src/app/globals.css` (artifact ramp
+- [x] **T-101** Land Map C alias tokens in `frontend/src/app/globals.css` (artifact ramp
       names as aliases; no `--color-*` rename; record the `--color-surface` vs
       `--surface-sunken` deviation row). → R-005.
-- [ ] **T-102** Add `frontend/src/components/__tests__/literal-freedom.test.ts` with the
+- [x] **T-102** Add `frontend/src/components/__tests__/literal-freedom.test.ts` with the
       `HEX_RAW` + `TW_ARB` blocks (`feedback-loop.md:149-169`) over the six parity dirs +
       the R-006 allowlist rule (artifact-token values only, matrix-referenced). Confirm RED
       against the 17-occurrence baseline before fixing anything. → R-006, R-029.
-- [ ] **T-103** Add T1-COL token-definition assertions against `globals.css` (Map C names)
+- [x] **T-103** Add T1-COL token-definition assertions against `globals.css` (Map C names)
       and the mutation break-checks (`feedback-loop.md:616-669`). → R-029.
 
 ## Phase 2 — Shared components (8 additions + restyles)
 
-- [ ] **T-201** Add `ui/badge.tsx` (5 tones, 24px, dot). → R-008 (cites
+- [x] **T-201** Add `ui/badge.tsx` (5 tones, 24px, dot). → R-008 (cites
       admin-design-spec.md:941-953).
-- [ ] **T-202** Add `ui/tag.tsx` (5 tones, 28px bordered pill). → R-008 (:954-966).
-- [ ] **T-203** Add `ui/data-table.tsx` (dense paddings, `grey-50` th, `navy-50` hover,
+- [x] **T-202** Add `ui/tag.tsx` (5 tones, 28px bordered pill). → R-008 (:954-966).
+- [x] **T-203** Add `ui/data-table.tsx` (dense paddings, `grey-50` th, `navy-50` hover,
       tabular-nums, `onRowClick`, `dense` flag). → R-008 (:982-985).
-- [ ] **T-204** Add `ui/filter-bar.tsx` (148px labelled selects, active accent border,
+- [x] **T-204** Add `ui/filter-bar.tsx` (148px labelled selects, active accent border,
       actions slot). → R-008 (:986-989).
-- [ ] **T-205** Add `ui/progress-bar.tsx` (132px label, 9px track, 5 fills). → R-008
+- [x] **T-205** Add `ui/progress-bar.tsx` (132px label, 9px track, 5 fills). → R-008
       (:994-999).
-- [ ] **T-206** Add `ui/checkbox.tsx` (20px box, 4px radius, teal-600 on, 0.55 disabled).
+- [x] **T-206** Add `ui/checkbox.tsx` (20px box, 4px radius, teal-600 on, 0.55 disabled).
       → R-008 (:1000-1003).
-- [ ] **T-207** Add `ui/field.tsx` (label + required asterisk + error + hint). → R-008
+- [x] **T-207** Add `ui/field.tsx` (label + required asterisk + error + hint). → R-008
       (:1004-1007).
-- [ ] **T-208** Add `ui/gradient-rule.tsx` (`--gradient-rule`; width/thickness props). →
+- [x] **T-208** Add `ui/gradient-rule.tsx` (`--gradient-rule`; width/thickness props). →
       R-008 (admin-design-spec.md:609-611; sponsor-design-spec.md:284).
-- [ ] **T-209** Restyle `ui/button.tsx` to artifact geometry (36/46/54px, 999px pill,
+- [x] **T-209** Restyle `ui/button.tsx` to artifact geometry (36/46/54px, 999px pill,
       primary/secondary/outline/ghost/onDark) + rewrite its stale tests against the
       artifact. → R-007, R-031.
-- [ ] **T-210** Restyle `ui/input.tsx` (+ stale-test sweep) and `sponsor/kpi-card.tsx`
+- [x] **T-210** Restyle `ui/input.tsx` (+ stale-test sweep) and `sponsor/kpi-card.tsx`
       (StatTile geometry incl. tone="dark") + rewrite `live-calc` stale test. → R-007,
       R-031.
-- [ ] **T-211** Restyle `dashboard-{sidebar,header,shell}.tsx`: 232px sticky rail
+- [x] **T-211** Restyle `dashboard-{sidebar,header,shell}.tsx`: 232px sticky rail
       `rgb(6,30,92)`, artifact nav labels/icons; keep `usePathname` routing. → R-001,
       R-002.
-- [ ] **T-212** Every component file hex-clean under the R-006 rule; each unit test uses
+- [x] **T-212** Every component file hex-clean under the R-006 rule; each unit test uses
       the Tier-1 technique (source + class assertions), never jsdom cascade. → R-006,
       R-009.
 
 ## Phase 3 — Slice A: admin screens
 
-- [ ] **T-301** AD-AUTH `app/admin/login/page.tsx` — split panel, admin variant copy,
+- [x] **T-301** AD-AUTH `app/admin/login/page.tsx` — split panel, admin variant copy,
       GradientRule 120px, 3 fields + remember checkbox + audit note. → R-011, R-028.
-- [ ] **T-302** AD-OV `app/admin/page.tsx` — KPI StatTiles, Work Queue, GHG DataTable,
+- [x] **T-302** AD-OV `app/admin/page.tsx` — KPI StatTiles, Work Queue, GHG DataTable,
       Province DataTable (row-click → farmers), CreditChart section = deferred
       placeholder. → R-012, R-015.
-- [ ] **T-303** AD-REV `app/admin/evidence/page.tsx` — queue + completeness DataTables,
+- [x] **T-303** AD-REV `app/admin/evidence/page.tsx` — queue + completeness DataTables,
       4/3 photo viewer + pipe overlay + GPS badge, metadata panel, approve/reject with
       reason Checkboxes + textarea; restyled admin-review components. → R-013.
-- [ ] **T-304** AD-FAR `app/admin/farmers/page.tsx` — 11-col DataTable, import/export
+- [x] **T-304** AD-FAR `app/admin/farmers/page.tsx` — 11-col DataTable, import/export
       actions, 760px slide-over drawer (gradient header, 5 tabs). → R-014.
-- [ ] **T-305** AD-APP `app/admin/applications/page.tsx` — 2-col split; live API data
+- [x] **T-305** AD-APP `app/admin/applications/page.tsx` — 2-col split; live API data
       preserved; no fixture swap. → R-016, R-025.
-- [ ] **T-306** AD-REPORT `app/admin/reports/page.tsx` — report DataTable + T-VER panel
+- [x] **T-306** AD-REPORT `app/admin/reports/page.tsx` — report DataTable + T-VER panel
       (3 ProgressBars + downloads). → R-017.
-- [ ] **T-307** AD-SPONSOR `app/admin/sponsors/page.tsx` — per-sponsor sections with
+- [x] **T-307** AD-SPONSOR `app/admin/sponsors/page.tsx` — per-sponsor sections with
       province + visibility Checkbox groups + stats header. → R-018.
-- [ ] **T-308** AD-SETTINGS `app/admin/settings/page.tsx` — 15×5 permissions matrix
+- [x] **T-308** AD-SETTINGS `app/admin/settings/page.tsx` — 15×5 permissions matrix
       table, two constants DataTables, 6-row toggle list. → R-019.
-- [ ] **T-309** AD-CHART new `app/admin/charts/page.tsx` — shell only (PageTitle +
+- [x] **T-309** AD-CHART new `app/admin/charts/page.tsx` — shell only (PageTitle +
       FilterBar + layout); 6 deferred placeholders; GHG DataTable ships; zero fetches. →
       R-015, E4.
-- [ ] **T-310** Tier-1 assertions for slice A screens (strings verbatim incl. Thai, sizes,
+- [x] **T-310** Tier-1 assertions for slice A screens (strings verbatim incl. Thai, sizes,
       classes; hex-clean). → R-006, R-028, R-029.
 
 ## Phase 4 — Slice B: sponsor screens
 
-- [ ] **T-401** SP-AUTH `app/sponsor/login/page.tsx` — sponsor token variants;
+- [x] **T-401** SP-AUTH `app/sponsor/login/page.tsx` — sponsor token variants;
       gradient-deep brand panel, no wind-farm `<img>` (gap row). → R-020, R-027.
-- [ ] **T-402** SP-OV `app/sponsor/page.tsx` — PageTitle + FilterBar + PdpaNote; CreditHero
+- [x] **T-402** SP-OV `app/sponsor/page.tsx` — PageTitle + FilterBar + PdpaNote; CreditHero
       + Badge + GradientRule; 2 StatTiles; deferred CreditChart frame; GHG + season
       ProgressBars; outcome KPIs. → R-021, E5.
-- [ ] **T-403** SP-AREA `app/sponsor/areas/page.tsx` — per-province `pad=false` sections,
+- [x] **T-403** SP-AREA `app/sponsor/areas/page.tsx` — per-province `pad=false` sections,
       7-col DataTable, photo pills, 4-col gallery. → R-022.
-- [ ] **T-404** SP-REPORT `app/sponsor/reports/page.tsx` — reports + certificates
+- [x] **T-404** SP-REPORT `app/sponsor/reports/page.tsx` — reports + certificates
       DataTables (Tag/Badge/outline Button). → R-023.
-- [ ] **T-405** Tier-1 assertions for slice B (as T-310). → R-006, R-028, R-029.
+- [x] **T-405** Tier-1 assertions for slice B (as T-310). → R-006, R-028, R-029.
 
 ## Phase 5 — Responsive drawer (both shells)
 
-- [ ] **T-501** <1024px hamburger + overlay drawer from the same nav source; focus trap,
+- [x] **T-501** <1024px hamburger + overlay drawer from the same nav source; focus trap,
       Escape/backdrop close, focus return. No intermediate breakpoints. → R-003.
-- [ ] **T-502** Worker-redirect guard test: assert `src/index.ts:382,387` redirects exist
+- [x] **T-502** Worker-redirect guard test: assert `src/index.ts:382,387` redirects exist
       (read-only) so the unreachable Worker HTML is never "restored". → R-004.
 
 ## Phase 6 — Tier-2, gates, independent QA, release
 
-- [ ] **T-601** Playwright Tier-2 suite per `feedback-loop.md` 18 designs; computed CSS
+- [x] **T-601** Playwright Tier-2 suite per `feedback-loop.md` 18 designs; computed CSS
       only; desktop + 1024/1023 pair; no API-value assertions. → R-030, R-025.
-- [ ] **T-602** Maker full gate run (record verbatim): `bun test tests/unit/` (914/0);
+- [x] **T-602** Maker full gate run (record verbatim): `bun test tests/unit/` (914/0);
       `bun test tests/integration/` (73); `cd frontend && npx vitest run`; `npx tsc
       --noEmit`; `npx eslint .` (0 errors); frontend build (static export). → R-031,
       R-032.
-- [ ] **T-603** Diff review: only `frontend/` + planning docs changed; `src/` diff empty
+- [x] **T-603** Diff review: only `frontend/` + planning docs changed; `src/` diff empty
       except nothing; no protected paths touched; explicit-path commits only (never
       `git add -A`). → R-024, HANDOFF lesson 7.
-- [ ] **T-604** Checker (independent, fresh QA worktree at pinned candidate SHA): re-run
+- [x] **T-604** Checker (independent, fresh QA worktree at pinned candidate SHA): re-run
       T-602 gates; diff **failing test names** (not counts) against the clean baseline;
       re-observe computed styles; do not trust maker numbers. Record evidence under
       `.super-speckit/qa/<run-id>/`. → R-032.
-- [ ] **T-605** Release matrix modelled on `specs/013-farmer-chat-design-parity.md`: every
+- [x] **T-605** Release matrix modelled on `specs/013-farmer-chat-design-parity.md`: every
       R-0xx row `verified` / `not-verified` / `not-applicable` with evidence path; explicit
       designer-gap rows (wind-farm PNG, logo binaries, lucide sprite); repoint kit-state
       matrix (O-5). → R-033.

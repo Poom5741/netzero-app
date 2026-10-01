@@ -25,7 +25,7 @@ cell and consolidated in "Disclosed deltas" below — flagged for T-606 HUMAN re
 | R-002 | Sponsor shell same rail, sponsor NAV + เอกสาร divider semantics | verified* | slice-b-t405.test.ts assertions; delta: divider carried as documented comment + assertion, not a rendered nav row (เอกสาร is label-only, no screen; live nav = 3 routes) — for T-606 human review |
 | R-003 | ≥1024px rail / <1024px focus-managed drawer, 1024/1023 Tier-2 pair | verified | T-501 `dbf60ee` (19 tests: trap/Escape/backdrop/focus-return/scroll-lock); Tier-2 1024/1023 handover live; single boundary (pre-existing 768px block removed); checker §I |
 | R-004 | No Worker-side shell; redirect topology asserted read-only | verified | worker-redirect-guard.test.ts (`c85fd61`): 302s :382/:387 precede mounts :404/:407; `src/` diff empty (checker §A) |
-| R-005 | Map C alias tokens in globals.css; no --color-* rename; deviation row recorded | verified | T-101 `f9aa1ba` (+107, 0 deletions); T1-COL 54 assertions; checker §E: 17 tokens byte-exact vs both artifact JSONs; deviation rows at both definition sites |
+| R-005 | Map C alias tokens in globals.css; no --color-* rename; deviation row recorded | verified | T-101 `f9aa1ba` (+107, 0 deletions); T1-COL 54 assertions; CORRECTED 2026-10-02: **33 ramp tokens (navy/teal/grey ×11) byte-exact vs both artifact HTMLs** (`design-artifacts/2026-09-28/admin-console.html` + `sponsor-portal.html`: 33 defs each, intersection 33, value-agree 33, css-exact 33); artifact JSONs hold usages only, no definitions — earlier "17 tokens" figure was the unrelated hex-baseline count; deviation rows at both definition sites |
 | R-006 | Zero non-artifact inlined hex in six parity dirs; allowlist matrix-referenced | verified | literal-freedom suite GREEN (0 HEX_RAW + 0 TW_ARB); checker §D independent scan: 0 real residuals; all 17 §2.2 baseline occurrences migrated; allowlist table truthfully zero rows |
 | R-007 | Existing components restyled not replaced (button/input/kpi-card/dashboard trio) | verified | T-209 `a911735`, T-210 `7d8d47a`, T-211 `ffb0c44`; APIs kept (additive: Button outline/onDark, KpiCard tone); Tier-2 T2-BTN computed geometry |
 | R-008 | The 8 missing artifact components added | verified | T-201…T-208 (`ddf18c0`…`9f8a549`): badge, tag, data-table, filter-bar, progress-bar, checkbox, field, gradient-rule + 46 unit tests; checker spot-checks |
@@ -98,5 +98,9 @@ allowlisted here with its matrix row).
 Landing verify (12/14, 2026-10-01) → purpose gate (user card tap ~02:19Z, decision.json
 03:13:56Z) → planning cycle (checker PASS) → implementation T-000…T-605 (maker runs, this
 branch) → T-604 INDEPENDENT CHECKER: **VERDICT PASS** (10/10 sections; report:
-`.super-speckit/qa/017-impl-r1-t604-checker/checker-report.md`). Merge + visual sign-off:
-T-606 HUMAN ONLY.
+`.super-speckit/qa/017-impl-r1-t604-checker/checker-report.md`). **2026-10-02 LOCAL
+SELF-HEAL** (`017-selfheal-local`, on a fresh clone machine): all six T-602 gates + Tier-2
+chromium re-run GREEN (914/0 · 73/0 after host repoint `16151b3` · 372/372 · tsc/eslint/build 0 ·
+22/0/12); §A scope + §D hex + §E tokens re-derived (33/33 byte-exact; matrix R-005 figure
+corrected 17→33). Report: `.super-speckit/qa/017-selfheal-local/report.md`. Merge + visual
+sign-off: T-606 HUMAN ONLY.
