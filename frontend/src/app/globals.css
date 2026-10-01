@@ -486,3 +486,24 @@ h3 {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* =====================================================================
+   AD-REV/AD-FAR support aliases (T-303/T-304, slice A part 2).
+   Precedent: the T-201 status-ink aliases (ddf18c0) and T-210 geometry
+   aliases — artifact token NAMES with no landed value, minted artifact-
+   exact so page sources stay CSS-var-only under R-006 (no raw hex).
+   Sources: Badge TONES soft tints admin-design-spec.md:947-950,
+   AD-REV reject panel :693-696 (bg --status-danger-soft, border
+   #EFC9CB), photo-viewer scene gradient :331/:684 (180deg sky/mid/
+   ground, mid stop at 52%). Separate :root block appended (valid CSS;
+   avoids touching the Map C alias block above).
+   ===================================================================== */
+:root {
+  --status-success-soft: #E7FCF7;
+  --status-info-soft: #EEF2FB;
+  --status-info: #1C489F;
+  --status-warning-soft: #FCF2E0;
+  --status-danger-soft: #FBECEC;
+  --status-danger-border: #EFC9CB;
+  --photo-scene: linear-gradient(180deg, #9FC7E8, #CFE3B9 52%, #8FA95C 100%);
+}
