@@ -50,7 +50,28 @@ npm-debug.log*
 # Transient/generated output removed from tracking; ignore so it cannot
 # creep back in. `tests/test-results/` and `frontend/test-results/` are
 # separate paths owned by their own .gitignore files.
-.super-speckit/
+#
+# `.super-speckit/` is ignored per-subdirectory, NOT wholesale. Git never
+# descends into an excluded directory, so a `!` negation for a child path
+# cannot re-include it — the parent rule must not cover the child at all.
+# Two subtrees are deliberately left TRACKED because they are the durable,
+# auditable evidence of why a change was made:
+#   .super-speckit/bugs/   confirmed-bug records (feature 008)
+#   .super-speckit/design/ design decisions
+.super-speckit/atlas/
+.super-speckit/bugs/*.tmp
+.super-speckit/feedback/
+.super-speckit/grills/
+.super-speckit/matrices/
+.super-speckit/purpose/
+.super-speckit/research/
+.super-speckit/state/
+# .super-speckit/qa/ is ignored EXCEPT the maker seed fixture, which is part
+# of the 008-fix-login-wiring evidence trail and is referenced by its bug records.
+.super-speckit/qa/*
+!.super-speckit/qa/008-fix-login-wiring-maker2/
+.super-speckit/qa/008-fix-login-wiring-maker2/*
+!.super-speckit/qa/008-fix-login-wiring-maker2/seed-maker-users.ts
 visual-qa-screenshots/
 /test-results/
 
