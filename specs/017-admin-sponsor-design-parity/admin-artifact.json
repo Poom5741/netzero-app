@@ -1,0 +1,2173 @@
+{
+  "artifactId": "161f2305-35de-42f8-83ed-7c90ab4da5a6",
+  "sourceFile": "design-artifacts/2026-09-28/admin-console.html",
+  "sourceSize": 2504058,
+  "manifestBlockLength": 2442568,
+  "totalModules": 72,
+  "decodeCommand": "python3 -c \"import re,json,base64,gzip,pathlib; ...\"  (see decode script at /tmp/nzc-admin-decode/)",
+  "designSystemGlobal": "window.NetZeroCarbonDesignSystem_f3e7a8",
+  "modules": [
+    {
+      "id": "9482f706-3071-47ef-a10d-293ec76b9810",
+      "componentPath": "screens/admin/LoginScreen.jsx",
+      "role": "screen",
+      "bytes": 11739,
+      "screenLabel": "AD-AUTH",
+      "destructuredFrom": "window.NetZeroCarbonDesignSystem_f3e7a8"
+    },
+    {
+      "id": "1e8c88ce-9966-4c5f-8ec4-ac0bc4ce90d2",
+      "componentPath": "screens/admin/OverviewScreen.jsx + ReviewScreen.jsx",
+      "role": "screen",
+      "bytes": 15611,
+      "screenLabels": [
+        "AD-OV",
+        "AD-REV"
+      ]
+    },
+    {
+      "id": "80e8634d-4689-4d3e-96ed-6ce38f681e25",
+      "componentPath": "screens/admin/FarmersScreen.jsx + ChartsScreen.jsx",
+      "role": "screen",
+      "bytes": 26323,
+      "screenLabels": [
+        "AD-FAR",
+        "AD-CHART"
+      ]
+    },
+    {
+      "id": "8c07477b-0027-4c54-88fe-c86bba24472b",
+      "componentPath": "screens/admin/ApplicationsScreen.jsx + ReportsScreen.jsx + SponsorsScreen.jsx",
+      "role": "screen",
+      "bytes": 22109,
+      "screenLabels": [
+        "AD-APP",
+        "AD-REPORT",
+        "AD-SPONSOR"
+      ]
+    },
+    {
+      "id": "20301eef-f947-40de-b124-763f338e3c60",
+      "componentPath": "screens/admin/SettingsScreen.jsx",
+      "role": "screen",
+      "bytes": 13862,
+      "screenLabel": "AD-SETTINGS"
+    },
+    {
+      "id": "f24453af-9d15-48ee-beda-8e32cfc14985",
+      "componentPath": "screens/admin/ApplicationsScreen.jsx + SettingsScreen.jsx",
+      "role": "screen",
+      "bytes": 13474,
+      "note": "DUPLICATE: SettingsScreen also in 20301eef; ApplicationsScreen also in 8c07477b"
+    },
+    {
+      "id": "c0d425a3-6ee5-4613-9c4a-c6ef8c5043c4",
+      "componentPath": "design-system/AdminDesignSystem.jsx",
+      "role": "design-system",
+      "bytes": 375876,
+      "note": "Shared design system; contains PageTitle, Section, FilterBar, DataTable, StatTile, Button, Badge, Tag, Icon, Field, Input, Select, Checkbox, Textarea, IconButton, ProgressBar, GradientRule, Logo, Card, CreditChart, PdpaNote, MockNote"
+    },
+    {
+      "id": "3ee05776-efb9-4d93-ae7f-7be67557cbf3",
+      "componentPath": "shared/computePlotSeason.js",
+      "role": "calc",
+      "bytes": 7323,
+      "exports": [
+        "A_CONST",
+        "SF_P",
+        "SF_W",
+        "CFOA",
+        "PHOTO_ROUNDS",
+        "sfOrganic",
+        "efCh4",
+        "ch4Soil",
+        "resolveSfW",
+        "computePlotSeason",
+        "GHG_2569"
+      ]
+    },
+    {
+      "id": "7fa43fba-baf7-41be-804a-d68dd41ef9c3",
+      "componentPath": "fixtures/fixtureData.js",
+      "role": "fixture",
+      "bytes": 8112,
+      "exports": [
+        "SPONSORS",
+        "PROVINCES",
+        "PLOTS",
+        "FARMERS",
+        "FARMER_NAMES",
+        "QUEUE",
+        "REJECT_REASONS",
+        "SEASONS",
+        "EXPORTS",
+        "NITROGEN_ROWS"
+      ]
+    },
+    {
+      "id": "7e8ee94b-8c24-43a0-8119-c202bdb58032",
+      "componentPath": "vendor/react-dom.js",
+      "role": "runtime",
+      "bytes": 109931
+    },
+    {
+      "id": "1fa849c1-f411-41fc-8c84-e844c2bee213",
+      "componentPath": "vendor/react.js",
+      "role": "runtime",
+      "bytes": 1080205
+    },
+    {
+      "id": "de3d021c-710a-4bcd-8a4d-6f8f99a59942",
+      "componentPath": "vendor/lucide-icons.js",
+      "role": "runtime",
+      "bytes": 355975
+    },
+    {
+      "id": "055ab9e6-bbb2-4558-9e05-b428095ffe22",
+      "componentPath": "vendor/chart-or-svg-lib.js",
+      "role": "runtime",
+      "bytes": 3137752
+    }
+  ],
+  "tokens": {
+    "--grey-100": "#EDEFF3",
+    "--grey-200": "#DDE1E8",
+    "--grey-300": "#C2C8D2",
+    "--grey-400": "#9AA3B2",
+    "--grey-50": "#F2F2F2",
+    "--grey-500": "#737E91",
+    "--grey-600": "#566277",
+    "--grey-700": "#3C4A5C",
+    "--grey-800": "#273343",
+    "--grey-900": "#1B2330",
+    "--grey-950": "#141414",
+    "--navy-100": "#D6E0F4",
+    "--navy-200": "#AEC2E8",
+    "--navy-300": "#7C9AD8",
+    "--navy-400": "#5279CB",
+    "--navy-50": "#EEF2FB",
+    "--navy-500": "#2C5EB8",
+    "--navy-600": "#1C489F",
+    "--navy-700": "#123787",
+    "--navy-800": "#0B2A72",
+    "--navy-900": "#061E5C",
+    "--navy-950": "#030E2E",
+    "--teal-100": "#C6F9EE",
+    "--teal-200": "#8FF3DE",
+    "--teal-300": "#52ECCA",
+    "--teal-400": "#24C4B2",
+    "--teal-50": "#E7FCF7",
+    "--teal-500": "#0AA8A3",
+    "--teal-600": "#028E91",
+    "--teal-700": "#027276",
+    "--teal-800": "#01565F",
+    "--teal-900": "#013B45",
+    "--teal-950": "#012730",
+    "--nzc-aqua": "#43D8B8",
+    "--nzc-black": "#141414",
+    "--nzc-mint": "#52ECCA",
+    "--nzc-navy": "#061E5C",
+    "--nzc-off-white": "#F2F2F2",
+    "--nzc-space-grey": "#273343",
+    "--nzc-teal": "#028E91",
+    "--line-bubble-me": "#A9E86B",
+    "--line-bubble-you": "#FFFFFF",
+    "--line-chat-bg": "#8FAAD0",
+    "--line-chat-ink": "#16202C",
+    "--line-chat-ink-2": "#4A5866",
+    "--line-chat-ink-3": "#78889A",
+    "--line-green": "#06C755",
+    "--line-green-dark": "#04A344",
+    "--line-hairline": "#EEF2F6",
+    "--line-qr-border": "#D6DFE9",
+    "--status-danger": "#C8464F",
+    "--status-danger-soft": "#FBECEC",
+    "--status-info": "#1C489F",
+    "--status-info-soft": "#EEF2FB",
+    "--status-success": "#0AA8A3",
+    "--status-success-soft": "#E7FCF7",
+    "--status-warning": "#E2A33C",
+    "--status-warning-soft": "#FCF2E0",
+    "--surface-accent-soft": "#E7FCF7",
+    "--surface-card": "#FFFFFF",
+    "--surface-card-alt": "#EEF2FB",
+    "--surface-inverse": "#061E5C",
+    "--surface-inverse-alt": "#273343",
+    "--surface-page": "#FFFFFF",
+    "--surface-sunken": "#F2F2F2",
+    "--white": "#FFFFFF",
+    "--action-primary": "#028E91",
+    "--action-primary-hover": "#027276",
+    "--action-primary-active": "#01565F",
+    "--action-secondary": "#061E5C",
+    "--action-secondary-hover": "#0B2A72",
+    "--action-disabled": "#DDE1E8",
+    "--border-accent": "#028E91",
+    "--border-default": "#C2C8D2",
+    "--border-strong": "#9AA3B2",
+    "--border-subtle": "#DDE1E8",
+    "--border-on-dark": "rgba(255,255,255,.18)",
+    "--blur-glass": "14px",
+    "--focus-ring": "0 0 0 3px rgba(10,168,163,.32)",
+    "--ring-focus-inverse": "0 0 0 3px rgba(82,236,202,.45)",
+    "--glass-fill": "rgba(255,255,255,.72)",
+    "--glass-fill-dark": "rgba(6,30,92,.62)",
+    "--gradient-deep": "linear-gradient(150deg,#061E5C 0%,#0B2A72 45%,#027276 100%)",
+    "--gradient-mark": "linear-gradient(135deg,#52ECCA 0%,#02A99E 42%,#028E91 62%,#0...)",
+    "--gradient-protect": "linear-gradient(180deg,rgba(6,30,92,0) 0%,rgba(6,30,92,.82)...)",
+    "--gradient-rule": "linear-gradient(90deg,#52ECCA 0%,#028E91 55%,#061E5C 100%)",
+    "--lift-hover": "translateY(-4px)",
+    "--press-scale": "0.98",
+    "--shadow-none": "none",
+    "--shadow-xs": "0 1px 2px rgba(6,30,92,.06)",
+    "--shadow-sm": "0 2px 6px rgba(6,30,92,.07)",
+    "--shadow-md": "0 8px 24px rgba(6,30,92,.09)",
+    "--shadow-lg": "0 18px 44px rgba(6,30,92,.12)",
+    "--shadow-xl": "0 32px 72px rgba(6,30,92,.16)",
+    "--shadow-accent": "0 12px 28px rgba(2,142,145,.24)",
+    "--shadow-inset-top": "inset 0 1px 0 rgba(255,255,255,.6)",
+    "--transition-card": "transform var(--duration-base) var(--ease-out),box-shadow var(--duration-base) var(--ease-out)",
+    "--transition-control": "background-color var(--duration-fast) var(--ease-standard),...",
+    "--container-max": "1200px",
+    "--container-narrow": "760px",
+    "--gutter": "24px",
+    "--card-padding": "24px",
+    "--section-y": "96px",
+    "--section-y-tight": "64px",
+    "--space-0": "0px",
+    "--space-1": "4px",
+    "--space-2": "8px",
+    "--space-3": "12px",
+    "--space-4": "16px",
+    "--space-5": "20px",
+    "--space-6": "24px",
+    "--space-8": "32px",
+    "--space-10": "40px",
+    "--space-12": "48px",
+    "--space-16": "64px",
+    "--space-20": "80px",
+    "--space-24": "96px",
+    "--space-32": "128px",
+    "--control-height-sm": "36px",
+    "--control-height-md": "46px",
+    "--control-height-lg": "54px",
+    "--field-height": "46px",
+    "--radius-none": "0px",
+    "--radius-xs": "4px",
+    "--radius-sm": "8px",
+    "--radius-md": "12px",
+    "--radius-lg": "16px",
+    "--radius-xl": "24px",
+    "--radius-2xl": "32px",
+    "--radius-pill": "999px",
+    "--radius-circle": "50%",
+    "--phone-radius": "38px",
+    "--phone-width": "360px",
+    "--text-xs": "12px",
+    "--text-sm": "14px",
+    "--text-base": "16px",
+    "--text-md": "18px",
+    "--text-lg": "20px",
+    "--text-xl": "24px",
+    "--text-2xl": "30px",
+    "--text-3xl": "38px",
+    "--text-4xl": "48px",
+    "--text-5xl": "60px",
+    "--text-6xl": "76px",
+    "--text-heading": "#061E5C",
+    "--text-body": "#273343",
+    "--text-muted": "#566277",
+    "--text-subtle": "#737E91",
+    "--text-accent": "#028E91",
+    "--text-link": "#028E91",
+    "--text-link-hover": "#061E5C",
+    "--text-on-accent": "#FFFFFF",
+    "--text-on-dark": "#FFFFFF",
+    "--text-on-dark-muted": "rgba(255,255,255,.72)",
+    "--font-display": "var(--font-sans)",
+    "--tracking-display": "-0.02em",
+    "--tracking-eyebrow": "0.14em",
+    "--tracking-heading": "-0.01em",
+    "--tracking-normal": "0em",
+    "--leading-tight": "1.08",
+    "--leading-snug": "1.2",
+    "--leading-normal": "1.55",
+    "--leading-relaxed": "1.7",
+    "--weight-light": "300",
+    "--weight-regular": "400",
+    "--weight-medium": "500",
+    "--weight-semibold": "600",
+    "--weight-bold": "700",
+    "--type-display-size": "76px",
+    "--type-display-weight": "300",
+    "--type-h1-size": "48px",
+    "--type-h2-size": "38px",
+    "--type-h3-size": "24px",
+    "--type-eyebrow-size": "12px",
+    "--type-body-size": "18px",
+    "--type-small-size": "14px",
+    "--duration-instant": "80ms",
+    "--duration-fast": "140ms",
+    "--duration-base": "220ms",
+    "--duration-slow": "420ms",
+    "--duration-reveal": "700ms",
+    "--duration-count": "1800ms",
+    "--ease-in": "cubic-bezier(.4,0,1,1)",
+    "--ease-out": "cubic-bezier(.16,1,.3,1)",
+    "--ease-standard": "cubic-bezier(.4,0,.2,1)",
+    "--logo-clearspace": "0.5em"
+  },
+  "screens": [
+    {
+      "id": "AD-AUTH",
+      "label": "AD-AUTH",
+      "module": "9482f706-3071-47ef-a10d-293ec76b9810",
+      "component": "LoginScreen",
+      "renderMode": "standalone-page",
+      "responsiveMode": "responsive-desktop-first",
+      "layout": "two-column split: left panel (gradient-deep bg, logo, headline, copy, footer), right panel (white bg, login form centered at 392px max-width)",
+      "grid": "gridTemplateColumns: 1.05fr .95fr; minHeight: 100vh",
+      "leftPanelBg": "var(--gradient-deep)",
+      "rightPanelBg": "var(--surface-page)",
+      "eyebrow": "Admin Console / Sponsor Portal (conditional on role prop)",
+      "heading": "โครงการทำนาลดโลกร้อน — ระบบหลังบ้าน (admin) / พื้นที่และเครดิตที่บริษัทของท่านสนับสนุน (sponsor)",
+      "subtext": "ตรวจภาพหลักฐาน อนุมัติใบสมัคร คำนวณเครดิต... (admin) / ดูได้เฉพาะพื้นที่ที่บริษัทสนับสนุน... (sponsor)",
+      "fields": [
+        "อีเมลบริษัท (type=email, default admin@netzero-carbon.io / esg@company-a.example)",
+        "รหัสผ่าน (type=password)",
+        "รหัส OTP จากแอป (placeholder=000000)"
+      ],
+      "checkboxes": [
+        "จำอุปกรณ์นี้ไว้ 30 วัน"
+      ],
+      "buttons": [
+        {
+          "label": "เข้าสู่ระบบ",
+          "size": "lg",
+          "fullWidth": true,
+          "iconRight": "arrow-right"
+        }
+      ],
+      "tokensUsed": [
+        "--gradient-deep",
+        "--surface-page",
+        "--text-xs",
+        "--weight-semibold",
+        "--tracking-eyebrow",
+        "--text-4xl",
+        "--weight-light",
+        "--leading-snug",
+        "--tracking-display",
+        "--text-md",
+        "--leading-relaxed",
+        "--text-2xl",
+        "--weight-light",
+        "--text-sm",
+        "--text-muted",
+        "--space-4",
+        "--space-5",
+        "--text-base",
+        "--radius-md",
+        "--surface-sunken",
+        "--space-6",
+        "--text-accent",
+        "--white",
+        "--teal-300",
+        "--field-height",
+        "--space-12"
+      ],
+      "copy": {
+        "heading": "เข้าสู่ระบบ",
+        "subheading": "บัญชีเจ้าหน้าที่ NZC · เข้าถึงได้ทุกพื้นที่และทุกเมนู",
+        "footer": "ระเบียบวิธี T-VER-P-METH-13-08 · บริษัท เนทซีโรคาร์บอน จำกัด"
+      }
+    },
+    {
+      "id": "AD-OV",
+      "label": "AD-OV",
+      "module": "1e8c88ce-9966-4c5f-8ec4-ac0bc4ce90d2",
+      "component": "OverviewScreen",
+      "renderMode": "standalone-page (no visible shell/nav in artifact, but expected to be inside admin chrome)",
+      "responsiveMode": "desktop (1200px container, 4-column grid)",
+      "layout": "full-width page, vertical stack: PageTitle + FilterBar + 4 StatTiles + Section (work queue, 4 cards) + 2-column (CreditChart + DataTable GHG) + DataTable by province",
+      "copy": {
+        "eyebrow": "ภาพรวมโครงการ",
+        "title": "โครงการทำนาลดโลกร้อน — ทุกพื้นที่",
+        "sub": "ต.หนองสะเดา อ.สามชุก จ.สุพรรณบุรี และ จ.ชัยนาท · ระเบียบวิธี T-VER-P-METH-13-08 ฉบับที่ 01 · แนวทางการประเมินที่ 3 (ค่าแนะนำ)",
+        "actions": [
+          "กราฟสรุปเครดิต (outline, chart-pie icon)",
+          "ส่งออกรายงาน (outline, download icon)",
+          "คิวตรวจภาพ (primary)"
+        ]
+      },
+      "statTiles": [
+        {
+          "label": "ครัวเรือนที่เข้าร่วม",
+          "value": "FARMERS.length + PROVINCES[1].households",
+          "unit": "ครัวเรือน",
+          "delta": "+13 (PROVINCES[1].households)"
+        },
+        {
+          "label": "แปลงย่อยที่ดำเนินการ",
+          "value": "PLOTS.length + 24",
+          "unit": "แปลง"
+        },
+        {
+          "label": "พื้นที่รวม",
+          "value": "fmt(totalRai, 1)",
+          "unit": "ไร่"
+        },
+        {
+          "label": "เครดิตสุทธิปี 2569 (ER)",
+          "value": "fmt(GHG_2569.er)",
+          "unit": "tCO₂eq"
+        }
+      ],
+      "workQueueCards": [
+        {
+          "title": "ใบสมัครรอตรวจ (AD-10)",
+          "value": "4",
+          "tag": "ค้าง 5 วัน",
+          "tone": "danger"
+        },
+        {
+          "title": "ภาพหลักฐานรอตรวจ",
+          "value": "QUEUE.length",
+          "tone": "neutral"
+        },
+        {
+          "title": "แปลงที่หลักฐานยังไม่ครบ 4 ภาพ",
+          "value": "needPhotos - gotPhotos",
+          "tag": "กระทบเครดิต",
+          "tone": "warning"
+        },
+        {
+          "title": "แปลงที่ถอยไปใช้ SF_w = 0.71",
+          "value": "fallbacks",
+          "tone": "danger"
+        }
+      ],
+      "tokensUsed": [
+        "--space-6",
+        "--space-4",
+        "--text-3xl",
+        "--weight-light",
+        "--radius-md",
+        "--status-danger-soft",
+        "--status-warning-soft",
+        "--white",
+        "--text-xs",
+        "--weight-semibold",
+        "--text-heading",
+        "--text-subtle",
+        "--border-subtle",
+        "--teal-600",
+        "--navy-600",
+        "--radius-card",
+        "--shadow-xs",
+        "--surface-card",
+        "--text-sm",
+        "--space-5",
+        "--space-6",
+        "--space-8"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "FilterBar",
+        "StatTile",
+        "Section",
+        "CreditChart",
+        "DataTable",
+        "Button",
+        "Badge",
+        "Tag",
+        "Icon",
+        "ProgressBar"
+      ]
+    },
+    {
+      "id": "AD-REV",
+      "label": "AD-REV",
+      "module": "1e8c88ce-9966-4c5f-8ec4-ac0bc4ce90d2",
+      "component": "ReviewScreen",
+      "renderMode": "standalone-page",
+      "responsiveMode": "desktop (420px right panel, minmax(0,1fr) left)",
+      "layout": "2-column: left (photo queue DataTable dense + completeness DataTable dense), right (photo viewer + metadata panel + action buttons)",
+      "copy": {
+        "eyebrow": "AD-01 · คิวตรวจภาพหลักฐาน",
+        "title": "ตรวจภาพท่อวัดระดับน้ำและ metadata",
+        "sub": "หนึ่งครอปต้องมี 4 ภาพ — เปียก 2 ครั้ง แห้ง 2 ครั้ง สลับกัน · ครบทั้ง 4 จึงใช้ SF_w = 0.55 ได้"
+      },
+      "photoViewerAspect": "4/3",
+      "photoViewerBg": "linear-gradient(180deg,#9FC7E8 0%,#CFE3B9 52%,#8FA95C 100%)",
+      "rejectReasons": [
+        "มองไม่เห็นขีดระดับน้ำในท่อ",
+        "ภาพเบลอ / มืดเกินไป",
+        "พิกัดตกนอกขอบเขตแปลง",
+        "เวลาถ่ายไม่อยู่ในช่วงกำหนดของรอบนี้",
+        "รอบแห้งแต่ในภาพน้ำยังเต็มท่อ (หรือกลับกัน)",
+        "ไม่ใช่ท่อวัดระดับน้ำของแปลงนี้",
+        "ส่งภาพจากคลังภาพ ไม่ได้ถ่ายผ่านกล้องของระบบ"
+      ],
+      "tokensUsed": [
+        "--gradient-deep",
+        "--surface-sunken",
+        "--shadow-xl",
+        "--space-6",
+        "--space-8",
+        "--space-4",
+        "--radius-md",
+        "--text-2xl",
+        "--weight-light",
+        "--white",
+        "--teal-300",
+        "--radius-circle",
+        "--space-12",
+        "--surface-page",
+        "--teal-50",
+        "--teal-200",
+        "--grey-200",
+        "--status-danger-soft",
+        "--border-default"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "Section",
+        "DataTable",
+        "Tag",
+        "Badge",
+        "Button",
+        "Checkbox",
+        "Field",
+        "Textarea",
+        "Icon"
+      ]
+    },
+    {
+      "id": "AD-FAR",
+      "label": "AD-FAR",
+      "module": "80e8634d-4689-4d3e-96ed-6ce38f681e25",
+      "component": "FarmersScreen",
+      "renderMode": "standalone-page with slide-over drawer (fixed overlay, 760px wide, full height)",
+      "responsiveMode": "desktop (drawer 760px)",
+      "layout": "full-page: PageTitle + FilterBar + PdpaNote banner + DataTable. Clicking row opens right-side drawer with gradient header, tab bar, and tab content.",
+      "copy": {
+        "eyebrow": "ทะเบียนเกษตรกร",
+        "title": "ดูราย CPA code · รายพื้นที่ · รายบริษัทผู้สนับสนุน",
+        "actions": [
+          "นำเข้าเป็นชุด (AD-13) (outline, upload icon)",
+          "ส่งออกราย CPA code (outline, download icon)"
+        ]
+      },
+      "tableColumns": [
+        "CPA code (mono 12px)",
+        "ชื่อ - นามสกุล",
+        "พื้นที่ (ต.X อ.X)",
+        "ผู้สนับสนุน (Tag navy)",
+        "แปลงย่อย (right)",
+        "ไร่ (right)",
+        "ภาพหลักฐาน (right)",
+        "BE (right)",
+        "PE (right)",
+        "ER tCO₂eq (right, accent bold)",
+        "สถานะหลักฐาน (Badge)"
+      ],
+      "drawerHeader": "gradient-deep bg, CPA code (mono teal-300), name (text-2xl light white), address, stats row",
+      "drawerTabs": [
+        "แปลงและเอกสาร",
+        "การคำนวณเครดิต",
+        "ที่มาของไนโตรเจน",
+        "ภาพหลักฐาน",
+        "ประวัติการแก้ไข"
+      ],
+      "tokensUsed": [
+        "--gradient-deep",
+        "--surface-sunken",
+        "--shadow-xl",
+        "--space-6",
+        "--space-8",
+        "--teal-300",
+        "--white",
+        "--radius-md",
+        "--text-2xl",
+        "--weight-light",
+        "--space-4",
+        "--space-5",
+        "--surface-card",
+        "--border-subtle",
+        "--radius-card",
+        "--shadow-xs",
+        "--text-sm",
+        "--weight-semibold",
+        "--text-heading",
+        "--teal-600",
+        "--navy-600"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "FilterBar",
+        "DataTable",
+        "Section",
+        "Badge",
+        "Tag",
+        "Button",
+        "Icon",
+        "Checkbox",
+        "PdpaNote"
+      ]
+    },
+    {
+      "id": "AD-CHART",
+      "label": "AD-CHART",
+      "module": "80e8634d-4689-4d3e-96ed-6ce38f681e25",
+      "component": "ChartsScreen",
+      "renderMode": "standalone-page",
+      "responsiveMode": "desktop (multi-column grids: 1.1fr 1fr 1.3fr; 1.2fr 1fr; 1fr 1fr 1fr)",
+      "layout": "complex multi-section: PageTitle + FilterBarLite + 3-col row (area text, Gauge, Donut) + 2-col row (CreditChart + BarSeries sponsors) + 3-col row (Treemap rice + Bubbles farmer ER + BarSeries photo rounds) + DataTable GHG by source",
+      "copy": {
+        "eyebrow": "แดชบอร์ดกราฟ",
+        "title": "สรุปเครดิตและผลการดำเนินโครงการ",
+        "sub": "ทุกตัวเลขคำนวณสดจากสมการ T-VER-P-METH-13-08 · ฤดูนาปี + นาปรัง 2569"
+      },
+      "chartTypes": [
+        "Gauge (SVG, 168px, teal arc on grey arc)",
+        "Donut (SVG, 190px, multiple colored arcs)",
+        "Bubbles (SVG scatter, 200px height)",
+        "Treemap (colored blocks)",
+        "BarSeries (vertical bars)",
+        "CreditChart (season comparison bars)"
+      ],
+      "tokensUsed": [
+        "--text-3xl",
+        "--weight-light",
+        "--tracking-display",
+        "--text-heading",
+        "--text-lg",
+        "--weight-semibold",
+        "--text-muted",
+        "--text-xs",
+        "--text-subtle",
+        "--teal-700",
+        "--teal-400",
+        "--navy-700",
+        "--status-warning",
+        "--status-danger",
+        "--teal-600",
+        "--teal-300",
+        "--teal-50",
+        "--grey-200",
+        "--border-default",
+        "--radius-md",
+        "--space-5",
+        "--space-6",
+        "--space-8"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "FilterBarLite",
+        "Section",
+        "Gauge",
+        "Donut",
+        "Bubbles",
+        "Treemap",
+        "BarSeries",
+        "DataTable",
+        "ProgressBar",
+        "StatTile",
+        "Tag",
+        "Badge",
+        "Button",
+        "Icon",
+        "CreditChart"
+      ]
+    },
+    {
+      "id": "AD-APP",
+      "label": "AD-APP",
+      "module": "8c07477b-0027-4c54-88fe-c86bba24472b",
+      "component": "ApplicationsScreen",
+      "renderMode": "standalone-page",
+      "responsiveMode": "desktop (400px detail panel)",
+      "layout": "2-column: left DataTable applications, right detail panel with metadata + checklist",
+      "copy": {
+        "eyebrow": "AD-10 · ใบสมัครรอตรวจ",
+        "title": "ตรวจและอนุมัติใบสมัครเข้าร่วมโครงการ",
+        "sub": "ชุดเอกสารที่บังคับเปลี่ยนตามสถานะการถือครอง (R-09) — เจ้าของ · เจ้าของร่วม · ผู้เช่า · ผู้รับมอบอำนาจ"
+      },
+      "mockNote": "หน้านี้ใช้ข้อมูลตัวอย่าง 4 ใบ ยังไม่ได้ต่อกับคิวใบสมัครจริง และยังไม่มีตัวอ่านเลขโฉนดจากภาพเพื่อเทียบกับ R-07 อัตโนมัติ",
+      "sampleApplications": [
+        {
+          "id": "AP-0312",
+          "code": "CPA1021",
+          "name": "สมพงษ์ ดีใจ",
+          "hold": "เจ้าของ",
+          "docs": 2,
+          "need": 3,
+          "age": "5 วัน",
+          "st": "เอกสารไม่ครบ",
+          "tone": "danger"
+        },
+        {
+          "id": "AP-0313",
+          "code": "CPA1022",
+          "name": "มาลี ศรีทอง",
+          "hold": "เจ้าของร่วม",
+          "docs": 4,
+          "need": 4,
+          "age": "2 วัน",
+          "st": "พร้อมอนุมัติ",
+          "tone": "success"
+        },
+        {
+          "id": "AP-0314",
+          "code": "CPA1023",
+          "name": "ประสิทธิ์ นากลาง",
+          "hold": "ผู้เช่า",
+          "docs": 5,
+          "need": 6,
+          "age": "3 วัน",
+          "st": "รอสัญญาเช่า",
+          "tone": "warning"
+        },
+        {
+          "id": "AP-0315",
+          "code": "CPA1024",
+          "name": "จำรัส เทียนทอง",
+          "hold": "ผู้รับมอบอำนาจ",
+          "docs": 6,
+          "need": 6,
+          "age": "1 วัน",
+          "st": "พร้อมอนุมัติ",
+          "tone": "success"
+        }
+      ],
+      "tokensUsed": [
+        "--status-warning-soft",
+        "--border-default",
+        "--radius-md",
+        "--text-xs",
+        "--leading-relaxed",
+        "--text-sm",
+        "--space-4",
+        "--space-5",
+        "--space-6",
+        "--space-4",
+        "--space-5",
+        "--grey-100",
+        "--text-heading",
+        "--text-muted",
+        "--weight-semibold",
+        "--space-8"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "Section",
+        "DataTable",
+        "Tag",
+        "Badge",
+        "Button",
+        "Icon",
+        "MockNote"
+      ]
+    },
+    {
+      "id": "AD-REPORT",
+      "label": "AD-REPORT",
+      "module": "80e8634d-4689-4d3e-96ed-6ce38f681e25",
+      "component": "ReportsScreen",
+      "renderMode": "standalone-page",
+      "responsiveMode": "desktop (380px right panel)",
+      "layout": "2-column: left DataTable of report types, right: T-VER submission panel + selected report detail",
+      "copy": {
+        "eyebrow": "AD-07 · ส่งออกรายงาน",
+        "title": "รายงานและไฟล์สำหรับยื่นขึ้นทะเบียน"
+      },
+      "reportTypes": [
+        {
+          "id": "EX-2041",
+          "name": "รายงานเกษตรกรรายบุคคล",
+          "fmt": "XLSX",
+          "scope": "ราย CPA code · ทุกพื้นที่",
+          "who": "แอดมิน"
+        },
+        {
+          "id": "EX-2042",
+          "name": "สรุปเครดิตประมาณการรายฤดู",
+          "fmt": "XLSX",
+          "scope": "รายพื้นที่ · รายฤดู",
+          "who": "แอดมิน · ลูกค้า"
+        },
+        {
+          "id": "EX-2043",
+          "name": "แบบฟอร์มขอขึ้นทะเบียน Premium T-VER",
+          "fmt": "DOCX",
+          "scope": "ทั้งโครงการ",
+          "who": "แอดมิน"
+        },
+        {
+          "id": "EX-2044",
+          "name": "ไฟล์คำนวณเครดิต Premium T-VER",
+          "fmt": "XLSX",
+          "scope": "ทั้งโครงการ",
+          "who": "แอดมิน"
+        },
+        {
+          "id": "EX-2045",
+          "name": "ทะเบียนเอกสารสิทธิ์และความยินยอม",
+          "fmt": "XLSX",
+          "scope": "รายโฉนด",
+          "who": "แอดมิน"
+        },
+        {
+          "id": "EX-2046",
+          "name": "รายงานการทวนสอบภาพหลักฐาน",
+          "fmt": "XLSX",
+          "scope": "รายภาพ · 4 ภาพต่อครอป",
+          "who": "แอดมิน · ผู้ประเมินภายนอก"
+        }
+      ],
+      "tverProgress": {
+        "baseline3yr": 71,
+        "docsComplete": 88,
+        "photosComplete": "computed%"
+      },
+      "tokensUsed": [
+        "--space-6",
+        "--space-4",
+        "--space-5",
+        "--text-sm",
+        "--weight-semibold",
+        "--text-heading",
+        "--text-muted",
+        "--text-subtle",
+        "--status-warning-soft",
+        "--radius-md",
+        "--space-3",
+        "--space-4",
+        "--teal-600",
+        "--navy-600",
+        "--text-2xl",
+        "--weight-light"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "Section",
+        "DataTable",
+        "ProgressBar",
+        "Button",
+        "Tag",
+        "Badge",
+        "Icon"
+      ]
+    },
+    {
+      "id": "AD-SPONSOR",
+      "label": "AD-SPONSOR",
+      "module": "80e8634d-4689-4d3e-96ed-6ce38f681e25",
+      "component": "SponsorsScreen",
+      "renderMode": "standalone-page",
+      "responsiveMode": "desktop",
+      "layout": "vertical stack of Section blocks, one per sponsor company",
+      "copy": {
+        "eyebrow": "F-65 · สิทธิ์ของลูกค้า",
+        "title": "บริษัทผู้สนับสนุนและขอบเขตที่มองเห็นได้",
+        "sub": "แอดมินเป็นผู้กำหนดว่าบัญชีลูกค้าเห็นพื้นที่ใดได้ · ลูกค้าไม่เห็นพื้นที่ของผู้สนับสนุนรายอื่น"
+      },
+      "sponsors": [
+        {
+          "id": "A",
+          "name": "บจก. A",
+          "households": 13,
+          "rai": 148.4,
+          "verified": 355.8,
+          "areas": [
+            "สุพรรณบุรี"
+          ]
+        },
+        {
+          "id": "B",
+          "name": "บจก. B",
+          "households": 6,
+          "rai": 62.8,
+          "verified": 0,
+          "areas": [
+            "ชัยนาท"
+          ]
+        },
+        {
+          "id": "C",
+          "name": "บจก. C",
+          "households": 0,
+          "rai": 0,
+          "verified": 0,
+          "pending": true,
+          "areas": []
+        }
+      ],
+      "tokensUsed": [
+        "--space-6",
+        "--space-4",
+        "--space-3",
+        "--text-sm",
+        "--weight-semibold",
+        "--text-heading",
+        "--text-muted",
+        "--text-subtle",
+        "--text-xs",
+        "--white",
+        "--border-subtle",
+        "--radius-md",
+        "--space-4"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "Section",
+        "Checkbox",
+        "Button",
+        "Badge"
+      ]
+    },
+    {
+      "id": "AD-SETTINGS",
+      "label": "AD-SETTINGS",
+      "module": "20301eef-f947-40de-b124-763f338e3c60",
+      "component": "SettingsScreen",
+      "renderMode": "standalone-page",
+      "responsiveMode": "desktop (620px max-width for some panels)",
+      "layout": "PageTitle + tab bar (5 tabs) + tab content. Tab content varies: permissions matrix (full-width table), accounts DataTable, calc constants DataTables, notification toggles, or 2-column form grid",
+      "copy": {
+        "eyebrow": "ตั้งค่าระบบ",
+        "title": "ตั้งค่าแอปและระดับสิทธิ์ของบัญชี",
+        "sub": "ทุกการเปลี่ยนแปลงในหน้านี้ถูกบันทึกลง audit log พร้อมค่าก่อน-หลัง (AD-11)"
+      },
+      "tabs": [
+        "สิทธิ์การเข้าถึง",
+        "บัญชีผู้ใช้",
+        "ค่าคงที่การคำนวณ",
+        "การแจ้งเตือน",
+        "ทั่วไป"
+      ],
+      "roles": [
+        {
+          "id": "admin",
+          "name": "ผู้ดูแลระบบ",
+          "who": "ทีม NZC ส่วนกลาง",
+          "n": 3,
+          "tone": "danger"
+        },
+        {
+          "id": "verifier",
+          "name": "เจ้าหน้าที่ทวนสอบ",
+          "who": "ทีมตรวจภาพและเอกสาร",
+          "n": 6,
+          "tone": "info"
+        },
+        {
+          "id": "field",
+          "name": "เจ้าหน้าที่ภาคสนาม",
+          "who": "ผู้ประสานงานพื้นที่",
+          "n": 11,
+          "tone": "success"
+        },
+        {
+          "id": "sponsor",
+          "name": "บัญชีลูกค้า",
+          "who": "บริษัทผู้สนับสนุน",
+          "n": 3,
+          "tone": "neutral"
+        },
+        {
+          "id": "auditor",
+          "name": "ผู้ประเมินภายนอก",
+          "who": "VVB / อบก. · อ่านอย่างเดียว",
+          "n": 2,
+          "tone": "warning"
+        }
+      ],
+      "permissions": [
+        "ดูแดชบอร์ดรวมทุกพื้นที่",
+        "ดูเฉพาะพื้นที่ที่ได้รับมอบหมาย",
+        "เห็นชื่อ เบอร์ เลขบัตร เลขโฉนด",
+        "ตรวจและอนุมัติภาพหลักฐาน",
+        "ตรวจและอนุมัติใบสมัคร",
+        "กรอกข้อมูลแทนเกษตรกร (BL-14)",
+        "ตอบแชตแทนบอต (AD-12)",
+        "นำเข้าข้อมูลเป็นชุด (AD-13)",
+        "สั่งคำนวณเครดิตใหม่ (calc_run)",
+        "แก้ค่าคงที่และตารางค้นค่า",
+        "ส่งออกรายงานรายเกษตรกร",
+        "ส่งออกชุดยื่น Premium T-VER",
+        "ดูและส่งออกรายงานของตัวเอง",
+        "ดู audit log ทั้งระบบ",
+        "ตั้งค่าสิทธิ์ของบัญชีอื่น"
+      ],
+      "calcConstants": [
+        {
+          "k": "EF_BL,c",
+          "v": "0.1952",
+          "u": "กก.CH₄/ไร่/วัน",
+          "src": "IPCC 2019 V4 Ch5 Table 5.11"
+        },
+        {
+          "k": "CF",
+          "v": "0.89",
+          "u": "—",
+          "src": "UNFCCC/FCCC/SBSTA/2015/L.13"
+        },
+        {
+          "k": "U_d",
+          "v": "15%",
+          "u": "—",
+          "src": "แนวทางการประเมินที่ 3 บังคับ"
+        },
+        {
+          "k": "GWP_CH4",
+          "v": "28",
+          "u": "—",
+          "src": "IPCC AR5"
+        },
+        {
+          "k": "GWP_N2O",
+          "v": "265",
+          "u": "—",
+          "src": "IPCC AR5"
+        },
+        {
+          "k": "EF_Urea",
+          "v": "0.20",
+          "u": "ตัน C/ตันยูเรีย",
+          "src": "IPCC 2019"
+        },
+        {
+          "k": "Frac_GASF / Frac_GASM",
+          "v": "0.11 / 0.21",
+          "u": "—",
+          "src": "IPCC 2019"
+        }
+      ],
+      "notifications": [
+        {
+          "label": "เตือนถึงกำหนดถ่ายภาพ (PJ-02)",
+          "desc": "ล่วงหน้า 3 วันก่อนหมดกำหนดของแต่ละรอบ",
+          "on": true
+        },
+        {
+          "label": "เตือนซ้ำเมื่อยังไม่ส่ง (PJ-10)",
+          "desc": "ทุก 2 วันจนกว่าจะส่ง หรือจนพ้นกำหนด",
+          "on": true
+        },
+        {
+          "label": "เตือนภาพถูกตีกลับ (PJ-09)",
+          "desc": "ส่งทันทีที่แอดมินกดตีกลับ",
+          "on": true
+        },
+        {
+          "label": "เตือนเอกสารใกล้หมดอายุ (F-62 · SY-08)",
+          "desc": "ล่วงหน้า 90 วันก่อนสัญญาเช่าหมดอายุ",
+          "on": true
+        },
+        {
+          "label": "เตือนกรอกข้อมูลย้อนหลังที่ค้าง",
+          "desc": "สัปดาห์ละครั้ง จนกว่าจะครบ 6 ฤดู",
+          "on": false
+        },
+        {
+          "label": "สรุปรายสัปดาห์ถึงแอดมิน",
+          "desc": "ทุกวันจันทร์ 08:00 · ส่งเข้าอีเมล",
+          "on": true
+        }
+      ],
+      "tokensUsed": [
+        "--space-6",
+        "--space-4",
+        "--space-3",
+        "--space-2",
+        "--space-1",
+        "--text-sm",
+        "--weight-semibold",
+        "--text-heading",
+        "--text-muted",
+        "--text-subtle",
+        "--text-xs",
+        "--text-xs",
+        "--teal-600",
+        "--teal-700",
+        "--white",
+        "--grey-50",
+        "--grey-100",
+        "--border-subtle",
+        "--border-default",
+        "--radius-md",
+        "--radius-pill",
+        "--status-warning-soft",
+        "--space-5",
+        "--space-6",
+        "--space-8",
+        "--text-md",
+        "--space-4"
+      ],
+      "componentsUsed": [
+        "PageTitle",
+        "Section",
+        "DataTable",
+        "Badge",
+        "Tag",
+        "Button",
+        "Checkbox",
+        "Field",
+        "Input",
+        "Select",
+        "MockNote"
+      ]
+    }
+  ],
+  "flow": [
+    {
+      "order": 1,
+      "from": "AD-AUTH (login)",
+      "to": "AD-OV (OverviewScreen)",
+      "trigger": "onLogin prop / form submit"
+    },
+    {
+      "order": 2,
+      "from": "AD-OV",
+      "to": "AD-REV (ReviewScreen)",
+      "trigger": "onNavigate('review') or 'คิวตรวจภาพ' button"
+    },
+    {
+      "order": 3,
+      "from": "AD-OV",
+      "to": "AD-CHART (ChartsScreen)",
+      "trigger": "onNavigate('charts') or 'กราฟสรุปเครดิต' button"
+    },
+    {
+      "order": 4,
+      "from": "AD-OV",
+      "to": "AD-REPORT (ReportsScreen)",
+      "trigger": "onNavigate('reports') or 'ส่งออกรายงาน' button"
+    },
+    {
+      "order": 5,
+      "from": "AD-OV",
+      "to": "AD-FAR (FarmersScreen)",
+      "trigger": "DataTable onRowClick on province rows"
+    },
+    {
+      "order": 6,
+      "from": "AD-FAR",
+      "to": "AD-FAR drawer (CalcTrace / plots / nitrogen / photos / audit)",
+      "trigger": "DataTable row click opens slide-over; tab navigation inside drawer"
+    },
+    {
+      "order": 7,
+      "from": "AD-OV",
+      "to": "AD-APP (ApplicationsScreen)",
+      "trigger": "from 'ใบสมัครรอตรวจ' card in work queue"
+    },
+    {
+      "order": 8,
+      "from": "AD-OV / sidebar",
+      "to": "AD-SPONSOR (SponsorsScreen)",
+      "trigger": "navigation"
+    },
+    {
+      "order": 9,
+      "from": "AD-OV / sidebar",
+      "to": "AD-SETTINGS (SettingsScreen)",
+      "trigger": "navigation"
+    }
+  ],
+  "components": {
+    "ConsoleShell": {
+      "module": "c0d425a3",
+      "chunkPath": "ui_kits/admin_console/AdminChrome.jsx",
+      "lineRange": "2531-2867",
+      "props": [
+        "nav",
+        "screen",
+        "onNavigate",
+        "account",
+        "role",
+        "children",
+        "onLogout"
+      ],
+      "geometry": {
+        "layout": "grid 232px minmax(0,1fr)",
+        "sidebarBg": "var(--surface-inverse)",
+        "sidebarPadding": "var(--space-6) var(--space-4)",
+        "mainPadding": "var(--space-8) var(--space-10) var(--space-16)"
+      }
+    },
+    "PageTitle": {
+      "module": "c0d425a3",
+      "chunkPath": "ui_kits/admin_console/AdminChrome.jsx",
+      "lineRange": "2531-2630",
+      "props": [
+        "eyebrow",
+        "title",
+        "sub",
+        "actions"
+      ],
+      "geometry": {
+        "eyebrow": "fontSize: var(--text-xs), fontWeight: var(--weight-semibold), color: var(--text-accent), uppercase, letterSpacing: var(--tracking-eyebrow), marginBottom: var(--space-1)",
+        "title": "fontSize: var(--text-3xl), fontWeight: var(--weight-light), letterSpacing: var(--tracking-display), margin: var(--space-2) 0 0",
+        "sub": "fontSize: var(--text-sm), color: var(--text-muted), marginTop: var(--space-2)",
+        "actionsGap": "var(--space-2)"
+      }
+    },
+    "Section": {
+      "module": "c0d425a3",
+      "chunkPath": "ui_kits/admin_console/AdminChrome.jsx",
+      "lineRange": "2630-2700",
+      "props": [
+        "title",
+        "sub",
+        "actions",
+        "children",
+        "pad"
+      ],
+      "geometry": {
+        "bg": "var(--surface-card)",
+        "border": "1px solid var(--border-subtle)",
+        "borderRadius": "var(--radius-card)",
+        "boxShadow": "var(--shadow-xs)",
+        "overflow": "hidden",
+        "headerPadding": "var(--space-5) var(--space-6)",
+        "headerBorderBottom": "1px solid var(--border-subtle)",
+        "h2": "fontSize: var(--text-md), fontWeight: var(--weight-semibold)",
+        "subFont": "var(--text-xs), color: var(--text-subtle)",
+        "bodyPadding": "pad ? var(--space-6) : 0"
+      }
+    },
+    "PdpaNote": {
+      "module": "c0d425a3",
+      "chunkPath": "ui_kits/admin_console/AdminChrome.jsx",
+      "lineRange": "2700-2730",
+      "props": [
+        "children"
+      ],
+      "geometry": {
+        "bg": "var(--status-info-soft)",
+        "border": "1px solid var(--navy-100)",
+        "borderRadius": "var(--radius-md)",
+        "padding": "var(--space-4) var(--space-5)",
+        "gap": "var(--space-3)",
+        "fontSize": "var(--text-xs)",
+        "lineHeight": "var(--leading-relaxed)",
+        "color": "var(--navy-800)",
+        "iconMarginTop": "1px"
+      }
+    },
+    "CreditChart": {
+      "module": "c0d425a3",
+      "chunkPath": "ui_kits/admin_console/AdminChrome.jsx",
+      "lineRange": "2730-2850",
+      "props": [
+        "seasons",
+        "showBaseline",
+        "height"
+      ],
+      "geometry": {
+        "heightDefault": "190px",
+        "barGap": "var(--space-6)",
+        "barBorderRadius": "4px 4px 0 0",
+        "baselineBarColor": "var(--grey-200)",
+        "estimateBarColor": "var(--teal-300)",
+        "verifiedBarColor": "var(--teal-700)",
+        "legendGap": "var(--space-5)",
+        "legendFontSize": "var(--text-xs)"
+      }
+    },
+    "Button": {
+      "module": "c0d425a3",
+      "chunkPath": "components/core/Button.jsx",
+      "lineRange": "354-428",
+      "TONES": {
+        "primary": {
+          "bg": "var(--action-primary)",
+          "fg": "var(--text-on-accent)",
+          "bd": "transparent",
+          "hoverBg": "var(--action-primary-hover)",
+          "activeBg": "var(--action-primary-active)"
+        },
+        "secondary": {
+          "bg": "var(--action-secondary)",
+          "fg": "var(--text-on-dark)",
+          "bd": "transparent",
+          "hoverBg": "var(--action-secondary-hover)",
+          "activeBg": "var(--navy-950)"
+        },
+        "outline": {
+          "bg": "transparent",
+          "fg": "var(--text-heading)",
+          "bd": "var(--border-default)",
+          "hoverBg": "var(--navy-50)",
+          "activeBg": "var(--navy-100)"
+        },
+        "ghost": {
+          "bg": "transparent",
+          "fg": "var(--text-accent)",
+          "bd": "transparent",
+          "hoverBg": "var(--teal-50)",
+          "activeBg": "var(--teal-100)"
+        },
+        "onDark": {
+          "bg": "rgba(255,255,255,.14)",
+          "fg": "var(--text-on-dark)",
+          "bd": "var(--border-on-dark)",
+          "hoverBg": "rgba(255,255,255,.24)",
+          "activeBg": "rgba(255,255,255,.3)"
+        }
+      },
+      "SIZES": {
+        "sm": {
+          "h": "var(--control-height-sm)",
+          "px": "var(--space-4)",
+          "fs": "var(--text-sm)"
+        },
+        "md": {
+          "h": "var(--control-height-md)",
+          "px": "var(--space-6)",
+          "fs": "var(--text-base)"
+        },
+        "lg": {
+          "h": "var(--control-height-lg)",
+          "px": "var(--space-8)",
+          "fs": "var(--text-md)"
+        }
+      },
+      "geometry": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "gap": "var(--space-2)",
+        "borderRadius": "var(--radius-control)",
+        "fontWeight": "var(--weight-semibold)",
+        "letterSpacing": "0.01em",
+        "cursor": "pointer or not-allowed",
+        "boxShadowPrimaryHover": "var(--shadow-accent)",
+        "transformPress": "scale(var(--press-scale))",
+        "transition": "var(--transition-control), transform var(--duration-instant) var(--ease-standard)"
+      }
+    },
+    "Badge": {
+      "module": "c0d425a3",
+      "chunkPath": "components/core/Badge.jsx",
+      "lineRange": "263-300",
+      "TONES": {
+        "success": {
+          "bg": "var(--status-success-soft)",
+          "fg": "var(--teal-800)",
+          "dot": "var(--status-success)"
+        },
+        "warning": {
+          "bg": "var(--status-warning-soft)",
+          "fg": "#8A5B10",
+          "dot": "var(--status-warning)"
+        },
+        "danger": {
+          "bg": "var(--status-danger-soft)",
+          "fg": "#8C2830",
+          "dot": "var(--status-danger)"
+        },
+        "info": {
+          "bg": "var(--status-info-soft)",
+          "fg": "var(--navy-800)",
+          "dot": "var(--status-info)"
+        },
+        "neutral": {
+          "bg": "var(--grey-100)",
+          "fg": "var(--grey-700)",
+          "dot": "var(--grey-500)"
+        }
+      },
+      "geometry": {
+        "height": "24px",
+        "padding": "0 var(--space-3)",
+        "borderRadius": "var(--radius-pill)",
+        "fontSize": "var(--text-xs)",
+        "fontWeight": "var(--weight-semibold)",
+        "gap": "var(--space-2)",
+        "dotSize": "6px"
+      }
+    },
+    "Tag": {
+      "module": "c0d425a3",
+      "chunkPath": "components/core/Tag.jsx",
+      "lineRange": "605-637",
+      "TONES": {
+        "teal": {
+          "bg": "var(--teal-50)",
+          "fg": "var(--teal-800)",
+          "bd": "var(--teal-200)"
+        },
+        "navy": {
+          "bg": "var(--navy-50)",
+          "fg": "var(--navy-800)",
+          "bd": "var(--navy-200)"
+        },
+        "neutral": {
+          "bg": "var(--grey-100)",
+          "fg": "var(--grey-700)",
+          "bd": "var(--grey-200)"
+        },
+        "solid": {
+          "bg": "var(--teal-600)",
+          "fg": "var(--white)",
+          "bd": "transparent"
+        },
+        "onDark": {
+          "bg": "rgba(255,255,255,.12)",
+          "fg": "var(--white)",
+          "bd": "var(--border-on-dark)"
+        }
+      },
+      "geometry": {
+        "height": "28px",
+        "padding": "0 var(--space-3)",
+        "borderRadius": "var(--radius-pill)",
+        "fontSize": "var(--text-xs)",
+        "fontWeight": "var(--weight-semibold)",
+        "letterSpacing": "0.02em"
+      }
+    },
+    "Icon": {
+      "module": "c0d425a3",
+      "chunkPath": "components/core/Icon.jsx",
+      "lineRange": "511-548",
+      "geometry": {
+        "display": "inline-flex",
+        "defaultSize": "20px",
+        "defaultStrokeWidth": "1.75",
+        "color": "currentColor",
+        "source": "window.lucide (lucide icons library)"
+      }
+    },
+    "IconButton": {
+      "module": "c0d425a3",
+      "chunkPath": "components/core/IconButton.jsx",
+      "lineRange": "553-578",
+      "D": {
+        "sm": "36",
+        "md": "46",
+        "lg": "54"
+      },
+      "geometry": {
+        "shape": "circle (var(--radius-circle))",
+        "rendersAs": "Button component"
+      }
+    },
+    "DataTable": {
+      "module": "c0d425a3",
+      "chunkPath": "components/data/DataTable.jsx",
+      "lineRange": "638-701",
+      "geometry": {
+        "container": "border: 1px solid var(--border-subtle), borderRadius: var(--radius-card), overflow: hidden, bg: var(--surface-card)",
+        "th": "bg: var(--grey-50), padding: dense?8px12px:11px14px, fontSize: var(--text-xs), fontWeight: var(--weight-semibold), color: var(--text-muted), borderBottom: 1px solid var(--border-subtle)",
+        "td": "padding: dense?8px12px:11px14px, borderBottom: lastRow?none:var(--grey-100), color: var(--text-body)",
+        "trHoverBg": "var(--navy-50)",
+        "fontVariantNumeric": "tabular-nums when align=right"
+      }
+    },
+    "FilterBar": {
+      "module": "c0d425a3",
+      "chunkPath": "components/data/FilterBar.jsx",
+      "lineRange": "702-774",
+      "geometry": {
+        "wrapper": "display:flex, gap:var(--space-3), flexWrap:wrap",
+        "label": "fontSize:var(--text-xs), fontWeight:var(--weight-semibold), color:var(--text-subtle)",
+        "filterBox": "minWidth:148px, padding:6px14px, borderRadius:var(--radius-md), border:active?var(--border-accent):var(--border-subtle), bg:active?var(--surface-accent-soft):var(--white)",
+        "select": "border:none, bg:none, outline:none, fontSize:var(--text-sm), fontWeight:var(--weight-semibold), color:active?var(--teal-800):var(--text-heading)",
+        "actionsMarginLeft": "auto"
+      }
+    },
+    "StatTile": {
+      "module": "c0d425a3",
+      "chunkPath": "components/data/StatTile.jsx",
+      "lineRange": "840-912",
+      "geometry": {
+        "bg": "tone==dark?var(--surface-inverse):var(--surface-card)",
+        "border": "tone==dark?var(--border-on-dark):var(--border-subtle)",
+        "borderRadius": "var(--radius-card)",
+        "padding": "var(--space-5) var(--space-6)",
+        "labelFont": "var(--text-sm) var(--weight-semibold) tone==dark?var(--teal-300):var(--text-heading)",
+        "valueFont": "var(--text-4xl) var(--weight-light) tracking-display tabular-nums",
+        "unitFont": "var(--text-sm) tone==dark?rgba(255,255,255,.7):var(--text-muted)",
+        "noteFont": "var(--text-xs) tone==dark?rgba(255,255,255,.66):var(--text-subtle)"
+      }
+    },
+    "ProgressBar": {
+      "module": "c0d425a3",
+      "chunkPath": "components/data/ProgressBar.jsx",
+      "lineRange": "775-839",
+      "fillColors": {
+        "teal": "var(--teal-600)",
+        "mint": "var(--teal-400)",
+        "navy": "var(--navy-700)",
+        "grey": "var(--grey-300)",
+        "warn": "var(--status-warning)"
+      },
+      "geometry": {
+        "trackBg": "var(--grey-100)",
+        "height": "default 9px",
+        "borderRadius": "var(--radius-pill)",
+        "transition": "width var(--duration-slow) var(--ease-out)",
+        "labelWidth": "132px",
+        "valueLabelWidth": "76px"
+      }
+    },
+    "Checkbox": {
+      "module": "c0d425a3",
+      "chunkPath": "components/forms/Checkbox.jsx",
+      "lineRange": "912-975",
+      "geometry": {
+        "box": "width:20px, height:20px, borderRadius:var(--radius-xs), border:on?var(--teal-600):var(--border-default), bg:on?var(--teal-600):var(--white)",
+        "checkedColor": "#fff",
+        "checkedChar": "✓",
+        "labelFont": "var(--text-sm) var(--text-body)",
+        "gap": "var(--space-3)",
+        "disabledOpacity": "0.55"
+      }
+    },
+    "Field": {
+      "module": "c0d425a3",
+      "chunkPath": "components/forms/Field.jsx",
+      "lineRange": "976-1023",
+      "geometry": {
+        "label": "var(--text-sm) var(--weight-semibold) var(--text-heading)",
+        "requiredAsterisk": "var(--status-danger) marginLeft:4px",
+        "hintFont": "var(--text-xs) var(--text-subtle)",
+        "errorFont": "var(--text-xs) var(--status-danger)"
+      }
+    },
+    "Input": {
+      "module": "c0d425a3",
+      "chunkPath": "components/forms/Input.jsx",
+      "lineRange": "1023-1063",
+      "geometry": {
+        "height": "var(--field-height)",
+        "padding": "0 var(--space-4)",
+        "fontSize": "var(--text-base)",
+        "border": "invalid?var(--status-danger):focus?var(--border-accent):var(--border-default)",
+        "borderRadius": "var(--radius-field)",
+        "focusBoxShadow": "var(--ring-focus)"
+      }
+    },
+    "Select": {
+      "module": "c0d425a3",
+      "chunkPath": "components/forms/Select.jsx",
+      "lineRange": "1063-1122",
+      "geometry": {
+        "sameAs": "Input",
+        "paddingRight": "var(--space-10) (for chevron)",
+        "chevron": "position:absolute right:var(--space-4) top:50%, pointerEvents:none, color:var(--text-subtle)"
+      }
+    },
+    "Textarea": {
+      "module": "c0d425a3",
+      "chunkPath": "components/forms/Textarea.jsx",
+      "lineRange": "1122-1180",
+      "geometry": {
+        "rowsDefault": "5",
+        "padding": "var(--space-3) var(--space-4)",
+        "fontSize": "var(--text-sm)",
+        "sameBorderFocusAs": "Input"
+      }
+    },
+    "GradientRule": {
+      "module": "c0d425a3",
+      "chunkPath": "components/brand/GradientRule.jsx",
+      "lineRange": "14-51",
+      "geometry": {
+        "bg": "var(--gradient-rule)",
+        "defaultWidth": "72px",
+        "thickness": "3px",
+        "borderRadius": "var(--radius-pill)"
+      }
+    },
+    "Logo": {
+      "module": "c0d425a3",
+      "chunkPath": "components/brand/Logo.jsx",
+      "lineRange": "51-236",
+      "geometry": {
+        "heightDefault": "40px",
+        "toneOptions": [
+          "full",
+          "white",
+          "mark"
+        ],
+        "filePattern": "horizontal-{tone} or mark-{tone}"
+      }
+    },
+    "Card": {
+      "module": "c0d425a3",
+      "chunkPath": "components/core/Card.jsx",
+      "lineRange": "429-511",
+      "geometry": {
+        "borderRadius": "var(--radius-lg)",
+        "interactiveLift": "translateY(-4px) + shadow transition"
+      }
+    }
+  },
+  "fixtures": {
+    "FARMERS": {
+      "shape": "array of objects: {code, name, prov, tambon, district, sponsor, plots[], rai, er, be, pe, photos, need, fallback, status, tone}",
+      "computedFrom": "PLOTS via computePlotSeason(); aggregated by CPA code",
+      "statusValues": [
+        "หลักฐานครบ",
+        "หลักฐานไม่ครบ · ถอย SF_w",
+        "กำลังเก็บหลักฐาน"
+      ],
+      "toneValues": [
+        "success",
+        "danger",
+        "warning"
+      ]
+    },
+    "PROVINCES": {
+      "shape": "array of objects: {name, districts, tambon, rai, households, credits, note}",
+      "values": [
+        {
+          "name": "สุพรรณบุรี",
+          "districts": 1,
+          "tambon": 1,
+          "rai": 148.4,
+          "households": 13,
+          "credits": 418.5605
+        },
+        {
+          "name": "ชัยนาท",
+          "districts": 1,
+          "tambon": 1,
+          "rai": 62.8,
+          "households": 6,
+          "credits": 176.3
+        }
+      ]
+    },
+    "PLOTS": {
+      "shape": "array of objects: {cpa, plot, deed, rai, rice, days, photosApproved, organicRoa, bl: {wwCode, sfP, organic[], nSynth, ureaT, doloT, limeT}, pj: {wwCode, sfP, organic[], nSynth, ureaT, doloT, limeT, fuelL, fuelType, kwh}}",
+      "keys": [
+        "cpa",
+        "plot",
+        "deed",
+        "rai",
+        "rice",
+        "days",
+        "photosApproved"
+      ]
+    },
+    "SPONSORS": {
+      "shape": "array of objects: {id, name, areas[], rai, households, verified, estimate, since, contact, pending?}",
+      "values": [
+        {
+          "id": "A",
+          "name": "บจก. A",
+          "areas": [
+            "สุพรรณบุรี"
+          ],
+          "rai": 148.4,
+          "households": 13,
+          "verified": 355.8,
+          "estimate": 418.6
+        },
+        {
+          "id": "B",
+          "name": "บจก. B",
+          "areas": [
+            "ชัยนาท"
+          ],
+          "rai": 62.8,
+          "households": 6,
+          "verified": 0,
+          "estimate": 176.3
+        },
+        {
+          "id": "C",
+          "name": "บจก. C",
+          "areas": [],
+          "rai": 0,
+          "households": 0,
+          "pending": true
+        }
+      ]
+    },
+    "SEASONS": {
+      "shape": "array of objects: {label, baseline, estimate, verified}",
+      "values": [
+        {
+          "label": "นาปี 2568",
+          "baseline": 652.3,
+          "estimate": 342.1,
+          "verified": 323.4
+        },
+        {
+          "label": "นาปรัง 2568",
+          "baseline": 251.0,
+          "estimate": 39.6,
+          "verified": 32.4
+        },
+        {
+          "label": "นาปี 2569 (S1)",
+          "baseline": 664.9,
+          "estimate": 249.4,
+          "verified": 0
+        },
+        {
+          "label": "นาปรัง 2569 (S2)",
+          "baseline": 263.3,
+          "estimate": 169.2,
+          "verified": 0
+        }
+      ]
+    },
+    "EXPORTS": {
+      "shape": "array of objects: {id, name, fmt, scope, note, who}",
+      "values": [
+        {
+          "id": "EX-2041",
+          "name": "รายงานเกษตรกรรายบุคคล",
+          "fmt": "XLSX"
+        },
+        {
+          "id": "EX-2042",
+          "name": "สรุปเครดิตประมาณการรายฤดู",
+          "fmt": "XLSX"
+        },
+        {
+          "id": "EX-2043",
+          "name": "แบบฟอร์มขอขึ้นทะเบียน Premium T-VER",
+          "fmt": "DOCX"
+        },
+        {
+          "id": "EX-2044",
+          "name": "ไฟล์คำนวณเครดิต Premium T-VER",
+          "fmt": "XLSX"
+        },
+        {
+          "id": "EX-2045",
+          "name": "ทะเบียนเอกสารสิทธิ์และความยินยอม",
+          "fmt": "XLSX"
+        },
+        {
+          "id": "EX-2046",
+          "name": "รายงานการทวนสอบภาพหลักฐาน",
+          "fmt": "XLSX"
+        }
+      ]
+    },
+    "QUEUE": {
+      "shape": "array of objects: {id, code, plot, round, stage, stageName, phase, water, when, gps, inside, age, tone}",
+      "values": [
+        {
+          "id": "PH-8841",
+          "code": "CPA1001",
+          "plot": "CPA1001/F01",
+          "round": "DRY-1",
+          "phase": "dry",
+          "inside": true
+        },
+        {
+          "id": "PH-8840",
+          "code": "CPA1002",
+          "plot": "CPA1002/F01",
+          "round": "WET-2",
+          "phase": "wet",
+          "inside": false
+        },
+        {
+          "id": "PH-8838",
+          "code": "CPA1004",
+          "plot": "CPA1004/F01",
+          "round": "DRY-2",
+          "phase": "dry",
+          "inside": true
+        },
+        {
+          "id": "PH-8835",
+          "code": "CPA1006",
+          "plot": "CPA1006/F01",
+          "round": "WET-1",
+          "phase": "wet",
+          "inside": true
+        },
+        {
+          "id": "PH-8830",
+          "code": "CPA1013",
+          "plot": "CPA1013/F02",
+          "round": "DRY-1",
+          "phase": "dry",
+          "inside": true
+        }
+      ]
+    },
+    "NITROGEN_ROWS": {
+      "shape": "array of objects: {no, formula, src, pctN, rate, urea, stage, photo}",
+      "values": [
+        {
+          "no": 1,
+          "formula": "16-8-8",
+          "src": "รายการมาตรฐาน FT-03",
+          "pctN": 16,
+          "rate": 25,
+          "urea": false,
+          "stage": "SG-03 · รองพื้น",
+          "photo": true
+        },
+        {
+          "no": 2,
+          "formula": "46-0-0",
+          "src": "รายการมาตรฐาน FT-02",
+          "pctN": 46,
+          "rate": 20,
+          "urea": true,
+          "stage": "SG-06 · แตกกอ",
+          "photo": true
+        },
+        {
+          "no": 3,
+          "formula": "18-12-6",
+          "src": "เกษตรกรพิมพ์เอง",
+          "pctN": 18,
+          "rate": 20,
+          "urea": false,
+          "stage": "SG-09 · ก่อนออกรวง",
+          "photo": false
+        }
+      ]
+    },
+    "REJECT_REASONS": {
+      "shape": "array of strings (7 items)",
+      "values": [
+        "มองไม่เห็นขีดระดับน้ำในท่อ",
+        "ภาพเบลอ / มืดเกินไป",
+        "พิกัดตกนอกขอบเขตแปลง",
+        "เวลาถ่ายไม่อยู่ในช่วงกำหนดของรอบนี้",
+        "รอบแห้งแต่ในภาพน้ำยังเต็มท่อ (หรือกลับกัน)",
+        "ไม่ใช่ท่อวัดระดับน้ำของแปลงนี้",
+        "ส่งภาพจากคลังภาพ ไม่ได้ถ่ายผ่านกล้องของระบบ"
+      ]
+    },
+    "PHOTO_ROUNDS": {
+      "shape": "array of objects: {code, stage, name, phase, day, need}",
+      "values": [
+        {
+          "code": "WET-1",
+          "stage": "SG-04",
+          "name": "รอบที่ 1 · เปียก",
+          "phase": "wet",
+          "day": 28
+        },
+        {
+          "code": "DRY-1",
+          "stage": "SG-05",
+          "name": "รอบที่ 1 · แห้ง",
+          "phase": "dry",
+          "day": 42
+        },
+        {
+          "code": "WET-2",
+          "stage": "SG-07",
+          "name": "รอบที่ 2 · เปียก",
+          "phase": "wet",
+          "day": 61
+        },
+        {
+          "code": "DRY-2",
+          "stage": "SG-08",
+          "name": "รอบที่ 2 · แห้ง",
+          "phase": "dry",
+          "day": 75
+        }
+      ]
+    },
+    "GHG_2569": {
+      "shape": "{rows: [{name, s1: [BE_s1, PE_s1], s2: [BE_s2, PE_s2], eq}], be, pe, le, er}",
+      "note": "From spreadsheet sheet 3.7 สรุปGHG",
+      "rows": [
+        {
+          "name": "น้ำขัง (มีเทน)",
+          "s1": [
+            648.9607,
+            136.0118
+          ],
+          "s2": [
+            247.2942,
+            136.0118
+          ],
+          "eq": "E-06 · E-07"
+        },
+        {
+          "name": "สารปรับปรุงดิน (ปูน)",
+          "s1": [
+            0.6497,
+            0.6497
+          ],
+          "s2": [
+            0.6497,
+            0.6497
+          ],
+          "eq": "E-09"
+        },
+        {
+          "name": "ปุ๋ยยูเรีย",
+          "s1": [
+            3.0774,
+            3.0774
+          ],
+          "s2": [
+            3.0774,
+            3.0774
+          ],
+          "eq": "E-10"
+        },
+        {
+          "name": "ปุ๋ยไนโตรเจน",
+          "s1": [
+            12.256,
+            15.8437
+          ],
+          "s2": [
+            12.256,
+            15.8437
+          ],
+          "eq": "E-11 ถึง E-16"
+        },
+        {
+          "name": "การเผาไหม้เชื้อเพลิงฟอสซิล",
+          "s1": [
+            0,
+            13.0219
+          ],
+          "s2": [
+            0,
+            13.0219
+          ],
+          "eq": "E-17"
+        },
+        {
+          "name": "การเผาไหม้มวลชีวภาพ",
+          "s1": [
+            0,
+            0
+          ],
+          "s2": [
+            0,
+            0
+          ],
+          "eq": "E-18"
+        }
+      ],
+      "be": 829.6331,
+      "pe": 337.209,
+      "le": 0,
+      "er": 418.5605
+    }
+  },
+  "calc": {
+    "A_CONST": {
+      "EF_BL_c": 0.1952,
+      "CF": 0.89,
+      "U_d": 0.15,
+      "GWP_CH4": 28,
+      "GWP_N2O": 265,
+      "EF_Limestone": 0.12,
+      "EF_Dolomite": 0.13,
+      "EF_Urea": 0.2,
+      "Frac_GASF": 0.11,
+      "Frac_GASM": 0.21,
+      "Frac_LEACH": 0.24,
+      "EF_ATD": 0.01,
+      "EF_LEACH": 0.011,
+      "EF_CH4_burn": 2.7
+    },
+    "SF_P": {
+      "WP-1": {
+        "v": 2.41,
+        "label": "ขังน้ำก่อนปลูก > 30 วัน"
+      },
+      "WP-2": {
+        "v": 1.0,
+        "label": "ไม่ขังน้ำ < 180 วัน หรือขังน้ำสั้น ๆ < 30 วัน"
+      },
+      "WP-3": {
+        "v": 0.68,
+        "label": "ไม่มีการขังน้ำก่อนปลูก > 180 วัน"
+      },
+      "WP-4": {
+        "v": 0.58,
+        "label": "ไม่มีการขังน้ำก่อนปลูก > 365 วัน"
+      }
+    },
+    "SF_W": {
+      "WW-1": {
+        "v": 1.0,
+        "n2o": 0.003,
+        "label": "ขังน้ำต่อเนื่องตลอดฤดู",
+        "photos": 0
+      },
+      "WW-2": {
+        "v": 0.71,
+        "n2o": 0.005,
+        "label": "ระบายน้ำ / ปล่อยแห้ง 1 ครั้ง",
+        "photos": 2
+      },
+      "WW-3": {
+        "v": 0.55,
+        "n2o": 0.005,
+        "label": "ปล่อยแห้งหลายครั้ง / เปียกสลับแห้ง (AWD)",
+        "photos": 4,
+        "fallback": "WW-2"
+      }
+    },
+    "CFOA": {
+      "OM-1": {
+        "v": 1.0,
+        "label": "ฟางไถกลบก่อนปลูก < 30 วัน"
+      },
+      "OM-2": {
+        "v": 0.29,
+        "label": "ฟางไถกลบก่อนปลูก > 30 วัน"
+      },
+      "OM-3": {
+        "v": 0.45,
+        "label": "ปุ๋ยหมัก / วัสดุอินทรีย์อื่น"
+      },
+      "OM-4": {
+        "v": 0.14,
+        "label": "ปุ๋ยคอก"
+      }
+    },
+    "FUEL": {
+      "ดีเซล": {
+        "ncv": "36.42e-6 TJ/ลิตร",
+        "ef": 74100
+      },
+      "เบนซิน": {
+        "ncv": "34.2e-6 TJ/ลิตร",
+        "ef": 69300
+      }
+    }
+  },
+  "unknowns": [
+    "AD-IMPORT, AD-MAP, AD-CHAT: no distinct module found in admin bundle; no shell module defines these views",
+    "MockNote: defined inline in screen modules 8c07477b and f24453af, not shared from design system",
+    "Revenue/split data: none in artifact",
+    "Per-sponsor credit allocation function: computePlotSeason is per-plot only; no sponsor-level aggregator found"
+  ],
+  "adminShell": {
+    "module": "c0d425a3-6ee5-4613-9c4a-c6ef8c5043c4.bin",
+    "chunkPath": "ui_kits/admin_console/AdminChrome.jsx",
+    "lineRange": "2531-2867",
+    "function": "ConsoleShell",
+    "geometry": {
+      "grid": "gridTemplateColumns: 232px minmax(0,1fr)",
+      "sidebarWidth": "232px (exact px, not a CSS token)",
+      "sidebarBg": "var(--surface-inverse) (#061E5C)",
+      "sidebarPadding": "var(--space-6) var(--space-4)",
+      "sidebarGap": "var(--space-6)",
+      "sidebarPosition": "sticky, top:0, height:100vh",
+      "mainPadding": "var(--space-8) var(--space-10) var(--space-16)",
+      "mainMinWidth": "0 (minmax(0,1fr))"
+    },
+    "navItem": {
+      "buttonGeometry": "borderRadius: var(--radius-sm), padding: 9px 11px",
+      "activeBg": "rgba(255,255,255,.12)",
+      "activeColor": "#fff",
+      "inactiveBg": "transparent",
+      "inactiveColor": "rgba(255,255,255,.72)",
+      "font": "13px, var(--weight-semibold), var(--font-sans)",
+      "icon": "Icon size=16",
+      "gap": "10px",
+      "countBadgeBg": "var(--teal-500)",
+      "countBadgeColor": "#fff",
+      "countBadgeFont": "10.5px, var(--weight-bold), borderRadius: var(--radius-pill), padding: 1px 7px"
+    },
+    "divider": {
+      "font": "10px, var(--weight-semibold), uppercase, letterSpacing: var(--tracking-eyebrow)",
+      "color": "rgba(255,255,255,.42)",
+      "padding": "var(--space-4) var(--space-3) var(--space-2)"
+    },
+    "userChip": {
+      "avatar": "32px circle, bg: var(--teal-600), color: #fff, fontSize: 12px, fontWeight: var(--weight-bold)",
+      "nameFont": "12px, var(--weight-semibold), color: #fff",
+      "roleFont": "10.5px, color: rgba(255,255,255,.6)",
+      "logoutIcon": "log-out, size=15, color: rgba(255,255,255,.6)"
+    },
+    "logoInSidebar": "assetBase: ../../assets/logos, tone: white, height: 28",
+    "props": [
+      "nav",
+      "screen",
+      "onNavigate",
+      "account",
+      "role",
+      "children",
+      "onLogout"
+    ],
+    "navShape": "Array<{id, label, icon, count?, divider?}>",
+    "accountShape": "{name: string, initials: string}",
+    "navigationPattern": "state-driven: parent passes screen+onNavigate to shell; screens call onNavigate(viewId) to switch; no route changes in artifact"
+  },
+  "implementationGap": [
+    {
+      "artifactId": "AD-AUTH",
+      "ourRoute": "/admin/login/page.tsx",
+      "status": "partial",
+      "gap": "Current is single-column form card; artifact is 2-col split with gradient left panel, Logo, headline, copy, GradientRule. Missing left marketing panel."
+    },
+    {
+      "artifactId": "AD-OV",
+      "ourRoute": "/admin/page.tsx",
+      "status": "partial",
+      "gap": "Current has KPI row + WorkQueueCard grid. Artifact additionally has CreditChart (grouped bar, 3 bars per season) + GHG DataTable (6 rows x 5 cols) + Province DataTable. Missing chart and GHG table."
+    },
+    {
+      "artifactId": "AD-REV",
+      "ourRoute": "/admin/evidence/page.tsx",
+      "status": "partial",
+      "gap": "Current uses card-based ReviewCard list + detail panel. Artifact uses dense DataTable queue (9 cols) + completeness DataTable + photo viewer (4/3 aspect, pipe SVG overlay, GPS badge) + metadata panel + approve/reject with 7 checkbox reasons. No pipe SVG viewer, no completeness table in our evidence page."
+    },
+    {
+      "artifactId": "AD-FAR",
+      "ourRoute": "/admin/farmers/page.tsx",
+      "status": "partial",
+      "gap": "Current is list + createFarmer form. Artifact has DataTable (11 cols) + 760px slide-over drawer with gradient header, 5-tab system (แปลง/calc/N/photo/audit). No drawer, no tabs, no CalcTrace."
+    },
+    {
+      "artifactId": "AD-CHART",
+      "ourRoute": "NONE",
+      "status": "no_route",
+      "gap": "No /admin/charts route. ChartsScreen (Gauge, Donut, CreditChart, BarSeries, Bubbles, Treemap, GHG DataTable) is entirely unimplemented as a standalone view."
+    },
+    {
+      "artifactId": "AD-APP",
+      "ourRoute": "/admin/applications/page.tsx",
+      "status": "partial",
+      "gap": "Current is tabbed (รอตรวจ/อนุมัติ/ปฏิเสธ/ทั้งหมด) with API data. Artifact is 2-col split (DataTable + detail panel with metadata list + checklist), uses 4 hardcoded sample rows, includes MockNote. No detail panel, no sample data."
+    },
+    {
+      "artifactId": "AD-REPORT",
+      "ourRoute": "/admin/reports/page.tsx",
+      "status": "partial",
+      "gap": "Current is report catalog with download. Artifact additionally has T-VER submission panel (3 ProgressBars + 3 download buttons + locked submit) + selected report detail pane. Missing T-VER progress panel."
+    },
+    {
+      "artifactId": "AD-SPONSOR",
+      "ourRoute": "/admin/sponsors/page.tsx",
+      "status": "minimal",
+      "gap": "Current is basic sponsor list with empty state. Artifact has per-sponsor Section with province area checkboxes + visibility level checkboxes. No sponsor permission UI."
+    },
+    {
+      "artifactId": "AD-SETTINGS",
+      "ourRoute": "/admin/settings/page.tsx",
+      "status": "partial",
+      "gap": "5 tabs exist in both. Artifact permissions is a 15x5 matrix table; ours is Record-based checkbox grid. Constants tab has two DataTable grids in artifact; notifications are toggle rows. Details differ."
+    },
+    {
+      "artifactId": "AD-SHELL",
+      "ourRoute": "/admin/layout.tsx",
+      "status": "different_pattern",
+      "gap": "Our layout uses route-driven DashboardShell with usePathname. Artifact ConsoleShell is state-driven (nav prop + screen + onNavigate). Shell is the same but the navigation mechanism differs: route-based vs prop-based."
+    }
+  ]
+}

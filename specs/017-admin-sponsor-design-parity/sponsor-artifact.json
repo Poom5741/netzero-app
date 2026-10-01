@@ -1,0 +1,1723 @@
+{
+  "artifactId": "0de23b7a-9fb3-433e-8930-7eff56a39e45",
+  "sourceFile": "design-artifacts/2026-09-28/sponsor-portal.html",
+  "sourceFileSize": 2467010,
+  "decodeCommand": "python3 - <<'EOF'\nimport re, json, base64, gzip, os\nhtml = open('design-artifacts/2026-09-28/sponsor-portal.html').read()\nbody = re.search(r'<script type=\"__bundler/manifest\">(.*?)</script>', html, re.DOTALL).group(1)\nmanifest = json.loads(body)\nfor uuid, info in manifest.items():\n    data = base64.b64decode(info['data'])\n    if info.get('compressed'): data = gzip.decompress(data)\n    open(f'/tmp/nzc-sponsor-decode/{uuid}.js', 'w').write(data.decode())\nEOF",
+  "decodeDate": "2026-09-29",
+  "manifestModules": 68,
+  "applicationModules": {
+    "9a78bbdb-69d8-4b90-a82d-822f30d2655d": {
+      "role": "design-system",
+      "bytes": 375876,
+      "mime": "application/javascript",
+      "description": "NetZeroCarbonDesignSystem_f3e7a8 — 27 components listed in @ds-bundle manifest",
+      "componentCount": 28
+    },
+    "a350f295-58c9-44bd-9b11-b1f3c64738da": {
+      "role": "screen",
+      "bytes": 11739,
+      "mime": "application/javascript",
+      "description": "LoginScreen + ConsoleShell + PageTitle + Section + PdpaNote + CreditChart. Shared admin/sponsor."
+    },
+    "7ccc65fc-cc06-41a3-8112-7407b6d435bb": {
+      "role": "screen",
+      "bytes": 12962,
+      "mime": "application/javascript",
+      "description": "SponsorOverview + SponsorAreas + SponsorReports"
+    },
+    "b836f80d-4f94-4ddc-a598-a02e4755b30b": {
+      "role": "fixture",
+      "bytes": 8112,
+      "mime": "application/javascript",
+      "description": "SPONSORS, PROVINCES, PLOTS, FARMERS, FARMER_NAMES, QUEUE, REJECT_REASONS, SEASONS, EXPORTS, NITROGEN_ROWS"
+    },
+    "97820dda-25b1-4694-b1f1-0b0c6700d03c": {
+      "role": "calc",
+      "bytes": 7323,
+      "mime": "application/javascript",
+      "description": "computePlotSeason, GHG_2569, PHOTO_ROUNDS, SF_P, SF_W, CFOA, A_CONST constants"
+    }
+  },
+  "vendorModules": [
+    {
+      "uuid": "d51ad957-530b-45f8-8283-ff5023a61896",
+      "role": "vendor",
+      "bytes": 3137752,
+      "description": "regjsparser"
+    },
+    {
+      "uuid": "ff634291-0f02-46a6-a0ee-00f169fd98cc",
+      "role": "vendor",
+      "bytes": 1080205,
+      "description": "React runtime"
+    },
+    {
+      "uuid": "c8a9416f-36cb-4a0f-8711-32086da2298e",
+      "role": "vendor",
+      "bytes": 355975,
+      "description": "React DOM runtime"
+    },
+    {
+      "uuid": "c9fb0782-60ed-4170-9392-e79eb481867b",
+      "role": "vendor",
+      "bytes": 109931,
+      "description": "Unknown vendor chunk"
+    }
+  ],
+  "fonts": [
+    {
+      "uuid": "29f4773e-127b-4311-9c8c-9894c0421cee",
+      "bytes": 32120,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "0deeb36f-be3c-4b47-a4b7-20bcad79b775",
+      "bytes": 31304,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "370478d4-eabd-497a-924b-469e8713369b",
+      "bytes": 31227,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "16e7fb7c-320e-47c0-87eb-47cd55a9191b",
+      "bytes": 31114,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "ea5469fa-1cc0-4792-a9ed-65c0310951d9",
+      "bytes": 30754,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "25775419-e3ed-4426-8e59-fa504ee111a4",
+      "bytes": 30375,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "dd77fc0d-d312-4a2c-90b1-17d77aef1dd5",
+      "bytes": 29111,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "6b56fa85-15d1-411f-9a21-79e89f50c0da",
+      "bytes": 25472,
+      "mime": "font/woff2"
+    },
+    {
+      "uuid": "7892b7db-1d8d-4ac8-a3ab-830fcc511453",
+      "bytes": 17336,
+      "mime": "font/woff2"
+    }
+  ],
+  "tokens": {
+    "--navy-950": "#030E2E",
+    "--navy-900": "#061E5C",
+    "--navy-800": "#0B2A72",
+    "--navy-700": "#123787",
+    "--navy-600": "#1C489F",
+    "--navy-500": "#2C5EB8",
+    "--navy-400": "#5279CB",
+    "--navy-300": "#7C9AD8",
+    "--navy-200": "#AEC2E8",
+    "--navy-100": "#D6E0F4",
+    "--navy-50": "#EEF2FB",
+    "--teal-950": "#012730",
+    "--teal-900": "#013B45",
+    "--teal-800": "#01565F",
+    "--teal-700": "#027276",
+    "--teal-600": "#028E91",
+    "--teal-500": "#0AA8A3",
+    "--teal-400": "#24C4B2",
+    "--teal-300": "#52ECCA",
+    "--teal-200": "#8FF3DE",
+    "--teal-100": "#C6F9EE",
+    "--teal-50": "#E7FCF7",
+    "--grey-950": "#141414",
+    "--grey-900": "#1B2330",
+    "--grey-800": "#273343",
+    "--grey-700": "#3C4A5C",
+    "--grey-600": "#566277",
+    "--grey-500": "#737E91",
+    "--grey-400": "#9AA3B2",
+    "--grey-300": "#C2C8D2",
+    "--grey-200": "#DDE1E8",
+    "--grey-100": "#EDEFF3",
+    "--grey-50": "#F2F2F2",
+    "--white": "#FFFFFF",
+    "--nzc-navy": "#061E5C",
+    "--nzc-teal": "#028E91",
+    "--nzc-aqua": "#43D8B8",
+    "--nzc-mint": "#52ECCA",
+    "--nzc-off-white": "#F2F2F2",
+    "--nzc-space-grey": "#273343",
+    "--nzc-black": "#141414",
+    "--status-success": "#0AA8A3",
+    "--status-success-soft": "var(--teal-50)",
+    "--status-danger": "#C8464F",
+    "--status-danger-soft": "#FBECEC",
+    "--status-warning": "#E2A33C",
+    "--status-warning-soft": "#FCF2E0",
+    "--status-info": "var(--navy-600)",
+    "--status-info-soft": "var(--navy-50)",
+    "--text-6xl": "76px",
+    "--text-5xl": "60px",
+    "--text-4xl": "48px",
+    "--text-3xl": "38px",
+    "--text-2xl": "30px",
+    "--text-xl": "24px",
+    "--text-lg": "20px",
+    "--text-md": "18px",
+    "--text-base": "16px",
+    "--text-sm": "14px",
+    "--text-xs": "12px",
+    "--text-accent": "var(--teal-600)",
+    "--text-body": "var(--grey-800)",
+    "--text-heading": "var(--navy-900)",
+    "--text-muted": "var(--grey-600)",
+    "--text-subtle": "var(--grey-500)",
+    "--text-link": "var(--teal-600)",
+    "--text-link-hover": "var(--navy-900)",
+    "--text-on-accent": "var(--white)",
+    "--text-on-dark": "var(--white)",
+    "--text-on-dark-muted": "rgba(255,255,255,.72)",
+    "--weight-light": "300",
+    "--weight-regular": "400",
+    "--weight-medium": "500",
+    "--weight-semibold": "600",
+    "--weight-bold": "700",
+    "--leading-tight": "1.08",
+    "--leading-snug": "1.2",
+    "--leading-normal": "1.55",
+    "--leading-relaxed": "1.7",
+    "--tracking-display": "-0.02em",
+    "--tracking-heading": "-0.01em",
+    "--tracking-normal": "0em",
+    "--tracking-eyebrow": "0.14em",
+    "--font-display": "var(--font-sans)",
+    "--space-0": "0px",
+    "--space-1": "4px",
+    "--space-2": "8px",
+    "--space-3": "12px",
+    "--space-4": "16px",
+    "--space-5": "20px",
+    "--space-6": "24px",
+    "--space-8": "32px",
+    "--space-10": "40px",
+    "--space-12": "48px",
+    "--space-16": "64px",
+    "--space-20": "80px",
+    "--space-24": "96px",
+    "--space-32": "128px",
+    "--gutter": "24px",
+    "--section-y": "var(--space-24)",
+    "--section-y-tight": "var(--space-16)",
+    "--container-max": "1200px",
+    "--container-narrow": "760px",
+    "--radius-xs": "4px",
+    "--radius-sm": "8px",
+    "--radius-md": "12px",
+    "--radius-lg": "16px",
+    "--radius-xl": "24px",
+    "--radius-2xl": "32px",
+    "--radius-card": "var(--radius-lg)",
+    "--radius-field": "var(--radius-sm)",
+    "--radius-control": "var(--radius-pill)",
+    "--radius-circle": "50%",
+    "--radius-pill": "999px",
+    "--radius-none": "0px",
+    "--radius-media": "var(--radius-lg)",
+    "--phone-radius": "38px",
+    "--phone-width": "360px",
+    "--shadow-none": "none",
+    "--shadow-xs": "0 1px 2px rgba(6,30,92,.06)",
+    "--shadow-sm": "0 2px 6px rgba(6,30,92,.07)",
+    "--shadow-md": "0 8px 24px rgba(6,30,92,.09)",
+    "--shadow-lg": "0 18px 44px rgba(6,30,92,.12)",
+    "--shadow-xl": "0 32px 72px rgba(6,30,92,.16)",
+    "--shadow-accent": "0 12px 28px rgba(2,142,145,.24)",
+    "--shadow-inset-top": "inset 0 1px 0 rgba(255,255,255,.6)",
+    "--border-subtle": "var(--grey-200)",
+    "--border-default": "var(--grey-300)",
+    "--border-strong": "var(--grey-400)",
+    "--border-accent": "var(--teal-600)",
+    "--border-on-dark": "rgba(255,255,255,.18)",
+    "--surface-page": "var(--white)",
+    "--surface-card": "var(--white)",
+    "--surface-card-alt": "var(--navy-50)",
+    "--surface-sunken": "var(--grey-50)",
+    "--surface-inverse": "var(--navy-900)",
+    "--surface-inverse-alt": "var(--grey-800)",
+    "--surface-accent-soft": "var(--teal-50)",
+    "--glass-fill": "rgba(255,255,255,.72)",
+    "--glass-fill-dark": "rgba(6,30,92,.62)",
+    "--blur-glass": "14px",
+    "--field-height": "46px",
+    "--control-height-sm": "36px",
+    "--control-height-md": "46px",
+    "--control-height-lg": "54px",
+    "--focus-ring": "0 0 0 3px rgba(10,168,163,.32)",
+    "--ring-focus-inverse": "0 0 0 3px rgba(82,236,202,.45)",
+    "--action-primary": "var(--teal-600)",
+    "--action-primary-hover": "var(--teal-700)",
+    "--action-primary-active": "var(--teal-800)",
+    "--action-secondary": "var(--navy-900)",
+    "--action-secondary-hover": "var(--navy-800)",
+    "--action-disabled": "var(--grey-200)",
+    "--duration-instant": "80ms",
+    "--duration-fast": "140ms",
+    "--duration-base": "220ms",
+    "--duration-slow": "420ms",
+    "--duration-reveal": "700ms",
+    "--duration-count": "1800ms",
+    "--ease-standard": "cubic-bezier(.4,0,.2,1)",
+    "--ease-in": "cubic-bezier(.4,0,1,1)",
+    "--ease-out": "cubic-bezier(.16,1,.3,1)",
+    "--lift-hover": "translateY(-4px)",
+    "--press-scale": "0.98",
+    "--transition-card": "transform var(--duration-base) var(--ease-out),box-shadow var(--duration-base) var(--ease-out)",
+    "--transition-control": "background-color var(--duration-fast) var(--ease-standard),color var(--duration-fast) var(--ease-standard)",
+    "--gradient-deep": "linear-gradient(150deg,#061E5C 0%,#0B2A72 45%,#027276 100%)",
+    "--gradient-rule": "linear-gradient(90deg,#52ECCA 0%,#028E91 55%,#061E5C 100%)",
+    "--gradient-mark": "linear-gradient(135deg,#52ECCA 0%,#02A99E 42%,#028E91 62%,#0…",
+    "--gradient-protect": "linear-gradient(180deg,rgba(6,30,92,0) 0%,rgba(6,30,92,.82) …",
+    "--line-green": "#06C755",
+    "--line-green-dark": "#04A344",
+    "--line-chat-bg": "#8FAAD0",
+    "--line-chat-ink": "#16202C",
+    "--line-chat-ink-2": "#4A5866",
+    "--line-chat-ink-3": "#78889A",
+    "--line-bubble-me": "#A9E86B",
+    "--line-bubble-you": "#FFFFFF",
+    "--line-hairline": "#EEF2F6",
+    "--line-qr-border": "#D6DFE9"
+  },
+  "screens": [
+    {
+      "id": "SP-AUTH",
+      "name": "LoginScreen",
+      "module": "a350f295-58c9-44bd-9b11-b1f3c64738da",
+      "rendering": "standalone",
+      "responsive": "desktop-split",
+      "components": [
+        "Logo",
+        "Button",
+        "Badge",
+        "Tag",
+        "Icon",
+        "Field",
+        "Input",
+        "Checkbox",
+        "GradientRule",
+        "StatTile"
+      ],
+      "layout": "Two-column split 1.05fr/.95fr. Left: brand panel with gradient-deep bg + wind-farm image at 18% opacity. Right: centred form on white.",
+      "copy": {
+        "eyebrow": "Sponsor Portal",
+        "title": "พื้นที่และเครดิตที่บริษัทของท่านสนับสนุน",
+        "subtitle": "ดูได้เฉพาะพื้นที่และเกษตรกรที่บริษัทของท่านสนับสนุน ตามสิทธิ์ที่แอดมินตั้งค่าไว้",
+        "fields": [
+          "อีเมลบริษัท",
+          "รหัสผ่าน",
+          "รหัส OTP จากแอป"
+        ],
+        "checkboxLabel": "จำอุปกรณ์นี้ไว้ 30 วัน",
+        "submitButton": "เข้าสู่ระบบ",
+        "defaultEmail": "esg@company-a.example",
+        "auditNote": "ทุกการเข้าดูและแก้ไขถูกบันทึกใน audit log (AD-11) พร้อมผู้ใช้ เวลา และค่าก่อน-หลัง"
+      },
+      "tokensUsed": [
+        "--gradient-deep",
+        "--teal-300",
+        "--text-4xl",
+        "--weight-light",
+        "--leading-snug",
+        "--tracking-display",
+        "--text-md",
+        "--leading-relaxed",
+        "--text-sm",
+        "--text-xs",
+        "--text-muted",
+        "--surface-page",
+        "--space-12",
+        "--space-16",
+        "--radius-md",
+        "--radius-card",
+        "--border-default",
+        "--field-height",
+        "--radius-pill",
+        "--focus-ring",
+        "--action-primary",
+        "--navy-900",
+        "--grey-200",
+        "--surface-sunken",
+        "--text-subtle"
+      ],
+      "geometry": {
+        "splitLeftRight": "1.05fr 0.95fr",
+        "leftPanelPadding": "64px 48px",
+        "logoHeight": 36,
+        "h1Size": "48px",
+        "formMaxWidth": "392px",
+        "fieldGap": "20px",
+        "buttonHeight": "54px",
+        "auditNotePadding": "16px"
+      }
+    },
+    {
+      "id": "SP-OV",
+      "name": "SponsorOverview",
+      "module": "7ccc65fc-cc06-41a3-8112-7407b6d435bb",
+      "rendering": "inside ConsoleShell",
+      "responsive": "desktop-only",
+      "components": [
+        "Button",
+        "Badge",
+        "Tag",
+        "Icon",
+        "StatTile",
+        "FilterBar",
+        "DataTable",
+        "ProgressBar",
+        "GradientRule"
+      ],
+      "layout": "PageTitle + FilterBar + PdpaNote + 3-col hero grid (CreditHero + 2x StatTile) + 2-col lower grid (CreditChart + GHG breakdown/Progress) + Section 4-col outcome KPIs",
+      "copy": {
+        "eyebrow": "Sponsor Portal",
+        "title": "พื้นที่และเครดิตที่บริษัทของท่านสนับสนุน",
+        "sub": "โครงการทำนาลดโลกร้อน · ต.หนองสะเดา อ.สามชุก จ.สุพรรณบุรี · ระเบียบวิธี T-VER-P-METH-13-08 ฉบับที่ 01",
+        "creditHeroLabel": "เครดิตที่รับรองแล้ว (ทวนสอบแล้ว)",
+        "statTile1Label": "พื้นที่ที่สนับสนุน",
+        "statTile1Unit": "ไร่",
+        "statTile2Label": "ครัวเรือนที่ได้รับประโยชน์",
+        "statTile2Unit": "ครัวเรือน",
+        "sectionChartTitle": "เครดิตรายฤดูของพื้นที่ท่าน",
+        "sectionChartSub": "หน่วย tCO₂eq · ประมาณการเทียบกับที่รับรองแล้ว",
+        "sectionGHGTitle": "ที่มาของส่วนต่าง · ปี 2569",
+        "sectionGHGSub": "ส่วนต่างเกือบทั้งหมดมาจากมีเทน — ปุ๋ยเท่ากันทั้งสองฝั่งโดยเจตนา",
+        "sectionOutcomeTitle": "ผลลัพธ์ร่วมของพื้นที่ที่ท่านสนับสนุน",
+        "outcomeRows": [
+          {
+            "t": "ลดมีเทนจากนาข้าว",
+            "v": "69.6%"
+          },
+          {
+            "t": "ลดการใช้น้ำ",
+            "v": "43%"
+          },
+          {
+            "t": "เชื้อเพลิงที่เพิ่มขึ้น",
+            "v": "+26.0"
+          },
+          {
+            "t": "ปริมาณปุ๋ย",
+            "v": "ไม่เปลี่ยน"
+          }
+        ],
+        "progressLabels": [
+          "แปลงที่แจ้งวันหว่าน",
+          "ภาพหลักฐาน 4 รอบ/ครอป",
+          "ข้อมูลปัจจัยการผลิตครบ"
+        ]
+      },
+      "tableHeaders": {
+        "GHG": [
+          "แหล่งการปล่อย",
+          "กรณีฐาน",
+          "โครงการ",
+          "ส่วนต่าง"
+        ],
+        "Progress": [
+          "แปลงที่แจ้งวันหว่าน",
+          "ภาพหลักฐาน 4 รอบ/ครอป",
+          "ข้อมูลปัจจัยการผลิตครบ"
+        ]
+      },
+      "tokensUsed": [
+        "--gradient-deep",
+        "--teal-300",
+        "--teal-600",
+        "--teal-700",
+        "--teal-50",
+        "--teal-800",
+        "--navy-900",
+        "--navy-600",
+        "--navy-50",
+        "--grey-800",
+        "--grey-600",
+        "--grey-500",
+        "--grey-300",
+        "--grey-200",
+        "--grey-100",
+        "--grey-50",
+        "--white",
+        "--text-3xl",
+        "--text-5xl",
+        "--text-sm",
+        "--text-xs",
+        "--text-lg",
+        "--text-md",
+        "--text-muted",
+        "--text-accent",
+        "--text-heading",
+        "--text-subtle",
+        "--weight-light",
+        "--weight-semibold",
+        "--leading-relaxed",
+        "--leading-snug",
+        "--tracking-display",
+        "--space-6",
+        "--space-5",
+        "--space-4",
+        "--space-3",
+        "--space-2",
+        "--space-24",
+        "--radius-card",
+        "--radius-md",
+        "--radius-sm",
+        "--radius-pill",
+        "--shadow-xs",
+        "--border-subtle",
+        "--surface-card",
+        "--surface-sunken",
+        "--surface-accent-soft",
+        "--status-success",
+        "--status-danger",
+        "--status-warning"
+      ],
+      "geometry": {
+        "heroGrid": "1.35fr 1fr 1fr",
+        "lowerGrid": "1.15fr 1fr",
+        "creditHeroPadding": "24px",
+        "creditValueSize": "60px",
+        "statTilePadding": "24px",
+        "sectionPadding": "24px",
+        "sectionHeaderPadding": "20px 24px",
+        "sectionBodyPadding": "24px",
+        "sectionRadius": "16px",
+        "chartHeight": 190,
+        "outcomeGrid": "repeat(4, 1fr)",
+        "outcomeValueSize": "38px"
+      }
+    },
+    {
+      "id": "SP-AREA",
+      "name": "SponsorAreas",
+      "module": "7ccc65fc-cc06-41a3-8112-7407b6d435bb",
+      "rendering": "inside ConsoleShell",
+      "responsive": "desktop-only",
+      "components": [
+        "Badge",
+        "Tag",
+        "Icon",
+        "DataTable",
+        "ProgressBar"
+      ],
+      "layout": "PageTitle + PdpaNote + one Section per province (DataTable) + photo gallery Section",
+      "copy": {
+        "eyebrow": "พื้นที่ของท่าน",
+        "title": "รายแปลงย่อยในพื้นที่ที่บริษัทของท่านสนับสนุน",
+        "sub": "ระบุด้วย CPA code และรหัสแปลงย่อยเท่านั้น · ไม่มีชื่อ ไม่มีเลขโฉนด",
+        "pdpaNote": "CPA code (เช่น CPA1001) และรหัสแปลงย่อย (CPA1001/F01) เป็นตัวระบุที่ใช้ในรายงานทุกฉบับ รวมถึงไฟล์คำนวณเครดิตที่ยื่น อบก. — ทำให้ตรวจย้อนกลับได้โดยไม่เปิดเผยตัวบุคคล",
+        "photoSectionTitle": "ภาพถ่ายแปลงจากพื้นที่ของท่าน",
+        "photoSectionSub": "CU-02 · ผูกภาพถ่ายแปลงเข้ากับตัวเลขเครดิต · ภาพไม่ระบุตัวบุคคล",
+        "tableHeaders": [
+          "CPA code",
+          "แปลงย่อย",
+          "ไร่",
+          "พันธุ์ข้าว",
+          "ภาพหลักฐาน",
+          "ตัวปรับการจัดการน้ำ",
+          "ER (tCO₂eq)"
+        ]
+      },
+      "tokensUsed": [
+        "--text-xs",
+        "--text-sm",
+        "--text-md",
+        "--text-3xl",
+        "--weight-light",
+        "--tracking-display",
+        "--text-muted",
+        "--text-accent",
+        "--text-heading",
+        "--text-subtle",
+        "--weight-semibold",
+        "--space-6",
+        "--space-5",
+        "--space-4",
+        "--space-3",
+        "--space-2",
+        "--radius-card",
+        "--radius-sm",
+        "--shadow-xs",
+        "--border-subtle",
+        "--surface-card",
+        "--surface-sunken",
+        "--navy-600",
+        "--teal-600",
+        "--grey-200",
+        "--grey-500",
+        "--white",
+        "--font-mono"
+      ],
+      "geometry": {
+        "tableCellPadding": "12px 16px",
+        "photoGrid": "repeat(4, 1fr)",
+        "photoGridGap": "12px",
+        "photoBadgeSize": "24px x 18px",
+        "photoCardRadius": "8px",
+        "photoCardBodyPadding": "7px 9px"
+      }
+    },
+    {
+      "id": "SP-REPORT",
+      "name": "SponsorReports",
+      "module": "7ccc65fc-cc06-41a3-8112-7407b6d435bb",
+      "rendering": "inside ConsoleShell",
+      "responsive": "desktop-only",
+      "components": [
+        "Button",
+        "Badge",
+        "Tag",
+        "Icon",
+        "DataTable"
+      ],
+      "layout": "PageTitle + Section (available reports DataTable) + Section (issued certificates DataTable)",
+      "copy": {
+        "eyebrow": "รายงาน",
+        "title": "ไฟล์ที่บริษัทของท่านดาวน์โหลดได้",
+        "sub": "ขอบเขตจำกัดอยู่ที่พื้นที่ที่ท่านสนับสนุน · ทุกไฟล์ใช้ CPA code แทนชื่อ",
+        "reportTableHeaders": [
+          "รายงาน",
+          "รูปแบบ",
+          "ขอบเขต",
+          ""
+        ],
+        "certTableHeaders": [
+          "เลขที่ใบรับรอง",
+          "ฤดู",
+          "tCO₂eq",
+          "สถานะ",
+          "วันที่ออก"
+        ],
+        "downloadButton": "ดาวน์โหลด"
+      },
+      "tokensUsed": [
+        "--text-xs",
+        "--text-sm",
+        "--text-md",
+        "--text-3xl",
+        "--weight-light",
+        "--tracking-display",
+        "--text-muted",
+        "--text-accent",
+        "--text-heading",
+        "--text-subtle",
+        "--weight-semibold",
+        "--space-6",
+        "--space-5",
+        "--space-4",
+        "--space-2",
+        "--radius-card",
+        "--radius-sm",
+        "--shadow-xs",
+        "--border-subtle",
+        "--surface-card",
+        "--surface-sunken",
+        "--teal-600",
+        "--teal-50",
+        "--navy-600",
+        "--white",
+        "--status-success",
+        "--status-warning"
+      ],
+      "geometry": {
+        "sectionRadius": "16px",
+        "sectionPadding": "24px",
+        "sectionHeaderPadding": "20px 24px",
+        "cellPadding": "12px 16px"
+      }
+    }
+  ],
+  "flow": [
+    {
+      "order": 1,
+      "from": "login (SP-AUTH)",
+      "to": "ConsoleShell + SponsorOverview (SP-OV)",
+      "trigger": "onLogin() called — sets role=sponsor, account=SPONSORS[0]",
+      "notes": "LoginScreen is a shared component used for both admin and sponsor. Role prop determines copy."
+    },
+    {
+      "order": 2,
+      "from": "SP-OV",
+      "to": "SP-AREA",
+      "trigger": "ConsoleShell nav: click 'พื้นที่ของท่าน' (map-pin icon)",
+      "notes": "All data filtered to MY_PROVINCES = SPONSORS[0].areas provinces only"
+    },
+    {
+      "order": 3,
+      "from": "SP-OV",
+      "to": "SP-REPORT",
+      "trigger": "ConsoleShell nav: click 'รายงาน' (download icon) OR SP-OV action button 'ดาวน์โหลดสรุป'",
+      "notes": "Reports filtered to EXPORTS entries where who.includes('ลูกค้า')"
+    },
+    {
+      "order": 4,
+      "from": "SP-REPORT",
+      "to": "SP-OV",
+      "trigger": "ConsoleShell nav: click 'ภาพรวม' (overview icon)",
+      "notes": "Default landing page after login"
+    }
+  ],
+  "components": {
+    "Button": {
+      "module": "9a78bbdb",
+      "sourceLines": "354-422",
+      "props": [
+        "variant=primary|secondary|outline|ghost|onDark",
+        "size=sm|md|lg",
+        "disabled",
+        "fullWidth",
+        "iconLeft",
+        "iconRight",
+        "as",
+        "href",
+        "children",
+        "style",
+        "onMouseEnter",
+        "onMouseLeave",
+        "onMouseDown",
+        "onMouseUp"
+      ],
+      "variants": {
+        "primary": {
+          "bg": "var(--action-primary)",
+          "fg": "var(--text-on-accent)",
+          "bd": "transparent",
+          "hoverBg": "var(--action-primary-hover)",
+          "activeBg": "var(--action-primary-active)"
+        },
+        "secondary": {
+          "bg": "var(--action-secondary)",
+          "fg": "var(--text-on-dark)",
+          "bd": "transparent",
+          "hoverBg": "var(--action-secondary-hover)",
+          "activeBg": "var(--navy-950)"
+        },
+        "outline": {
+          "bg": "transparent",
+          "fg": "var(--text-heading)",
+          "bd": "var(--border-default)",
+          "hoverBg": "var(--navy-50)",
+          "activeBg": "var(--navy-100)"
+        },
+        "ghost": {
+          "bg": "transparent",
+          "fg": "var(--text-accent)",
+          "bd": "transparent",
+          "hoverBg": "var(--teal-50)",
+          "activeBg": "var(--teal-100)"
+        },
+        "onDark": {
+          "bg": "rgba(255,255,255,.14)",
+          "fg": "var(--text-on-dark)",
+          "bd": "var(--border-on-dark)",
+          "hoverBg": "rgba(255,255,255,.24)",
+          "activeBg": "rgba(255,255,255,.3)"
+        }
+      },
+      "sizes": {
+        "sm": {
+          "h": "var(--control-height-sm)",
+          "px": "var(--space-4)",
+          "fs": "var(--text-sm)"
+        },
+        "md": {
+          "h": "var(--control-height-md)",
+          "px": "var(--space-6)",
+          "fs": "var(--text-base)"
+        },
+        "lg": {
+          "h": "var(--control-height-lg)",
+          "px": "var(--space-8)",
+          "fs": "var(--text-md)"
+        }
+      },
+      "common": {
+        "fontWeight": "var(--weight-semibold)",
+        "letterSpacing": "0.01em",
+        "borderRadius": "var(--radius-control)",
+        "shadowPrimary": "var(--shadow-accent)",
+        "pressScale": "var(--press-scale)",
+        "transition": "var(--transition-control), transform var(--duration-instant) var(--ease-standard)",
+        "gap": "var(--space-2)"
+      }
+    },
+    "Badge": {
+      "module": "9a78bbdb",
+      "sourceLines": "263-293",
+      "props": [
+        "tone=success|warning|danger|info|neutral",
+        "dot",
+        "children",
+        "style"
+      ],
+      "toneColors": {
+        "success": {
+          "bg": "var(--status-success-soft)",
+          "fg": "var(--teal-800)",
+          "dot": "var(--status-success)"
+        },
+        "warning": {
+          "bg": "var(--status-warning-soft)",
+          "fg": "#8A5B10",
+          "dot": "var(--status-warning)"
+        },
+        "danger": {
+          "bg": "var(--status-danger-soft)",
+          "fg": "#8C2830",
+          "dot": "var(--status-danger)"
+        },
+        "info": {
+          "bg": "var(--status-info-soft)",
+          "fg": "var(--navy-800)",
+          "dot": "var(--status-info)"
+        },
+        "neutral": {
+          "bg": "var(--grey-100)",
+          "fg": "var(--grey-700)",
+          "dot": "var(--grey-500)"
+        }
+      },
+      "geometry": {
+        "height": "24px",
+        "padding": "0 var(--space-3)",
+        "borderRadius": "var(--radius-pill)",
+        "fontSize": "var(--text-xs)",
+        "fontWeight": "var(--weight-semibold)",
+        "gap": "var(--space-2)",
+        "dotSize": "6px",
+        "dotRadius": "var(--radius-circle)"
+      }
+    },
+    "Tag": {
+      "module": "9a78bbdb",
+      "sourceLines": "605-633",
+      "props": [
+        "tone=teal|navy|neutral|solid|onDark",
+        "icon",
+        "children",
+        "style"
+      ],
+      "toneColors": {
+        "teal": {
+          "bg": "var(--teal-50)",
+          "fg": "var(--teal-800)",
+          "bd": "var(--teal-200)"
+        },
+        "navy": {
+          "bg": "var(--navy-50)",
+          "fg": "var(--navy-800)",
+          "bd": "var(--navy-200)"
+        },
+        "neutral": {
+          "bg": "var(--grey-100)",
+          "fg": "var(--grey-700)",
+          "bd": "var(--grey-200)"
+        },
+        "solid": {
+          "bg": "var(--teal-600)",
+          "fg": "var(--white)",
+          "bd": "transparent"
+        },
+        "onDark": {
+          "bg": "rgba(255,255,255,.12)",
+          "fg": "var(--white)",
+          "bd": "var(--border-on-dark)"
+        }
+      },
+      "geometry": {
+        "height": "28px",
+        "padding": "0 var(--space-3)",
+        "borderRadius": "var(--radius-pill)",
+        "fontSize": "var(--text-xs)",
+        "fontWeight": "var(--weight-semibold)",
+        "letterSpacing": "0.02em"
+      }
+    },
+    "StatTile": {
+      "module": "9a78bbdb",
+      "sourceLines": "840-905",
+      "props": [
+        "value",
+        "unit",
+        "label",
+        "note",
+        "delta",
+        "tone=light|dark",
+        "align=left|center",
+        "style"
+      ],
+      "geometry": {
+        "bg": "var(--surface-card)",
+        "border": "1px solid var(--border-subtle)",
+        "borderRadius": "var(--radius-card)",
+        "padding": "var(--space-5) var(--space-6)",
+        "gap": "var(--space-2)",
+        "label_fontSize": "var(--text-sm)",
+        "label_fontWeight": "var(--weight-semibold)",
+        "label_color_light": "var(--text-heading)",
+        "label_color_dark": "var(--teal-300)",
+        "value_fontSize": "var(--text-4xl)",
+        "value_fontWeight": "var(--weight-light)",
+        "value_lineHeight": 1,
+        "value_letterSpacing": "var(--tracking-display)",
+        "value_color_light": "var(--text-heading)",
+        "value_color_dark": "var(--white)",
+        "unit_fontSize": "var(--text-sm)",
+        "unit_fontWeight": "var(--weight-semibold)",
+        "unit_color_light": "var(--text-muted)",
+        "unit_color_dark": "rgba(255,255,255,.7)",
+        "note_fontSize": "var(--text-xs)",
+        "note_lineHeight": "var(--leading-relaxed)",
+        "note_color_light": "var(--text-subtle)",
+        "note_color_dark": "rgba(255,255,255,.66)"
+      }
+    },
+    "DataTable": {
+      "module": "9a78bbdb",
+      "sourceLines": "638-696",
+      "props": [
+        "columns",
+        "rows",
+        "onRowClick",
+        "dense=false",
+        "style"
+      ],
+      "geometry": {
+        "container_border": "1px solid var(--border-subtle)",
+        "container_borderRadius": "var(--radius-card)",
+        "container_bg": "var(--surface-card)",
+        "table_width": "100%",
+        "table_collapse": "border-collapse",
+        "table_fontSize": "var(--text-sm)",
+        "th_padding_normal": "11px 14px",
+        "th_padding_dense": "8px 12px",
+        "th_bg": "var(--grey-50)",
+        "th_fontSize": "var(--text-xs)",
+        "th_fontWeight": "var(--weight-semibold)",
+        "th_color": "var(--text-muted)",
+        "th_borderBottom": "1px solid var(--border-subtle)",
+        "tr_hover_bg": "var(--navy-50)",
+        "td_padding_normal": "11px 14px",
+        "td_padding_dense": "8px 12px",
+        "td_borderBottom": "1px solid var(--grey-100)",
+        "td_color": "var(--text-body)",
+        "td_fontVariantNumeric": "tabular-nums"
+      }
+    },
+    "FilterBar": {
+      "module": "9a78bbdb",
+      "sourceLines": "702-769",
+      "props": [
+        "label=ตัวกรอง",
+        "filters=[{id,label,value,options,active}]",
+        "onChange",
+        "actions",
+        "style"
+      ],
+      "geometry": {
+        "layout": "flex alignItems:center gap:var(--space-3) flexWrap:wrap",
+        "label_fontSize": "var(--text-xs)",
+        "label_fontWeight": "var(--weight-semibold)",
+        "label_color": "var(--text-subtle)",
+        "filter_minWidth": "148px",
+        "filter_padding": "6px 14px",
+        "filter_borderRadius": "var(--radius-md)",
+        "filter_border_active": "var(--border-accent)",
+        "filter_border_inactive": "var(--border-subtle)",
+        "filter_bg_active": "var(--surface-accent-soft)",
+        "filter_bg_inactive": "var(--white)",
+        "filter_shadow_inactive": "var(--shadow-xs)",
+        "filter_shadow_active": "none",
+        "filter_label_fontSize": "10.5px",
+        "filter_label_color": "var(--text-subtle)",
+        "select_border": "none",
+        "select_bg": "none",
+        "select_fontSize": "var(--text-sm)",
+        "select_fontWeight": "var(--weight-semibold)",
+        "select_color_active": "var(--teal-800)",
+        "select_color_inactive": "var(--text-heading)",
+        "actions_marginLeft": "auto"
+      }
+    },
+    "ProgressBar": {
+      "module": "9a78bbdb",
+      "sourceLines": "775-833",
+      "props": [
+        "value",
+        "max=100",
+        "label",
+        "valueLabel",
+        "tone=teal|mint|navy|grey|warn",
+        "height=9",
+        "style"
+      ],
+      "geometry": {
+        "layout": "flex alignItems:center gap:var(--space-4)",
+        "label_flex": "0 0 132px",
+        "label_fontSize": "var(--text-xs)",
+        "label_color": "var(--text-muted)",
+        "track_flex": 1,
+        "track_height": "height prop (default 9px)",
+        "track_bg": "var(--grey-100)",
+        "track_borderRadius": "var(--radius-pill)",
+        "fill_borderRadius": "var(--radius-pill)",
+        "fill_transition": "width var(--duration-slow) var(--ease-out)",
+        "valueLabel_flex": "0 0 76px",
+        "valueLabel_textAlign": "right",
+        "valueLabel_fontSize": "var(--text-sm)",
+        "valueLabel_fontWeight": "var(--weight-semibold)",
+        "valueLabel_color": "var(--text-heading)",
+        "fillColors": {
+          "teal": "var(--teal-600)",
+          "mint": "var(--teal-400)",
+          "navy": "var(--navy-700)",
+          "grey": "var(--grey-300)",
+          "warn": "var(--status-warning)"
+        }
+      }
+    },
+    "GradientRule": {
+      "module": "9a78bbdb",
+      "sourceLines": "14-34",
+      "props": [
+        "width=72",
+        "thickness=3",
+        "orientation=horizontal|vertical",
+        "style"
+      ],
+      "geometry": {
+        "default_width": "72px",
+        "default_thickness": "3px",
+        "borderRadius": "var(--radius-pill)",
+        "gradient_horizontal": "var(--gradient-rule)",
+        "gradient_vertical": "linear-gradient(180deg,#52ECCA 0%,#028E91 55%,#061E5C 100%)"
+      }
+    },
+    "Icon": {
+      "module": "9a78bbdb",
+      "sourceLines": "511-541",
+      "props": [
+        "name",
+        "size=20",
+        "strokeWidth=1.75",
+        "color=currentColor",
+        "style"
+      ],
+      "iconLibrary": "lucide (window.lucide.createIcons)",
+      "usedInSponsor": [
+        "arrow-right",
+        "download",
+        "shield-check",
+        "log-out",
+        "layout-dashboard",
+        "map",
+        "file-spreadsheet"
+      ]
+    },
+    "IconButton": {
+      "module": "9a78bbdb",
+      "sourceLines": "553-572",
+      "props": [
+        "size=sm|md|lg",
+        "label (aria-label)",
+        "children",
+        "style"
+      ],
+      "geometry": {
+        "uses": "Button as base",
+        "shape": "circle",
+        "sizes": {
+          "sm": "36px",
+          "md": "46px",
+          "lg": "54px"
+        },
+        "padding": "0"
+      }
+    },
+    "Card": {
+      "module": "9a78bbdb",
+      "sourceLines": "429-505",
+      "props": [
+        "media",
+        "mediaAlt",
+        "eyebrow",
+        "title",
+        "children",
+        "footer",
+        "tone=light|dark",
+        "interactive=false",
+        "padding",
+        "style"
+      ],
+      "geometry": {
+        "bg_light": "var(--surface-card)",
+        "bg_dark": "var(--surface-inverse)",
+        "border_light": "1px solid var(--border-subtle)",
+        "border_dark": "1px solid var(--border-on-dark)",
+        "borderRadius": "var(--radius-card)",
+        "shadow_default": "var(--shadow-sm)",
+        "shadow_hover": "var(--shadow-lg)",
+        "transition": "var(--transition-card)",
+        "media_aspectRatio": "16/10",
+        "body_padding": "var(--card-padding)",
+        "body_gap": "var(--space-3)"
+      }
+    },
+    "StatCounter": {
+      "module": "9a78bbdb",
+      "sourceLines": "159-230",
+      "props": [
+        "value",
+        "suffix",
+        "prefix",
+        "label",
+        "description",
+        "tone=light|dark",
+        "animate=true",
+        "duration=1800",
+        "style"
+      ],
+      "geometry": {
+        "value_fontSize": "var(--text-5xl)",
+        "value_fontWeight": "var(--weight-light)",
+        "value_lineHeight": "var(--leading-tight)",
+        "value_letterSpacing": "var(--tracking-display)",
+        "value_color_light": "var(--text-accent)",
+        "value_color_dark": "var(--teal-300)",
+        "label_fontSize": "var(--text-lg)",
+        "label_fontWeight": "var(--weight-semibold)",
+        "description_fontSize": "var(--text-sm)",
+        "description_lineHeight": "var(--leading-relaxed)"
+      },
+      "animation": {
+        "duration_ms": 1800,
+        "easing": "1-Math.pow(1-p,3)",
+        "reducedMotion": "respected"
+      }
+    },
+    "SectionHeading": {
+      "module": "9a78bbdb",
+      "sourceLines": "88-153",
+      "props": [
+        "eyebrow",
+        "title",
+        "lead",
+        "align=left|center",
+        "tone=light|dark",
+        "rule=true",
+        "as=h2",
+        "actions",
+        "style"
+      ],
+      "geometry": {
+        "eyebrow_fontSize": "var(--type-eyebrow-size)",
+        "eyebrow_fontWeight": "var(--weight-semibold)",
+        "eyebrow_letterSpacing": "var(--tracking-eyebrow)",
+        "eyebrow_textTransform": "uppercase",
+        "title_fontSize": "var(--type-h2-size)",
+        "title_fontWeight": "var(--weight-light)",
+        "title_lineHeight": "var(--leading-snug)",
+        "title_letterSpacing": "var(--tracking-display)",
+        "rule_width": "72px",
+        "rule_height": "3px",
+        "rule_borderRadius": "var(--radius-pill)",
+        "rule_background": "var(--gradient-rule)",
+        "lead_fontSize": "var(--text-md)",
+        "lead_lineHeight": "var(--leading-relaxed)",
+        "lead_maxWidth": "62ch"
+      }
+    },
+    "Field": {
+      "module": "9a78bbdb",
+      "sourceLines": "976-1016",
+      "props": [
+        "label",
+        "hint",
+        "error",
+        "required=false",
+        "htmlFor",
+        "children",
+        "style"
+      ],
+      "geometry": {
+        "layout": "flex flexDirection:column gap:var(--space-2)",
+        "label_fontSize": "var(--text-sm)",
+        "label_fontWeight": "var(--weight-semibold)",
+        "label_color": "var(--text-heading)",
+        "requiredAsterisk_color": "var(--status-danger)",
+        "error_fontSize": "var(--text-xs)",
+        "error_color": "var(--status-danger)",
+        "hint_fontSize": "var(--text-xs)",
+        "hint_color": "var(--text-subtle)"
+      }
+    },
+    "Input": {
+      "module": "9a78bbdb",
+      "sourceLines": "1023-1057",
+      "props": [
+        "invalid=false",
+        "style",
+        "onFocus",
+        "onBlur",
+        "...rest"
+      ],
+      "geometry": {
+        "width": "100%",
+        "height": "var(--field-height)",
+        "padding": "0 var(--space-4)",
+        "fontSize": "var(--text-base)",
+        "color": "var(--text-body)",
+        "bg": "var(--white)",
+        "border_default": "1px solid var(--border-default)",
+        "border_focus": "1px solid var(--border-accent)",
+        "border_invalid": "1px solid var(--status-danger)",
+        "borderRadius": "var(--radius-field)",
+        "boxShadow_focus": "var(--ring-focus)"
+      }
+    },
+    "Checkbox": {
+      "module": "9a78bbdb",
+      "sourceLines": "912-970",
+      "props": [
+        "label",
+        "checked",
+        "defaultChecked",
+        "disabled=false",
+        "onChange",
+        "style"
+      ],
+      "geometry": {
+        "layout": "inline-flex alignItems:center gap:var(--space-3)",
+        "box_size": "20px",
+        "box_borderRadius": "var(--radius-xs)",
+        "box_border_default": "var(--border-default)",
+        "box_border_checked": "var(--teal-600)",
+        "box_bg_unchecked": "var(--white)",
+        "box_bg_checked": "var(--teal-600)",
+        "box_color_checked": "var(--white)",
+        "box_fontSize": "13px",
+        "transition": "var(--transition-control)"
+      }
+    },
+    "Select": {
+      "module": "9a78bbdb",
+      "sourceLines": "1063-1116",
+      "props": [
+        "invalid=false",
+        "children",
+        "style",
+        "onFocus",
+        "onBlur"
+      ],
+      "geometry": {
+        "width": "100%",
+        "height": "var(--field-height)",
+        "padding": "0 var(--space-10) 0 var(--space-4)",
+        "fontSize": "var(--text-base)",
+        "border_default": "1px solid var(--border-default)",
+        "border_focus": "1px solid var(--border-accent)",
+        "border_invalid": "1px solid var(--status-danger)",
+        "borderRadius": "var(--radius-field)",
+        "boxShadow_focus": "var(--ring-focus)",
+        "appearance": "none",
+        "caret": "var(--space-4)"
+      }
+    },
+    "Textarea": {
+      "module": "9a78bbdb",
+      "sourceLines": "1122-1159",
+      "props": [
+        "invalid=false",
+        "rows=5",
+        "style",
+        "onFocus",
+        "onBlur"
+      ],
+      "geometry": {
+        "width": "100%",
+        "padding": "var(--space-3) var(--space-4)",
+        "fontSize": "var(--text-base)",
+        "lineHeight": "var(--leading-normal)",
+        "border_default": "1px solid var(--border-default)",
+        "border_focus": "1px solid var(--border-accent)",
+        "border_invalid": "1px solid var(--status-danger)",
+        "borderRadius": "var(--radius-field)",
+        "boxShadow_focus": "var(--ring-focus)",
+        "resize": "vertical"
+      }
+    }
+  },
+  "fixtures": {
+    "SPONSORS": {
+      "shape": "Sponsor[]",
+      "description": "Available sponsor accounts. SPONSORS[0] is the logged-in sponsor (ME).",
+      "sample": [
+        {
+          "id": "A",
+          "name": "บจก. A",
+          "areas": [
+            "สุพรรณบุรี"
+          ],
+          "rai": 148.4,
+          "households": 13,
+          "verified": 355.8,
+          "estimate": 418.6,
+          "since": "2568",
+          "contact": "ฝ่าย ESG"
+        },
+        {
+          "id": "B",
+          "name": "บจก. B",
+          "areas": [
+            "ชัยนาท"
+          ],
+          "rai": 62.8,
+          "households": 6,
+          "verified": 0,
+          "estimate": 176.3,
+          "since": "2569",
+          "contact": "ฝ่ายความยั่งยืน"
+        },
+        {
+          "id": "C",
+          "name": "บจก. C",
+          "areas": [],
+          "rai": 0,
+          "households": 0,
+          "verified": 0,
+          "estimate": 0,
+          "since": "2569",
+          "contact": "ฝ่ายจัดซื้อพลังงาน",
+          "pending": true
+        }
+      ]
+    },
+    "PROVINCES": {
+      "shape": "Province[]",
+      "description": "All provinces in the project.",
+      "sample": [
+        {
+          "name": "สุพรรณบุรี",
+          "districts": 1,
+          "tambon": 1,
+          "rai": 148.4,
+          "households": 13,
+          "credits": 418.5605,
+          "note": "ต.หนองสะเดา อ.สามชุก — พื้นที่ขึ้นทะเบียนแล้ว"
+        },
+        {
+          "name": "ชัยนาท",
+          "districts": 1,
+          "tambon": 1,
+          "rai": 62.8,
+          "households": 6,
+          "credits": 176.3,
+          "note": "กลุ่มใหม่ · ยังไม่เข้ารอบทวนสอบ"
+        }
+      ]
+    },
+    "PLOTS": {
+      "shape": "Plot[]",
+      "description": "Individual plot sub-units. 13 plots across 7 CPA codes. Real data from AWD calculation spreadsheet.",
+      "keys": [
+        "cpa",
+        "plot",
+        "deed",
+        "rai",
+        "rice",
+        "days",
+        "photosApproved",
+        "organicRoa",
+        "bl",
+        "pj"
+      ]
+    },
+    "FARMERS": {
+      "shape": "Farmer[]",
+      "description": "Derived by grouping PLOTS by CPA code. Adds computed er, be, pe, photos, need, fallback, status, tone."
+    },
+    "SEASONS": {
+      "shape": "Season[]",
+      "description": "Season-level credit summary.",
+      "sample": [
+        {
+          "label": "นาปี 2568",
+          "baseline": 652.3,
+          "estimate": 342.1,
+          "verified": 323.4
+        },
+        {
+          "label": "นาปรัง 2568",
+          "baseline": 251.0,
+          "estimate": 39.6,
+          "verified": 32.4
+        },
+        {
+          "label": "นาปี 2569 (S1)",
+          "baseline": 664.9,
+          "estimate": 249.4,
+          "verified": 0
+        },
+        {
+          "label": "นาปรัง 2569 (S2)",
+          "baseline": 263.3,
+          "estimate": 169.2,
+          "verified": 0
+        }
+      ]
+    },
+    "GHG_2569": {
+      "shape": "GHG2569",
+      "description": "Aggregate GHG breakdown for year 2569. Project totals: BE=829.6331, PE=337.2090, ER=418.5605 tCO₂eq.",
+      "rows": [
+        {
+          "name": "น้ำขัง (มีเทน)",
+          "s1": [
+            648.9607,
+            136.0118
+          ],
+          "s2": [
+            247.2942,
+            136.0118
+          ],
+          "eq": "E-06 · E-07"
+        },
+        {
+          "name": "สารปรับปรุงดิน (ปูน)",
+          "s1": [
+            0.6497,
+            0.6497
+          ],
+          "s2": [
+            0.6497,
+            0.6497
+          ],
+          "eq": "E-09"
+        },
+        {
+          "name": "ปุ๋ยยูเรีย",
+          "s1": [
+            3.0774,
+            3.0774
+          ],
+          "s2": [
+            3.0774,
+            3.0774
+          ],
+          "eq": "E-10"
+        },
+        {
+          "name": "ปุ๋ยไนโตรเจน",
+          "s1": [
+            12.256,
+            15.8437
+          ],
+          "s2": [
+            12.256,
+            15.8437
+          ],
+          "eq": "E-11 ถึง E-16"
+        },
+        {
+          "name": "การเผาไหม้เชื้อเพลิงฟอสซิล",
+          "s1": [
+            0,
+            13.0219
+          ],
+          "s2": [
+            0,
+            13.0219
+          ],
+          "eq": "E-17"
+        },
+        {
+          "name": "การเผาไหม้มวลชีวภาพ",
+          "s1": [
+            0,
+            0
+          ],
+          "s2": [
+            0,
+            0
+          ],
+          "eq": "E-18"
+        }
+      ]
+    },
+    "PHOTO_ROUNDS": {
+      "shape": "PhotoRound[]",
+      "description": "4 photo rounds per crop cycle: WET-1, DRY-1, WET-2, DRY-2.",
+      "sample": [
+        {
+          "code": "WET-1",
+          "stage": "SG-04",
+          "name": "รอบที่ 1 · เปียก",
+          "phase": "wet",
+          "day": 28,
+          "need": "ภาพท่อ PVC ให้เห็นน้ำเต็มระดับผิวดิน"
+        },
+        {
+          "code": "DRY-1",
+          "stage": "SG-05",
+          "name": "รอบที่ 1 · แห้ง",
+          "phase": "dry",
+          "day": 42,
+          "need": "ภาพท่อ PVC ให้เห็นระดับน้ำต่ำกว่าผิวดิน (อ่านค่า ซม.)"
+        },
+        {
+          "code": "WET-2",
+          "stage": "SG-07",
+          "name": "รอบที่ 2 · เปียก",
+          "phase": "wet",
+          "day": 61,
+          "need": "ภาพท่อ PVC ให้เห็นน้ำเต็มระดับผิวดินอีกครั้ง"
+        },
+        {
+          "code": "DRY-2",
+          "stage": "SG-08",
+          "name": "รอบที่ 2 · แห้ง",
+          "phase": "dry",
+          "day": 75,
+          "need": "ภาพท่อ PVC ให้เห็นระดับน้ำต่ำกว่าผิวดิน (อ่านค่า ซม.)"
+        }
+      ]
+    },
+    "EXPORTS": {
+      "shape": "ExportItem[]",
+      "description": "All exportable report files. Sponsor sees only entries where who.includes('ลูกค้า').",
+      "availableToSponsor": [
+        "EX-2042"
+      ],
+      "sample": [
+        {
+          "id": "EX-2041",
+          "name": "รายงานเกษตรกรรายบุคคล",
+          "fmt": "XLSX",
+          "scope": "ราย CPA code · ทุกพื้นที่",
+          "who": "แอดมิน"
+        },
+        {
+          "id": "EX-2042",
+          "name": "สรุปเครดิตประมาณการรายฤดู",
+          "fmt": "XLSX",
+          "scope": "รายพื้นที่ · รายฤดู",
+          "who": "แอดมิน · ลูกค้า"
+        }
+      ]
+    },
+    "QUEUE": {
+      "shape": "QueueItem[]",
+      "description": "Photo inspection queue. Admin-facing. Not shown to sponsor."
+    }
+  },
+  "calcs": {
+    "computePlotSeason": {
+      "module": "97820dda-25b1-4694-b1f1-0b0c6700d03c",
+      "description": "Core credit calculation for one plot-season. Returns {BL, PJ, sfWbl, sfWpj, be, pe, le, er}.",
+      "inputs": [
+        "Plot with bl/pj SeasonSide"
+      ],
+      "outputs": [
+        "BL: SeasonEmissions",
+        "PJ: SeasonEmissions",
+        "sfWbl: SfWResult",
+        "sfWpj: SfWResult",
+        "be: number (tCO₂eq)",
+        "pe: number (tCO₂eq)",
+        "er: number (tCO₂eq after 15% U_d)"
+      ],
+      "formula": "ER = Math.max(0, (BL.total - PJ.total) * (1 - A.U_d)) where A.U_d = 0.15"
+    },
+    "resolveSfW": {
+      "module": "97820dda",
+      "description": "Determines SF_w water management factor from WW code and photo count.",
+      "logic": {
+        "WW-1 (continuous flood)": "sf_w = 1.00, photos needed = 0",
+        "WW-2 (1 dry cycle)": "sf_w = 0.71, photos needed = 2; falls back to 1.00 if fewer",
+        "WW-3 (AWD)": "sf_w = 0.55, photos needed = 4; falls back to 0.71 if fewer"
+      }
+    },
+    "seasonSide": {
+      "module": "97820dda",
+      "description": "Computes emissions for one side (BL or PJ) of one season. E-06 to E-18.",
+      "emissions": [
+        "E-06/E-07 CH4 soil",
+        "E-09 lime",
+        "E-10 urea",
+        "E-11–E-16 N2O",
+        "E-17 fuel (PJ only)",
+        "E-18 biomass burn"
+      ],
+      "note": "CF (0.89) applied to BL CH4 only, not PJ"
+    },
+    "GHG_2569": {
+      "module": "97820dda",
+      "description": "Aggregate verified GHG numbers for Suphanburi 2569. Source: AWD calculation spreadsheet Sheet 3.7.",
+      "be": 829.6331,
+      "pe": 337.209,
+      "le": 0,
+      "er": 418.5605
+    }
+  },
+  "unknowns": [
+    "Button component raw JSX source — minified in 9a78bbdb bundle",
+    "DataTable component raw JSX source — minified in 9a78bbdb bundle",
+    "FilterBar internal layout — minified in 9a78bbdb bundle",
+    "Icon sprite/asset file — not in extracted module set",
+    "Logo SVG/PNG asset files — referenced as artifact-relative paths ../../assets/logos/*",
+    "Background image renewables-wind-farm.png — not in extracted set",
+    "SectionHeading component source — in 9a78bbdb but not used in sponsor screens",
+    "StatCounter component source — in 9a78bbdb but not used in sponsor screens",
+    "Admin portal screens — NOT in sponsor-portal.html; in admin-console.html",
+    "Nav icon names — passed as n.icon string to Icon component, actual icon names not decoded"
+  ],
+  "mapDiscrepancies": [
+    {
+      "finding": "LoginScreen in a350f295 is a SHARED component for both Admin and Sponsor",
+      "mapSays": "SP-AUTH → LoginScreen → a350f295",
+      "reality": "Same module also used for AD-AUTH (via role='admin' prop). The a350f295 module is NOT in the admin-console.html bundle — sponsor-portal.html carries its own copy.",
+      "severity": "info"
+    },
+    {
+      "finding": "ConsoleShell is shared between Admin and Sponsor",
+      "mapSays": "Only listed under SP-AUTH",
+      "reality": "a350f295 exports ConsoleShell used by both Admin and Sponsor portals",
+      "severity": "info"
+    },
+    {
+      "finding": "No additional screens beyond the 4 listed in the map",
+      "mapSays": "SP-AUTH, SP-OV, SP-AREA, SP-REPORT",
+      "reality": "Exactly these 4 screens confirmed. No hidden screens.",
+      "severity": "info"
+    }
+  ],
+  "additionalFindings": {
+    "navItems": [
+      {
+        "label": "ภาพรวม",
+        "divider": true,
+        "id": null,
+        "icon": null
+      },
+      {
+        "id": "overview",
+        "label": "เครดิตและพื้นที่",
+        "icon": "layout-dashboard"
+      },
+      {
+        "id": "areas",
+        "label": "รายแปลงในพื้นที่",
+        "icon": "map"
+      },
+      {
+        "label": "เอกสาร",
+        "divider": true,
+        "id": null,
+        "icon": null
+      },
+      {
+        "id": "reports",
+        "label": "รายงานและใบรับรอง",
+        "icon": "file-spreadsheet"
+      }
+    ],
+    "navItemCount": 5,
+    "clickableScreens": 3,
+    "dividerOnlyEntries": 2,
+    "screensNotInMap": [],
+    "confirmedScreenCount": 4,
+    "keyFinding_documentsNavItem": "NAV has a divider 'เอกสาร' but NO corresponding screen. The nav structure was planned for 4 clickable sections but only 3 are implemented. The 'เอกสาร' divider is label-only.",
+    "creditChartGeometry": {
+      "module": "a350f295",
+      "axes": {
+        "x": "season labels (ฤดู)",
+        "y": "tCO2eq (no explicit label drawn)",
+        "barsPerSeason": "showBaseline ? 3 : 2"
+      },
+      "barColors": {
+        "baseline": "var(--grey-200)",
+        "estimate": "var(--teal-300)",
+        "verified": "var(--teal-700)"
+      },
+      "barGeometry": {
+        "gapWithinGroup": "3px",
+        "gapBetweenGroups": "var(--space-6)",
+        "minWidth": "8px",
+        "borderRadius": "4px 4px 0 0"
+      },
+      "legend": [
+        {
+          "color": "var(--grey-200)",
+          "label": "กรณีฐาน BE (tCO2eq)",
+          "shown": "only when showBaseline=true"
+        },
+        {
+          "color": "var(--teal-300)",
+          "label": "ประมาณการ ER"
+        },
+        {
+          "color": "var(--teal-700)",
+          "label": "ทวนสอบแล้ว"
+        }
+      ]
+    },
+    "filterDefaults": {
+      "season": {
+        "id": "season",
+        "label": "ฤดู",
+        "value": "นาปี 2569 (S1)",
+        "options": [
+          "นาปี 2569 (S1)",
+          "นาปรัง 2569 (S2)",
+          "นาปี 2568"
+        ],
+        "active": true
+      },
+      "prov": {
+        "id": "prov",
+        "label": "จังหวัด",
+        "value": "ทั้งหมด (1)",
+        "options": [
+          "ทั้งหมด (1)",
+          "สุพรรณบุรี"
+        ],
+        "active": false
+      },
+      "tambon": {
+        "id": "tambon",
+        "label": "ตำบล",
+        "value": "หนองสะเดา",
+        "options": [
+          "หนองสะเดา"
+        ],
+        "active": true
+      },
+      "compare": {
+        "id": "compare",
+        "label": "เทียบกับ",
+        "value": "ฤดูก่อนหลัง",
+        "options": [
+          "ฤดูก่อนหลัง",
+          "กรณีฐาน 3 ปี",
+          "ค่าเฉลี่ยโครงการ"
+        ],
+        "active": false
+      }
+    },
+    "componentCountCorrection": "Previously recorded 27 components. Actual count from @ds-bundle is 28."
+  }
+}
