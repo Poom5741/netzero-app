@@ -57,7 +57,7 @@ export default function SponsorLoginPage() {
      * eyebrow "Sponsor Portal", Thai headline, sponsor description + sub copy. Two-column
      * artifact split gridTemplateColumns 1.05fr .95fr, minHeight 100vh. LEFT: gradient-deep
      * brand panel with the existing logo lockup pipeline (no logo asset gap invention).
-     * NO wind-farm <img>: renewables-wind-farm.png is the documented designer gap (R-027,
+     * No wind-farm image element: renewables-wind-farm.png is the documented designer gap (R-027,
      * sponsor-design-spec.md:925 unknown #2) — the reversible alternative ships (the
      * --gradient-deep background alone; the decorative 18%-opacity image does not affect
      * component geometry) and is tracked as a release-matrix gap row. No placeholder PNG
