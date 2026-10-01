@@ -8,6 +8,10 @@
   --color-on-primary-container: #013B45;
 
   /* === Surface Colors — Claude source white/grey palette === */
+  /* DEVIATION ROW (017 Map C, Tension 0 — flagged, NOT silently resolved):
+     artifact --surface-sunken is #F2F2F2 while this existing semantic token is
+     #f0f4f8 — different values, not just different names. See the Map C alias
+     block below (feedback-loop.md, "Conflict requiring separate resolution"). */
   --color-surface: #f0f4f8;
   --color-surface-dim: #d6dade;
   --color-surface-container-lowest: #ffffff;
@@ -111,6 +115,109 @@
   /* Form Field Dimensions */
   --form-field-height: 44px;
   --form-field-padding: 12px 16px;
+}
+
+/* =====================================================================
+   Map C — 017 artifact alias tokens (T-101, specs/017-admin-sponsor-design-parity)
+   Decision: Map C (alias tokens) — design decision status "decided"
+   (.super-speckit/design/017-admin-sponsor-design-parity/decision.json).
+   Artifact ramp + semantic token NAMES land here as ALIASES beside the
+   existing semantic --color-* theme tokens above; NO existing --color-*
+   token is renamed and no existing utility changes value (feedback-loop.md,
+   "Open prerequisite — artifact-token → theme-name mapping — DECIDED: Map C").
+   Source of record: admin-artifact.json + sponsor-artifact.json (values
+   identical in both). Asserted by T1-COL-01…54 + T1-CTL-01…08.
+
+   DEVIATION ROW (Tension 0 — recorded, not resolved by this feature):
+   --color-surface: #f0f4f8  (existing semantic token, @theme above)
+   --surface-sunken: #F2F2F2 (artifact alias, below)
+   These are DIFFERENT VALUES, not just different names. Per feedback-loop.md
+   the conflict is flagged for a separate Tension-0 decision; until then the
+   two tokens intentionally coexist.
+   ===================================================================== */
+:root {
+  /* Artifact navy ramp (T1-COL-01…11) */
+  --navy-50: #EEF2FB;
+  --navy-100: #D6E0F4;
+  --navy-200: #AEC2E8;
+  --navy-300: #7C9AD8;
+  --navy-400: #5279CB;
+  --navy-500: #2C5EB8;
+  --navy-600: #1C489F;
+  --navy-700: #123787;
+  --navy-800: #0B2A72;
+  --navy-900: #061E5C;
+  --navy-950: #030E2E;
+
+  /* Artifact teal ramp (T1-COL-12…22; --teal-400 ground truth #24C4B2) */
+  --teal-50: #E7FCF7;
+  --teal-100: #C6F9EE;
+  --teal-200: #8FF3DE;
+  --teal-300: #52ECCA;
+  --teal-400: #24C4B2;
+  --teal-500: #0AA8A3;
+  --teal-600: #028E91;
+  --teal-700: #027276;
+  --teal-800: #01565F;
+  --teal-900: #013B45;
+  --teal-950: #012730;
+
+  /* Artifact cool-grey ramp (T1-COL-23…33) */
+  --grey-50: #F2F2F2;
+  --grey-100: #EDEFF3;
+  --grey-200: #DDE1E8;
+  --grey-300: #C2C8D2;
+  --grey-400: #9AA3B2;
+  --grey-500: #737E91;
+  --grey-600: #566277;
+  --grey-700: #3C4A5C;
+  --grey-800: #273343;
+  --grey-900: #1B2330;
+  --grey-950: #141414;
+
+  /* NZC brand aliases (T1-COL-34…39) */
+  --nzc-navy: #061E5C;       /* = --navy-900 */
+  --nzc-teal: #028E91;       /* = --teal-600 */
+  --nzc-aqua: #43D8B8;
+  --nzc-mint: #52ECCA;       /* = --teal-300 */
+  --nzc-off-white: #F2F2F2;  /* = --grey-50 */
+  --nzc-space-grey: #273343; /* = --grey-800 */
+
+  /* Artifact surface tokens (T1-COL-40…42) */
+  --surface-inverse: #061E5C; /* sidebar bg — same value as --color-inverse-surface */
+  --surface-card: #FFFFFF;
+  /* DEVIATION ROW: artifact --surface-sunken (#F2F2F2) vs existing
+     --color-surface (#f0f4f8) — value conflict recorded per feedback-loop.md
+     Map C section; not silently resolved here (see @theme block above). */
+  --surface-sunken: #F2F2F2;
+
+  /* Artifact text tokens (T1-COL-43…46) */
+  --text-heading: #061E5C; /* = --navy-900 */
+  --text-body: #273343;    /* = --grey-800 */
+  --text-muted: #566277;   /* = --grey-600 */
+  --text-accent: #028E91;  /* = --teal-600 */
+
+  /* Artifact action tokens (T1-COL-47…51) */
+  --action-primary: #028E91;         /* = --teal-600 */
+  --action-primary-hover: #027276;   /* = --teal-700 */
+  --action-primary-active: #01565F;  /* = --teal-800 */
+  --action-secondary: #061E5C;       /* = --navy-900 */
+  --action-secondary-hover: #0B2A72; /* = --navy-800 */
+
+  /* Artifact status tones (T1-COL-52…54) */
+  --status-success: #0AA8A3; /* = --teal-500 */
+  --status-danger: #C8464F;
+  --status-warning: #E2A33C;
+
+  /* Artifact control dimensions (T1-CTL-01…08).
+     --shadow-accent and --gradient-deep already exist in @theme above with
+     artifact-identical values; --gradient-rule is the one new brand token. */
+  --control-height-sm: 36px;
+  --control-height-md: 46px;
+  --control-height-lg: 54px;
+  --radius-pill: 999px;
+  --focus-ring: 0 0 0 3px rgba(10,168,163,.32);
+  --gradient-rule: linear-gradient(90deg, #52ECCA 0%, #028E91 55%, #061E5C 100%);
 }
 
 /* === Base Styles === */
