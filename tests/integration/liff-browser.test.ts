@@ -5,11 +5,11 @@
  * Checks HTTP status, page titles, and expected Thai text content.
  *
  * Run: bun test tests/integration/liff-browser.test.ts
- * Env: LIFF_BASE_URL (default: https://netzero-frontend.pages.dev)
+ * Env: LIFF_BASE_URL (default: https://netzero-frontend.poom-a1d.workers.dev)
  */
 import { describe, expect, it } from "vitest";
 
-const BASE_URL = process.env.LIFF_BASE_URL ?? "https://netzero-frontend.pages.dev";
+const BASE_URL = process.env.LIFF_BASE_URL ?? "https://netzero-frontend.poom-a1d.workers.dev";
 
 interface PageCheck {
   path: string;
