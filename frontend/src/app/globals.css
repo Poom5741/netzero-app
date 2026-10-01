@@ -225,7 +225,57 @@
   --radius-pill: 999px;
   --focus-ring: 0 0 0 3px rgba(10,168,163,.32);
   --gradient-rule: linear-gradient(90deg, #52ECCA 0%, #028E91 55%, #061E5C 100%);
+
+/* =====================================================================
+   GAP A/B geometry alias tokens (T-209/T-210/T-211 support — button,
+   input, StatTile/kpi-card, dashboard shell). Values are artifact-exact
+   from admin-artifact.json + sponsor-artifact.json (identical where both
+   define them). Precedent: the T-201 status-ink alias commit (ddf18c0) —
+   GAP B names a value that carries no landed token, so an artifact-exact
+   alias is minted here to keep component sources CSS-var-only (R-006).
+   NOT defined here on purpose (namespace collision with Tailwind v4
+   defaults — a :root override would change existing utilities, violating
+   the Map C no-existing-utility-changes-value rule):
+     --text-4xl (Tailwind 36px vs artifact 48px)  -> --stat-tile-value-size
+     --leading-relaxed (Tailwind 1.625 vs artifact 1.7) -> --stat-tile-note-leading
+   --text-xs/sm/base already resolve via the Tailwind v4 theme at the same
+   px values (12/14/16). --radius-sm (8px) already exists in @theme above.
+   ===================================================================== */
+  --white: #FFFFFF;
+  --text-on-accent: var(--white);
+  --text-on-dark: var(--white);
+  --text-md: 18px;
+  --weight-light: 300;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --tracking-display: -0.02em;
+  --tracking-eyebrow: 0.14em;
+  --stat-tile-value-size: 48px;  /* GAP B StatTile value --text-4xl = 48px */
+  --stat-tile-note-leading: 1.7; /* GAP B StatTile note --leading-relaxed = 1.7 */
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-16: 64px;
+  --border-default: #C2C8D2;
+  --border-subtle: #DDE1E8;
+  --border-accent: #028E91;
+  --border-on-dark: rgba(255,255,255,.18);
+  --radius-card: var(--radius-lg);
+  --radius-control: var(--radius-pill);
+  --radius-field: var(--radius-sm);
+  --radius-circle: 50%;
+  --field-height: 46px;
+  --press-scale: 0.98;
+  --duration-fast: 140ms;
+  --duration-instant: 80ms;
+  --ease-standard: cubic-bezier(.4,0,.2,1);
+  --transition-control: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
 }
+
 
 /* === Base Styles === */
 html {
