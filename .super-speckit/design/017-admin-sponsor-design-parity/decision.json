@@ -1,0 +1,18 @@
+{
+  "feature": "017-admin-sponsor-design-parity",
+  "status": "decided",
+  "prototype": "prototype.html",
+  "brief": "design-brief.md",
+  "design_system_sources": [
+    "specs/017-admin-sponsor-design-parity/admin-design-spec.md",
+    "specs/017-admin-sponsor-design-parity/sponsor-design-spec.md",
+    "specs/017-admin-sponsor-design-parity/admin-artifact.json",
+    "specs/017-admin-sponsor-design-parity/sponsor-artifact.json"
+  ],
+  "external_sources": [
+    "HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md"
+  ],
+  "decision_by": "Dev (maker) at design-first per user GO 'implement it' 2026-10-01T04:43:50Z relayed by Chief; O-2 icon strategy + O-6 PageTitle/Section classification resolved here (plan open points); NOT the human purpose gate (that remains decision.json in purpose/)",
+  "decision_at": "2026-10-01T04:52:28Z",
+  "notes": "O-2: vendored inline-SVG lucide-derived path subset, no new dependency. O-6: (a) page-local inline patterns per GAP-B-excluded evidence. Accessibility WCAG 2.2 AA. Deviations: cool-grey ramp; 232px rail + <1024px drawer. Hex: artifact tokens only (R-006)."
+}
