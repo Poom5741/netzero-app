@@ -22,7 +22,7 @@ describe("BottomNav", () => {
     const items = [{ icon: "bar_chart", label: "สรุปผล", href: "/summary", active: true }];
     render(<BottomNav items={items} />);
     const link = screen.getByText("สรุปผล").closest("a");
-    expect(link).toHaveClass("bg-[#028E91]");
+    expect(link).toHaveClass("bg-[var(--action-primary)]");
     expect(link).toHaveClass("text-white");
   });
 
