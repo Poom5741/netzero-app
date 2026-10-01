@@ -105,5 +105,9 @@ chromium re-run GREEN (914/0 · 73/0 after host repoint `16151b3` · 372/372 · 
 corrected 17→33). Report: `.super-speckit/qa/017-selfheal-local/report.md`.
 **T-606 VISUAL SIGN-OFF RECEIVED**: THE USER (Poom5741), `2026-10-01T22:46:29Z`, chat verbatim
 "sure i signoff that design", against review surface `localhost:3100/{admin,sponsor}` at
-`000d6b5` (isolated worktree, all gates green). **Merge approval: PENDING** — T-606 closes on
-human-approved merge only.
+`000d6b5` (isolated worktree, all gates green).
+**T-606 MERGE APPROVED**: THE USER (Poom5741), `2026-10-01T22:49:11Z`, chose "Merge to main +
+push" over {push branch + PR only, hold local}. Pre-merge audit (skill
+safe-push-to-github-multi-agent-repo): main unmoved (0 behind), 51 commits 0 scaffolding,
+1 deletion (`GATE-PENDING.md`, user-authorized), 0 strict secret-pattern hits, fast-forward
+merge = merged tree identical to the fully-gated tree. **T-606 CLOSED.**

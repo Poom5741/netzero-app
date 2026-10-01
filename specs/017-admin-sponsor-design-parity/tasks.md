@@ -137,11 +137,11 @@ artifact — never re-add dead CSS. → R-031.
       R-0xx row `verified` / `not-verified` / `not-applicable` with evidence path; explicit
       designer-gap rows (wind-farm PNG, logo binaries, lucide sprite); repoint kit-state
       matrix (O-5). → R-033.
-- [ ] **T-606** Human visual sign-off + human-approved merge; release summary with per-row
+- [x] **T-606** Human visual sign-off + human-approved merge; release summary with per-row
       verdicts. Milestone → run `reassess` for any follow-on slice (config
       `reassess_after_verified_milestone_slice`). → HANDOFF §9.
-      **Visual sign-off RECEIVED** `2026-10-01T22:46:29Z` (user chat, verbatim in
-      release-matrix Verification chain). **Merge approval PENDING.**
+      **CLOSED**: visual sign-off `2026-10-01T22:46:29Z` + merge approval `2026-10-01T22:49:11Z`
+      (both user chat, verbatim in release-matrix Verification chain).
 
 ## Dependencies and ordering
 
