@@ -29,7 +29,7 @@ user-approved, but the annotation was BLOCKED because this file never landed
 ## Why the original never landed
 
 - `.gitignore:53` ignores all of `.super-speckit/`, where the matrix lived
-  (HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:57 — "This matches feature 013's precedent").
+  (docs/handoff/HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:57 — "This matches feature 013's precedent").
 - Landing verification found the file "does not exist anywhere locally (verified post-pull)"
   and it was deliberately NOT fabricated at gate time (gate-close-note-2026-10-01.md:31–33).
 - The 017 non-goal "no changes to `specs/013-farmer-chat-design-parity.md` or any 013 artifact"
@@ -44,12 +44,12 @@ The kit matrix convention places 9xx rows under "Explicit exclusions" with statu
 
 | Requirement ID | Status | Reason | Approval |
 | --- | --- | --- | --- |
-| R-901 | ~~not-applicable~~ → **SUPERSEDED** | "Admin and sponsor surfaces — excluded by confirmed non-goals" (original matrix line 57, quoted verbatim in GATE-PENDING.md:29 and HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:68) | **SUPERSEDED — by 017-admin-sponsor-design-parity, user-approved 2026-10-01 (purpose gate card tap "Approve all as recommended")** |
+| R-901 | ~~not-applicable~~ → **SUPERSEDED** | "Admin and sponsor surfaces — excluded by confirmed non-goals" (original matrix line 57, quoted verbatim in GATE-PENDING.md:29 and docs/handoff/HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:68) | **SUPERSEDED — by 017-admin-sponsor-design-parity, user-approved 2026-10-01 (purpose gate card tap "Approve all as recommended")** |
 
 Decision chain (every link cited):
 1. Original row: `013-farmer-chat-design-parity.md:57` recorded "Admin and sponsor surfaces —
    excluded by confirmed non-goals", status `not-applicable`
-   (HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:68; GATE-PENDING.md:29).
+   (docs/handoff/HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:68; GATE-PENDING.md:29).
 2. Gate question Q2 recommended **revoke**: "this feature is that carve-out's reversal; annotate
    the row `superseded`" (GATE-PENDING.md:29; mirrored purpose-map.md:37, purpose-map.html:45).
 3. Human approval: user Poom5741 tapped "✅ Approve all as recommended" 2026-10-01 ~02:19 UTC
@@ -93,7 +93,7 @@ each row the landed slice specs prove existed in the matrix, with its stated con
 
 | Row | Stated content | Citation |
 | --- | --- | --- |
-| R-013 | Chat canvas paints the artifact `--line-chat-bg: #8FAAD0` (the R-013 precedent regex-technique lives in `tests/unit/liff-page-parity.test.ts`) | specs/015-worker-liff-parity/spec.md:34; HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:124 |
+| R-013 | Chat canvas paints the artifact `--line-chat-bg: #8FAAD0` (the R-013 precedent regex-technique lives in `tests/unit/liff-page-parity.test.ts`) | specs/015-worker-liff-parity/spec.md:34; docs/handoff/HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:124 |
 | R-014 | Bot bubble text uses `--line-chat-ink: #16202C`; legacy `#333` must not appear | specs/015-worker-liff-parity/spec.md:35 |
 | R-015 | User bubble uses `--line-bubble-me: #A9E86B` | specs/015-worker-liff-parity/spec.md:36 |
 | R-016 | System divider is a `rgba(0,0,0,0.22)` pill, radius `999px`, `3px 12px`, 11px | specs/015-worker-liff-parity/spec.md:37 |
@@ -104,7 +104,7 @@ each row the landed slice specs prove existed in the matrix, with its stated con
 
 Matrix usage in the record: the 017 requirements-to-verification matrix was to be "modelled on
 `013-farmer-chat-design-parity.md` (that matrix is the template — read it)"
-(HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:142).
+(docs/handoff/HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:142).
 
 ## Other R-9xx rows
 

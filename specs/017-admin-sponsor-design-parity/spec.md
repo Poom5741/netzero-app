@@ -7,7 +7,7 @@
 **Design evidence (landed, verified 12/14 MATCH on 2026-10-01)**:
 `admin-design-spec.md` (1052 ln) · `admin-artifact.json` (2173 ln) · `sponsor-design-spec.md`
 (1001 ln) · `sponsor-artifact.json` (1723 ln) · `feedback-loop.md` (760 ln) ·
-`GATE-PENDING.md` · `HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md` (repo root)
+`GATE-PENDING.md` · `docs/handoff/HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md` (repo root)
 
 ## Why
 

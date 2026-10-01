@@ -46,7 +46,7 @@ tests/unit/ tests/integration/` must stay 914/0 + 73 pass (R-032). Bare repo-wid
 ## Plan-time derivation — the 8 missing components (T3(b))
 
 > **Provenance: derived 2026-10-01 from landed artifacts — the approved summary asserted
-> the count but never enumerated it** (HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:73;
+> the count but never enumerated it** (docs/handoff/HANDOFF-AGENT-017-WEB-CONSOLE-PARITY-2026-09-30.md:73;
 > purpose-map row 3d marks this as a plan-time derivation item). This section is that
 > derivation, recorded at plan time as the gate requires.
 
