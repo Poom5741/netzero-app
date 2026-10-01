@@ -26,7 +26,7 @@ artifact — never re-add dead CSS. → R-031.
 
 - [x] **T-000** Run design-first: brief + prototype + `decision.json` status `decided`;
       resolve open point O-2 (icon strategy: inline-SVG lucide subset vs `lucide-react`
-      dependency). Blocked on nothing; gates all implementation tasks. → R-033.
+      dependency). Blocked on nothing; gates all implementation tasks. → R-033, R-010.
 - [x] **T-000b** Record baseline outputs above verbatim into the run evidence folder
       `.super-speckit/qa/<run-id>/`. → R-032.
 
@@ -125,10 +125,10 @@ artifact — never re-add dead CSS. → R-031.
 - [x] **T-602** Maker full gate run (record verbatim): `bun test tests/unit/` (914/0);
       `bun test tests/integration/` (73); `cd frontend && npx vitest run`; `npx tsc
       --noEmit`; `npx eslint .` (0 errors); frontend build (static export). → R-031,
-      R-032.
+      R-032, R-026 (auth suites green inside the gate run).
 - [x] **T-603** Diff review: only `frontend/` + planning docs changed; `src/` diff empty
       except nothing; no protected paths touched; explicit-path commits only (never
-      `git add -A`). → R-024, HANDOFF lesson 7.
+      `git add -A`). → R-024, R-026 (gates absent from diff = preserved), HANDOFF lesson 7.
 - [x] **T-604** Checker (independent, fresh QA worktree at pinned candidate SHA): re-run
       T-602 gates; diff **failing test names** (not counts) against the clean baseline;
       re-observe computed styles; do not trust maker numbers. Record evidence under
