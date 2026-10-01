@@ -10,6 +10,12 @@ interface DashboardHeaderProps {
 /**
  * Sticky glassmorphic top header with search, notifications, settings,
  * and the signed-in user. Shared by the dashboards.
+ *
+ * T-501 — below the single 1024px boundary the sidebar hamburger (rendered
+ * by DashboardSidebar, fixed into the header band) overlaps the left edge,
+ * so the header reserves clearance with a pl-16 base padding; the shipped
+ * lg:px-10 still governs at >=1024px (unchanged). No other behaviour
+ * change; no intermediate breakpoints.
  */
 export function DashboardHeader({
   userLabel = "System Admin",
@@ -23,7 +29,7 @@ export function DashboardHeader({
   }
 
   return (
-    <header className="dashboard-header fixed top-0 left-0 right-0 bg-surface/80 backdrop-blur-md z-40 px-6 lg:px-10 flex items-center justify-between border-b border-surface-container-highest/30 shadow-[0_1px_8px_rgba(0,0,0,0.02)]" style={{ height: 'var(--header-height, 64px)' }}>
+    <header className="dashboard-header fixed top-0 left-0 right-0 bg-surface/80 backdrop-blur-md z-40 pl-16 pr-6 lg:px-10 flex items-center justify-between border-b border-surface-container-highest/30 shadow-[0_1px_8px_rgba(0,0,0,0.02)]" style={{ height: "var(--header-height, 64px)" }}>
       <div className="flex items-center gap-4">
         <span className="material-symbols-outlined text-on-surface-variant">search</span>
         <input

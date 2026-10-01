@@ -452,14 +452,6 @@ h3 {
 }
 
 /* === Dashboard Layout — responsive sidebar (Claude source 232px) === */
-@media (min-width: 768px) {
-  .dashboard-main {
-    padding-left: 72px;
-  }
-  .dashboard-header {
-    left: 72px;
-  }
-}
 @media (min-width: 1024px) {
   .dashboard-main {
     padding-left: 232px;
