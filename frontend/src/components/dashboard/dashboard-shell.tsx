@@ -37,9 +37,9 @@ export function DashboardShell({
         searchPlaceholder={searchPlaceholder}
       />
       <main
-        className="pt-14 pl-4 lg:pl-[232px] transition-all"
+        className="pt-14 pl-4 lg:pl-[var(--sidebar-width)] transition-all min-w-0"
       >
-        <div className="p-6 lg:p-10">
+        <div className="p-6 lg:px-[var(--space-10)] lg:pt-[var(--space-8)] lg:pb-[var(--space-16)]">
           {children}
         </div>
       </main>

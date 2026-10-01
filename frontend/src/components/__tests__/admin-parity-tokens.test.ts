@@ -14,8 +14,10 @@
  *   - --surface-inverse value sensitivity (T1-COL-40)      [:616-628]
  *   - raw hex added back turns literal-freedom red         [:630-644]
  *   - sidebar bg-token revert is caught by the detectors   [:645-656]
- * The shell-geometry width check [:657-664] targets geometry that does not
- * exist until T-211 (Phase 2) and is intentionally not fabricated here.
+ *   - sidebar-width 232px rail: present + 232->200 mutation caught
+ *     (feedback-loop.md:630-640, the T1-SH-WIDTH break-check; added once
+ *     T-211 landed the 232px rail — the directive cites this check at
+ *     :657-664)
  *
  * Hard constraints honoured: readFileSync + regex on raw source only; no
  * jsdom cascade/computed-style assertions; no rendered DOM; no new deps.
@@ -187,7 +189,7 @@ describe("T1 mutation break-checks (feedback-loop.md:616-669)", () => {
     );
   });
 
-  it("sidebar bg-token revert: swapping raw-hex utilities for tokens clears the detectors, and a raw-hex regression is flagged (:645-656)", () => {
+  it("sidebar bg-token revert: the T-211 rail is token-clean and a raw-hex regression is flagged (:645-656)", () => {
     const HEX_RAW = /(?<![0-9a-fA-FisVar]|var\()#[0-9a-fA-F]{3,8}(?![0-9a-fA-FisVar]|,)/g;
     const sidebarPath = join(
       FRONTEND_ROOT,
@@ -197,19 +199,29 @@ describe("T1 mutation break-checks (feedback-loop.md:616-669)", () => {
       "dashboard-sidebar.tsx",
     );
     const sidebarSrc = readFileSync(sidebarPath, "utf8");
-    // Today the rail still uses raw-hex arbitrary classes (T-211 restyles them);
-    // prove the detector measures exactly token-vs-hex by mutating a copy.
-    const tokenized = sidebarSrc
-      .split("bg-[#061E5C]")
-      .join("bg-inverse-surface")
-      .split("bg-[#028E91]")
-      .join("bg-primary");
-    expect(tokenized).not.toBe(sidebarSrc); // the raw-hex classes exist today
+    // Since T-211 the rail references var(--navy-900)/var(--teal-600); the
+    // old bg-[#061E5C]/bg-[#028E91] utilities must stay gone (R-031: the
+    // hex classes were removed, never re-added).
     const hexValues = (s: string) => (s.match(HEX_RAW) ?? []).map((v) => v.toUpperCase());
-    expect(hexValues(tokenized)).not.toContain("#061E5C");
-    expect(hexValues(tokenized)).not.toContain("#028E91");
+    expect(hexValues(sidebarSrc)).not.toContain("#061E5C");
+    expect(hexValues(sidebarSrc)).not.toContain("#028E91");
+    expect(sidebarSrc).toContain("bg-[var(--navy-900)]");
     // Break direction: reintroducing a raw-hex bg utility must be flagged.
-    const broken = tokenized + '\nclassName="bg-[#FF0000]"';
+    const broken = sidebarSrc + '\nclassName="bg-[#FF0000]"';
     expect(hexValues(broken)).toContain("#FF0000");
+  });
+
+  it("sidebar width break-check: the 232px rail exists and a 232->200 mutation is caught (feedback-loop.md:630-640, T1-SH-WIDTH)", () => {
+    const sidebarSrc = readFileSync(
+      join(FRONTEND_ROOT, "src", "components", "dashboard", "dashboard-sidebar.tsx"),
+      "utf8",
+    );
+    // Detector for the GAP A sidebar-width geometry (--sidebar-width rail).
+    const widthDetector = (s: string) => /w-\[232px\]/.test(s);
+    expect(widthDetector(sidebarSrc)).toBe(true); // pristine: 232px rail exists
+    // Break (:633): change sidebar from 232px to 200px — detector goes red.
+    const mutated = sidebarSrc.split("w-[232px]").join("w-[200px]");
+    expect(mutated).not.toBe(sidebarSrc); // mutation actually applied
+    expect(widthDetector(mutated)).toBe(false);
   });
 });

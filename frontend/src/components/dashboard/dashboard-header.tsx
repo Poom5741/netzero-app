@@ -61,7 +61,7 @@ export function DashboardHeader({
         </div>
         <div className="h-8 w-px bg-outline-variant/30" />
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[#028E91] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[var(--teal-600)] flex items-center justify-center">
             <span className="material-symbols-outlined text-white text-[18px]">person</span>
           </div>
           <span className="text-label-md text-on-surface">{userLabel}</span>
