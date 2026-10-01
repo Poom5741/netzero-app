@@ -208,6 +208,13 @@
   --status-success: #0AA8A3; /* = --teal-500 */
   --status-danger: #C8464F;
   --status-warning: #E2A33C;
+  /* GAP B Badge fg inks (T-201 support): admin-design-spec.md:941-953 TONES
+     gives Badge warning/danger fg as #8A5B10 / #8C2830 and the artifact
+     (admin-artifact.json Badge.TONES) carries the same values with no token
+     name. Alias names minted here (values artifact-exact) so ui/badge.tsx can
+     stay CSS-var-only under R-006 (no raw hex in component source). */
+  --status-warning-strong: #8A5B10;
+  --status-danger-strong: #8C2830;
 
   /* Artifact control dimensions (T1-CTL-01…08).
      --shadow-accent and --gradient-deep already exist in @theme above with
