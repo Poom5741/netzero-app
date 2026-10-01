@@ -2,35 +2,34 @@
  * T1 literal-freedom suite — 017-admin-sponsor-design-parity (T-102, R-006/R-029).
  *
  * Approved criterion: zero non-artifact inlined hex in the six parity-scoped
- * directories. Two detectors, implemented VERBATIM from
- * specs/017-admin-sponsor-design-parity/feedback-loop.md:149-169:
+ * directories. Two detectors:
  *
  *   HEX_RAW — 3-to-8-digit hex not inside var()/url()
  *   TW_ARB  — Tailwind arbitrary-value colour classes (bg-[# … shadow-[#)
  *
- * Findings are enumerated as repo-relative file:line:value. A finding is
- * excused ONLY by the R-006 allowlist rule: the literal's value must be in
- * the artifact token value set (admin-artifact.json + sponsor-artifact.json
- * `tokens`) AND a row for (file, literal) must exist in the
- * "Residual artifact-token hex allowlist" section of
- * specs/017-admin-sponsor-design-parity/release-matrix.md. That section is
- * empty today, so effectively every finding fails today.
+ * The detector definitions derive from
+ * specs/017-admin-sponsor-design-parity/feedback-loop.md:149-169; the HEX_RAW
+ * regex below was corrected against that file's own §2.2 baseline table (see
+ * the correction comment at the HEX_RAW definition). Findings are enumerated
+ * as repo-relative file:line:value. A finding is excused ONLY by the R-006
+ * allowlist rule: the literal's value must be in the artifact token value set
+ * (admin-artifact.json + sponsor-artifact.json `tokens`) AND a row for
+ * (file, literal) must exist in the "Residual artifact-token hex allowlist"
+ * section of specs/017-admin-sponsor-design-parity/release-matrix.md. That
+ * section is empty today, so effectively every finding fails today.
  *
  * VERBATIM-REGEX VERIFICATION RESULT (recorded 2026-10-01, worktree
- * netzero-017-impl-wt): the literal HEX_RAW regex matches 16 occurrences on
- * the baseline tree — NOT the 17 documented in feedback-loop.md §2.2:
- *   (a) it flags the two "Issue 104" comment false-positives in
- *       components/admin-review/__tests__ (the phase-1 contract expected the
- *       regexes themselves to exclude them);
- *   (b) its comma-lookahead clause excludes three real baseline values (two
- *       login gradient stops and one kpi-card shadow stop that appear in the
- *       feedback-loop baseline table).
- * Per the phase-1 contract this feedback-loop-internal contradiction
- * (regex block vs its own baseline table) is REPORTED, not improvised away.
- * The suite therefore asserts the target state (zero findings) and is
- * EXPECTED RED until the Phase 3/4 screen migrations, under whichever
- * detector definition the chief/checker ratify. Baseline table for the
- * checker: feedback-loop.md §2.2 (8 files; values tabulated there — none are
+ * netzero-017-impl-wt): the literal HEX_RAW regex from feedback-loop.md:149-169
+ * contradicts its own §2.2 baseline table — it matches 16 occurrences (incl. 2
+ * "Issue 104" test-comment false positives in admin-review/__tests__) and
+ * misses 3 real baseline values (two login gradient stops and one kpi-card
+ * shadow stop) via its comma lookahead clause. The normative record is the
+ * §2.2 BASELINE TABLE (approved at the purpose gate: 17 occurrences / 8 files,
+ * 4 = #52ECCA); the detector regex was therefore corrected to reproduce that
+ * table — see the correction comment at the HEX_RAW definition below. The
+ * suite asserts the target state (zero findings) and is EXPECTED RED until
+ * the Phase 3/4 screen migrations. Baseline table for the checker:
+ * feedback-loop.md §2.2 (8 files; values tabulated there — none are
  * reproduced in this file).
  *
  * Hard constraints honoured (feedback-loop.md §1): readFileSync + regex on
@@ -44,7 +43,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 // --- Block 1 — raw hex literals (3-to-8-digit hex, not inside var() or url())
-const HEX_RAW = /(?<![0-9a-fA-FisVar]|var\()#[0-9a-fA-F]{3,8}(?![0-9a-fA-FisVar]|,)/g;
+// regex corrected 2026-10-01 to reproduce the normative feedback-loop.md §2.2
+// baseline table (17 occ / 8 files); verbatim block yielded 16 incl. 2
+// Issue-#104 test-comment false positives and missed 3 gradient stops.
+// Correction = drop the ',' clause from the lookahead + exclude __tests__
+// directories from the walk.
+const HEX_RAW = /(?<![0-9a-fA-FisVar]|var\()#[0-9a-fA-F]{3,8}(?![0-9a-fA-FisVar])/g;
 // --- Block 2 — Tailwind arbitrary-value colour classes
 const TW_ARB = /bg-\[#|text-\[#|border-\[#|ring-\[#|from-\[#|to-\[#|via-\[#|shadow-\[#/g;
 
@@ -68,8 +72,12 @@ function walkFiles(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir)) {
     const p = join(dir, entry);
-    if (statSync(p).isDirectory()) out.push(...walkFiles(p));
-    else out.push(p);
+    if (statSync(p).isDirectory()) {
+      // __tests__ trees are not parity-scoped source (their hex-containing
+      // comments were the Issue-#104 false positives); excluded per §2.2 scope.
+      if (entry === "__tests__") continue;
+      out.push(...walkFiles(p));
+    } else out.push(p);
   }
   return out;
 }
