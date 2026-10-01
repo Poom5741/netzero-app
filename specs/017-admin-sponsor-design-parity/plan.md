@@ -187,6 +187,15 @@ frontend/src/
 - **O-5** Matrix pointer — kit state still points at `GATE-PENDING.md`; repoint to the
   release-stage verification matrix at candidate time (no CLI for matrix re-pointing
   exists; hand-maintain matching the 013 schema, per HANDOFF §7 note).
+- **O-6** (checker flag, 2026-10-01): Shared Component Inventory (admin-design-spec.md ~:500, module
+  c0d425a3) lists PageTitle and Section — no counterpart files under frontend/src/components/,
+  neither enumerated in the 8 (R-008/GAP-B derivation) nor excluded. The approved count of 8
+  (HANDOFF:73) is preserved via the GAP-B arithmetic (16 sections + GradientRule − 8 exclusions = 8);
+  resolve at design-first (Phase 0 / T-000) whether PageTitle and Section are (a) page-local inline
+  patterns (like TrustBadge), (b) derivatives of existing primitives (Card/SectionHeading family),
+  or (c) genuine additions beyond the approved 8 — the third outcome requires user/Chief sign-off
+  since it contradicts the approved count. Tasks T-309/T-402/R-015/R-021/R-022 reference them and
+  must not proceed to implementation before O-6 is resolved.
 
 ## Merge policy
 
