@@ -53,7 +53,7 @@ cell and consolidated in "Disclosed deltas" below — flagged for T-606 HUMAN re
 | R-030 | Tier-2 Playwright green (computed CSS, 1024/1023 pair) | verified* | T-601 `d306214`: 22 passed / 0 failed / 12 EXPLICIT named skips (reasons independently spot-verified genuine by checker §G); unverified designs listed below — never a silent pass |
 | R-031 | 4 stale tests deleted or rewritten against artifact | verified | button ×3 rewritten to GAP B tones (8→16 tests), live-calc ×1 rewritten to artifact card chrome; all green (checker §C verbose rerun) |
 | R-032 | Baselines hold (914/0 unit, 73 integration, vitest, tsc, eslint, build) | verified | maker six-gate run (t602-full-gates) + checker §B independent re-run: all six exit 0 |
-| R-033 | Design decision `decided` before implementation; human visual sign-off at release | verified (gate) | decision.json DECIDED `13bd602` @04:52:28Z BEFORE any UI commit (f9aa1ba is next); visual sign-off = T-606 HUMAN — OPEN, never autonomous |
+| R-033 | Design decision `decided` before implementation; human visual sign-off at release | verified (gate) | decision.json DECIDED `13bd602` @04:52:28Z BEFORE any UI commit (f9aa1ba is next); visual sign-off = T-606 HUMAN — SIGNED `2026-10-01T22:46:29Z` (chat, verbatim in Verification chain); merge approval still pending, never autonomous |
 
 ## Designer-gap rows (never invented; remain open until designer supplies)
 
@@ -102,5 +102,8 @@ branch) → T-604 INDEPENDENT CHECKER: **VERDICT PASS** (10/10 sections; report:
 SELF-HEAL** (`017-selfheal-local`, on a fresh clone machine): all six T-602 gates + Tier-2
 chromium re-run GREEN (914/0 · 73/0 after host repoint `16151b3` · 372/372 · tsc/eslint/build 0 ·
 22/0/12); §A scope + §D hex + §E tokens re-derived (33/33 byte-exact; matrix R-005 figure
-corrected 17→33). Report: `.super-speckit/qa/017-selfheal-local/report.md`. Merge + visual
-sign-off: T-606 HUMAN ONLY.
+corrected 17→33). Report: `.super-speckit/qa/017-selfheal-local/report.md`.
+**T-606 VISUAL SIGN-OFF RECEIVED**: THE USER (Poom5741), `2026-10-01T22:46:29Z`, chat verbatim
+"sure i signoff that design", against review surface `localhost:3100/{admin,sponsor}` at
+`000d6b5` (isolated worktree, all gates green). **Merge approval: PENDING** — T-606 closes on
+human-approved merge only.

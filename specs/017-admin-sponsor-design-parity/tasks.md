@@ -140,6 +140,8 @@ artifact — never re-add dead CSS. → R-031.
 - [ ] **T-606** Human visual sign-off + human-approved merge; release summary with per-row
       verdicts. Milestone → run `reassess` for any follow-on slice (config
       `reassess_after_verified_milestone_slice`). → HANDOFF §9.
+      **Visual sign-off RECEIVED** `2026-10-01T22:46:29Z` (user chat, verbatim in
+      release-matrix Verification chain). **Merge approval PENDING.**
 
 ## Dependencies and ordering
 
