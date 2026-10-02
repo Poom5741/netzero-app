@@ -1,0 +1,27 @@
+name = "netzero-carbon-poc-staging"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# STAGING D1 database (clone of prod `netzero`, 2026-10-02)
+[[d1_databases]]
+binding = "DB"
+database_name = "netzero-staging-db"
+database_id = "b291686f-ce8c-470c-aeef-92fe08e89b56"
+
+# STAGING R2 bucket (fresh, empty)
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "netzero-photos-staging"
+
+# Workers AI
+[ai]
+binding = "AI"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "staging"
+APP_URL = "https://netzero-carbon-poc-staging.poom-a1d.workers.dev"
+
+[observability]
+enabled = true
