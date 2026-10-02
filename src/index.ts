@@ -126,33 +126,39 @@ app.post("/webhook/line", async (c) => {
   try {
     const rawBody = await c.req.text();
     const sig = c.req.header("X-Line-Signature");
+    const secret = c.env.LINE_CHANNEL_SECRET;
 
-    // Always accept the request (LINE verification + real events)
-    // Verify signature if present
-    if (sig) {
-      const secret = c.env.LINE_CHANNEL_SECRET;
-      if (secret) {
-        const key = await crypto.subtle.importKey(
-          "raw",
-          new TextEncoder().encode(secret),
-          { name: "HMAC", hash: "SHA-256" },
-          false,
-          ["sign"],
-        );
-        const hmacSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
-        // LINE's X-Line-Signature is Base64-encoded HMAC-SHA256 (not hex)
-        const macBytes = new Uint8Array(hmacSig);
-        let expected = "";
-        for (const b of macBytes) expected += String.fromCharCode(b);
-        expected = btoa(expected);
+    // LINE signs every delivery with Base64-encoded HMAC-SHA256 of the raw
+    // body. Unsigned or unverifiable requests are rejected before any event
+    // processing (D3: the old "Always accept" path let forgeries drive farmer
+    // flows). Missing secret fails closed.
+    if (!sig) {
+      return c.json({ error: "Missing signature" }, 401);
+    }
+    if (!secret) {
+      console.error("LINE_CHANNEL_SECRET not configured; rejecting webhook delivery");
+      return c.json({ error: "LINE_CHANNEL_SECRET not configured" }, 500);
+    }
 
-        if (sig !== expected) {
-          console.log(
-            `SIG_MISMATCH: got=${sig.substring(0, 20)}... expected=${expected.substring(0, 20)}...`,
-          );
-          return c.json({ error: "Invalid signature" }, 401);
-        }
-      }
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const hmacSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+    // LINE's X-Line-Signature is Base64-encoded HMAC-SHA256 (not hex)
+    const macBytes = new Uint8Array(hmacSig);
+    let expected = "";
+    for (const b of macBytes) expected += String.fromCharCode(b);
+    expected = btoa(expected);
+
+    if (sig !== expected) {
+      console.log(
+        `SIG_MISMATCH: got=${sig.substring(0, 20)}... expected=${expected.substring(0, 20)}...`,
+      );
+      return c.json({ error: "Invalid signature" }, 401);
     }
 
     const accessToken = c.env.LINE_CHANNEL_ACCESS_TOKEN;
