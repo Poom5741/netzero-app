@@ -1,0 +1,18 @@
+{
+  "feature": "013-farmer-chat-design-parity",
+  "decision": "approved",
+  "decided_by": "user directive 2026-09-29: update farmer design to match 100% to html design chat design on claude",
+  "visual_thesis": "100% parity with client Claude Design artifact (LINE OA farmer surface)",
+  "design_source": {
+    "type": "claude-design-artifact",
+    "path": "design-artifacts/2026-09-28/line-oa-farmer.html",
+    "artifact_id": "19c446b9-e2f5-4e09-a118-fca56ec0c0c8",
+    "license": "client-owned project design"
+  },
+  "token_source": "artifact embedded styles (see artifact-evidence.md)",
+  "alternatives_considered": [],
+  "notes": [
+    "Native LINE Flex messages bounded by LINE schema; deviations recorded as evidence-backed, not silent.",
+    "No functional regressions to flows verified in 2026-09-19 full-flow review."
+  ]
+}
