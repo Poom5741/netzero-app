@@ -10,6 +10,9 @@ SHA = re.compile(r"^[0-9a-f]{7,64}$")
 def root(value: str) -> Path: return Path(value).resolve()
 def state_path(repo: Path, feature: str) -> Path: return repo / ".super-speckit/state/features" / f"{feature}.json"
 def manifest_path(repo: Path) -> Path: return repo / ".super-speckit/state/work-state.yml"
+def feature_files(repo: Path) -> list[Path]:
+    """Real feature JSON files; skips macOS AppleDouble ('._*') metadata forks."""
+    return sorted(p for p in (repo / ".super-speckit/state/features").glob("*.json") if not p.name.startswith("._"))
 def load(repo: Path, feature: str) -> dict: return json.loads(state_path(repo, feature).read_text())
 def save(repo: Path, feature: str, data: dict) -> None:
     p = state_path(repo, feature); p.parent.mkdir(parents=True, exist_ok=True); p.write_text(json.dumps(data, indent=2) + "\n")
@@ -17,7 +20,7 @@ def save(repo: Path, feature: str, data: dict) -> None:
 def render_work_state_manifest(repo: Path) -> str:
     """Render a dependency-free YAML index that humans and other tools can inspect."""
     records=[]
-    for path in sorted((repo / ".super-speckit/state/features").glob("*.json")):
+    for path in feature_files(repo):
         records.append(json.loads(path.read_text()))
     lines=["schema_version: 1", "authority: files-and-commands", "generated_from: .super-speckit/state/features/*.json", "features:"]
     if not records:
@@ -53,7 +56,7 @@ def git_value(repo: Path, *args: str) -> str | None:
 
 def validation_failures(repo: Path) -> list[str]:
     failures=[]
-    for p in (repo / ".super-speckit/state/features").glob("*.json"):
+    for p in feature_files(repo):
         try:
             d=json.loads(p.read_text()); assert d["state"] in STATES; assert d["maker"] != d["checker"]
             assert d.get("purpose", {}).get("status") in {"not_started", "draft", "confirmed", "rework"}
