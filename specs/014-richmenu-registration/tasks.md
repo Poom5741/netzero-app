@@ -38,6 +38,14 @@
       but execution requires a live channel access token (secret) and mutates the production
       LINE channel. **Blocked on authorized credentials + go-ahead; never fabricated.**
 
+      **Evidence update 2026-10-05** (read-only probe via `scripts/register-rich-menu.ts --check`):
+      channel `netzero-test` (`@489xulzz`) **already has a default rich menu**
+      (`richmenu-90d39bb27db377e604168ebaf69cabd9`, "NetZeroCarbon Post-Activation Menu Large") —
+      same six postback actions (BL_HOME/SEASON_HOME/TODO/FIELD_LIST/SUMMARY/CONTACT) but a
+      2500×1686 two-row layout with `selected: true`. The artifact-parity config is 2500×843 with
+      `selected: false`. Applying would replace a working live menu and collapse it by default —
+      **product decision required** (confirm `selected` state + visual choice) before `--apply`.
+
 ## Not in this slice
 
 - Per-user menu linking (`linkRichMenuToUser`) — no requirement yet.
