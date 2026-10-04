@@ -103,14 +103,16 @@ describe("setDefaultRichMenu", () => {
 });
 
 describe("uploadRichMenuImage", () => {
-  it("POSTs raw PNG bytes to the content endpoint", async () => {
+  it("POSTs raw PNG bytes to the api-data content endpoint (binary host, not api.line.me)", async () => {
     const calls = captureFetch({ status: 200, statusText: "OK", body: "{}" });
     const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]).buffer;
 
     const res = await uploadRichMenuImage("token-abc", "rm-1", png);
 
     expect(calls).toHaveLength(1);
-    expect(calls[0].url).toBe("https://api.line.me/v2/bot/richmenu/rm-1/content");
+    // LINE serves rich menu image content on the api-data host — uploading to
+    // api.line.me 404s (found live 2026-10-05, T-208 first apply attempt).
+    expect(calls[0].url).toBe("https://api-data.line.me/v2/bot/richmenu/rm-1/content");
     expect(calls[0].method).toBe("POST");
     expect(calls[0].headers["Content-Type"]).toBe("image/png");
     expect(calls[0].headers.Authorization).toBe("Bearer token-abc");
@@ -127,7 +129,7 @@ describe("uploadRichMenuImage", () => {
   it("url-encodes the rich menu id", async () => {
     const calls = captureFetch({ status: 200, statusText: "OK", body: "{}" });
     await uploadRichMenuImage("t", "rm/../evil", new Uint8Array([0]).buffer);
-    expect(calls[0].url).toBe("https://api.line.me/v2/bot/richmenu/rm%2F..%2Fevil/content");
+    expect(calls[0].url).toBe("https://api-data.line.me/v2/bot/richmenu/rm%2F..%2Fevil/content");
   });
 });
 
@@ -147,5 +149,9 @@ describe("rich menu image asset", () => {
 
   it("matches the size declared in buildRichMenu()", () => {
     expect(buildRichMenu().size).toEqual({ width: 2500, height: 843 });
+  });
+
+  it("is under LINE's 1 MB upload limit (found live 2026-10-05: 1.63MB asset 413/404s)", () => {
+    expect(readFileSync(asset).length).toBeLessThan(1_000_000);
   });
 });
