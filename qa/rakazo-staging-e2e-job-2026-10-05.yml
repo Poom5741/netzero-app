@@ -1,0 +1,108 @@
+# Rakazo journey job — full staging E2E (LINE OA → sponsor portal)
+# Generated 2026-10-05 for candidate main@8125303 (frontend worker 6edb6fd1, backend netzero-carbon-poc 144f0607)
+# Hand to Rakazo as-is. Rakazo is the independent manual-browser/computer checker.
+
+job: rakazo-staging-e2e
+run_id: 2026-10-05-staging-e2e-r1
+candidate_sha: "8125303"
+role: independent_persistent_manual_checker
+deadline: null
+
+environment:
+  stack: STAGING  # client-facing ORIGINAL stack — real LINE OA lives here. NOT production, NOT dev.
+  frontend: https://netzero-frontend.poom-a1d.workers.dev
+  backend: https://netzero-carbon-poc.poom-a1d.workers.dev
+  build_fingerprint: https://netzero-frontend.poom-a1d.workers.dev/_staging-build.json  # expect {"build":"8125303", ...}
+  line_oa:
+    name: netzero-test
+    add_friend_url: https://line.me/R/ti/p/@489xulzz
+    liff_id: 2011183008-7bEomfVF  # per AGENTS.md staging record; LIFF pages are backend-hosted by design
+    note: bot replies live; rich menu postbacks BL_HOME/SEASON_HOME fall back to dashboard (known, minor)
+  test_identities:  # staging, public handoff — READ the password from the handoff doc, never copy it into evidence
+    admin: admin@netzero.com
+    sponsor: sponsor@netzero.com
+    password_source: docs/handoff/STAGING-HANDOFF-clients-2026-10-02.md
+    farmer_identification: phone number IS the identity — no password; LINE account linking is automatic
+
+isolation_contract:
+  - private Rakazo computer + clean browser profile; log out any pre-existing session before each portal journey
+  - use only the supplied test identities; never expose credentials in evidence files
+  - QA-only: write only under .super-speckit/qa/2026-10-05-staging-e2e-r1/
+  - no product code, config, git, or deploy changes; no delegation to peer agents
+  - report unavailable surfaces as not-run, never passed
+
+declared_journeys:
+  - id: J0
+    name: environment receipt
+    steps:
+      - verify build fingerprint returns build 8125303
+      - verify backend /health responds and reports environment
+    expect: fingerprint matches candidate; receipt recorded
+
+  - id: J1
+    name: farmer via native LINE OA → LIFF (end-to-end farmer journey)
+    entry: real LINE account on Rakazo's computer (LINE desktop/web allowed; this is the accepted release bar — real-device camera pass is waived)
+    steps:
+      - add friend / open OA netzero-test
+      - onboarding / registration via LIFF (name, phone, documents)
+      - admin approval gate — LINE blocks photo capture until application is approved; coordinate: complete admin approval in J2 between farmer phases, then return
+      - season setup (AWD calendar) via LIFF
+      - 4 photo rounds (OB/PJ/RP + close-out) via native photo action → LIFF camera/upload
+      - bot replies after each action (single batched reply per replyToken)
+      - results summary at season end
+    expect: each step's observed state, message content, and LIFF rendering recorded; upload results show pending/flagged states as designed
+    known_caveats: GPS 0,0 on evidence photos is a known caveat; fresh post-deploy calendar renders
+
+  - id: J2
+    name: admin console review & approval
+    entry: https://netzero-frontend.poom-a1d.workers.dev/admin/login
+    steps:
+      - login (fresh)
+      - dashboard: shell, KPIs, navigation
+      - farmers list → find the J1 farmer → farmer detail (plots, season inputs, rice variety render)
+      - evidence grid → review pending photos from J1 rounds → approve/flag as appropriate for the flow
+      - sponsors page → sponsor detail
+      - settings page renders
+      - logout → confirm session cleared
+    expect: approvals unblock the J1 farmer's next phase; wrong-password attempt checked once
+    known_caveats: rail shows admin@netzerocarbon.com (cosmetic); pending count may include orphan test links
+
+  - id: J3
+    name: sponsor portal (017 UI) — recently fixed F1/F2/F3, regression focus
+    entry: https://netzero-frontend.poom-a1d.workers.dev/sponsor/login
+    steps:
+      - wrong-password attempt → inline Thai error, no navigation
+      - correct login → must land on /sponsor and STAY (session gate passes; no bounce)
+      - dashboard (ภาพรวม): KPI/summary loads via backend API; province/season filters present; PDPA CS-02 notice visible
+      - พื้นที่ (areas): renders; scoped by sponsor areas (สุพรรณบุรี)
+      - รายงานและใบรับรอง (reports): EX-2042 row → download → real CSV streams (first line "รายงาน EX-2042 — สรุปคาร์บอนเครดิต")
+      - reload /sponsor mid-session → session persists (SameSite=None backend-host cookie)
+      - logout → /sponsor now redirects to login; back button does not resurrect the session
+    expect: no bounce loop after login; all three pages render; empty states acceptable when data genuinely absent
+    context: F1 (JSON login 500), F2 (BACKEND binding + cross-origin login), F3 (same-origin session gate) all resolved 2026-10-05 — treat any recurrence as a defect
+
+  - id: J4
+    name: sponsor data scoping (requires J1/J2 to have produced attributable data)
+    steps:
+      - sponsor sees only farmers/plots within its admin-assigned area
+      - CPA codes shown instead of real names (PDPA CS-02)
+      - summary numbers reconcile with what admin approved
+    expect: any out-of-scope data visible to sponsor = defect (security-relevant)
+
+testing_notes:
+  - React hydration resets controlled inputs — fill forms only after load settles; verify value stuck before submit
+  - browser automation: domSnapshot is the locator ground truth; never guess selectors
+  - LINE replyToken constraint: expect one batched reply per farmer message
+  - legacy e2e suites in repo are pre-017 drift — do NOT run them as acceptance evidence
+
+out_of_scope_on_rakazo_computer:
+  - real-device (phone) camera pass — waived per 2026-09-29 decision
+  - production environment — does not exist yet
+  - dev stack (netzero-carbon-poc-staging) — different environment, different credentials
+
+return_contract:
+  report_path: .super-speckit/qa/2026-10-05-staging-e2e-r1/journey-ux-report.md
+  evidence_dir: .super-speckit/qa/2026-10-05-staging-e2e-r1/
+  per_journey: status (passed/failed/blocked/not-run), URL, viewport, exact actions, observed vs expected, sanitized screenshot/trace paths
+  findings: exact repro steps, observed/expected, classification (defect / cosmetic / data-state / security), severity
+  final_status: passed ONLY if every declared journey passed against candidate 8125303 and no confirmed defect remains in declared scope

@@ -1,0 +1,120 @@
+# ---- Sensitive source data (DO NOT commit) ----
+# Real farmer documents, personal data, carbon-calculation sheets, CSV exports.
+# These stay local and are excluded from the public repo.
+/New Line NZC/
+
+# ---- Node ----
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.pnpm-store/
+
+# ---- Cloudflare / Wrangler ----
+.wrangler/
+.next/
+.dev.vars
+wrangler.toml.bak
+*secret*
+
+# ---- Env / secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Tests / tooling ----
+.mt-cache/
+.turbo/
+
+# ---- Agent / automation loop state (not project code) ----
+.pi-glla/
+.until-done/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Editor / IDE ----
+.vscode/
+.idea/
+*.swp
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+*.pth
+.mimosa/
+.playwright-mcp/
+
+# ---- Removed local artifacts (2026-09-29 cleanup) ----
+# Transient/generated output removed from tracking; ignore so it cannot
+# creep back in. `tests/test-results/` and `frontend/test-results/` are
+# separate paths owned by their own .gitignore files.
+#
+# `.super-speckit/` is ignored per-subdirectory, NOT wholesale. Git never
+# descends into an excluded directory, so a `!` negation for a child path
+# cannot re-include it — the parent rule must not cover the child at all.
+# Two subtrees are deliberately left TRACKED because they are the durable,
+# auditable evidence of why a change was made:
+#   .super-speckit/bugs/   confirmed-bug records (feature 008)
+#   .super-speckit/design/ design decisions
+.super-speckit/atlas/
+.super-speckit/bugs/*.tmp
+.super-speckit/feedback/
+.super-speckit/grills/
+.super-speckit/matrices/
+.super-speckit/purpose/
+.super-speckit/research/
+.super-speckit/state/
+# .super-speckit/qa/ is ignored EXCEPT the maker seed fixture, which is part
+# of the 008-fix-login-wiring evidence trail and is referenced by its bug records.
+.super-speckit/qa/*
+!.super-speckit/qa/008-fix-login-wiring-maker2/
+.super-speckit/qa/008-fix-login-wiring-maker2/*
+!.super-speckit/qa/008-fix-login-wiring-maker2/seed-maker-users.ts
+visual-qa-screenshots/
+/test-results/
+
+# ---- Visual QA output (keep .gitkeep placeholders) ----
+tests/visual/captures/reference/
+tests/visual/captures/provenance/
+tests/visual/comparison/diff/
+tests/visual/comparison/overlay/
+tests/visual/comparison/results/
+tests/visual/comparison/temp-*.png
+tests/visual/noise/profiles/
+!tests/visual/captures/.gitkeep
+!tests/visual/comparison/diff/.gitkeep
+!tests/visual/comparison/overlay/.gitkeep
+!tests/visual/comparison/results/.gitkeep
+!tests/visual/noise/profiles/.gitkeep
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+bower_components/
+jspm_packages/
+__pycache__/
+site-packages/
+venv/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+cdk.out/
+*.egg-info/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）
