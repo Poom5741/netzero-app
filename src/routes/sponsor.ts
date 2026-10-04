@@ -55,11 +55,34 @@ sponsorRoutes.use("*", async (c, next) => {
 sponsorRoutes.get("/login", (c) => c.html(loginPage()));
 
 sponsorRoutes.post("/login", async (c) => {
-  const form = await c.req.formData();
-  const email = String(form.get("email") ?? "").trim();
-  const password = String(form.get("password") ?? "");
-  const otp = String(form.get("otp") ?? "");
-  if (!email || !password) return c.html(loginPage("Email and password are required"), 400);
+  // F1: this route had duplicate handlers — the first parsed formData()
+  // unconditionally, so the 017 portal's JSON login hit an unhandled 500.
+  // One handler dispatches on content-type, mirroring auth.ts b8.
+  const contentType = (c.req.header("content-type") || "").toLowerCase();
+  const isJson = contentType.includes("application/json");
+  let email = "";
+  let password = "";
+  let otp = "";
+  try {
+    if (isJson) {
+      const body = await c.req.json();
+      email = String(body.email ?? "").trim();
+      password = String(body.password ?? "");
+      otp = String(body.otp ?? "");
+    } else {
+      const form = await c.req.formData();
+      email = String(form.get("email") ?? "").trim();
+      password = String(form.get("password") ?? "");
+      otp = String(form.get("otp") ?? "");
+    }
+  } catch {
+    const message = "Email and password are required";
+    return isJson ? c.json({ error: message }, 400) : c.html(loginPage(message), 400);
+  }
+  if (!email || !password) {
+    const message = "Email and password are required";
+    return isJson ? c.json({ error: message }, 400) : c.html(loginPage(message), 400);
+  }
   const user = await c.env.DB.prepare(
     "SELECT id, email, password_hash, role, otp_secret, areas FROM users WHERE email = ?",
   )
@@ -72,64 +95,26 @@ sponsorRoutes.post("/login", async (c) => {
       otp_secret: string | null;
     }>();
   if (user?.role !== "sponsor" || !(await verifyPassword(password, user.password_hash))) {
-    return c.html(loginPage("Invalid credentials"), 401);
+    return isJson
+      ? c.json({ error: "Invalid credentials" }, 401)
+      : c.html(loginPage("Invalid credentials"), 401);
   }
-  if (user.otp_secret && !verifyOtp(user.otp_secret, otp))
-    return c.html(loginPage("Invalid OTP code"), 401);
+  if (user.otp_secret && !verifyOtp(user.otp_secret, otp)) {
+    return isJson
+      ? c.json({ error: "Invalid OTP code" }, 401)
+      : c.html(loginPage("Invalid OTP code"), 401);
+  }
   const cookie = await createSessionCookie(
     { userId: user.id, role: "sponsor", email: user.email },
     c.env.SECRET,
     true,
     86400,
-    "Lax", // Explicitly set Lax for sponsor login compatibility
+    // JSON (017 portal) is a cross-origin Pages <-> Worker call and needs
+    // SameSite=None; the legacy same-origin form is first-party and Lax
+    // suffices (see auth.ts b8 comment).
+    isJson ? "None" : "Lax",
   );
-  return new Response(null, {
-    status: 302,
-    headers: { Location: "/sponsor", "Set-Cookie": cookie },
-  });
-});
-
-sponsorRoutes.post("/login", async (c) => {
-  try {
-    const body = await c.req.json();
-    const email = String(body.email ?? "").trim();
-    const password = String(body.password ?? "");
-    const otp = String(body.otp ?? "");
-
-    if (!email || !password) {
-      return c.json({ error: "Email and password are required" }, 400);
-    }
-
-    const user = await c.env.DB.prepare(
-      "SELECT id, email, password_hash, role, otp_secret, areas FROM users WHERE email = ?",
-    )
-      .bind(email)
-      .first<{
-        id: string;
-        email: string;
-        password_hash: string;
-        role: string;
-        otp_secret: string | null;
-      }>();
-
-    if (user?.role !== "sponsor" || !(await verifyPassword(password, user.password_hash))) {
-      return c.json({ error: "Invalid credentials" }, 401);
-    }
-
-    if (user.otp_secret && !verifyOtp(user.otp_secret, otp)) {
-      return c.json({ error: "Invalid OTP code" }, 401);
-    }
-
-    const cookie = await createSessionCookie(
-      { userId: user.id, role: "sponsor", email: user.email },
-      c.env.SECRET,
-      true,
-      86400,
-      // FINDING-E fix: same as /login — cross-origin Pages <-> Worker
-      // requires SameSite=None; cookie remains HttpOnly + Secure.
-      "None",
-    );
-
+  if (isJson) {
     return c.json(
       {
         success: true,
@@ -137,17 +122,13 @@ sponsorRoutes.post("/login", async (c) => {
         message: "Login successful",
       },
       200,
-      {
-        "Set-Cookie": cookie,
-      },
-    );
-  } catch (error) {
-    console.error("Sponsor login error:", error);
-    return c.json(
-      { error: "Login failed", details: error instanceof Error ? error.message : String(error) },
-      500,
+      { "Set-Cookie": cookie },
     );
   }
+  return new Response(null, {
+    status: 302,
+    headers: { Location: "/sponsor", "Set-Cookie": cookie },
+  });
 });
 
 sponsorRoutes.post("/logout", (c) => {
