@@ -20,8 +20,17 @@ export default function SponsorLoginPage() {
     setLoading(true);
     setError("");
 
+    // F1-follow-up 2026-10-05: login must hit the BACKEND host directly. The
+    // /sponsor-login proxy sets the nzc_session cookie on the FRONTEND host,
+    // but every dashboard XHR goes straight to the backend origin (see the
+    // apiBase fallback in the dashboard/areas/reports pages), so a proxied
+    // login cookie never authenticates them. The backend JSON handler returns
+    // 200 {success:true} with a SameSite=None cookie and CORS allow-lists
+    // this origin — cross-origin login is its designed contract (FINDING-E).
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
     try {
-      const res = await fetch("/sponsor-login", {
+      const res = await fetch(`${apiBase}/sponsor/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -30,14 +39,19 @@ export default function SponsorLoginPage() {
           ...(credentials.otp ? { otp: credentials.otp } : {}),
           ...(credentials.remember ? { remember: true } : {}),
         }),
-        redirect: "manual",
         credentials: "include",
       });
 
       if (res.status === 0 || res.status === 302) {
-        // Same-origin 302 (opaque redirect): backend verified credentials
-        // and set the HttpOnly nzc_session cookie. Only then navigate.
+        // Legacy opaque-302 path (backend form portal). Keep for compat.
         router.push("/sponsor");
+      } else if (res.ok) {
+        const body = (await res.json().catch(() => null)) as { success?: boolean } | null;
+        if (body?.success) {
+          router.push("/sponsor");
+        } else {
+          setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+        }
       } else if (res.status === 401) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {
@@ -64,7 +78,10 @@ export default function SponsorLoginPage() {
      * is fabricated. RIGHT: white form panel centred at the artifact 392px max-width
      * (:479; page-local override — the shared spec-006 tokens --login-form-max-width and
      * the panel-width pair in globals.css stay untouched: /login still consumes them).
-     * Auth/session wiring preserved verbatim (R-026): /sponsor-login POST, opaque-302
+     * Auth/session wiring updated 2026-10-05 (F1 follow-up): cross-origin JSON
+   * POST to ${apiBase}/sponsor/login accepting 200 {success:true} — the
+   * proxied /sponsor-login path cannot work because its cookie lands on the
+   * frontend host while dashboard XHRs target the backend origin directly.
      * handling, router.push, error/loading state, LoginForm type="sponsor".
      * R-006: the last 2 raw-hex literals in parity scope (the raw-teal eyebrow literal at :76 and
      * the raw-teal gradient-stop literal at :85) migrate to var(--teal-300) and the GradientRule
