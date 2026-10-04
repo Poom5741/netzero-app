@@ -16,6 +16,9 @@ import { buildRichMenu, type RichMenuConfig } from "./rich-menu";
 type LineResponse = { status: number; statusText: string; body: string };
 
 const API_BASE = "https://api.line.me/v2/bot";
+// LINE serves binary content (image upload/download) on a separate host —
+// posting to api.line.me 404s. Found live 2026-10-05 during T-208 apply.
+const API_DATA_BASE = "https://api-data.line.me/v2/bot";
 
 async function post(accessToken: string, path: string, body?: unknown): Promise<LineResponse> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -58,7 +61,7 @@ export async function uploadRichMenuImage(
   richMenuId: string,
   image: ArrayBuffer,
 ): Promise<LineResponse> {
-  const res = await fetch(`${API_BASE}/richmenu/${encodeURIComponent(richMenuId)}/content`, {
+  const res = await fetch(`${API_DATA_BASE}/richmenu/${encodeURIComponent(richMenuId)}/content`, {
     method: "POST",
     headers: {
       "Content-Type": "image/png",

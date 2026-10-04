@@ -30,13 +30,21 @@
 
 ## Open (external dependency — not silently executable)
 
-- [ ] **T-208** Register the rich menu against the live LINE channel
+- [x] **T-208** Register the rich menu against the live LINE channel
       (`createRichMenu` → upload `assets/richmenu/richmenu-2500x843.png` as content →
-      `setDefaultRichMenu`). The 2500×843 asset NOW EXISTS (tracked at
-      `assets/richmenu/richmenu-2500x843.png`; design brief
-      `.super-speckit/design/rich-menu-image-brief.md`), so spec's asset precondition is met —
-      but execution requires a live channel access token (secret) and mutates the production
-      LINE channel. **Blocked on authorized credentials + go-ahead; never fabricated.**
+      `setDefaultRichMenu`). **DONE 2026-10-05** with user-approved artwork (the tracked
+      asset IS the chosen design; compressed 1.63MB → 588KB via 256-color palette to meet
+      LINE's 1 MB limit). Evidence: `richmenu-38a19aa2844dc60e6d7bbdc41e5c376b` created,
+      image uploaded, set as default — all HTTP 200; content downloaded back from
+      `api-data.line.me` byte-identical at 2500×843. Fixed en route: `uploadRichMenuImage`
+      must use the `api-data.line.me` binary host (first apply 404'd on `api.line.me`;
+      tests pinned the wrong host and now pin the right one), plus a ≤1MB asset regression
+      test. Orphaned image-less menu `richmenu-995a40b124affd18e4544a6e3253347e` deleted
+      (200). Prior live menu (`richmenu-90d39bb2…`, 2500×1686) remains registered on the
+      channel but is no longer the default. Decision trail: the probe found the prior menu
+      (`richmenu-90d39bb2…`) open by default (`selected: true`); the artifact config's
+      `selected: false` was kept per the QA'd artifact-of-record. If farmers report the menu
+      feels hidden, flip `selected` in `src/line/rich-menu.ts` and re-apply.
 
 ## Not in this slice
 
