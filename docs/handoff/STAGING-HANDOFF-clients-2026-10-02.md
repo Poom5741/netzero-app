@@ -32,7 +32,7 @@
 ## 4. Known limitations & quirks (not secrets, tell clients up front)
 - **F1 (sponsor new-UI login broken):** the redesigned sponsor login form sends JSON, but the backend's form handler throws on JSON → HTTP 500 → "ไม่สามารถเข้าสู่ระบบได้". Reproduced + routed to Dev 2026-10-02. **Interim: use the legacy portal URL in §1.**
 - Admin rail displays `admin@netzerocarbon.com` (display only; login uses `@netzero.com`).
-- Backend `/health` reports `"environment": "development"` — label only, it is the live production worker.
+- Backend `/health` reports `"environment": "development"` — stale label only; this is the live **staging** worker (the project has **no production environment yet**; production will be provisioned at launch).
 - Charts page `/admin/charts` intentionally shows **8 dashed deferred chart frames** (not yet implemented).
 - CO₂ shows 0.00 tCO₂eq / $0 investment — expected: no approved season yet; payment calc not wired.
 - LINE chat identity binding is per-phone; the current test phone is bound to farmer สมชาย มั่นคง / PLOT-001.
