@@ -115,10 +115,12 @@ describe("T-405 — SP-AUTH /sponsor/login (T-401)", () => {
     expect(LOGIN_SRC).toContain("var(--gradient-deep)");
   });
 
-  it("auth/session wiring preserved verbatim (R-026)", () => {
+  it("auth/session wiring — cross-origin backend login (F1 follow-up 2026-10-05)", () => {
     expect(LOGIN_SRC).toContain("sessionStorage.removeItem(\"nzc_admin_email\")");
-    expect(LOGIN_SRC).toContain("fetch(\"/sponsor-login\"");
-    expect(LOGIN_SRC).toContain("redirect: \"manual\"");
+    // Login must target the backend origin directly: the /sponsor-login proxy
+    // sets its cookie on the frontend host, but dashboard XHRs authenticate
+    // against the backend origin, so a proxied cookie never authorizes them.
+    expect(LOGIN_SRC).toContain("`${apiBase}/sponsor/login`");
     expect(LOGIN_SRC).toContain("credentials: \"include\"");
     expect(LOGIN_SRC).toContain("router.push(\"/sponsor\")");
     expect(LOGIN_SRC).toContain("type=\"sponsor\"");

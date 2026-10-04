@@ -16,7 +16,7 @@ type Bindings = {
 
 function mockD1(userRow: Record<string, unknown> | null) {
   return {
-    prepare(sql: string) {
+    prepare(_sql: string) {
       return {
         bind(..._args: unknown[]) {
           return {
