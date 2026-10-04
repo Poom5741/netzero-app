@@ -1,6 +1,23 @@
-# Sponsor portal real-browser test — 2026-10-05 (F2 verification → F3 found)
+# Sponsor portal real-browser test — 2026-10-05 (F2 verification → F3 found → F3 fixed)
 
-**Environment:** STAGING (client-facing original stack)
+## POST-FIX VERIFICATION (same day, after PR #173 merged + deployed)
+
+**Deploy:** frontend worker `6edb6fd1` (assets from main `8125303`), `/_staging-build.json` restored → `{"build":"8125303","note":"F3 session-gate fix (PR #173)"}`.
+
+Real-browser run, fresh load of `/sponsor/login`, credentials `sponsor@netzero.com`:
+
+1. Login POST → 200 → client-side nav to **`/sponsor`** — **gate passed, no bounce** ✅
+2. Dashboard shell renders: sidebar (ภาพรวม/พื้นที่/รายงานและใบรับรอง), header, province/season filters, PDPA CS-02 notice. Screenshot: `qa/sponsor-f3-fixed-dashboard-2026-10-05.png`
+3. Dashboard APIs all 200 authenticated: `/sponsor/me` (sponsor user, area สุพรรณบุรี), `/sponsor/farmers` (empty scoped list), `/sponsor/summary` (totalFarmers 2, totalPlots 0)
+4. Walked `/sponsor/areas` and `/sponsor/reports` — both render correctly; session held across all client-side navigations (no bounces). Reports shows the EX-2042 CSV download row.
+
+Empty states ("ยังไม่มีข้อมูล") are **genuine data scoping**, not defects: the sponsor's scoped farmer list is empty and staging has 0 plots/season records (matches the summary payload).
+
+**Verdict: sponsor portal journey PASSES end-to-end on staging. F3 RESOLVED.**
+
+---
+
+## Pre-fix findings (original report)**Environment:** STAGING (client-facing original stack)
 **Frontend:** `https://netzero-frontend.poom-a1d.workers.dev` (017 sponsor portal)
 **Backend:** `https://netzero-carbon-poc.poom-a1d.workers.dev`
 **Method:** ZCode in-app browser (browser-use), real Chromium, live network capture via fetch instrumentation persisted through navigations (sessionStorage).
