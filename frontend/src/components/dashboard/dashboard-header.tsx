@@ -5,6 +5,25 @@ import { useRouter } from "next/navigation";
 interface DashboardHeaderProps {
   userLabel: string;
   searchPlaceholder?: string;
+  role?: "admin" | "sponsor";
+}
+
+// D-1 2026-10-05 (Rakazo staging e2e r1): sponsor and admin session cookies
+// live on different hosts (sponsor login is cross-origin to the backend origin
+// per the F2 contract; admin login is same-origin through the proxy). Logout
+// must clear the cookie on the host that owns it: the 017 header's same-origin
+// /api/auth/logout call cleared only the frontend-host cookie, so the sponsor
+// session survived user-visible logout until the 24h TTL. The backend's
+// POST /sponsor/logout clears the backend-host cookie with the matching
+// SameSite=None flag (src/routes/sponsor.ts:134) — call it cross-origin with
+// credentials:"include" for sponsor; admin keeps the same-origin proxy path.
+const LOGOUT_API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE || "https://netzero-carbon-poc.poom-a1d.workers.dev";
+
+export function logoutTarget(role: "admin" | "sponsor"): { url: string; credentials: RequestCredentials } {
+  return role === "sponsor"
+    ? { url: `${LOGOUT_API_BASE}/sponsor/logout`, credentials: "include" }
+    : { url: "/api/auth/logout", credentials: "same-origin" };
 }
 
 /**
@@ -20,11 +39,13 @@ interface DashboardHeaderProps {
 export function DashboardHeader({
   userLabel = "System Admin",
   searchPlaceholder = "ค้นหาทั่วโลก...",
+  role = "admin",
 }: DashboardHeaderProps) {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    const { url, credentials } = logoutTarget(role);
+    await fetch(url, { method: "POST", credentials });
     router.push("/login");
   }
 

@@ -72,7 +72,7 @@ describe("DashboardHeader", () => {
     fireEvent.click(screen.getByLabelText("ออกจากระบบ"));
 
     await vi.waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith("/api/auth/logout", { method: "POST" });
+      expect(mockFetch).toHaveBeenCalledWith("/api/auth/logout", { method: "POST", credentials: "same-origin" });
       expect(mockPush).toHaveBeenCalledWith("/login");
     });
   });
