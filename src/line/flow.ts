@@ -1198,6 +1198,13 @@ async function handleResults(ctx: FlowContext): Promise<FlowResult> {
         ? `${ctx.appUrl}/liff/summary?plot_id=${encodeURIComponent(plotId)}&farmer_id=${encodeURIComponent(ctx.farmerId)}`
         : ctx.appUrl;
 
+  // D-3 (Rakazo r2/r3): ดูประวัติการส่ง gets its own target — the summary
+  // ภาพ tab (submission history deep-link), not a duplicate of the dashboard
+  // button. Only set when the summary URL is the context-bearing LIFF form.
+  const historyUrl = summaryUrl.includes("/liff/summary")
+    ? `${summaryUrl}&tab=${encodeURIComponent("ภาพ")}`
+    : undefined;
+
   await safePush(ctx, [
     buildDashboardBubble({
       farmerName: farmer?.full_name || "—",
@@ -1208,6 +1215,7 @@ async function handleResults(ctx: FlowContext): Promise<FlowResult> {
       totalPhotos: results.totalPhotos,
       pendingTasks: results.pendingTasks,
       appUrl: summaryUrl,
+      historyUrl,
     }),
   ]);
   return { newState: "results" };

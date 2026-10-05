@@ -1621,6 +1621,12 @@ liffRoutes.get("/summary", async (c) => {
   const db = c.env.DB;
   const plotId = c.req.query("plot_id") || "";
   const farmerId = c.req.query("farmer_id") || "";
+  // D-3 (Rakazo r2/r3): deep-linkable tabs — the season card's
+  // ดูประวัติการส่ง button opens ?tab=ภาพ (submission history). Unknown or
+  // missing tab falls back to the default ผล view.
+  const activeTab = (["ผล", "เครดิต", "ภาพ"] as const).includes(c.req.query("tab") as never)
+    ? (c.req.query("tab") as "ผล" | "เครดิต" | "ภาพ")
+    : "ผล";
   try {
     let plotCode = "";
     let seasonKey = "";
@@ -1680,11 +1686,11 @@ liffRoutes.get("/summary", async (c) => {
         .join("\n          ");
 
       body = `<div style="display:flex;gap:4px;background:var(--grey-100);padding:3px;border-radius:var(--radius-pill);">
-        ${summaryTabHtml("ผล", true)}
-        ${summaryTabHtml("เครดิต", false)}
-        ${summaryTabHtml("ภาพ", false)}
+        ${summaryTabHtml("ผล", activeTab === "ผล")}
+        ${summaryTabHtml("เครดิต", activeTab === "เครดิต")}
+        ${summaryTabHtml("ภาพ", activeTab === "ภาพ")}
       </div>
-      <div data-tab-page="ผล" style="display:flex;flex-direction:column;gap:14px;">
+      <div data-tab-page="ผล" style="display:${activeTab === "ผล" ? "flex" : "none"};flex-direction:column;gap:14px;">
         <div style="background:var(--gradient-deep);color:#fff;border-radius:var(--radius-md);padding:15px 14px;">
           <div style="font-size:11px;letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:var(--teal-300);font-weight:var(--weight-semibold);">คาร์บอนที่ลดได้ (ประมาณการ)</div>
           <div style="display:flex;align-items:baseline;gap:7px;margin-top:5px;">
@@ -1709,7 +1715,7 @@ liffRoutes.get("/summary", async (c) => {
           </div>
         </div>
       </div>
-      <div data-tab-page="เครดิต" style="display:none;flex-direction:column;gap:14px;">
+      <div data-tab-page="เครดิต" style="display:${activeTab === "เครดิต" ? "flex" : "none"};flex-direction:column;gap:14px;">
         <div class="panel">
           <div class="panel-title">เครดิตของคุณมาจากไหน</div>
           <div class="panel-hint">เกือบทั้งหมดมาจากมีเทนในนาข้าวที่ลดลงเพราะปล่อยแห้งสลับเปียก</div>
@@ -1730,7 +1736,7 @@ liffRoutes.get("/summary", async (c) => {
           </div>
         </div>
       </div>
-      <div data-tab-page="ภาพ" style="display:none;flex-direction:column;gap:14px;">
+      <div data-tab-page="ภาพ" style="display:${activeTab === "ภาพ" ? "flex" : "none"};flex-direction:column;gap:14px;">
         <div class="panel">
           <div class="panel-title">ภาพท่อวัดระดับน้ำ 4 รอบของครอปนี้</div>
           <div class="panel-hint">ภาพที่ตีกลับต้องถ่ายใหม่ — ดูสถานะได้จากแชท</div>

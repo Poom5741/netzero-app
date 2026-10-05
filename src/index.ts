@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { buildWelcomeBubble } from "./line/flex-builders";
 import { type ConversationState, handleFlow } from "./line/flow";
 import { pushMessage, replyMessage } from "./line/reply";
+import { noStoreForAuthenticatedSessions } from "./middleware/no-store";
 import { adminRoutes } from "./routes/admin";
 import { authRoutes } from "./routes/auth";
 import { dashboardRoutes } from "./routes/dashboard";
@@ -56,6 +57,9 @@ app.use(
     credentials: true,
   }),
 );
+
+// D-2: see src/middleware/no-store.ts — no-store on authenticated responses
+app.use("*", noStoreForAuthenticatedSessions);
 
 // Root-level /register — serve registration form directly (no redirect for LIFF compatibility)
 // MUST be before sub-routers to avoid being caught by them

@@ -758,6 +758,10 @@ export function buildDashboardBubble(data: {
   totalPhotos: number;
   pendingTasks: number;
   appUrl?: string;
+  /** D-3 (Rakazo r2/r3): distinct target for ดูประวัติการส่ง — the summary
+   * ภาพ tab (submission history). Sharing appUrl made the button a dead
+   * duplicate of the dashboard action. Falls back to appUrl when absent. */
+  historyUrl?: string;
 }): LineMessage {
   // RP-03 — artifact card: teal hero, season badge, results + history actions.
   return buildArtifactCard({
@@ -777,7 +781,7 @@ export function buildDashboardBubble(data: {
       },
     ],
     actions: [
-      { label: "ดูประวัติการส่ง", uri: data.appUrl },
+      { label: "ดูประวัติการส่ง", uri: data.historyUrl ?? data.appUrl },
       { label: "เปิดแดชบอร์ดของฉัน", primary: true, uri: data.appUrl },
     ],
   });
