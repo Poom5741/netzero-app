@@ -266,7 +266,7 @@ export default function SponsorDashboardPage() {
         userEmail={userEmail}
         brand="NetZero"
       />
-      <DashboardHeader userLabel={userName} searchPlaceholder="ค้นหาแปลง..." />
+      <DashboardHeader role="sponsor" userLabel={userName} searchPlaceholder="ค้นหาแปลง..." />
 
       <div className="dashboard-main">
         <main className="relative pt-20 min-h-screen bg-surface px-6 lg:px-10 py-6">
