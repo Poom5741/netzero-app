@@ -56,3 +56,25 @@ export async function getSponsors(db: D1Database): Promise<SponsorItem[]> {
     };
   });
 }
+
+/**
+ * J4 enabler (Rakazo r2/r3/r4): persist the sponsor's assigned provinces.
+ * The admin sponsors page previously kept checkbox selection in local state
+ * only ("no persist API exists") so attributable scoping data could never
+ * exist. Areas are stored as a JSON array on users.areas — same shape
+ * getSponsors reads. Returns the updated areas, or null when the id is not
+ * a sponsor.
+ */
+export async function setSponsorAreas(
+  db: D1Database,
+  sponsorUserId: string,
+  areas: string[],
+): Promise<string[] | null> {
+  const cleaned = [...new Set(areas.map((a) => a.trim()).filter(Boolean))].sort();
+  const result = await db
+    .prepare("UPDATE users SET areas = ?1 WHERE id = ?2 AND role = 'sponsor'")
+    .bind(JSON.stringify(cleaned), sponsorUserId)
+    .run();
+  if ((result.meta?.changes ?? 0) === 0) return null;
+  return cleaned;
+}

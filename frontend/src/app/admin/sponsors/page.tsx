@@ -3,7 +3,13 @@
 import { useAdminSessionGate } from "@/lib/use-session-gate";
 import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { getSponsors, getProvinceTable, type SponsorItem, type ProvinceTableItem } from "@/lib/api";
+import {
+  getSponsors,
+  getProvinceTable,
+  saveSponsorAreas,
+  type SponsorItem,
+  type ProvinceTableItem,
+} from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
 
 /**
@@ -14,8 +20,9 @@ import { Checkbox } from "@/components/ui/checkbox";
  * visibility-level checkboxes). Live wiring preserved (R-025/R-026):
  * session gate + getSponsors effect verbatim; getProvinceTable (existing
  * live getter) feeds the province checkbox OPTIONS (checked = the live
- * sponsor.areas membership) — changes stay LOCAL state only, exactly
- * like the previous page (no persist API exists; nothing is submitted).
+ * sponsor.areas membership). J4 ENABLER 2026-10-06: checkbox selection is
+ * no longer local-state-only — a per-sponsor บันทึก action PUTs the
+ * selection to /api/admin/sponsors/:id/areas and refreshes the live state.
  * Live-field deltas, disclosed (R-025): the artifact stats header
  * (households / ไร่ / verified) has no SponsorItem field — the header
  * binds the live fields (แปลง / เครดิต / จังหวัด); the visibility-level
@@ -26,6 +33,8 @@ import { Checkbox } from "@/components/ui/checkbox";
  * (presentation-only).
  */
 
+type SaveState = "idle" | "saving" | "saved" | "error";
+
 export default function SponsorsPage() {
   const [sponsors, setSponsors] = useState<SponsorItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +42,7 @@ export default function SponsorsPage() {
   const authed = useAdminSessionGate();
   const [provinces, setProvinces] = useState<ProvinceTableItem[]>([]);
   const [areaSelection, setAreaSelection] = useState<Record<string, string[]>>({});
+  const [saveState, setSaveState] = useState<Record<string, SaveState>>({});
 
   useEffect(() => {
     if (!authed) return;
@@ -52,6 +62,21 @@ export default function SponsorsPage() {
   }, [authed]);
 
   const provinceNames = [...new Set(provinces.map((p) => p.province))];
+
+  async function handleSave(sponsor: SponsorItem) {
+    const areas = areaSelection[sponsor.id] ?? sponsor.areas;
+    setSaveState((prev) => ({ ...prev, [sponsor.id]: "saving" }));
+    try {
+      await saveSponsorAreas(sponsor.id, areas);
+      // refresh live state so the stats header and checked boxes reflect D1
+      setSponsors((prev) =>
+        prev.map((s) => (s.id === sponsor.id ? { ...s, areas } : s)),
+      );
+      setSaveState((prev) => ({ ...prev, [sponsor.id]: "saved" }));
+    } catch {
+      setSaveState((prev) => ({ ...prev, [sponsor.id]: "error" }));
+    }
+  }
 
   if (authed === null) return null;
 
@@ -108,8 +133,8 @@ export default function SponsorsPage() {
                   }
                 >
                   <div className="grid items-start" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: "var(--space-6)" }}>
-                    {/* Province-area checkbox group (:436) — live options,
-                        local-only selection state (no persist API; R-025). */}
+                    {/* Province-area checkbox group (:436) — live options;
+                        J4 enabler: selection persists via the บันทึก action. */}
                     <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
                       <p className="text-sm font-semibold" style={{ color: "var(--text-heading)", margin: 0 }}>พื้นที่จังหวัดที่เห็นได้</p>
                       {provinceNames.length === 0 ? (
@@ -132,6 +157,23 @@ export default function SponsorsPage() {
                           />
                         ))
                       )}
+                      <div className="flex items-center" style={{ gap: "var(--space-3)", marginTop: "var(--space-2)" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSave(sponsor)}
+                          disabled={saveState[sponsor.id] === "saving"}
+                          className="text-sm font-semibold rounded-lg bg-primary text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ padding: "var(--space-2) var(--space-5)" }}
+                        >
+                          {saveState[sponsor.id] === "saving" ? "กำลังบันทึก..." : "บันทึกพื้นที่"}
+                        </button>
+                        {saveState[sponsor.id] === "saved" && (
+                          <span className="text-xs text-primary">บันทึกแล้ว ✓</span>
+                        )}
+                        {saveState[sponsor.id] === "error" && (
+                          <span className="text-xs text-error">บันทึกไม่สำเร็จ ลองใหม่</span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Visibility-level checkbox group (:436) — deferred

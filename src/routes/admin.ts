@@ -23,7 +23,7 @@ import { getReviewQueue } from "../admin/queue";
 import { getReports, logReportDownload } from "../admin/reports";
 import { reviewPhoto } from "../admin/review";
 import { getSettings, updateSettings } from "../admin/settings";
-import { getSponsors } from "../admin/sponsors";
+import { getSponsors, setSponsorAreas } from "../admin/sponsors";
 import { requireRole } from "../auth/middleware";
 import { handleFarmerCreate } from "../farmer/create";
 
@@ -635,6 +635,22 @@ adminRoutes.get("/api/admin/sponsors", async (c) => {
   const db = c.env.DB;
   const sponsors = await getSponsors(db);
   return c.json(sponsors);
+});
+
+// PUT /api/admin/sponsors/:id/areas — persist the sponsor's assigned
+// provinces (J4 enabler: the sponsors page checkboxes were local-state-only).
+adminRoutes.put("/api/admin/sponsors/:id/areas", async (c) => {
+  const db = c.env.DB;
+  const id = c.req.param("id");
+  const body = (await c.req.json().catch(() => null)) as { areas?: unknown } | null;
+  if (!body || !Array.isArray(body.areas) || body.areas.some((a) => typeof a !== "string")) {
+    return c.json({ error: "areas must be an array of strings" }, 400);
+  }
+  const updated = await setSponsorAreas(db, id, body.areas as string[]);
+  if (updated === null) {
+    return c.json({ error: "Sponsor not found" }, 404);
+  }
+  return c.json({ id, areas: updated });
 });
 
 // ── Settings API ──────────────────────────────────────────────────────
