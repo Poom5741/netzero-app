@@ -19,7 +19,7 @@ export function DashboardShell({
   children,
   entries,
   userName = "Admin User",
-  userEmail = "admin@netzerocarbon.com",
+  userEmail = "admin@netzero.com",
   brand = "NetZero",
   userLabel = "System Admin",
   searchPlaceholder = "ค้นหาทั่วโลก...",

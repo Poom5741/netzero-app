@@ -352,6 +352,18 @@ export async function getSponsors(): Promise<SponsorItem[]> {
   return res.data;
 }
 
+/**
+ * J4 enabler: persist a sponsor's assigned provinces (users.areas).
+ * Replaces the previous local-state-only checkbox behaviour.
+ */
+export async function saveSponsorAreas(id: string, areas: string[]): Promise<void> {
+  const res = await apiRequest<{ id: string; areas: string[] }>(
+    `/api/admin/sponsors/${encodeURIComponent(id)}/areas`,
+    { method: "PUT", json: { areas } },
+  );
+  if (!res.ok) throw new Error(`Save sponsor areas error: ${res.status}`);
+}
+
 // ── Settings ────────────────────────────────────────────────────────
 
 export interface SettingsData {

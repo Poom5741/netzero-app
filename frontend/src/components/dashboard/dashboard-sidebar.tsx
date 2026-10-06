@@ -53,7 +53,7 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({
   entries,
   userName = "Admin User",
-  userEmail = "admin@netzerocarbon.com",
+  userEmail = "admin@netzero.com",
   brand = "NetZero",
 }: DashboardSidebarProps) {
   const [open, setOpen] = useState(false);

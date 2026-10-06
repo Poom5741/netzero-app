@@ -147,7 +147,7 @@ export default function SponsorReportsPage() {
   };
 
   const userName = profile?.user?.name ?? profile?.user?.email ?? "ผู้สนับสนุน";
-  const userEmail = profile?.user?.email ?? "sponsor@netzerocarbon.com";
+  const userEmail = profile?.user?.email ?? "sponsor@netzero.com";
 
   return (
     <>
