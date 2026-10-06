@@ -67,6 +67,7 @@ function fetchJson<T>(path: string, fallback: T): Promise<T> {
     try {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", endpoint);
+      xhr.withCredentials = true; // D-5: cross-origin BE XHR must carry the nzc_session cookie
       xhr.onload = () => {
         try {
           resolve(xhr.status >= 200 && xhr.status < 300 ? (JSON.parse(xhr.responseText) as T) : fallback);
