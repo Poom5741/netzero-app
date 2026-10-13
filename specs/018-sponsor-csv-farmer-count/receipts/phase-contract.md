@@ -1,0 +1,2 @@
+## phase-contract
+Micro delivery; this contract points at the active playbook `specs/018-sponsor-csv-farmer-count/playbook.md` (ordered steps, purpose, scope boundary). Write boundary: one writer (omp-dev) edits only `src/sponsor/dashboard.ts` + `tests/unit/…` (+ this feature's spec artifacts). Checker (rakazo identity via clean qa-clone) may not edit product code. No `.super-speckit` upgrade-tree files are touched or committed by this feature.

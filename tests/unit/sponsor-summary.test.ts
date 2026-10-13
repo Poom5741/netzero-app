@@ -93,6 +93,24 @@ describe("getSponsorSummary", () => {
       fertilization: 0,
     });
   });
+
+  // Regression (specs/018-sponsor-csv-farmer-count, FR-1): totalFarmers must be
+  // plot-scoped like getSponsorFarmers/totalHouseholds, so the EX-2042 CSV
+  // จำนวนเกษตรกร reconciles with the sponsor farmers list. A farmer registered
+  // in an assigned province but with no plots is NOT in the sponsor's farmer
+  // population. Before the fix the count query had no plot join, so only the
+  // plot-joined population below answered with 1 and this test failed with 0.
+  it("counts farmers plot-scoped: plotless in-scope farmer excluded (EX-2042 reconciliation)", async () => {
+    const db = mockD1({
+      "FROM farmers f JOIN plots p ON p.farmer_id = f.id": [{ total_farmers: 1 }],
+      "COUNT(DISTINCT p.id)": [{ total_plots: 1 }],
+      "SUM(coalesce": [{ total_co2: 0 }],
+      water_management: [],
+    }) as unknown as D1Database;
+
+    const result = await getSponsorSummary(db, ["สุพรรณบุรี"]);
+    expect(result.totalFarmers).toBe(1);
+  });
 });
 
 describe("getSponsorFarmers", () => {

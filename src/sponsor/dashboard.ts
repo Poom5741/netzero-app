@@ -411,7 +411,7 @@ export async function getSponsorSummary(
       .all<{ total_plots: number }>(),
     db
       .prepare(
-        `SELECT COUNT(DISTINCT f.id) as total_farmers FROM farmers f WHERE 1=1 ${whereClause}`,
+        `SELECT COUNT(DISTINCT f.id) as total_farmers FROM farmers f JOIN plots p ON p.farmer_id = f.id WHERE 1=1 ${whereClause}`,
       )
       .bind(...af.values)
       .all<{ total_farmers: number }>(),

@@ -1,0 +1,20 @@
+{
+  "investigation_digest": "6bcd6e26c98ce5ed13e843af36db1a8f8cd362f6bd3a53b817d2a331033563a2",
+  "observed": "getSponsorSummary.totalFarmers counts farmers by registered province only (no plot join) while getSponsorFarmers, getPlotsByProvinceScoped, totalHouseholds and the FE surfaces are plot-scoped; the EX-2042 CSV prints totalFarmers, so staging shows CSV เกษตรกร=2 vs list=1. FE province-filter options derive from the scoped /sponsor response; the r2 'unscoped options' sighting was D-5's 401→fallback-demo-data path, already closed by PR #177 (live check 2026-10-13: options = ทุกจังหวัด, สุพรรณบุรี only).",
+  "proposed": "Change exactly one query in getSponsorSummary: totalFarmers becomes COUNT(DISTINCT f.id) FROM farmers f JOIN plots p ON p.farmer_id = f.id (same predicate shape as the existing totalHouseholds query), so every sponsor surface (summary API, EX-2042 CSV, farmers list) shares the plot-scoped reading. No FE change; areaFilter untouched.",
+  "invariants": [
+    "Sponsor summary, farmers list, plots-by-province and EX-2042 CSV report the same farmer population for the same session and filters.",
+    "areaFilter remains the single scoping choke point (f.addr_province vs users.areas).",
+    "EX-2042 first line stays 'รายงาน EX-2042 — สรุปคาร์บอนเครดิต'; CSV field order unchanged.",
+    "No changes outside src/sponsor/dashboard.ts (+ its unit test) in this delivery."
+  ],
+  "verification_plan": "R-1 failing-first unit regression test on getSponsorSummary (plotless in-scope farmer must not be counted) then passing after fix; R-2 live browser check of filter options on staging post-deploy; R-3 live re-smoke (CSV first line, logout chain, ภาพรวม data); R-4 configured checks + independent checker run in qa-clone on the exact candidate SHA.",
+  "view": {
+    "renderer": "mermaid",
+    "source": "specs/018-sponsor-csv-farmer-count/design-flow.mmd",
+    "source_digest": "ca9533e88e8f37a78673d4a1534eb824d073fd55c29f92dac6e50a184e6ec3be",
+    "artifact": "specs/018-sponsor-csv-farmer-count/design-flow.md",
+    "artifact_digest": "73d53eb95e48d8493c21090ee1820637f9560cb06ac005bcc2850d81271d8847",
+    "limitation": "Static Mermaid text rendered by the chat client only; no interactive Archify renderer installed in this environment. The diagram is an explanation, not proof that product code obeys it — the unit regression test and live API checks are the enforcement."
+  }
+}
