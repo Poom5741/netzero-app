@@ -1,0 +1,9 @@
+{
+  "candidate_sha": "69af6d86d8d71c6c83b6871b20535419c7940ce6",
+  "authority": "repo owner Poom5741 — merge explicitly granted in chat 2026-10-13 ('pls pr and then merge'); merged by omp-dev via gh on the owner's authenticated account",
+  "forge_status": "merged",
+  "base_sha": "6b0aa0ebe2782f19922603e84a87f19569d91f0e",
+  "merged_sha": "492958d484eab8b2fc6164ef1340184902c47983",
+  "pr": 178,
+  "evidence": "specs/018-sponsor-csv-farmer-count/receipts/evidence/merge-178.md"
+}
