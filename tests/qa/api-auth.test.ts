@@ -61,24 +61,22 @@ async function sponsorCookie(role = "sponsor"): Promise<string> {
 }
 
 describe("sponsor API auth contract (api_assertions gate)", () => {
-  it.each([
-    "/sponsor/summary",
-    "/sponsor/farmers",
-    "/sponsor/reports/EX-2042/download",
-  ])("returns 401 without a session cookie: %s", async (path) => {
-    const res = await app().request(path, {}, bindings() as never);
-    expect(res.status).toBe(401);
-  });
+  it.each(["/sponsor/summary", "/sponsor/farmers", "/sponsor/reports/EX-2042/download"])(
+    "returns 401 without a session cookie: %s",
+    async (path) => {
+      const res = await app().request(path, {}, bindings() as never);
+      expect(res.status).toBe(401);
+    },
+  );
 
-  it.each([
-    "/sponsor/summary",
-    "/sponsor/farmers",
-    "/sponsor/reports/EX-2042/download",
-  ])("returns 403 for a non-sponsor role: %s", async (path) => {
-    const cookie = await sponsorCookie("farmer");
-    const res = await app().request(path, { headers: { Cookie: cookie } }, bindings() as never);
-    expect(res.status).toBe(403);
-  });
+  it.each(["/sponsor/summary", "/sponsor/farmers", "/sponsor/reports/EX-2042/download"])(
+    "returns 403 for a non-sponsor role: %s",
+    async (path) => {
+      const cookie = await sponsorCookie("farmer");
+      const res = await app().request(path, { headers: { Cookie: cookie } }, bindings() as never);
+      expect(res.status).toBe(403);
+    },
+  );
 
   it("returns 200 area-scoped summary with a sponsor session", async () => {
     const cookie = await sponsorCookie();
@@ -94,7 +92,11 @@ describe("sponsor API auth contract (api_assertions gate)", () => {
   it("streams the EX-2042 CSV with a sponsor session (first line contract)", async () => {
     const cookie = await sponsorCookie();
     const res = await app()
-      .request("/sponsor/reports/EX-2042/download", { headers: { Cookie: cookie } }, bindings() as never)
+      .request(
+        "/sponsor/reports/EX-2042/download",
+        { headers: { Cookie: cookie } },
+        bindings() as never,
+      )
       .then((r) => r);
     expect(res.status).toBe(200);
     const text = await res.text();
