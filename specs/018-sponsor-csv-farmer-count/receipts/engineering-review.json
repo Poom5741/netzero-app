@@ -1,0 +1,20 @@
+{
+  "candidate_sha": "69af6d86d8d71c6c83b6871b20535419c7940ce6",
+  "checker": "rakazo",
+  "status": "passed",
+  "blocking_findings": [],
+  "reviewer_session": "rakazo chat bot cmv5em6tc000l3cqw4q3jjr4z (Chief), thread cmv5em6td000m3cqwl1tytx50, 2026-10-13",
+  "review_scope": "PR #178 full diff at the exact candidate SHA, reviewed in Chief's own clean clone (netzero-app-review, HEAD = candidate, tree clean); Chief independently re-ran unit gate (930 pass), api gate (8 pass), failing-first flip proof (revert of the one-line fix fails the new regression test 0≠1), biome, backend tsc, frontend typecheck",
+  "verdict_quote": "VERDICT: approve — BLOCKING FINDINGS: none",
+  "non_blocking_dispositions": [
+    "SQL correctness pass — join/alias/fan-out analysis with file:line evidence (dashboard.ts:414, :381-396, migrate.sql:22-35)",
+    "Consumer routing pass — blast radius exactly summary JSON + EX-2042 CSV line; HTML dashboard does not render totalFarmers",
+    "Test quality — auth gate contract-grade; SQL-shape regression accepted for this tier; stronger assertions (จำนวนเกษตรกร,1 line; real-SQLite D1 tier) noted for 019",
+    "totalFarmers === totalHouseholds redundancy accepted as semantically defensible (farmer ≙ CPA household); follow-up may derive one from the other",
+    "CSV filter-ignoring behavior pre-existing and unchanged; filtered-list divergence by design",
+    "e2e retirement coherent; /chat nits inside the documented 019 baseline; stale tests/test-results/journey-results.json cosmetic"
+  ],
+  "evidence": [
+    { "path": "specs/018-sponsor-csv-farmer-count/receipts/evidence/rakazo-review-69af6d8.md", "digest": "bbd31dc785cc8ff8a8b0bb7d8bb9ca780d21455975b45fc8fcd8a4cfa4cb3fc0" }
+  ]
+}

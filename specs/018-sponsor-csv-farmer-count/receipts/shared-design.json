@@ -1,5 +1,5 @@
 {
-  "investigation_digest": "6bcd6e26c98ce5ed13e843af36db1a8f8cd362f6bd3a53b817d2a331033563a2",
+  "investigation_digest": "91940ba8241d21e49c2d240fca6fdee44e6ea076347b57f30963a57b823a2465",
   "observed": "getSponsorSummary.totalFarmers counts farmers by registered province only (no plot join) while getSponsorFarmers, getPlotsByProvinceScoped, totalHouseholds and the FE surfaces are plot-scoped; the EX-2042 CSV prints totalFarmers, so staging shows CSV เกษตรกร=2 vs list=1. FE province-filter options derive from the scoped /sponsor response; the r2 'unscoped options' sighting was D-5's 401→fallback-demo-data path, already closed by PR #177 (live check 2026-10-13: options = ทุกจังหวัด, สุพรรณบุรี only).",
   "proposed": "Change exactly one query in getSponsorSummary: totalFarmers becomes COUNT(DISTINCT f.id) FROM farmers f JOIN plots p ON p.farmer_id = f.id (same predicate shape as the existing totalHouseholds query), so every sponsor surface (summary API, EX-2042 CSV, farmers list) shares the plot-scoped reading. No FE change; areaFilter untouched.",
   "invariants": [

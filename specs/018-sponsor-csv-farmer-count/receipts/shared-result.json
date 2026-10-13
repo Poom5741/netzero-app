@@ -1,0 +1,91 @@
+{
+  "candidate_sha": "69af6d86d8d71c6c83b6871b20535419c7940ce6",
+  "checker": "rakazo",
+  "design_digest": "82aa04f1c69e01ceca664328f0717037cba93ef0bcc94aadbbc625ac069db318",
+  "status": "passed",
+  "summary": "Sponsor farmer population is now single-sourced: getSponsorSummary.totalFarmers counts farmers through the plot join exactly like /sponsor/farmers and totalHouseholds, so the EX-2042 CSV จำนวนเกษตรกร reconciles with every sponsor surface (live staging: CSV=summary=list=households=1; was CSV=2 vs list=1). Verified by failing-first unit regression, real-route API gate (401/403/200 + CSV first line), six configured gates green in an independent clone, and live staging checks on deployed BUILD_ID 69af6d86 (fingerprints, D-5 credentialed XHRs intact, logout chain bouncing).",
+  "deviations": [
+    "Failing repro and fix landed in one commit (2e88f8c) instead of separate failing-test-first commits; failing-first was demonstrated in the working tree before the fix (expected 1, got 0) and is documented in QA-018-006/fr1-evidence.md.",
+    "Province-filter item required no product change: PR #177's credentialed XHRs had already scoped the options (verified live twice, 2026-10-13); recorded as verified-no-change.",
+    "Playwright gate recorded as owner-authorized exception (129/70 desktop triage: stale pre-017 specs + real a11y findings); 019 (specs/019-e2e-gate-current/README.md) stands it back up as required."
+  ],
+  "conventions": [
+    {
+      "id": "C1",
+      "status": "preserved",
+      "reason": "List surfaces untouched; the count query was aligned to the established plot-scoped reading (JOIN plots), matching getSponsorFarmers/totalHouseholds.",
+      "evidence": [
+        {
+          "path": ".super-speckit/qa/QA-018-006/gate-unit.log",
+          "digest": "2c974a377a8a465bb8d3424f9b468763f6af6e80e3535eacaca88ea4212c0627"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "status": "preserved",
+      "reason": "areaFilter remains the single scoping choke point; no query predicate outside f.addr_province was added or changed.",
+      "evidence": [
+        {
+          "path": ".super-speckit/qa/QA-018-006/gate-api.log",
+          "digest": "468b018c84105fe433b65d5382b56db0e1af9f55c7daf68fe837eacb0ef72691"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "status": "preserved",
+      "reason": "No FE file changed in this delivery; D-5 withCredentials wiring and R-025 page structure untouched (verified live on staging).",
+      "evidence": [
+        {
+          "path": ".super-speckit/qa/QA-018-006/fr2-fr3-evidence.md",
+          "digest": "57d5c15da88346123f19025398cc0268de11ebb8579e843e0fabe2682c6625bd"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "status": "preserved",
+      "reason": "CSV keeps reading summary.totalFarmers, which now shares the plot-scoped population — compliance-adjacent numbers reconcile end-to-end on staging.",
+      "evidence": [
+        {
+          "path": ".super-speckit/qa/QA-018-006/fr2-fr3-evidence.md",
+          "digest": "57d5c15da88346123f19025398cc0268de11ebb8579e843e0fabe2682c6625bd"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "status": "preserved",
+      "reason": "Backend redeployed under the same worker with BUILD_ID bound to the candidate SHA; fingerprint endpoint and /health attest it; LINE webhook continuity unchanged (same worker, no binding changes).",
+      "evidence": [
+        {
+          "path": "specs/018-sponsor-csv-farmer-count/receipts/evidence/pr-178.md",
+          "digest": "d8d4fead430d5b7fff468142f90a7fd3f861ee7265a135a779b05314f11734c6"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".super-speckit/qa/QA-018-006/proof-pack.json",
+      "digest": "1c69ea1525f09f5e91091f1b7391c68c2e6734b9071111bbedb3ff851bfa59c0"
+    },
+    {
+      "path": ".super-speckit/qa/QA-018-006/fr1-evidence.md",
+      "digest": "55958c81489555201aac442959415f0e4270f027ae1fbc1666ab8a97fab3edd7"
+    },
+    {
+      "path": ".super-speckit/qa/QA-018-006/fr2-fr3-evidence.md",
+      "digest": "57d5c15da88346123f19025398cc0268de11ebb8579e843e0fabe2682c6625bd"
+    }
+  ],
+  "view": {
+    "renderer": "mermaid",
+    "source": "specs/018-sponsor-csv-farmer-count/design-flow.mmd",
+    "source_digest": "ca9533e88e8f37a78673d4a1534eb824d073fd55c29f92dac6e50a184e6ec3be",
+    "artifact": "specs/018-sponsor-csv-farmer-count/design-flow.md",
+    "artifact_digest": "73d53eb95e48d8493c21090ee1820637f9560cb06ac005bcc2850d81271d8847",
+    "limitation": "Static Mermaid text rendered by the chat client only; no interactive Archify renderer installed. The diagram explains the change; the regression test, API gate, and live staging checks are the enforcement."
+  }
+}
