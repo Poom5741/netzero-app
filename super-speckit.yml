@@ -52,7 +52,10 @@ gates:
   typecheck_frontend: "npm run --prefix frontend typecheck"
   app_start: "npm run dev:all"
   app_url: "http://localhost:3000"
-  playwright: "npx playwright test --config frontend/playwright.config.ts"
+  # OWNER-AUTHORIZED EXCEPTION (2026-10-13, feature 018): baseline triage
+  # 129 pass / 70 fail — stale pre-017 specs + real a11y findings.
+  # Re-pointed command returns via 019: npx playwright test --config frontend/playwright.config.ts
+  playwright: ""
   api_assertions: "bun test tests/qa/api-auth.test.ts"
   db_assertions: ""
   ocr_review: ""

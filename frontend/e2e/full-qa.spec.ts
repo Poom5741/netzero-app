@@ -135,7 +135,7 @@ test.describe("2. Login Page (/admin/login)", () => {
     const errors = await collectConsoleErrors(page, async () => {
       await page.goto(`${TARGET}/admin/login`, { waitUntil: "networkidle", timeout: 30000 });
     });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-login-desktop.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-login-desktop.png", fullPage: true });
 
     // Verify DOM structure (elements exist regardless of CSS layout)
     await expect(page.locator("h1")).toContainText("เข้าสู่ระบบ Admin");
@@ -174,7 +174,7 @@ test.describe("2. Login Page (/admin/login)", () => {
   test("responsive mobile - card width bug", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/admin/login`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-login-mobile.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-login-mobile.png", fullPage: true });
 
     const cardBox = await page.evaluate(() => {
       const card = document.querySelector(".neumorphic");
@@ -208,7 +208,7 @@ test.describe("3. Chat Page (/chat)", () => {
     const errors = await collectConsoleErrors(page, async () => {
       await page.goto(`${TARGET}/chat`, { waitUntil: "networkidle", timeout: 30000 });
     });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-chat-desktop.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-chat-desktop.png", fullPage: true });
 
     await expect(page.locator("text=Chat Hub")).toBeVisible();
     const botBubble = page.locator("text=สวัสดีครับ");
@@ -251,7 +251,7 @@ test.describe("3. Chat Page (/chat)", () => {
   test("mobile responsive", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/chat`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-chat-mobile.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-chat-mobile.png", fullPage: true });
     await expect(page.locator('input[aria-label="พิมพ์ข้อความ"]')).toBeVisible();
     await expect(page.locator('nav[aria-label="นำทางหลัก"]')).toBeVisible();
   });
@@ -293,7 +293,7 @@ test.describe("4. Admin Review Page (/admin)", () => {
     const errors = await collectConsoleErrors(page, async () => {
       await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle", timeout: 30000 });
     });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-desktop.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-admin-desktop.png", fullPage: true });
 
     // Use heading selector to avoid strict mode (text appears in both mobile header and h2)
     await expect(page.getByRole("heading", { name: "Review Queue" })).toBeVisible();
@@ -344,7 +344,7 @@ test.describe("4. Admin Review Page (/admin)", () => {
       await expect(panel.locator("button:has-text('Approve')")).toBeVisible();
       await expect(panel.locator("button:has-text('Reject')")).toBeVisible();
       await expect(panel.locator('button[aria-label="Close"]')).toBeVisible();
-      await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-detail-panel.png", fullPage: true });
+      await page.screenshot({ path: "./e2e-evidence/test-results/qa-admin-detail-panel.png", fullPage: true });
     } else {
       console.log("[ADMIN] No review cards (empty/error state)");
     }
@@ -354,7 +354,7 @@ test.describe("4. Admin Review Page (/admin)", () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-mobile.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-admin-mobile.png", fullPage: true });
     await expect(page.locator('[data-testid="mobile-brand"]')).toBeVisible();
   });
 });
@@ -366,7 +366,7 @@ test.describe("5. Sponsor Dashboard (/sponsor)", () => {
     const errors = await collectConsoleErrors(page, async () => {
       await page.goto(`${TARGET}/sponsor`, { waitUntil: "networkidle", timeout: 30000 });
     });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-sponsor-desktop.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-sponsor-desktop.png", fullPage: true });
 
     // Use heading to avoid strict mode
     await expect(page.getByRole("heading", { name: "แดชบอร์ดผู้สนับสนุน" })).toBeVisible();
@@ -411,7 +411,7 @@ test.describe("5. Sponsor Dashboard (/sponsor)", () => {
   test("mobile responsive", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/sponsor`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-sponsor-mobile.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-sponsor-mobile.png", fullPage: true });
     await expect(page.getByRole("heading", { name: "แดชบอร์ดผู้สนับสนุน" })).toBeVisible();
   });
 
@@ -437,7 +437,7 @@ test.describe("6. Upload Page (/upload)", () => {
     const errors = await collectConsoleErrors(page, async () => {
       await page.goto(`${TARGET}/upload`, { waitUntil: "networkidle", timeout: 30000 });
     });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-upload-desktop.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-upload-desktop.png", fullPage: true });
 
     await expect(page.locator("text=อัปโหลดรูป")).toBeVisible();
     await expect(page.locator('[role="radiogroup"][aria-label="ประเภทรูป"]')).toBeVisible();
@@ -474,7 +474,7 @@ test.describe("6. Upload Page (/upload)", () => {
   test("mobile responsive", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/upload`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-upload-mobile.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-upload-mobile.png", fullPage: true });
     await expect(page.locator('[data-testid="camera-frame"]')).toBeVisible();
   });
 
@@ -495,7 +495,7 @@ test.describe("7. Summary Page (/summary)", () => {
     const errors = await collectConsoleErrors(page, async () => {
       await page.goto(`${TARGET}/summary`, { waitUntil: "networkidle", timeout: 30000 });
     });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-summary-desktop.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-summary-desktop.png", fullPage: true });
 
     await expect(page.locator("text=สรุปฤดูกาล")).toBeVisible();
     await expect(page.locator("text=เลือกแปลงนา")).toBeVisible();
@@ -540,7 +540,7 @@ test.describe("7. Summary Page (/summary)", () => {
   test("mobile responsive", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/summary`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-summary-mobile.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-summary-mobile.png", fullPage: true });
     await expect(page.locator("text=สรุปฤดูกาล")).toBeVisible();
     await expect(page.locator('input[type="range"]')).toBeVisible();
   });
@@ -600,7 +600,7 @@ test.describe("9. Responsive Layout Tests", () => {
   test("chat at desktop 1440px", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`${TARGET}/chat`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-chat-1440.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-chat-1440.png", fullPage: true });
     const chatArea = page.locator("main");
     const box = await chatArea.boundingBox();
     if (box) expect(box.width).toBeGreaterThan(400);
@@ -609,13 +609,13 @@ test.describe("9. Responsive Layout Tests", () => {
   test("chat at tablet 768px", async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto(`${TARGET}/chat`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-chat-768.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-chat-768.png", fullPage: true });
   });
 
   test("chat at mobile 375px", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto(`${TARGET}/chat`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-chat-375.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-chat-375.png", fullPage: true });
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     expect(bodyWidth).toBeLessThanOrEqual(376);
   });
@@ -632,13 +632,13 @@ test.describe("9. Responsive Layout Tests", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-1440.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-admin-1440.png", fullPage: true });
 
 
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-375.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-admin-375.png", fullPage: true });
   });
 
   test("no horizontal overflow on all mobile pages", async ({ page }) => {
@@ -707,7 +707,7 @@ test.describe("11. Empty and Error States", () => {
       maxRedirects: 0,
     });    await page.goto(`${TARGET}/admin`, { waitUntil: "networkidle" });
     await page.waitForTimeout(5000);
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-admin-empty-state.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-admin-empty-state.png", fullPage: true });
 
     const state = await page.evaluate(() => ({
       hasEmptyInbox: document.body.textContent?.includes("ไม่มีรายการ"),
@@ -723,7 +723,7 @@ test.describe("11. Empty and Error States", () => {
   test("sponsor shows data or fallback", async ({ page }) => {
     await page.goto(`${TARGET}/sponsor`, { waitUntil: "networkidle" });
     await page.waitForTimeout(5000);
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-sponsor-fallback.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-sponsor-fallback.png", fullPage: true });
     await expect(page.getByRole("heading", { name: "แดชบอร์ดผู้สนับสนุน" })).toBeVisible();
     await expect(page.locator("text=CO₂ ที่ลดทั้งหมด")).toBeVisible();
   });
@@ -731,7 +731,7 @@ test.describe("11. Empty and Error States", () => {
   test("summary renders even without plot data", async ({ page }) => {
     await page.goto(`${TARGET}/summary`, { waitUntil: "networkidle" });
     await page.waitForTimeout(3000);
-    await page.screenshot({ path: "/Users/poom-work/netzero-app/test-results/qa-summary-no-data.png", fullPage: true });
+    await page.screenshot({ path: "./e2e-evidence/test-results/qa-summary-no-data.png", fullPage: true });
     await expect(page.locator("text=สรุปฤดูกาล")).toBeVisible();
     await expect(page.locator("text=เลือกแปลงนา")).toBeVisible();
   });

@@ -724,7 +724,7 @@ for (const [vpName, vp] of Object.entries(VIEWPORTS)) {
       // Take screenshot for visual inspection
       const filename = `${vpName.replace(/[^a-zA-Z0-9]/g, "_")}_${pg.path.replace(/\//g, "_") || "root"}.png`;
       await page.screenshot({
-        path: `/Users/poom-work/netzero-app/.gstack/qa-reports/screenshots/mobile-qa-${filename}`,
+        path: `./e2e-evidence/.gstack/qa-reports/screenshots/mobile-qa-${filename}`,
         fullPage: false,
       });
     });
