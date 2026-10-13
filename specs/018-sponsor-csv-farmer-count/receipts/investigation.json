@@ -1,0 +1,139 @@
+{
+  "base_sha": "6b0aa0ebe2782f19922603e84a87f19569d91f0e",
+  "playbook": "bug-fix",
+  "playbook_digest": "018bbc146ae19145caa6c7e70591fee081b64447dda1c1c4b681c9974d928b13",
+  "intent": "Make sponsor-facing numbers reconcile before the client's r6 staging round: EX-2042 CSV จำนวนเกษตรกร must agree with /sponsor/farmers; confirm the ภาพรวม province filter only offers assigned areas. Part of the user-selected 'fix the 2 visible items first' track toward production-ready.",
+  "flow": "sponsor session → GET /sponsor/summary (getSponsorSummary, src/sponsor/dashboard.ts) → GET /sponsor/reports/EX-2042/download CSV emission (src/routes/sponsor.ts) vs GET /sponsor/farmers (getSponsorFarmers); FE ภาพรวม filter options derive from scoped GET /sponsor provinces (frontend/src/app/sponsor/page.tsx:298).",
+  "scope_rationale": "Micro: single backend query semantic fix plus verification of an already-covered FE behavior. Boundaries understood (plot-scoped sponsor surfaces since r5), no consequential data/security decision open — the owner picked 'fix the 2 visible items' from the flagged set.",
+  "unknowns": [
+    "Whether staging D1's second in-scope farmer (plotless) is a permanent fixture or test residue — irrelevant to the fix: both readings of the old query counted it; plot-scoped reading excludes it consistently with every other sponsor surface."
+  ],
+  "unresolved_blockers": [],
+  "conventions": [
+    {
+      "id": "C1",
+      "rule": "Sponsor list surfaces are plot-scoped: farmers appear only through JOIN plots (farmers with ≥1 plot).",
+      "scope": "src/sponsor/dashboard.ts getSponsorFarmers, getPlotsByProvinceScoped",
+      "source": "specs/018-sponsor-csv-farmer-count/receipts/evidence/dashboard-prefix-snapshot.txt",
+      "plan_application": "Align getSponsorSummary.totalFarmers to the same plot-scoped reading; do not change the list."
+    },
+    {
+      "id": "C2",
+      "rule": "Area scoping filters on f.addr_province against the sponsor's assigned areas (areas JSON on users).",
+      "scope": "src/sponsor/dashboard.ts areaFilter",
+      "source": "specs/018-sponsor-csv-farmer-count/receipts/evidence/dashboard-prefix-snapshot.txt",
+      "plan_application": "Keep areaFilter untouched; the fix only adds the plot join to the farmers count."
+    },
+    {
+      "id": "C3",
+      "rule": "FE sponsor pages preserve R-025 wiring verbatim; cross-origin XHRs must set withCredentials (D-5).",
+      "scope": "frontend/src/app/sponsor/*",
+      "source": "tests/verification/staging-e2e-2026-10-05.md",
+      "plan_application": "No FE edit planned; province-filter scoping is expected already fixed by PR #177 (401→fallback demo data was the r2 symptom). Verify live instead."
+    },
+    {
+      "id": "C4",
+      "rule": "EX-2042 is a compliance-adjacent report; its numbers must reconcile with every sponsor surface.",
+      "scope": "src/routes/sponsor.ts CSV emission",
+      "source": "src/routes/sponsor.ts",
+      "plan_application": "Single source of truth: CSV keeps reading summary.totalFarmers after the query is fixed."
+    },
+    {
+      "id": "C5",
+      "rule": "Backend staging deploys preserve LINE webhook continuity; the candidate is recorded via BUILD_ID.",
+      "scope": "deploy practice",
+      "source": "docs/handoff/STAGING-HANDOFF-clients-2026-10-02.md",
+      "plan_application": "Redeploy backend worker with BUILD_ID=<candidate sha>; no worker-name/binding changes."
+    }
+  ],
+  "evidence": [
+    {
+      "path": "tests/verification/staging-e2e-2026-10-05.md",
+      "digest": "679e8dbf31d5f98615405477fa3e3ccc3a5516a2a45c03cf666d94aabce38af6"
+    },
+    {
+      "path": ".super-speckit/qa/2026-10-13-pre-client-smoke/report.md",
+      "digest": "81df3becee2bc1698a3024fdc7a66c1dd071539747bd47727fc59a9f2725e18f"
+    },
+    {
+      "path": "src/routes/sponsor.ts",
+      "digest": "05c3e1ae7f36f74afdf7ac4240149820d634c459d38e6af628a9df178487a331"
+    },
+    {
+      "path": "docs/handoff/STAGING-HANDOFF-clients-2026-10-02.md",
+      "digest": "174222c7fba5df911083784e7857d6f0a197fd8452affbc37e88df7852182daf"
+    },
+    {
+      "path": "specs/018-sponsor-csv-farmer-count/receipts/evidence/dashboard-prefix-snapshot.txt",
+      "digest": "47a8591737e1dcd366cf8abb80e045c0e5a584f09497e76e9421e02ced49c227"
+    }
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "source_step": "1",
+      "status": "completed",
+      "evidence": [
+        {
+          "path": ".super-speckit/qa/2026-10-13-pre-client-smoke/report.md",
+          "digest": "81df3becee2bc1698a3024fdc7a66c1dd071539747bd47727fc59a9f2725e18f"
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "source_step": "2",
+      "status": "completed",
+      "evidence": [
+        {
+          "path": "tests/verification/staging-e2e-2026-10-05.md",
+          "digest": "679e8dbf31d5f98615405477fa3e3ccc3a5516a2a45c03cf666d94aabce38af6"
+        }
+      ]
+    },
+    {
+      "id": "S3",
+      "source_step": "3",
+      "status": "completed",
+      "evidence": [
+        {
+          "path": "src/routes/sponsor.ts",
+          "digest": "05c3e1ae7f36f74afdf7ac4240149820d634c459d38e6af628a9df178487a331"
+        }
+      ]
+    },
+    {
+      "id": "S4",
+      "source_step": "4",
+      "status": "completed",
+      "evidence": [
+        {
+          "path": ".super-speckit/qa/QA-018-006/fr2-fr3-evidence.md",
+          "digest": "57d5c15da88346123f19025398cc0268de11ebb8579e843e0fabe2682c6625bd"
+        }
+      ]
+    },
+    {
+      "id": "S5",
+      "source_step": "5",
+      "status": "completed",
+      "evidence": [
+        {
+          "path": ".super-speckit/qa/QA-018-006/fr1-evidence.md",
+          "digest": "55958c81489555201aac442959415f0e4270f027ae1fbc1666ab8a97fab3edd7"
+        }
+      ]
+    },
+    {
+      "id": "S6",
+      "source_step": "6",
+      "status": "completed",
+      "evidence": [
+        {
+          "path": "specs/018-sponsor-csv-farmer-count/receipts/evidence/pr-178.md",
+          "digest": "d8d4fead430d5b7fff468142f90a7fd3f861ee7265a135a779b05314f11734c6"
+        }
+      ]
+    }
+  ]
+}

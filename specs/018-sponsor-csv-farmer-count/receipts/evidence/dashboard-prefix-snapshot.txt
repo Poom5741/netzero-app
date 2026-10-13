@@ -1,0 +1,14 @@
+Pre-fix observation snapshot — src/sponsor/dashboard.ts getSponsorSummary farmers count
+Captured 2026-10-13 from the working tree at base 6b0aa0ebe2782f19922603e84a87f19569d91f0e (before candidate 2e88f8c).
+Provenance: read via file read of lines ~408-418 during investigation (see investigation receipt S1-S3).
+
+    db
+      .prepare(
+        `SELECT COUNT(DISTINCT f.id) as total_farmers FROM farmers f WHERE 1=1 ${whereClause}`,
+      )
+      .bind(...af.values)
+      .all<{ total_farmers: number }>(),
+
+Defect: no plots join — counts farmers by registered province (f.addr_province via areaFilter)
+regardless of plot ownership, unlike getSponsorFarmers/getPlotsByProvinceScoped/totalHouseholds.
+Post-fix line (candidate 2e88f8c): same query with `JOIN plots p ON p.farmer_id = f.id`.
