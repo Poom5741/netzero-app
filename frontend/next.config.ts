@@ -1,8 +1,12 @@
+const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN ?? "http://localhost:8787";
 import type { NextConfig } from "next";
 
 // STATIC_EXPORT=1 produces a static `out/` directory for Cloudflare assets
 // deploy; API calls go to NEXT_PUBLIC_API_BASE instead of the dev rewrite.
 const isStaticExport = process.env.STATIC_EXPORT === "1";
+// Dev-server rewrite target for the backend Worker. Override when the backend
+// runs on a non-default port locally (e.g. BACKEND_ORIGIN=http://localhost:8799
+// when :8787 is occupied); defaults preserve the historical :8787 contract.
 
 const nextConfig: NextConfig = isStaticExport
   ? {
@@ -24,38 +28,38 @@ const nextConfig: NextConfig = isStaticExport
     return [
       {
         source: "/api/auth/:path*",
-        destination: "http://localhost:8787/:path*",
+        destination: BACKEND_ORIGIN + "/:path*",
       },
       {
         source: "/api/:path*",
-        destination: "http://localhost:8787/api/:path*",
+        destination: BACKEND_ORIGIN + "/api/:path*",
       },
       {
         source: "/login",
-        destination: "http://localhost:8787/login",
+        destination: BACKEND_ORIGIN + "/login",
       },
       {
         // POST target for the sponsor login form. Must NOT collide with the
         // /sponsor/login page route: Next applies array rewrites only after
         // page routes match, so a same-path rewrite is shadowed (SUB-F1).
         source: "/sponsor-login",
-        destination: "http://localhost:8787/sponsor/login",
+        destination: BACKEND_ORIGIN + "/sponsor/login",
       },
       {
         source: "/logout",
-        destination: "http://localhost:8787/logout",
+        destination: BACKEND_ORIGIN + "/logout",
       },
       {
         source: "/redirect",
-        destination: "http://localhost:8787/redirect",
+        destination: BACKEND_ORIGIN + "/redirect",
       },
       {
         source: "/evidence/:path*",
-        destination: "http://localhost:8787/evidence/:path*",
+        destination: BACKEND_ORIGIN + "/evidence/:path*",
       },
       {
         source: "/sponsor/:path*",
-        destination: "http://localhost:8787/sponsor/:path*",
+        destination: BACKEND_ORIGIN + "/sponsor/:path*",
       },
     ];
   },

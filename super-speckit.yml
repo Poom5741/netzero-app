@@ -52,7 +52,7 @@ gates:
   typecheck_frontend: "npm run --prefix frontend typecheck"
   app_start: "npm run dev:all"
   app_url: "http://localhost:3000"
-  playwright: "npx playwright test"
+  playwright: "npx playwright test --config frontend/playwright.config.ts"
   api_assertions: "bun test tests/qa/api-auth.test.ts"
   db_assertions: ""
   ocr_review: ""
